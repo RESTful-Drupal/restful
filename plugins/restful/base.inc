@@ -21,6 +21,7 @@ abstract class RestfulBase implements RestfulInterface {
    */
   protected $request;
 
+  protected $publicFields = array();
 
   public function __construct($plugin, $request) {
     $this->plugin = $plugin;
@@ -28,6 +29,10 @@ abstract class RestfulBase implements RestfulInterface {
   }
 
   public function process() {
+  }
+
+  public function getPublicFields() {
+    return $this->publicFields;
   }
 
   public function access() {

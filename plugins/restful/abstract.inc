@@ -27,6 +27,13 @@ interface RestfulInterface {
    */
   public function process();
 
+  /**
+   * Return the fields and properties that should be public.
+   *
+   * @return array
+   */
+  public function getPublicFields();
+
 
   /**
    * Determine if user can access notifier.
