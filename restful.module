@@ -1,0 +1,6 @@
+<?php
+
+/**
+ * @file
+ * Turn Drupal to a RESTful server, following best practices.
+ */
