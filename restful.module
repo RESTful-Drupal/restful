@@ -55,20 +55,97 @@ function restful_ctools_plugin_type() {
 
 
 /**
- * Helper function to include CTools plugins and get a restful plguin.
- *
- * @param $plugin_name
- *   The plugin that should be loaded.
+ * Helper function to include CTools plugins and get all restful plugins.
  */
-function restful_get_notifier($plugin_name) {
+function restful_get_restful_plugins() {
   ctools_include('plugins');
-  return ctools_get_plugins('restful', 'restful', $plugin_name);
+  return ctools_get_plugins('restful', 'restful');
 }
 
 /**
- * Helper function to include CTools plugins and get all restful plugins.
+ * Implements hook_menu().
  */
-function restful_get_notifiers() {
-  ctools_include('plugins');
-  return ctools_get_plugins('restful', 'restful');
+function restful_menu() {
+
+}
+
+
+/**
+ * Return the handler based on major and minor version, and resource name.
+ *
+ * @param $major_version
+ * @param $resource
+ * @param int $minor_version
+ *
+ * @return mixed
+ */
+function restful_get_restful_handler($request, $major_version, $resource, $minor_version = 0) {
+  $cache = &drupal_static(__FUNCTION__);
+  $identifier = implode(':', array($major_version, $resource, $minor_version));
+  if (isset($cache[$identifier])) {
+    return $cache[$identifier];
+  }
+
+  $cache[$identifier] = NULL;
+
+
+  // Array with all the handlers with the same major version and resource name.
+  // We get all of them, so we can find the correct one if minor version is
+  // present.
+  $valid_plugins = array();
+  foreach (restful_get_restful_plugins() as $name => $plugin) {
+    if ($plugin['major_version'] != $major_version) {
+      continue;
+    }
+
+    if ($name != $resource) {
+      continue;
+    }
+
+    if ($minor_version == $plugin['minor_version']) {
+      // We found out handler, so we can break.
+      $valid_plugins[$plugin['minor_version']] = $plugin;
+      break;
+    }
+
+    if ($plugin['minor_version'] > $minor_version) {
+      // Minor version is above the needed one.
+      continue;
+    }
+
+    $valid_plugins[$plugin['minor_version']] = $plugin;
+  }
+
+  if (!$valid_plugins) {
+    return;
+  }
+
+  // Sort the handlers, and get the last one, as it is the closest one to the
+  // requested minor version.
+  ksort($valid_plugins);
+  $plugin = end($valid_plugins);
+
+  $class = ctools_plugin_load_class('restful', 'restful', $plugin, 'class');
+  $cache[$identifier] = new $class($plugin, $request);
+  return $cache[$identifier];
+}
+
+/**
+ * Access callback
+ */
+function restful_menu_access_callback($major_version, $resource) {
+  $minor_version = !empty($_REQUEST['minor_version']) && is_numeric($_REQUEST['minor_version']) ? $_REQUEST['minor_version'] : 0;
+  $request = array();
+  if (!$handler = restful_get_handler($request, $major_version, $resource, $minor_version)) {
+    return;
+  }
+
+  return $handler->access();
+}
+
+function restful_menu_process_callback($major_version, $resource) {
+  $minor_version = !empty($_REQUEST['minor_version']) && is_numeric($_REQUEST['minor_version']) ? $_REQUEST['minor_version'] : 0;
+  $request = array();
+  $handler = restful_get_handler($request, $major_version, $resource, $minor_version);
+  $handler->process();
 }
