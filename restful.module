@@ -4,3 +4,153 @@
  * @file
  * Turn Drupal to a RESTful server, following best practices.
  */
+
+/**
+ * Implements hook_ctools_plugin_directory().
+ */
+function restful_ctools_plugin_directory($module, $plugin) {
+  if ($module == 'restful') {
+    return 'plugins/' . $plugin;
+  }
+}
+
+/**
+ * Add defaults values to the notifier plugins.
+ *
+ * - 'description': The description of the plugin.
+ * - 'options': Array with the following keys:
+ *   - 'save on fail': Save the message is delivery failed. Defaults to
+ *     TRUE.
+ *   - 'save on success': Save the message is delivery successded. Defaults to
+ *     TRUE.
+ *   - 'language override': Override user's language, and use the
+ *     Message's language. Defaults to FALSE.
+ *   - 'rendered fields': Array keyed with the view mode(s), and the text
+ *     field(s) to save the rendered output.
+ *     The rendered field is used when it is needed to save the message
+ *     exactly as it was sent (for example for message logs), as it might
+ *     change and show differently when viewed later - as a result of on
+ *     the fly token replacement, or even editing the message type.
+ */
+function restful_plugin_process(&$plugin, $info) {
+  $plugin += array(
+    'description' => '',
+    'options' => array(),
+    'major_version' => 1,
+    'minor_version' => 0,
+    'entity_type' => FALSE,
+    'bundle' => FALSE,
+  );
+
+  $plugin['options'] += array(
+  );
+}
+
+/**
+ * Implements hook_ctools_plugin_type().
+ */
+function restful_ctools_plugin_type() {
+  $plugins['restful'] = array(
+    'classes' => array('class'),
+    'process' => 'restful_plugin_process',
+  );
+  return $plugins;
+}
+
+
+/**
+ * Helper function to include CTools plugins and get all restful plugins.
+ */
+function restful_get_restful_plugins() {
+  ctools_include('plugins');
+  return ctools_get_plugins('restful', 'restful');
+}
+
+/**
+ * Implements hook_menu().
+ */
+function restful_menu() {
+
+}
+
+
+/**
+ * Return the handler based on major and minor version, and resource name.
+ *
+ * @param $major_version
+ * @param $resource
+ * @param int $minor_version
+ *
+ * @return RestfulInterface | null
+ *
+ */
+function restful_get_restful_handler($resource, $major_version = 1, $minor_version = 0) {
+  $cache = &drupal_static(__FUNCTION__);
+  $identifier = implode(':', array($major_version, $resource, $minor_version));
+  if (isset($cache[$identifier])) {
+    return $cache[$identifier];
+  }
+
+  $cache[$identifier] = NULL;
+
+
+  // Array with all the handlers with the same major version and resource name.
+  // We get all of them, so we can find the correct one if minor version is
+  // present.
+  $valid_plugins = array();
+  foreach (restful_get_restful_plugins() as $name => $plugin) {
+    if ($plugin['major_version'] != $major_version) {
+      continue;
+    }
+
+    if ($name != $resource) {
+      continue;
+    }
+
+    if ($minor_version == $plugin['minor_version']) {
+      // We found out handler, so we can break.
+      $valid_plugins[$plugin['minor_version']] = $plugin;
+      break;
+    }
+
+    if ($plugin['minor_version'] > $minor_version) {
+      // Minor version is above the needed one.
+      continue;
+    }
+
+    $valid_plugins[$plugin['minor_version']] = $plugin;
+  }
+
+  if (!$valid_plugins) {
+    return;
+  }
+
+  // Sort the handlers, and get the last one, as it is the closest one to the
+  // requested minor version.
+  ksort($valid_plugins);
+  $plugin = end($valid_plugins);
+
+  $class = ctools_plugin_load_class('restful', 'restful', $plugin['name'], 'class');
+  $cache[$identifier] = new $class($plugin);
+  return $cache[$identifier];
+}
+
+/**
+ * Access callback
+ */
+function restful_menu_access_callback($major_version, $resource) {
+  $minor_version = !empty($_REQUEST['minor_version']) && is_numeric($_REQUEST['minor_version']) ? $_REQUEST['minor_version'] : 0;
+  $request = array();
+  if (!$handler = restful_get_handler($request, $major_version, $resource, $minor_version)) {
+    return;
+  }
+
+  return $handler->access();
+}
+
+function restful_menu_process_callback($major_version, $resource) {
+  $minor_version = !empty($_REQUEST['minor_version']) && is_numeric($_REQUEST['minor_version']) ? $_REQUEST['minor_version'] : 0;
+  $request = array();
+  $handler = restful_get_handler($request, $major_version, $resource, $minor_version);
+  $handler->process();
+}

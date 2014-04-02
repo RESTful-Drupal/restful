@@ -1,0 +1,15 @@
+<?php
+
+/**
+ * @file
+ * Example module for the RESTful module.
+ */
+
+/**
+ * Implements hook_ctools_plugin_directory().
+ */
+function restful_example_ctools_plugin_directory($module, $plugin) {
+  if ($module == 'restful') {
+    return 'plugins/' . $plugin;
+  }
+}
