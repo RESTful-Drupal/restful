@@ -6,5 +6,5 @@ $plugin = array(
   'entity_type' => 'node',
   'bundle' => 'article',
   'description' => t('Export the article content type.'),
-  'class' => 'RestfulExampleArticlesResource',
+  'class' => 'RestfulTestArticlesResource',
 );
