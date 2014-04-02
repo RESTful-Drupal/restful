@@ -10,5 +10,6 @@ files[] = plugins/restful/RestfulBase.php
 
 ; Exceptions
 files[] = exceptions/RestfulBadRequestException.php
+files[] = exceptions/RestfulGoneException.php
 files[] = exceptions/RestfulUnsupportedMediaTypeException.php
 files[] = exceptions/RestfulUnprocessableEntityException.php

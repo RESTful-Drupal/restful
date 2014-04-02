@@ -19,9 +19,22 @@ abstract class RestfulBase implements RestfulInterface {
   protected $publicFields = array();
 
   protected $controllers = array(
-    '' => 'list',
-    '\d+' => 'entity',
+    '' => array(
+      // GET returns a list of entities.
+      'get' => 'getList',
+      // POST
+      'post' => 'postEntity',
+    ),
+    '\d+' => array(
+      'get' => 'getEntity',
+      'put' => 'putEntity',
+      'delete' => 'deleteEntity',
+    ),
   );
+
+  public function getControllers () {
+    return $this->controllers;
+  }
 
   public function __construct($plugin) {
     $this->plugin = $plugin;
@@ -40,20 +53,35 @@ abstract class RestfulBase implements RestfulInterface {
     return $this->{$method_name}($path, $request, $account);
   }
 
-  public function getControllerFromPath($path, $method) {
+  public function getControllerFromPath($path, $http_method) {
     $selected_controller = FALSE;
-    foreach ($this->controllers as $pattern => $controller) {
-      if ($pattern == $path || ($pattern && preg_match('/' . $pattern . '/', $path))) {
-        $selected_controller = $controller;
-        break;
+    foreach ($this->getControllers() as $pattern => $controllers) {
+      if ($pattern != $path && ($pattern && preg_match('/' . $pattern . '/', $path))) {
+        continue;
       }
+
+      if ($controllers === FALSE) {
+        // Method isn't valid anymore, due to a deprecated API endpoint.
+        $params = array('@path' => $path);
+        throw new RestfulGoneException(format_string('The path @path endpoint is not valid.', $params));
+      }
+
+      if (!isset($controllers[$http_method])) {
+        $params = array('@method' => strtolower($http_method));
+        throw new RestfulBadRequestException(format_string('The http method @method is not allowed for this path.', $params));
+      }
+
+      // We found the controller, so we can break.
+      $selected_controller = $controllers[$http_method];
+      break;
+
     }
 
     if (!$selected_controller) {
       return;
     }
 
-    $method_name = strtolower($method) . ucfirst($selected_controller);
+    $method_name = strtolower($http_method) . ucfirst($selected_controller);
     return method_exists($this, $method_name) ? $method_name : NULL;
   }
 
