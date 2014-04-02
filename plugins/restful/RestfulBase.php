@@ -32,6 +32,9 @@ abstract class RestfulBase implements RestfulInterface {
     ),
   );
 
+  /**
+   * Return the defined controllers.
+   */
   public function getControllers () {
     return $this->controllers;
   }
@@ -50,9 +53,25 @@ abstract class RestfulBase implements RestfulInterface {
       $account = user_load($user->uid);
     }
 
-    return $this->{$method_name}($path, $request, $account);
+    if ($path) {
+      // If $path is empty we don't need to pass it along.
+      return $this->{$method_name}($request, $account);
+    }
+    else {
+      return $this->{$method_name}($path, $request, $account);
+    }
   }
 
+  /**
+   * Return the controller from a given path.
+   *
+   * @param $path
+   * @param $http_method
+   * @return null|string
+   *
+   * @throws RestfulBadRequestException
+   * @throws RestfulGoneException
+   */
   public function getControllerFromPath($path, $http_method) {
     $selected_controller = FALSE;
     foreach ($this->getControllers() as $pattern => $controllers) {
@@ -85,11 +104,11 @@ abstract class RestfulBase implements RestfulInterface {
     return method_exists($this, $method_name) ? $method_name : NULL;
   }
 
-  public function getList($path, $request, $account) {
+  public function getList($request, $account) {
   }
 
   public function getEntity($entity_id, $request, $account) {
-    $this->isValidEntity($entity_id, $account);
+    $this->isValidEntity('view', $entity_id, $account);
 
     $wrapper = entity_metadata_wrapper($this->plugin['entity_type'], $entity_id);
     $values = array();
@@ -132,7 +151,22 @@ abstract class RestfulBase implements RestfulInterface {
 
   }
 
-  public function isValidEntity($entity_id, $account) {
+  /**
+   * Determine if an entity is valid, and accessible.
+   *
+   * @params $action
+   *   The operation to perform on the entity (view, update, delete).
+   * @param $entity_id
+   *   The entity ID.
+   * @param $account
+   *   The user object.
+   *
+   * @return
+   *   TRUE if user can access entity.
+   *
+   * @throws RestfulUnprocessableEntityException
+   */
+  public function isValidEntity($op, $entity_id, $account) {
     $entity_type = $this->plugin['entity_type'];
 
     $params = array(
@@ -149,6 +183,7 @@ abstract class RestfulBase implements RestfulInterface {
     if ($bundle != $this->plugin['bundle']) {
       throw new RestfulUnprocessableEntityException(format_string('The specified entity ID @id is not a valid @resource.', $params));
     }
+    return entity_access($op, $entity_type, $entity);
   }
 
   public function getPublicFields() {
