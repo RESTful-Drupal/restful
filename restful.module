@@ -36,6 +36,10 @@ function restful_plugin_process(&$plugin, $info) {
   $plugin += array(
     'description' => '',
     'options' => array(),
+    'major_version' => 1,
+    'minor_version' => 0,
+    'entity_type' => FALSE,
+    'bundle' => FALSE,
   );
 
   $plugin['options'] += array(
@@ -46,7 +50,7 @@ function restful_plugin_process(&$plugin, $info) {
  * Implements hook_ctools_plugin_type().
  */
 function restful_ctools_plugin_type() {
-  $plugins['notifier'] = array(
+  $plugins['restful'] = array(
     'classes' => array('class'),
     'process' => 'restful_plugin_process',
   );
@@ -77,9 +81,10 @@ function restful_menu() {
  * @param $resource
  * @param int $minor_version
  *
- * @return mixed
+ * @return RestfulInterface | null
+ *
  */
-function restful_get_restful_handler($request, $major_version, $resource, $minor_version = 0) {
+function restful_get_restful_handler($resource, $major_version = 1, $minor_version = 0) {
   $cache = &drupal_static(__FUNCTION__);
   $identifier = implode(':', array($major_version, $resource, $minor_version));
   if (isset($cache[$identifier])) {
@@ -125,8 +130,8 @@ function restful_get_restful_handler($request, $major_version, $resource, $minor
   ksort($valid_plugins);
   $plugin = end($valid_plugins);
 
-  $class = ctools_plugin_load_class('restful', 'restful', $plugin, 'class');
-  $cache[$identifier] = new $class($plugin, $request);
+  $class = ctools_plugin_load_class('restful', 'restful', $plugin['name'], 'class');
+  $cache[$identifier] = new $class($plugin);
   return $cache[$identifier];
 }
 

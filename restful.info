@@ -1,7 +1,15 @@
 name = RESTful
 description = Turn Drupal to a RESTful server, following best practices.
 core = 7.x
+dependencies[] = ctools
 dependencies[] = entity
 
-files[] = plugins/restful/abstract.inc
-files[] = plugins/restful/base.inc
+; Plugins
+files[] = plugins/restful/RestfulInterface.php
+files[] = plugins/restful/RestfulBase.php
+
+; Exceptions
+files[] = exceptions/RestfulBadRequestException.php
+files[] = exceptions/RestfulGoneException.php
+files[] = exceptions/RestfulUnsupportedMediaTypeException.php
+files[] = exceptions/RestfulUnprocessableEntityException.php
