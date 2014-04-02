@@ -23,7 +23,7 @@ interface RestfulInterface {
    * @return
    *   TRUE or FALSE based on delivery status.
    */
-  public function process($path = '', $request = NULL, $method = 'GET');
+  public function process($path = '', $request = NULL, $method = 'GET', $account = NULL);
 
   /**
    * Return the fields and properties that should be public.

@@ -1,0 +1,5 @@
+name = RESTful Test
+description = Helper module for the RESTful module's tests.
+core = 7.x
+dependencies[] = restful
+hidden = TRUE

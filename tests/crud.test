@@ -1,0 +1,48 @@
+<?php
+
+/**
+ * @file
+ * Contains ZarizBranchTestCase
+ */
+
+class RestfulTestCase extends DrupalWebTestCase {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Entity CRUD',
+      'description' => 'Test the create, update and delete of an entity.',
+      'group' => 'Restful',
+    );
+  }
+
+  function setUp() {
+    parent::setUp('restful_test');
+  }
+
+  /**
+   * Test getting an entity.
+   */
+  function testGetEntity() {
+    $handler = restful_get_restful_handler('articles');
+
+    $title = $this->randomName();
+
+    $settings = array(
+      'type' => 'article',
+      'title' => $title,
+    );
+    $node1 = $this->drupalCreateNode($settings);
+    $id = $node1->nid;
+
+    $request['fields'] = 'id,label';
+    $result = $handler->process($id, $request);
+    $expected_result = array(
+      'id' => $id,
+      'label' => $title,
+    );
+
+    $this->assertEqual($result, $expected_result);
+
+  }
+
+}

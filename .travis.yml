@@ -33,4 +33,5 @@ before_script:
   - drush runserver 127.0.0.1:8080 &
   - until netstat -an 2>/dev/null | grep '8080.*LISTEN'; do true; done
 
-# script: drush test-run restful --uri=http://127.0.0.1:8080
+script:
+  - drush test-run "Restful" --uri=http://127.0.0.1:8080
