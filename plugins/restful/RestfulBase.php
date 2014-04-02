@@ -53,7 +53,7 @@ abstract class RestfulBase implements RestfulInterface {
       $account = user_load($user->uid);
     }
 
-    if ($path) {
+    if (!$path) {
       // If $path is empty we don't need to pass it along.
       return $this->{$method_name}($request, $account);
     }
@@ -73,9 +73,9 @@ abstract class RestfulBase implements RestfulInterface {
    * @throws RestfulGoneException
    */
   public function getControllerFromPath($path, $http_method) {
-    $selected_controller = FALSE;
+    $selected_controller = NULL;
     foreach ($this->getControllers() as $pattern => $controllers) {
-      if ($pattern != $path && ($pattern && preg_match('/' . $pattern . '/', $path))) {
+      if ($pattern != $path && !($pattern && preg_match('/' . $pattern . '/', $path))) {
         continue;
       }
 
@@ -93,15 +93,9 @@ abstract class RestfulBase implements RestfulInterface {
       // We found the controller, so we can break.
       $selected_controller = $controllers[$http_method];
       break;
-
     }
 
-    if (!$selected_controller) {
-      return;
-    }
-
-    $method_name = strtolower($http_method) . ucfirst($selected_controller);
-    return method_exists($this, $method_name) ? $method_name : NULL;
+    return $selected_controller;
   }
 
   public function getList($request, $account) {
