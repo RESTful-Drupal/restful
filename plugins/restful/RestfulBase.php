@@ -43,7 +43,63 @@ abstract class RestfulBase implements RestfulInterface {
     $this->plugin = $plugin;
   }
 
-  public function process($path = '', $request = NULL, $method = 'get', $account = NULL) {
+  /**
+   * Call resource using the GET http method.
+   *
+   * @param string $path
+   *   (optional) The path.
+   * @param null $request
+   *   (optional) The request.
+   * @param null $account
+   *   (optional) The user object.
+   */
+  public function get($path = '', $request = NULL, $account = NULL) {
+    return $this->process($path, $request, $account, 'get');
+  }
+
+  /**
+   * Call resource using the POST http method.
+   *
+   * @param string $path
+   *   (optional) The path.
+   * @param null $request
+   *   (optional) The request.
+   * @param null $account
+   *   (optional) The user object.
+   */
+  public function post($path = '', $request = NULL, $account = NULL) {
+    return $this->process($path, $request, $account, 'post');
+  }
+
+  /**
+   * Call resource using the PUT http method.
+   *
+   * @param string $path
+   *   (optional) The path.
+   * @param null $request
+   *   (optional) The request.
+   * @param null $account
+   *   (optional) The user object.
+   */
+  public function put($path = '', $request = NULL, $account = NULL) {
+    return $this->process($path, $request, $account, 'put');
+  }
+
+  /**
+   * Call resource using the DELETE http method.
+   *
+   * @param string $path
+   *   (optional) The path.
+   * @param null $request
+   *   (optional) The request.
+   * @param null $account
+   *   (optional) The user object.
+   */
+  public function delete($path = '', $request = NULL, $account = NULL) {
+    return $this->process($path, $request, $account, 'delete');
+  }
+
+  public function process($path = '', $request = NULL, $account = NULL, $method = 'get') {
     global $user;
     if (!$method_name = $this->getControllerFromPath($path, $method)) {
       throw new RestfulBadRequestException('Path does not exist');
