@@ -20,9 +20,9 @@ class RestfulCRUDTestCase extends DrupalWebTestCase {
   }
 
   /**
-   * Test getting an entity.
+   * Test viewing an entity (GET method).
    */
-  function testGetEntity() {
+  function testViewEntity() {
     $handler = restful_get_restful_handler('articles');
 
     $title = $this->randomName();
@@ -42,7 +42,27 @@ class RestfulCRUDTestCase extends DrupalWebTestCase {
     );
 
     $this->assertEqual($result, $expected_result);
+  }
 
+  /**
+   * Test creating an entity (POST method).
+   */
+  function testCreateEntity() {
+    $handler = restful_get_restful_handler('articles');
+    $label = $this->randomName();
+    $request = array(
+      'label' => $label,
+    );
+    $result = $handler->post('', $request);
+
+    $node = node_load($result['id']);
+    $expected_result = array(
+      'id' => $node->nid,
+      'label' => $node->title,
+      'self' => url('node/' . $node->nid, array('absolute' => TRUE)),
+    );
+
+    $this->assertEqual($result, $expected_result, 'Entity was created.');
   }
 
 }

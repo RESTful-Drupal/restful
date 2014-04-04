@@ -12,6 +12,16 @@
 abstract class RestfulBase implements RestfulInterface {
 
   /**
+   * The entity type.
+   */
+  protected $entityType;
+
+  /**
+   * The bundle.
+   */
+  protected $bundle;
+
+  /**
    * The plugin definition.
    */
   protected $plugin;
@@ -23,11 +33,11 @@ abstract class RestfulBase implements RestfulInterface {
       // GET returns a list of entities.
       'get' => 'getList',
       // POST
-      'post' => 'postEntity',
+      'post' => 'createEntity',
     ),
     '\d+' => array(
-      'get' => 'getEntity',
-      'put' => 'putEntity',
+      'get' => 'viewEntity',
+      'put' => 'updateEntity',
       'delete' => 'deleteEntity',
     ),
   );
@@ -41,6 +51,8 @@ abstract class RestfulBase implements RestfulInterface {
 
   public function __construct($plugin) {
     $this->plugin = $plugin;
+    $this->entityType = $plugin['entity_type'];
+    $this->bundle = $plugin['bundle'];
   }
 
   /**
@@ -157,10 +169,19 @@ abstract class RestfulBase implements RestfulInterface {
   public function getList($request, $account) {
   }
 
-  public function getEntity($entity_id, $request, $account) {
+  /**
+   * View an entity.
+   *
+   * @param $entity_id
+   * @param $request
+   * @param $account
+   * @return array
+   * @throws Exception
+   */
+  public function viewEntity($entity_id, $request, $account) {
     $this->isValidEntity('view', $entity_id, $account);
 
-    $wrapper = entity_metadata_wrapper($this->plugin['entity_type'], $entity_id);
+    $wrapper = entity_metadata_wrapper($this->entityType, $entity_id);
     $values = array();
 
     $limit_fields = !empty($request['fields']) ? explode(',', $request['fields']) : array();
@@ -197,7 +218,73 @@ abstract class RestfulBase implements RestfulInterface {
     return $values;
   }
 
-  public function postEntity($entity_id, $request, $account) {
+  /**
+   * Create a new entity.
+   *
+   * @param $request
+   * @param $account
+   * @return array
+   */
+  public function createEntity($request, $account) {
+    $entity_info = entity_get_info($this->entityType);
+    $bundle_key = $entity_info['entity keys']['bundle'];
+    $values = array($bundle_key => $this->bundle);
+
+    $entity = entity_create($this->entityType, $values);
+    $wrapper = entity_metadata_wrapper($this->entityType, $entity);
+
+    foreach ($this->getPublicFields() as $public_property => $info) {
+      // @todo: Pass value to validators, even if it doesn't exist, so we can
+      // validate required properties.
+
+      if (!isset($request[$public_property])) {
+        // No property to set.
+        continue;
+      }
+
+      // @todo: Check access to property.
+      $property_name = !empty($info['property']) ? $info['property'] : FALSE;
+      if ($property_name && $this->checkPropertyAccess($wrapper, $property_name)) {
+        $wrapper->{$property_name}->set($request[$public_property]);
+      }
+    }
+
+    $wrapper->save();
+    return $this->viewEntity($wrapper->getIdentifier(), NULL, $account);
+  }
+
+  /**
+   * Helper method to check access on a property.
+   *
+   * @todo Remove this once Entity API properly handles text format access.
+   *
+   * @param EntityMetadataWrapper $wrapper
+   *   The parent entity.
+   * @param string $property_name
+   *   The property name on the entity.
+   * @param EntityMetadataWrapper $property
+   *   The property whose access is to be checked.
+   *
+   * @return bool
+   *   TRUE if the current user has access to set the property, FALSE otherwise.
+   */
+  protected function checkPropertyAccess($wrapper, $property_name) {
+    $property = $wrapper->{$property_name};
+    // @todo Hack to check format access for text fields. Should be removed once
+    // this is handled properly on the Entity API level.
+    if ($property->type() == 'text_formatted' && $property->format->value()) {
+      $format = (object) array('format' => $property->format->value());
+      if (!filter_access($format)) {
+        return FALSE;
+      }
+    }
+
+    // @todo: We should use $property->access(), but this causes a notice in
+    // entity_metadata_no_hook_node_access() as the $op is "upadted" instead of
+    // "create".
+    // return $property->access('edit');
+
+    return TRUE;
 
   }
 
@@ -216,8 +303,8 @@ abstract class RestfulBase implements RestfulInterface {
    *
    * @throws RestfulUnprocessableEntityException
    */
-  public function isValidEntity($op, $entity_id, $account) {
-    $entity_type = $this->plugin['entity_type'];
+  protected function isValidEntity($op, $entity_id, $account) {
+    $entity_type = $this->entityType;
 
     $params = array(
       '@id' => $entity_id,
@@ -233,12 +320,13 @@ abstract class RestfulBase implements RestfulInterface {
     if ($bundle != $this->plugin['bundle']) {
       throw new RestfulUnprocessableEntityException(format_string('The specified entity ID @id is not a valid @resource.', $params));
     }
-    return entity_access($op, $entity_type, $entity);
+
+    return entity_access($op, $entity_type, $entity, $account);
   }
 
   public function getPublicFields() {
     $public_fields = $this->publicFields;
-    if (!empty($this->plugin['entity_type'])) {
+    if (!empty($this->entityType)) {
       $public_fields += array(
         'id' => array('wrapper_method' => 'getIdentifier'),
         'label' => array('wrapper_method' => 'label'),

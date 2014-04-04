@@ -5,8 +5,9 @@ dependencies[] = ctools
 dependencies[] = entity
 
 ; Plugins
-files[] = plugins/restful/RestfulInterface.php
 files[] = plugins/restful/RestfulBase.php
+files[] = plugins/restful/RestfulBaseNode.php
+files[] = plugins/restful/RestfulInterface.php
 
 ; Exceptions
 files[] = exceptions/RestfulBadRequestException.php

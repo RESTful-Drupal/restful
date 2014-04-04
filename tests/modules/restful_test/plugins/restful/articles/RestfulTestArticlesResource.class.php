@@ -5,5 +5,5 @@
  * Contains RestfulTestArticlesResource.
  */
 
-class RestfulTestArticlesResource extends RestfulBase {
+class RestfulTestArticlesResource extends RestfulBaseNode {
 }
