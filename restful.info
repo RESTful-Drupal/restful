@@ -15,4 +15,4 @@ files[] = exceptions/RestfulUnsupportedMediaTypeException.php
 files[] = exceptions/RestfulUnprocessableEntityException.php
 
 ; Tests
-files[] = tests/crud.test
+files[] = tests/RestfulCRUDTestCase.test

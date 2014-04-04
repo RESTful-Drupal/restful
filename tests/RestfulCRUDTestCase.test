@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains ZarizBranchTestCase
+ * Contains RestfulCRUDTestCase
  */
 
-class RestfulTestCase extends DrupalWebTestCase {
+class RestfulCRUDTestCase extends DrupalWebTestCase {
 
   public static function getInfo() {
     return array(
