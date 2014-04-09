@@ -1,0 +1,33 @@
+<?php
+
+/**
+ * @file
+ * Contains RestfulGetHandlersTestCase
+ */
+
+class RestfulGetHandlersTestCase extends DrupalWebTestCase {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Get handlers',
+      'description' => 'Test getting handlers by version (major and minor).',
+      'group' => 'Restful',
+    );
+  }
+
+  function setUp() {
+    parent::setUp('restful_test');
+  }
+
+  /**
+   * Test getting handlers via API.
+   */
+  function testGetHandlers() {
+    $handler = restful_get_restful_handler('articles');
+    $this->assertEqual(get_class($handler), 'RestfulTestArticlesResource');
+
+    $handler = restful_get_restful_handler('articles', 1, 1);
+    $this->assertEqual(get_class($handler), 'RestfulTestArticlesResource__1_1');
+  }
+
+}

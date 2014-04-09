@@ -103,7 +103,7 @@ function restful_get_restful_handler($resource, $major_version = 1, $minor_versi
       continue;
     }
 
-    if ($name != $resource) {
+    if ($plugin['resource'] != $resource) {
       continue;
     }
 
