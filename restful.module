@@ -37,7 +37,7 @@ function restful_plugin_process(&$plugin, $info) {
     'description' => '',
     'options' => array(),
     'major_version' => 1,
-    'minor_version' => 0,
+    'restful_minor_version' => 0,
     'entity_type' => FALSE,
     'bundle' => FALSE,
   );
@@ -70,7 +70,19 @@ function restful_get_restful_plugins() {
  * Implements hook_menu().
  */
 function restful_menu() {
-
+  $items = array();
+  $base_path = variable_get('restful_hook_menu_base_path', 'api/%');
+  foreach (restful_get_restful_plugins() as $plugin) {
+    $resource = $plugin['resource'];
+    $items[$base_path . '/' . $resource] = array(
+      'title' => $plugin['name'],
+      'access callback' => 'restful_menu_access_callback',
+      'access arguments' => array(1, 2),
+      'page callback' => 'restful_menu_process_callback',
+      'page arguments' => array(1, 2),
+    );
+  }
+  return $items;
 }
 
 
@@ -79,14 +91,14 @@ function restful_menu() {
  *
  * @param $major_version
  * @param $resource
- * @param int $minor_version
+ * @param int $restful_minor_version
  *
  * @return RestfulInterface | null
  *
  */
-function restful_get_restful_handler($resource, $major_version = 1, $minor_version = 0) {
+function restful_get_restful_handler($resource, $major_version = 1, $restful_minor_version = 0) {
   $cache = &drupal_static(__FUNCTION__);
-  $identifier = implode(':', array($major_version, $resource, $minor_version));
+  $identifier = implode(':', array($major_version, $resource, $restful_minor_version));
   if (isset($cache[$identifier])) {
     return $cache[$identifier];
   }
@@ -107,18 +119,18 @@ function restful_get_restful_handler($resource, $major_version = 1, $minor_versi
       continue;
     }
 
-    if ($minor_version == $plugin['minor_version']) {
+    if ($restful_minor_version == $plugin['restful_minor_version']) {
       // We found out handler, so we can break.
-      $valid_plugins[$plugin['minor_version']] = $plugin;
+      $valid_plugins[$plugin['restful_minor_version']] = $plugin;
       break;
     }
 
-    if ($plugin['minor_version'] > $minor_version) {
+    if ($plugin['restful_minor_version'] > $restful_minor_version) {
       // Minor version is above the needed one.
       continue;
     }
 
-    $valid_plugins[$plugin['minor_version']] = $plugin;
+    $valid_plugins[$plugin['restful_minor_version']] = $plugin;
   }
 
   if (!$valid_plugins) {
@@ -136,21 +148,46 @@ function restful_get_restful_handler($resource, $major_version = 1, $minor_versi
 }
 
 /**
- * Access callback
+ * Access callback; Determine access for an API call.
  */
 function restful_menu_access_callback($major_version, $resource) {
-  $minor_version = !empty($_REQUEST['minor_version']) && is_numeric($_REQUEST['minor_version']) ? $_REQUEST['minor_version'] : 0;
-  $request = array();
-  if (!$handler = restful_get_handler($request, $major_version, $resource, $minor_version)) {
+  $restful_minor_version = !empty($_REQUEST['restful_minor_version']) && is_numeric($_REQUEST['restful_minor_version']) ? $_REQUEST['restful_minor_version'] : 0;
+  if (!$handler = restful_get_restful_handler($resource, $major_version, $restful_minor_version)) {
+    return;
+  }
+
+  if (!in_array($_SERVER['REQUEST_METHOD'], array('GET', 'POST', 'PUT', 'DELETE'))) {
     return;
   }
 
   return $handler->access();
 }
 
+/**
+ * Page callback; Return the response for an API call.
+ *
+ * @param $major_version
+ * @param $resource
+ */
 function restful_menu_process_callback($major_version, $resource) {
-  $minor_version = !empty($_REQUEST['minor_version']) && is_numeric($_REQUEST['minor_version']) ? $_REQUEST['minor_version'] : 0;
+  $restful_minor_version = !empty($_REQUEST['restful_minor_version']) && is_numeric($_REQUEST['restful_minor_version']) ? $_REQUEST['restful_minor_version'] : 0;
+  $handler = restful_get_restful_handler($resource, $major_version, $restful_minor_version);
+
+  $path = func_get_args();
+  unset($path[0], $path[1]);
+  $path = implode('/', $path);
+
   $request = array();
-  $handler = restful_get_handler($request, $major_version, $resource, $minor_version);
-  $handler->process();
+  $method = strtolower($_SERVER['REQUEST_METHOD']);
+
+  switch ($method) {
+    case 'get':
+      $request = $_GET;
+      break;
+
+    case 'post':
+      $request = $_POST;
+  }
+
+  return drupal_json_output($handler->{$method}($path, $request));
 }
