@@ -32,7 +32,7 @@ $handler = restful_get_restful_handler('articles');
 $handler->post('', array('label' => 'example title'));
 ```
 
-View an Article (``GET`` method)
+View an Article (GET method)
 
 ```php
 $handler = restful_get_restful_handler('articles');
