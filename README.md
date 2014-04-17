@@ -8,8 +8,7 @@ The aim of the module, is to allow exposing an API, without Drupal's data struct
 ## Difference between other modules (e.g. RestWs and Services Entity)
 
 * Restful module requires explicitly declaring the exposed API. When enabling the
-module nothing will happen until the implementing developer will declare the
-it
+module nothing will happen until the implementing developer will declare it
 * Instead of exposing resources by entity type (e.g. node, taxonomy term), Restful
 cares about bundles. So for example you may expose the ``Article`` content type, but
 not the ``Page`` content type
