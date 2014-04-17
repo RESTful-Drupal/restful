@@ -2,13 +2,13 @@
 
 /**
  * @file
- * Helper module for the RESTful module's tests.
+ * Example module for the RESTful module.
  */
 
 /**
  * Implements hook_ctools_plugin_directory().
  */
-function restful_test_ctools_plugin_directory($module, $plugin) {
+function restful_example_ctools_plugin_directory($module, $plugin) {
   if ($module == 'restful') {
     return 'plugins/' . $plugin;
   }
