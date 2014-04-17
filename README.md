@@ -7,7 +7,7 @@ The aim of the module, is to allow exposing an API, without Drupal's data struct
 
 Developed by [Gizra](http://gizra.com)
 
-## Difference between "RestWs" and "Services entity"
+## Difference between other modules (e.g. RestWs and Services Entity)
 
 * Restful module requires explicitly declaring the exposed API. When enabling the
 module nothing will happen until the implementing developer will declare the
@@ -28,14 +28,14 @@ with the ``field_`` prefix
 ## API overview
 Assuming you have enabled the REstful example module
 
-Create a new Article (``POST`` HTTP method)
+Create a new Article (POST method)
 
 ```php
 $handler = restful_get_restful_handler('articles');
 $handler->post('', array('label' => 'example title'));
 ```
 
-View an Article (``GET`` HTTP method)
+View an Article (``GET`` method)
 
 ```php
 $handler = restful_get_restful_handler('articles');
