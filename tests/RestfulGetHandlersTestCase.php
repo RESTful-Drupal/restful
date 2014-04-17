@@ -16,7 +16,7 @@ class RestfulGetHandlersTestCase extends DrupalWebTestCase {
   }
 
   function setUp() {
-    parent::setUp('restful_test');
+    parent::setUp('restful_example');
   }
 
   /**
