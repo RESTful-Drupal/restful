@@ -5,8 +5,6 @@
 This module follows [this post](http://www.vinaysahni.com/best-practices-for-a-pragmatic-restful-api) to achieve a _practical_ RESTful for Drupal.
 The aim of the module, is to allow exposing an API, without Drupal's data structure leaking to it.
 
-Developed by [Gizra](http://gizra.com)
-
 ## Difference between other modules (e.g. RestWs and Services Entity)
 
 * Restful module requires explicitly declaring the exposed API. When enabling the
@@ -49,7 +47,6 @@ array(
 
 ```
 
+## Credits
 
-
-
-
+Developed by [Gizra](http://gizra.com)
