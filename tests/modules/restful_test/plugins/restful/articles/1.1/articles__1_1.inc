@@ -9,5 +9,5 @@ $plugin = array(
   'description' => t('Export the article content type.'),
   'class' => 'RestfulTestArticlesResource__1_1',
   // Set the minor version.
-  'minor_version' => 1,
+  'restful_minor_version' => 1,
 );
