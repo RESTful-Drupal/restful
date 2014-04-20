@@ -44,8 +44,8 @@ class RestfulHookMenuestCase extends DrupalWebTestCase {
     $this->assertEqual($result, json_encode($expected_result));
 
     // Test version 1.1
-    $headers = array('restful_minor_version' => 1);
-    $result = $this->httpRequest('api/1/articles/' . $node1->nid, 'GET', NULL, $headers);
+    $headers = array('Restful-Minor-Version: 1');
+    $result = $this->httpRequest('api/1/articles/' . $node1->nid, 'GET', NULL, NULL, $headers);
     unset($expected_result['self']);
     $this->assertEqual($result, json_encode($expected_result));
   }
