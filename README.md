@@ -154,7 +154,7 @@ curl https://example.com/api/v1/articles/1 \
 ```
 
 ### Error handling
-While an ``Exception`` us thrown when using the API via Drupal, this is not the
+While a PHP ``Exception`` is thrown when using the API via Drupal, this is not the
 case when consuming the API externally. Instead of the exception a valid JSON
 with ``code``, ``message`` and ``description`` would be returned.
 
