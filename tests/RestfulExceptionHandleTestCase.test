@@ -1,0 +1,38 @@
+<?php
+
+/**
+ * @file
+ * Contains RestfulExceptionHandleTestCase
+ */
+
+class RestfulExceptionHandleTestCase extends DrupalWebTestCase {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Exception handling',
+      'description' => 'Test converting exceptions into JSON with code, message and description.',
+      'group' => 'Restful',
+    );
+  }
+
+  function setUp() {
+    parent::setUp('restful_example');
+  }
+
+  /**
+   * Test converting exceptions into JSON with code, message and description.
+   *
+   * When calling the API via hook_menu(), exceptions should be converted to a
+   * valid JSON.
+   */
+  function testExceptionHandle() {
+    $options['query'] = array('sort' => 'wrong_key');
+    $this->drupalGet('api/v1/articles', $options);
+    $expected_result = array(
+      'code' => 400,
+      'message' => 'The sort wrong_key is not allowed for this path.',
+      'description' => 'Bad Request.',
+    );
+    $this->assertText(drupal_json_encode($expected_result), 'Exception was converted to JSON.');
+  }
+}

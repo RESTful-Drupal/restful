@@ -217,5 +217,22 @@ function restful_menu_process_callback($major_version, $resource_name) {
       $request = $_POST;
   }
 
-  return drupal_json_output($handler->{$method}($path, $request));
+  try {
+    $result = $handler->{$method}($path, $request);
+  }
+  catch (RestfulException $e) {
+    $result = array(
+      'code' => $e->getCode(),
+      'message' => $e->getMessage(),
+      'description' => $e->getDescription(),
+    );
+  }
+  catch (Exception $e) {
+    $result = array(
+      'code' => 500,
+      'message' => $e->getMessage(),
+    );
+  }
+
+  return drupal_json_output($result);
 }
