@@ -89,16 +89,19 @@ function restful_menu() {
 /**
  * Return the handler based on major and minor version, and resource name.
  *
- * @param $major_version
- * @param $resource
+ * @param $resource_name
+ *   The name of the resource (e.g. "articles").
+ * @param int $major_version
+ *   (optional) The major version (not prefixed with "v"). Defaults to 1.
  * @param int $restful_minor_version
+ *   (optional) The minor version. Defaults to 0.
  *
- * @return RestfulInterface | null
- *
+ * @return RestfulInterface | NULL
+ *   The handler object if found, or NULL.
  */
-function restful_get_restful_handler($resource, $major_version = 1, $restful_minor_version = 0) {
+function restful_get_restful_handler($resource_name, $major_version = 1, $restful_minor_version = 0) {
   $cache = &drupal_static(__FUNCTION__);
-  $identifier = implode(':', array($major_version, $resource, $restful_minor_version));
+  $identifier = implode(':', array($major_version, $resource_name, $restful_minor_version));
   if (isset($cache[$identifier])) {
     return $cache[$identifier];
   }
@@ -115,7 +118,7 @@ function restful_get_restful_handler($resource, $major_version = 1, $restful_min
       continue;
     }
 
-    if ($plugin['resource'] != $resource) {
+    if ($plugin['resource'] != $resource_name) {
       continue;
     }
 
@@ -147,12 +150,31 @@ function restful_get_restful_handler($resource, $major_version = 1, $restful_min
   return $cache[$identifier];
 }
 
+
 /**
  * Access callback; Determine access for an API call.
+ *
+ * @param $major_version
+ *   The major version, prefixed with v (e.g. v1, v2).
+ * @param $resource_name
+ *   The name of the resource (e.g. "articles").
+ *
+ * @return
+ *   TRUE if user is allowed to access resource.
  */
-function restful_menu_access_callback($major_version, $resource) {
-  $restful_minor_version = !empty($_SERVER['HTTP_RESTFUL_MINOR_VERSION']) && is_numeric($_SERVER['HTTP_RESTFUL_MINOR_VERSION']) ? $_SERVER['HTTP_RESTFUL_MINOR_VERSION'] : 0;
-  if (!$handler = restful_get_restful_handler($resource, $major_version, $restful_minor_version)) {
+function restful_menu_access_callback($major_version, $resource_name) {
+  if ($major_version[0] != 'v') {
+    // Major version not prefixed with "v".
+    return;
+  }
+
+  if (!$major_version = intval(str_replace('v', '', $major_version))) {
+    // Major version is not an integer.
+    return;
+  }
+
+  $restful_minor_version = !empty($_SERVER['HTTP_RESTFUL_MINOR_VERSION']) && is_int($_SERVER['HTTP_RESTFUL_MINOR_VERSION']) ? $_SERVER['HTTP_RESTFUL_MINOR_VERSION'] : 0;
+  if (!$handler = restful_get_restful_handler($resource_name, $major_version, $restful_minor_version)) {
     return;
   }
 
@@ -167,11 +189,17 @@ function restful_menu_access_callback($major_version, $resource) {
  * Page callback; Return the response for an API call.
  *
  * @param $major_version
- * @param $resource
+ *   The major version, prefixed with v (e.g. v1, v2).
+ * @param $resource_name
+ *   The name of the resource (e.g. "articles").
+ *
+ * @return
+ *   JSON output with the result of the API call.
  */
-function restful_menu_process_callback($major_version, $resource) {
+function restful_menu_process_callback($major_version, $resource_name) {
+  $major_version = intval(str_replace('v', '', $major_version));
   $restful_minor_version = !empty($_SERVER['HTTP_RESTFUL_MINOR_VERSION']) && is_numeric($_SERVER['HTTP_RESTFUL_MINOR_VERSION']) ? $_SERVER['HTTP_RESTFUL_MINOR_VERSION'] : 0;
-  $handler = restful_get_restful_handler($resource, $major_version, $restful_minor_version);
+  $handler = restful_get_restful_handler($resource_name, $major_version, $restful_minor_version);
 
   $path = func_get_args();
   unset($path[0], $path[1]);

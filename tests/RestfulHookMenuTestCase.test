@@ -34,7 +34,7 @@ class RestfulHookMenuTestCase extends DrupalWebTestCase {
     $node1 = $this->drupalCreateNode($settings);
 
     // Test version 1.0
-    $result = $this->httpRequest('api/1/articles/' . $node1->nid, 'GET');
+    $result = $this->httpRequest('api/v1/articles/' . $node1->nid, 'GET');
     $expected_result = array(
       'id' => $node1->nid,
       'label' => $node1->title,
@@ -45,7 +45,7 @@ class RestfulHookMenuTestCase extends DrupalWebTestCase {
 
     // Test version 1.1
     $headers = array('Restful-Minor-Version: 1');
-    $result = $this->httpRequest('api/1/articles/' . $node1->nid, 'GET', NULL, NULL, $headers);
+    $result = $this->httpRequest('api/v1/articles/' . $node1->nid, 'GET', NULL, NULL, $headers);
     unset($expected_result['self']);
     $this->assertEqual($result, json_encode($expected_result));
   }
