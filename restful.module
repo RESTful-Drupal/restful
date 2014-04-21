@@ -151,7 +151,7 @@ function restful_get_restful_handler($resource, $major_version = 1, $restful_min
  * Access callback; Determine access for an API call.
  */
 function restful_menu_access_callback($major_version, $resource) {
-  $restful_minor_version = !empty($_SERVER['HTTP-RESTFUL-MINOR-VERSION']) && is_numeric($_SERVER['HTTP-RESTFUL-MINOR-VERSION']) ? $_SERVER['HTTP-RESTFUL-MINOR-VERSION'] : 0;
+  $restful_minor_version = !empty($_SERVER['HTTP_RESTFUL_MINOR_VERSION']) && is_numeric($_SERVER['HTTP_RESTFUL_MINOR_VERSION']) ? $_SERVER['HTTP_RESTFUL_MINOR_VERSION'] : 0;
   if (!$handler = restful_get_restful_handler($resource, $major_version, $restful_minor_version)) {
     return;
   }
@@ -170,7 +170,7 @@ function restful_menu_access_callback($major_version, $resource) {
  * @param $resource
  */
 function restful_menu_process_callback($major_version, $resource) {
-  $restful_minor_version = !empty($_SERVER['HTTP-RESTFUL-MINOR-VERSION']) && is_numeric($_SERVER['HTTP-RESTFUL-MINOR-VERSION']) ? $_SERVER['HTTP-RESTFUL-MINOR-VERSION'] : 0;
+  $restful_minor_version = !empty($_SERVER['HTTP_RESTFUL_MINOR_VERSION']) && is_numeric($_SERVER['HTTP_RESTFUL_MINOR_VERSION']) ? $_SERVER['HTTP_RESTFUL_MINOR_VERSION'] : 0;
   $handler = restful_get_restful_handler($resource, $major_version, $restful_minor_version);
 
   $path = func_get_args();
