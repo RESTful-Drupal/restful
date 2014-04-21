@@ -5,5 +5,5 @@
  * Contains RestfulExampleArticlesResource.
  */
 
-class RestfulExampleArticlesResource extends RestfulBaseNode {
+class RestfulExampleArticlesResource extends RestfulEntityBaseNode {
 }

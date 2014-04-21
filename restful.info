@@ -5,8 +5,9 @@ dependencies[] = ctools
 dependencies[] = entity
 
 ; Plugins
-files[] = plugins/restful/RestfulBase.php
-files[] = plugins/restful/RestfulBaseNode.php
+files[] = plugins/restful/RestfulEntityBase.php
+files[] = plugins/restful/RestfulEntityBaseNode.php
+files[] = plugins/restful/RestfulEntityInterface.php
 files[] = plugins/restful/RestfulInterface.php
 
 ; Exceptions
@@ -18,4 +19,5 @@ files[] = exceptions/RestfulUnprocessableEntityException.php
 ; Tests
 files[] = tests/RestfulCRUDTestCase.test
 files[] = tests/RestfulGetHandlersTestCase.test
-files[] = tests/RestfulHookMenuestCase.test
+files[] = tests/RestfulHookMenuTestCase.test
+files[] = tests/RestfulListTestCase.test

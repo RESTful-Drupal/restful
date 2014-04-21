@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains RestfulHookMenuestCase
+ * Contains RestfulHookMenuTestCase
  */
 
-class RestfulHookMenuestCase extends DrupalWebTestCase {
+class RestfulHookMenuTestCase extends DrupalWebTestCase {
 
   public static function getInfo() {
     return array(
