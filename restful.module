@@ -221,6 +221,7 @@ function restful_menu_process_callback($major_version, $resource_name) {
     $result = $handler->{$method}($path, $request);
   }
   catch (RestfulException $e) {
+    drupal_add_http_header('Status', $e->getCode());
     $result = array(
       'code' => $e->getCode(),
       'message' => $e->getMessage(),

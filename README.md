@@ -22,28 +22,156 @@ with the ``field_`` prefix
 * Audience is developers and not site builders
 
 
-## API overview
-Assuming you have enabled the REstful example module
+## API via Drupal
 
-Create a new Article (POST method)
+Assuming you have enabled the RESTful example module
+
+### Getting handlers
 
 ```php
+// Get handler v1.0
 $handler = restful_get_restful_handler('articles');
+
+// Get handler v1.1
+$handler = restful_get_restful_handler('articles', 1, 1);
+```
+
+### Create a new entity
+```php
+$handler = restful_get_restful_handler('articles');
+// POST method.
 $handler->post('', array('label' => 'example title'));
 ```
 
-View an Article (GET method)
-
+### View an entity
 ```php
+// Handler v1.0
 $handler = restful_get_restful_handler('articles');
+// GET method.
 $result = $handler->get(1);
 
+// Output:
 array(
   'id' => 1,
   'label' => 'example title',
-  'self' => 'http://example.com/node/1',
+  'self' => 'https://example.com/node/1',
 );
 
+// Handler v1.1 extends v1.0, and removes the "self" property from the
+// exposed properties.
+$handler = restful_get_restful_handler('articles', 1, 1);
+$result = $handler->get(1);
+
+// Output:
+array(
+  'id' => 1,
+  'label' => 'example title',
+);
+
+```
+
+#### Filtering fields
+Using the ``?fields`` query string, you can decalre which fields should be
+returned.
+
+```php
+$handler = restful_get_restful_handler('articles');
+
+// Define the fields.
+$request['fields'] = 'id,label';
+$result = $handler->get(2, $request);
+
+// Output:
+array(
+  'id' => 2,
+  'label' => 'another title',
+);
+```
+
+### List entities
+```php
+$handler = restful_get_restful_handler('articles');
+$result = $handler->get();
+
+// Output:
+array(
+  'list' => array(
+    array(
+      'id' => 1,
+      'label' => 'example title',
+      'self' => 'https://example.com/node/1',
+    );
+    array(
+      'id' => 2,
+      'label' => 'another title',
+      'self' => 'https://example.com/node/2',
+    );
+  ),
+);
+```
+
+#### Sort
+You can sort the list of entities by multiple properties. Prefixing the property
+with a dash (``-``) will sort is in a descending order.
+If no sorting is specified the default sorting is by the entity ID.
+
+```php
+$handler = restful_get_restful_handler('articles');
+
+// Define the sorting by ID (descending) and label (ascending).
+$request['sorting'] = '-id,label';
+$result = $handler->get('', $request);
+
+// Output:
+array(
+  'list' => array(
+    array(
+      'id' => 2,
+      'label' => 'another title',
+      'self' => 'https://example.com/node/2',
+    );
+    array(
+      'id' => 1,
+      'label' => 'example title',
+      'self' => 'https://example.com/node/1',
+    );
+  ),
+);
+
+```
+
+### API via URL
+
+### View an Article
+
+```shell
+# Handler v1.0
+curl https://example.com/api/v1/articles/1
+
+# Handler v1.1
+curl https://example.com/api/v1/articles/1 \
+  -H "Restful-Minor-Version: 1"
+```
+
+### Error handling
+While an ``Exception`` us thrown when using the API via Drupal, this is not the
+case when consuming the API externally. Instead of the exception a valid JSON
+with ``code``, ``message`` and ``description`` would be returned.
+
+For example, trying to sort a list by an invalid key
+
+```shell
+curl https://example.com/api/v1/articles?sort=wrong_key
+```
+
+Will result with an HTTP code 400, and the following JSON:
+
+```javascript
+{
+  code: 400,
+  message: "The sort wrong_key is not allowed for this path.",
+  description: "Bad Request."
+}
 ```
 
 ## Credits
