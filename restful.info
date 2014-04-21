@@ -11,6 +11,7 @@ files[] = plugins/restful/RestfulEntityInterface.php
 files[] = plugins/restful/RestfulInterface.php
 
 ; Exceptions
+files[] = exceptions/RestfulException.php
 files[] = exceptions/RestfulBadRequestException.php
 files[] = exceptions/RestfulGoneException.php
 files[] = exceptions/RestfulUnsupportedMediaTypeException.php
@@ -18,6 +19,7 @@ files[] = exceptions/RestfulUnprocessableEntityException.php
 
 ; Tests
 files[] = tests/RestfulCRUDTestCase.test
+files[] = tests/RestfulExceptionHandleTestCase.test
 files[] = tests/RestfulGetHandlersTestCase.test
 files[] = tests/RestfulHookMenuTestCase.test
 files[] = tests/RestfulListTestCase.test
