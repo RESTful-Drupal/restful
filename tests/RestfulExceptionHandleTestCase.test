@@ -34,5 +34,6 @@ class RestfulExceptionHandleTestCase extends DrupalWebTestCase {
       'description' => 'Bad Request.',
     );
     $this->assertText(drupal_json_encode($expected_result), 'Exception was converted to JSON.');
+    $this->assertResponse('400', 'Correct HTTP code.');
   }
 }
