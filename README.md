@@ -119,7 +119,7 @@ If no sorting is specified the default sorting is by the entity ID.
 $handler = restful_get_restful_handler('articles');
 
 // Define the sorting by ID (descending) and label (ascending).
-$request['sorting'] = '-id,label';
+$request['sort'] = '-id,label';
 $result = $handler->get('', $request);
 
 // Output:
