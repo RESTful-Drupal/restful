@@ -1,0 +1,151 @@
+<?php
+
+/**
+ * @file
+ * Contains RestfulListTestCase
+ */
+
+class RestfulListTestCase extends DrupalWebTestCase {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'List entities',
+      'description' => 'Test the listing of entities.',
+      'group' => 'Restful',
+    );
+  }
+
+  function setUp() {
+    parent::setUp('restful_example');
+  }
+
+  /**
+   * Test the listing of entities.
+   */
+  function testList() {
+    $settings = array('type' => 'article');
+
+    $titles = array(
+      'abc',
+      'xyz',
+      'efg',
+    );
+    foreach ($titles as $title) {
+      $settings['title'] = $title;
+      $node = $this->drupalCreateNode($settings);
+      $nodes[$title] = $node->nid;
+    }
+
+    // Add unpublished node, to confirm it is not listed.
+    $settings['status'] = NODE_NOT_PUBLISHED;
+    $this->drupalCreateNode($settings);
+
+    $handler = restful_get_restful_handler('articles');
+    $request['fields'] = 'id,label';
+
+    // No sorting (default sorting).
+    $result = $handler->get('', $request);
+    $expected_result = array(
+      array(
+        'id' => $nodes['abc'],
+        'label' => 'abc',
+      ),
+      array(
+        'id' => $nodes['xyz'],
+        'label' => 'xyz',
+      ),
+      array(
+        'id' => $nodes['efg'],
+        'label' => 'efg',
+      ),
+    );
+    $this->assertEqual($result['list'], $expected_result, 'No sorting (default sorting).');
+
+    // Sort by ID descending.
+    $request['sort'] = '-id';
+    $result = $handler->get('', $request);
+    $expected_result = array(
+      array(
+        'id' => $nodes['efg'],
+        'label' => 'efg',
+      ),
+      array(
+        'id' => $nodes['xyz'],
+        'label' => 'xyz',
+      ),
+      array(
+        'id' => $nodes['abc'],
+        'label' => 'abc',
+      ),
+    );
+    $this->assertEqual($result['list'], $expected_result, 'Sort by ID descending.');
+
+    // Sort by label ascending.
+    $request['sort'] = 'label';
+    $result = $handler->get('', $request);
+    $expected_result = array(
+      array(
+        'id' => $nodes['abc'],
+        'label' => 'abc',
+      ),
+      array(
+        'id' => $nodes['efg'],
+        'label' => 'efg',
+      ),
+      array(
+        'id' => $nodes['xyz'],
+        'label' => 'xyz',
+      ),
+    );
+    $this->assertEqual($result['list'], $expected_result, 'Sort by label ascending.');
+
+    // Sort by label and by ID. For that we add another node titled "abc".
+    $settings = array(
+      'type' => 'article',
+      'title' => 'abc',
+    );
+    $node = $this->drupalCreateNode($settings);
+
+    $request['sort'] = 'label,id';
+    $result = $handler->get('', $request);
+    $expected_result = array(
+      array(
+        'id' => $nodes['abc'],
+        'label' => 'abc',
+      ),
+      array(
+        'id' => $node->nid,
+        'label' => 'abc',
+      ),
+      array(
+        'id' => $nodes['efg'],
+        'label' => 'efg',
+      ),
+      array(
+        'id' => $nodes['xyz'],
+        'label' => 'xyz',
+      ),
+    );
+    $this->assertEqual($result['list'], $expected_result, 'Sort by ID and by label.');
+
+    // Illegal sort property.
+    $request['sort'] = 'wrong_key';
+    try {
+      $handler->get('', $request);
+      $this->fail('Illegal sort property used.');
+    }
+    catch (RestfulBadRequestException $e) {
+      $this->pass('Exception thrown on illegal sort property.');
+    }
+
+    // Illegal sort property, descending.
+    $request['sort'] = '-wrong_key';
+    try {
+      $handler->get('', $request);
+      $this->fail('Illegal sort property, descending, used.');
+    }
+    catch (RestfulBadRequestException $e) {
+      $this->pass('Exception thrown on illegal sort property, descending.');
+    }
+  }
+}
