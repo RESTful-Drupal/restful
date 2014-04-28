@@ -283,12 +283,14 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
         continue;
       }
 
+      // Set default values.
       $info += array(
         'wrapper_method' => 'value',
+        'wrapper_method_on_entity' => FALSE,
       );
 
+      $property = $info['property'];
       if ($info['wrapper_method'] == 'value') {
-        $property = $info['property'];
 
         if (empty($wrapper->{$property})) {
           throw new Exception(format_string('Property @property does not exist.', array('@property' => $property)));
@@ -299,7 +301,8 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
         }
       }
       else {
-        $value = $wrapper->{$info['wrapper_method']}();
+        $sub_wrapper = $info['wrapper_method_on_entity'] ? $wrapper : $wrapper->{$property};
+        $value = $sub_wrapper->{$info['wrapper_method']}();
       }
 
       $values[$public_property] = $value;
@@ -418,8 +421,14 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
     $public_fields = $this->publicFields;
     if (!empty($this->entityType)) {
       $public_fields += array(
-        'id' => array('wrapper_method' => 'getIdentifier'),
-        'label' => array('wrapper_method' => 'label'),
+        'id' => array(
+          'wrapper_method' => 'getIdentifier',
+          'wrapper_method_on_entity' => TRUE,
+        ),
+        'label' => array(
+          'wrapper_method' => 'label',
+          'wrapper_method_on_entity' => TRUE,
+        ),
         'self' => array('property' => 'url'),
       );
     }
