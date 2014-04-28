@@ -290,18 +290,31 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
       );
 
       $property = $info['property'];
+
       if ($info['wrapper_method'] == 'value') {
 
         if (empty($wrapper->{$property})) {
           throw new Exception(format_string('Property @property does not exist.', array('@property' => $property)));
         }
 
-        if (!$value = $wrapper->{$property}->value()) {
+        if (!empty($info['sub_property'])) {
+          $sub_wrapper =  $wrapper->{$property}->{$info['sub_property']};
+        }
+        else {
+          $sub_wrapper = $wrapper->{$property};
+        }
+
+        if (!$value = $sub_wrapper->value()) {
           continue;
         }
       }
       else {
         $sub_wrapper = $info['wrapper_method_on_entity'] ? $wrapper : $wrapper->{$property};
+
+        if (!empty($info['sub_property'])) {
+          $sub_wrapper = $sub_wrapper->{$info['sub_property']};
+        }
+
         $value = $sub_wrapper->{$info['wrapper_method']}();
       }
 
