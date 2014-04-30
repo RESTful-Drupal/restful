@@ -17,6 +17,16 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
   protected $entityType;
 
   /**
+   * The bundle.
+   */
+  protected $bundle;
+
+  /**
+   * The plugin definition.
+   */
+  protected $plugin;
+
+  /**
    * The public fields that exposed to the API.
    *
    *  Field properties allowed:
@@ -49,16 +59,6 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *    )
    */
   protected $publicFields = array();
-
-  /**
-   * The bundle.
-   */
-  protected $bundle;
-
-  /**
-   * The plugin definition.
-   */
-  protected $plugin;
 
   protected $controllers = array(
     '' => array(
