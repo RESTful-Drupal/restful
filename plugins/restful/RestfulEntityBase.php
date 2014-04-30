@@ -17,6 +17,40 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
   protected $entityType;
 
   /**
+   * The public fields that exposed to the API.
+   *
+   *  Field properties allowed:
+   *
+   *    @property property
+   *      The entity property.
+   *
+   *    @property (optional) sub_property
+   *      A sub property name of a property
+   *      (default: FALSE)
+   *
+   *    @property wrapper_method
+   *      The wrapper's method name to perform on the field.
+   *
+   *    @property wrapper_method_on_entity
+   *      A Boolean to indicate on what to perform the wrapper method.
+   *      (default: FALSE)
+   *      TRUE - on the entity.
+   *      FALSE - on the property.
+   *
+   *  For Example:
+   *    To execute:
+   *      $wrapper->body->value->value()
+   *
+   *    The definitions is:
+   *    'content' => array(
+   *      'property' => 'body'
+   *      'sub_property' => 'value'
+   *      'wrapper_method' => 'value',
+   *    )
+   */
+  protected $publicFields = array();
+
+  /**
    * The bundle.
    */
   protected $bundle;
@@ -25,8 +59,6 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    * The plugin definition.
    */
   protected $plugin;
-
-  protected $publicFields = array();
 
   protected $controllers = array(
     '' => array(
