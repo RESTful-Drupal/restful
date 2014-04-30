@@ -30,12 +30,17 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *
    *    @property wrapper_method
    *      The wrapper's method name to perform on the field.
+   *      (default: value)
+   *      e.g.: value, label
    *
    *    @property wrapper_method_on_entity
    *      A Boolean to indicate on what to perform the wrapper method.
    *      (default: FALSE)
    *      TRUE - on the entity.
    *      FALSE - on the property.
+   *
+   *    @property (optional) callback
+   *      A callback function to perform on the returned value.
    *
    *  For Example:
    *    To execute:
@@ -320,6 +325,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
         'wrapper_method' => 'value',
         'wrapper_method_on_entity' => FALSE,
         'sub_property' => FALSE,
+        'callback' => FALSE,
       );
 
       $property = $info['property'];
@@ -340,6 +346,11 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
         if (!$value = $sub_wrapper->value()) {
           continue;
         }
+
+        if (!empty($info['callback']) && method_exists($this, $info['callback'])) {
+          $value = $this->{$info['callback']}($value);
+        }
+
       }
       else {
         $sub_wrapper = $info['wrapper_method_on_entity'] ? $wrapper : $wrapper->{$property};
