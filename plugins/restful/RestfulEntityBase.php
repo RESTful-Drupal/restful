@@ -299,7 +299,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
         }
 
         if ($info['sub_property']) {
-          $sub_wrapper =  $wrapper->{$property}->{$info['sub_property']};
+          $sub_wrapper = $wrapper->{$property}->{$info['sub_property']};
         }
         else {
           $sub_wrapper = $wrapper->{$property};
