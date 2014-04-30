@@ -347,8 +347,15 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
           continue;
         }
 
-        if (!empty($info['callback']) && method_exists($this, $info['callback'])) {
-          $value = $this->{$info['callback']}($value);
+        if (!empty($info['callback'])) {
+          if (method_exists($this, $info['callback'])) {
+            $value = $this->{$info['callback']}($value);
+          }
+          else {
+            throw new RestfulCallbackException(
+              format_string('Callback function @callback does not exists.', array('@callback' => $info['callback']))
+            );
+          }
         }
 
       }
