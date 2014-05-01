@@ -26,6 +26,25 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    */
   protected $plugin;
 
+  /**
+   * The public fields that are exposed to the API.
+   *
+   *  Array with the optional values:
+   *  - "property": The entity property (e.g. "title", "nid").
+   *  - "sub_property": A sub property name of a property to take from it the
+   *    content. This can be used for example on a text field with filtered text
+   *    input format where we would need to do $wrapper->body->value->value().
+   *    Defaults to FALSE.
+   *  - "wrapper_method": The wrapper's method name to perform on the field.
+   *    This can be used for example to get the entity label, by setting the
+   *    value to "label". Defaults to "value".
+   *  - "wrapper_method_on_entity": A Boolean to indicate on what to perform
+   *    the wrapper method. If TRUE the method will perform on the entity (e.g.
+   *    $wrapper->label()) and FALSE on the property or sub property
+   *    (e.g. $wrapper->field_reference->label()). Defaults to FALSE.
+   *  - "process_callback": A callable callback to perform on the returned
+   *    value, or an array with the object and method. Defaults To FALSE.
+   */
   protected $publicFields = array();
 
   protected $controllers = array(
@@ -283,23 +302,51 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
         continue;
       }
 
+      // Set default values.
       $info += array(
         'wrapper_method' => 'value',
+        'wrapper_method_on_entity' => FALSE,
+        'sub_property' => FALSE,
+        'process_callback' => FALSE,
       );
 
+      $property = $info['property'];
+
       if ($info['wrapper_method'] == 'value') {
-        $property = $info['property'];
 
         if (empty($wrapper->{$property})) {
           throw new Exception(format_string('Property @property does not exist.', array('@property' => $property)));
         }
 
-        if (!$value = $wrapper->{$property}->value()) {
-          continue;
+        if ($info['sub_property']) {
+          if ($wrapper->{$property}->value()) {
+            $sub_wrapper = $wrapper->{$property}->{$info['sub_property']};
+          }
+        }
+        else {
+          $sub_wrapper = $wrapper->{$property};
+        }
+
+        $value = $sub_wrapper->value();
+
+        if (!empty($info['process_callback'])) {
+          if (!$value = call_user_func($info['process_callback'], $value)) {
+
+            $callback_name = is_array($info['process_callback']) ? $info['process_callback'][1] : $info['process_callback'];
+            $params = array('@callback' => $callback_name);
+
+            throw new Exception(format_string('Process callback function: @callback does not exists.', $params));
+          }
         }
       }
       else {
-        $value = $wrapper->{$info['wrapper_method']}();
+        $sub_wrapper = $info['wrapper_method_on_entity'] ? $wrapper : $wrapper->{$property};
+
+        if ($info['sub_property']) {
+          $sub_wrapper = $sub_wrapper->{$info['sub_property']};
+        }
+
+        $value = $sub_wrapper->{$info['wrapper_method']}();
       }
 
       $values[$public_property] = $value;
@@ -418,8 +465,14 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
     $public_fields = $this->publicFields;
     if (!empty($this->entityType)) {
       $public_fields += array(
-        'id' => array('wrapper_method' => 'getIdentifier'),
-        'label' => array('wrapper_method' => 'label'),
+        'id' => array(
+          'wrapper_method' => 'getIdentifier',
+          'wrapper_method_on_entity' => TRUE,
+        ),
+        'label' => array(
+          'wrapper_method' => 'label',
+          'wrapper_method_on_entity' => TRUE,
+        ),
         'self' => array('property' => 'url'),
       );
     }
