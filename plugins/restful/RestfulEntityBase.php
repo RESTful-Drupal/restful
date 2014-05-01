@@ -325,7 +325,9 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
         }
 
         if ($info['sub_property']) {
-          $sub_wrapper = $wrapper->{$property}->{$info['sub_property']};
+          if ($wrapper->{$property}->value()) {
+            $sub_wrapper = $wrapper->{$property}->{$info['sub_property']};
+          }
         }
         else {
           $sub_wrapper = $wrapper->{$property};
@@ -337,8 +339,12 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
 
         if (!empty($info['process_callback'])) {
           if (!$value = call_user_func($info['process_callback'], $value)) {
-            throw new RestfulException(
-              format_string('Process callback function @callback does not exists.', array('@callback' => $info['process_callback']))
+
+            $callback_name = is_array($info['process_callback']) ? $info['process_callback'][1] : $info['process_callback'];
+            $args = array('@callback' => $callback_name);
+
+            throw new Exception(
+              format_string('Process callback function: @callback does not exists.', $args)
             );
           }
         }
