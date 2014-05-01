@@ -312,6 +312,15 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
         continue;
       }
 
+      // Set default values.
+      $info += array(
+        'wrapper_method' => 'value',
+        'wrapper_method_on_entity' => FALSE,
+        'sub_property' => FALSE,
+        'process_callback' => FALSE,
+        'callback' => FALSE,
+      );
+
       if (!empty($info['callback'])) {
         // Calling a callback to receive the value.
 
@@ -325,14 +334,6 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
       }
       else {
         // Exposing an entity field.
-
-        // Set default values.
-        $info += array(
-          'wrapper_method' => 'value',
-          'wrapper_method_on_entity' => FALSE,
-          'sub_property' => FALSE,
-          'process_callback' => FALSE,
-        );
 
         $property = $info['property'];
 
