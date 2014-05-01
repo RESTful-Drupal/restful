@@ -264,7 +264,6 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
     foreach ($sorts as $sort => $direction) {
       // Determine if sorting is by field or property.
       if (empty($public_fields[$sort]['column'])) {
-
         $query->propertyOrderBy($public_fields[$sort]['property'], $direction);
       }
       else {
