@@ -8,7 +8,7 @@
 class RestfulTestEntityTestsResource__1_2 extends RestfulTestEntityTestsResource {
 
   /**
-   * Overrides RestfulExampleArticlesResource::getPublicFields().
+   * Overrides RestfulTestEntityTestsResource::getPublicFields().
    */
   public function getPublicFields() {
     $public_fields = parent::getPublicFields();
