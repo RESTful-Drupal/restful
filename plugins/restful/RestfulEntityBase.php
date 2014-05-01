@@ -353,9 +353,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
             $sub_wrapper = $wrapper->{$property};
           }
 
-          if (!empty($sub_wrapper)) {
-            $value = $sub_wrapper->value();
-          }
+          $value = $sub_wrapper->value();
 
           if (!empty($value) && !empty($info['process_callback'])) {
             if (!$value = call_user_func($info['process_callback'], $value)) {
