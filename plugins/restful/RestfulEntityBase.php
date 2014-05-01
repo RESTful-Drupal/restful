@@ -38,7 +38,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *    - "wrapper_method_on_entity": A Boolean to indicate on what to perform
    *      the wrapper method. If TRUE the method will perform on the entity and
    *      FALSE on the property or sub property. Defaults to FALSE.
-   *    - "process_callback": A callback function to perform on the returned
+   *    - "process_callback": A callable callback to perform on the returned
    *      value. Defaults TO FALSE.
    *
    *  For Example:
