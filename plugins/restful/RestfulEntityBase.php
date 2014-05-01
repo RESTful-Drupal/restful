@@ -335,22 +335,24 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
         $property = $info['property'];
         $sub_wrapper = $info['wrapper_method_on_entity'] ? $wrapper : $wrapper->{$property};
 
-        if ($info['sub_property']) {
-          if ($wrapper->{$property}->value()) {
-            $sub_wrapper = $wrapper->{$property}->{$info['sub_property']};
-          }
-        }
-
         $method = $info['wrapper_method'];
 
         if ($sub_wrapper instanceof EntityListWrapper) {
           // Multiple value.
           foreach ($sub_wrapper as $item_wrapper) {
+
+            if ($info['sub_property'] && $item_wrapper->value()) {
+              $item_wrapper = $item_wrapper->{$info['sub_property']};
+            }
+
             $value[] = $item_wrapper->{$method}();
           }
         }
         else {
           // Single value.
+          if ($info['sub_property'] && $sub_wrapper->value()) {
+            $sub_wrapper = $sub_wrapper->{$info['sub_property']};
+          }
           $value = $sub_wrapper->{$method}();
         }
       }
