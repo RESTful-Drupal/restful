@@ -322,24 +322,22 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
         'callback' => FALSE,
       );
 
-      if (!empty($info['callback'])) {
+      if ($info['callback']) {
         // Calling a callback to receive the value.
-
-        if (!$value = call_user_func($info['callback'], $value)) {
-
+        if (!is_callable($info['callback'])) {
           $callback_name = is_array($info['callback']) ? $info['callback'][1] : $info['callback'];
           $params = array('@callback' => $callback_name);
-
           throw new Exception(format_string('Process callback function: @callback does not exists.', $params));
         }
+
+        $value = call_user_func($info['callback'], $value);
       }
+
       else {
         // Exposing an entity field.
         $property = $info['property'];
 
-
         if ($info['wrapper_method'] == 'value') {
-
           if (empty($wrapper->{$property})) {
             throw new Exception(format_string('Property @property does not exist.', array('@property' => $property)));
           }
@@ -355,14 +353,15 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
 
           $value = $sub_wrapper->value();
 
-          if (!empty($value) && !empty($info['process_callback'])) {
-            if (!$value = call_user_func($info['process_callback'], $value)) {
-
+          // Let process callback change the value, even if it is NULL.
+          if ($info['process_callback']) {
+            if (!is_callable($info['process_callback'])) {
               $callback_name = is_array($info['process_callback']) ? $info['process_callback'][1] : $info['process_callback'];
               $params = array('@callback' => $callback_name);
-
               throw new Exception(format_string('Process callback function: @callback does not exists.', $params));
             }
+
+            $value = call_user_func($info['process_callback'], $value);
           }
         }
         else {
