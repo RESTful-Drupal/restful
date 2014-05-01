@@ -16,15 +16,15 @@ class RestfulCRUDTestCase extends DrupalWebTestCase {
   }
 
   function setUp() {
-    parent::setUp('restful_example', 'entity_feature');
+    parent::setUp('restful_example', 'restful_test');
   }
 
   /**
    * Test viewing an entity (GET method).
    *
    * v1.0 - Simple entity view (id, label, self).
-   * v1.1 - Text field.
-   * v1.2 - Multiple text field.
+   * v1.1 - Text field with filtered text.
+   * v1.2 - Multiple text field with filtered text.
    * v1.3 - Entity reference label.
    * v1.4 - Multiple entity reference label.
    * v1.5 - Entity reference as resource.
@@ -40,14 +40,17 @@ class RestfulCRUDTestCase extends DrupalWebTestCase {
 
     $id = $entity1->pid;
 
-    $handler = restful_get_restful_handler('entity_tests');
+    // v1.0 - Simple entity view (id, label, self).
+    $handler = restful_get_restful_handler('entity_tests', 1, 0);
     $result = $handler->get($id);
     $expected_result = array(
       'id' => $id,
-      'label' => '',
+      'label' => 'Main test type',
+      'self' => url('custom/' . $id)
     );
-
     $this->assertEqual($result, $expected_result);
+
+    // v1.1 - Text field.
   }
 
   /**
