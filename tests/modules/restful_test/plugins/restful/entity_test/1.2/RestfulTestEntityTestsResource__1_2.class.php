@@ -23,18 +23,6 @@ class RestfulTestEntityTestsResource__1_2 extends RestfulTestEntityTestsResource
       'wrapper_method' => 'label',
     );
 
-    $public_fields['resource_single'] = array(
-      'property' => 'entity_reference_single',
-      'resource' => 'entity_tests',
-    );
-
-    $public_fields['resource_multiple'] = array(
-      'property' => 'entity_reference_multiple',
-      'resource' => 'entity_tests',
-    );
-
-
-
     return $public_fields;
   }
 }
