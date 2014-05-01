@@ -16,7 +16,6 @@ files[] = exceptions/RestfulBadRequestException.php
 files[] = exceptions/RestfulGoneException.php
 files[] = exceptions/RestfulUnsupportedMediaTypeException.php
 files[] = exceptions/RestfulUnprocessableEntityException.php
-files[] = exceptions/RestfulCallbackException.php
 
 ; Tests
 files[] = tests/RestfulCRUDTestCase.test

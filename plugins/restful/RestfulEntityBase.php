@@ -29,28 +29,17 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
   /**
    * The public fields that exposed to the API.
    *
-   *  Field properties allowed:
-   *
-   *    @property property
-   *      The entity property.
-   *
-   *    @property (optional) sub_property
-   *      A sub property name of a property
-   *      (default: FALSE)
-   *
-   *    @property wrapper_method
-   *      The wrapper's method name to perform on the field.
-   *      (default: value)
-   *      e.g.: value, label
-   *
-   *    @property wrapper_method_on_entity
-   *      A Boolean to indicate on what to perform the wrapper method.
-   *      (default: FALSE)
-   *      TRUE - on the entity.
-   *      FALSE - on the property.
-   *
-   *    @property (optional) callback
-   *      A callback function to perform on the returned value.
+   *  Optional; Array with the optional values:
+   *    - "property": Te entity property.
+   *    - "sub_property": A sub property name of a property to take from it the
+   *      content. Defaults to FALSE.
+   *    - "wrapper_method": The wrapper's method name to perform on the field.
+   *      Defaults to "value".
+   *    - "wrapper_method_on_entity": A Boolean to indicate on what to perform
+   *      the wrapper method. If TRUE the method will perform on the entity and
+   *      FALSE on the property or sub property. Defaults to FALSE.
+   *    - "process_callback": A callback function to perform on the returned
+   *      value. Defaults TO FALSE.
    *
    *  For Example:
    *    To execute:
@@ -325,7 +314,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
         'wrapper_method' => 'value',
         'wrapper_method_on_entity' => FALSE,
         'sub_property' => FALSE,
-        'callback' => FALSE,
+        'process_callback' => FALSE,
       );
 
       $property = $info['property'];
@@ -347,17 +336,13 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
           continue;
         }
 
-        if (!empty($info['callback'])) {
-          if (method_exists($this, $info['callback'])) {
-            $value = $this->{$info['callback']}($value);
-          }
-          else {
-            throw new RestfulCallbackException(
-              format_string('Callback function @callback does not exists.', array('@callback' => $info['callback']))
+        if (!empty($info['process_callback'])) {
+          if (!$value = call_user_func($info['process_callback'], $value)) {
+            throw new RestfulException(
+              format_string('Process callback function @callback does not exists.', array('@callback' => $info['process_callback']))
             );
           }
         }
-
       }
       else {
         $sub_wrapper = $info['wrapper_method_on_entity'] ? $wrapper : $wrapper->{$property};
