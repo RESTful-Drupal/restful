@@ -163,7 +163,7 @@ class RestfulCRUDTestCase extends DrupalWebTestCase {
     // v1.1 - Text field.
     $handler = restful_get_restful_handler('entity_tests', 1, 0);
     $result = $handler->get($id);
-    $expected_result['text_single'] = "<p>$text1</p>";
+    $expected_result['single'] = "<p>$text1</p>";
     $this->assertEqual($result, $expected_result);
 
 

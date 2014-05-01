@@ -13,12 +13,12 @@ class RestfulTestEntityTestsResource__1_1 extends RestfulTestEntityTestsResource
   public function getPublicFields() {
     $public_fields = parent::getPublicFields();
 
-    $public_fields['text_single'] = array(
+    $public_fields['single'] = array(
       'property' => 'text_single',
       'sub_property' => 'value',
     );
 
-    $public_fields['text_multiple'] = array(
+    $public_fields['multiple'] = array(
       'property' => 'text_multiple',
       'sub_property' => 'value',
     );
