@@ -169,6 +169,17 @@ class RestfulCRUDTestCase extends DrupalWebTestCase {
     $expected_result['single'] = "<p>$text1</p>";
     $this->assertEqual($result, $expected_result);
 
+    // Empty the text fields.
+    $wrapper->text_single->set(NULL);
+    $wrapper->text_multiple->set(NULL);
+    $wrapper->save();
+
+    $result = $handler->get($id);
+    $expected_result = $base_expected_result;
+    $expected_result['single'] = NULL;
+    $expected_result['multiple'] = NULL;
+    $this->assertEqual($result, $expected_result);
+
 
     // v1.2 - Entity reference field.
     $handler = restful_get_restful_handler('entity_tests', 1, 2);
