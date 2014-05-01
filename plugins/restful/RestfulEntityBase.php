@@ -261,7 +261,6 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
 
         $sorts[$sort] = $direction;
       }
-
     }
     else {
       // Sort by default using the entity ID.
@@ -271,6 +270,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
     foreach ($sorts as $sort => $direction) {
       // Determine if sorting is by field or property.
       if (empty($public_fields[$sort]['column'])) {
+
         $query->propertyOrderBy($public_fields[$sort]['property'], $direction);
       }
       else {
@@ -302,6 +302,8 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
     $limit_fields = !empty($request['fields']) ? explode(',', $request['fields']) : array();
 
     foreach ($this->getPublicFields() as $public_property => $info) {
+      $sub_wrapper = NULL;
+      $value = NULL;
 
       if ($limit_fields && !in_array($public_property, $limit_fields)) {
         // Limit fields doesn't include this property.
@@ -333,9 +335,11 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
           $sub_wrapper = $wrapper->{$property};
         }
 
-        $value = $sub_wrapper->value();
+        if (!empty($sub_wrapper)) {
+          $value = $sub_wrapper->value();
+        }
 
-        if (!empty($info['process_callback'])) {
+        if (!empty($value) && !empty($info['process_callback'])) {
           if (!$value = call_user_func($info['process_callback'], $value)) {
 
             $callback_name = is_array($info['process_callback']) ? $info['process_callback'][1] : $info['process_callback'];
