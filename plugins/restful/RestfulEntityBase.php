@@ -75,6 +75,15 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
   }
 
   /**
+   * Return the resource name.
+   *
+   * @return string
+   */
+  public function getResourceName() {
+    return $this->plugin['resource'];
+  }
+
+  /**
    * Call resource using the GET http method.
    *
    * @param string $path
@@ -303,53 +312,68 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
         continue;
       }
 
-      // Set default values.
-      $info += array(
-        'wrapper_method' => 'value',
-        'wrapper_method_on_entity' => FALSE,
-        'sub_property' => FALSE,
-        'process_callback' => FALSE,
-      );
+      if (!empty($info['callback'])) {
+        // Calling a callback to receive the value.
 
-      $property = $info['property'];
+        if (!$value = call_user_func($info['callback'], $value)) {
 
-      if ($info['wrapper_method'] == 'value') {
+          $callback_name = is_array($info['callback']) ? $info['callback'][1] : $info['callback'];
+          $params = array('@callback' => $callback_name);
 
-        if (empty($wrapper->{$property})) {
-          throw new Exception(format_string('Property @property does not exist.', array('@property' => $property)));
-        }
-
-        if ($info['sub_property']) {
-          if ($wrapper->{$property}->value()) {
-            $sub_wrapper = $wrapper->{$property}->{$info['sub_property']};
-          }
-        }
-        else {
-          $sub_wrapper = $wrapper->{$property};
-        }
-
-        if (!empty($sub_wrapper)) {
-          $value = $sub_wrapper->value();
-        }
-
-        if (!empty($value) && !empty($info['process_callback'])) {
-          if (!$value = call_user_func($info['process_callback'], $value)) {
-
-            $callback_name = is_array($info['process_callback']) ? $info['process_callback'][1] : $info['process_callback'];
-            $params = array('@callback' => $callback_name);
-
-            throw new Exception(format_string('Process callback function: @callback does not exists.', $params));
-          }
+          throw new Exception(format_string('Process callback function: @callback does not exists.', $params));
         }
       }
       else {
-        $sub_wrapper = $info['wrapper_method_on_entity'] ? $wrapper : $wrapper->{$property};
+        // Exposing an entity field.
 
-        if ($info['sub_property']) {
-          $sub_wrapper = $sub_wrapper->{$info['sub_property']};
+        // Set default values.
+        $info += array(
+          'wrapper_method' => 'value',
+          'wrapper_method_on_entity' => FALSE,
+          'sub_property' => FALSE,
+          'process_callback' => FALSE,
+        );
+
+        $property = $info['property'];
+
+        if ($info['wrapper_method'] == 'value') {
+
+          if (empty($wrapper->{$property})) {
+            throw new Exception(format_string('Property @property does not exist.', array('@property' => $property)));
+          }
+
+          if ($info['sub_property']) {
+            if ($wrapper->{$property}->value()) {
+              $sub_wrapper = $wrapper->{$property}->{$info['sub_property']};
+            }
+          }
+          else {
+            $sub_wrapper = $wrapper->{$property};
+          }
+
+          if (!empty($sub_wrapper)) {
+            $value = $sub_wrapper->value();
+          }
+
+          if (!empty($value) && !empty($info['process_callback'])) {
+            if (!$value = call_user_func($info['process_callback'], $value)) {
+
+              $callback_name = is_array($info['process_callback']) ? $info['process_callback'][1] : $info['process_callback'];
+              $params = array('@callback' => $callback_name);
+
+              throw new Exception(format_string('Process callback function: @callback does not exists.', $params));
+            }
+          }
         }
+        else {
+          $sub_wrapper = $info['wrapper_method_on_entity'] ? $wrapper : $wrapper->{$property};
 
-        $value = $sub_wrapper->{$info['wrapper_method']}();
+          if ($info['sub_property']) {
+            $sub_wrapper = $sub_wrapper->{$info['sub_property']};
+          }
+
+          $value = $sub_wrapper->{$info['wrapper_method']}();
+        }
       }
 
       $values[$public_property] = $value;
