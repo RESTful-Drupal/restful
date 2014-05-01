@@ -333,11 +333,9 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
           if (!$value = call_user_func($info['process_callback'], $value)) {
 
             $callback_name = is_array($info['process_callback']) ? $info['process_callback'][1] : $info['process_callback'];
-            $args = array('@callback' => $callback_name);
+            $params = array('@callback' => $callback_name);
 
-            throw new Exception(
-              format_string('Process callback function: @callback does not exists.', $args)
-            );
+            throw new Exception(format_string('Process callback function: @callback does not exists.', $params));
           }
         }
       }
