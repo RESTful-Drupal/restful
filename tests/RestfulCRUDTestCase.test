@@ -16,7 +16,96 @@ class RestfulCRUDTestCase extends DrupalWebTestCase {
   }
 
   function setUp() {
-    parent::setUp('restful_example', 'restful_test');
+    parent::setUp('restful_example', 'restful_test', 'entityreference');
+
+    // Text - single.
+    $field = array(
+      'field_name' => 'text_single',
+      'type' => 'text_long',
+      'entity_types' => array('entity_test'),
+      'cardinality' => 1,
+    );
+    $field = field_create_field($field);
+
+    $instance = array(
+      'field_name' => 'text_single',
+      'bundle' => 'main',
+      'entity_type' => 'entity_test',
+      'label' => t('Text single'),
+      'settings' => array(
+        'text_processing' => 1,
+      ),
+    );
+    field_create_instance($instance);
+
+
+    // Text - multiple.
+    $field = array(
+      'field_name' => 'text_multiple',
+      'type' => 'text_long',
+      'entity_types' => array('entity_test'),
+      'cardinality' => FIELD_CARDINALITY_UNLIMITED,
+    );
+    $field = field_create_field($field);
+
+    $instance = array(
+      'field_name' => 'text_multiple',
+      'bundle' => 'main',
+      'entity_type' => 'entity_test',
+      'label' => t('Text multiple'),
+      'settings' => array(
+        'text_processing' => 1,
+      ),
+    );
+    field_create_instance($instance);
+
+    // Entity reference - single.
+    $field = array(
+      'entity_types' => array('entity_test'),
+      'settings' => array(
+        'handler' => 'base',
+        'target_type' => 'entity_test',
+        'handler_settings' => array(
+        ),
+      ),
+      'field_name' => 'entity_reference_single',
+      'type' => 'entityreference',
+      'cardinality' => 1,
+    );
+    field_create_field($field);
+
+    $instance = array(
+      'entity_type' => 'entity_test',
+      'field_name' => 'entity_reference_single',
+      'bundle' => 'main',
+      'label' => t('Entity reference single'),
+    );
+
+    field_create_instance($instance);
+
+    // Entity reference - multiple.
+    $field = array(
+      'entity_types' => array('entity_test'),
+      'settings' => array(
+        'handler' => 'base',
+        'target_type' => 'entity_test',
+        'handler_settings' => array(
+        ),
+      ),
+      'field_name' => 'entity_reference_multiple',
+      'type' => 'entityreference',
+      'cardinality' => FIELD_CARDINALITY_UNLIMITED,
+    );
+    field_create_field($field);
+
+    $instance = array(
+      'entity_type' => 'entity_test',
+      'field_name' => 'entity_reference_multiple',
+      'bundle' => 'main',
+      'label' => t('Entity reference multiple'),
+    );
+
+    field_create_instance($instance);
   }
 
   /**
@@ -35,10 +124,31 @@ class RestfulCRUDTestCase extends DrupalWebTestCase {
    * v1.10 - Non-existing "process callback" property.
    */
   function testViewEntity() {
+    $user1 = $this->drupalCreateUser();
     $entity1 = entity_create('entity_test', array('name' => 'main', 'uid' => $user1->uid));
     $entity1->save();
 
-    $id = $entity1->pid;
+    $entity2 = entity_create('entity_test', array('name' => 'main', 'uid' => $user1->uid));
+    $entity2->save();
+
+    $entity3 = entity_create('entity_test', array('name' => 'main', 'uid' => $user1->uid));
+    $wrapper = entity_metadata_wrapper('entity_test', $entity3);
+
+    $text1 = $this->randomString();
+    $text2 = $this->randomString();
+
+
+    $wrapper->text_single->set(array('value' => $text1));
+    $wrapper->text_multiple[] = array('value' => $text1);
+    $wrapper->text_multiple[] = array('value' => $text2);
+
+    $wrapper->entity_reference_single->set($entity1);
+    $wrapper->entity_reference_multiple[] = $entity1;
+    $wrapper->entity_reference_multiple[] = $entity2;
+
+    $wrapper->save();
+
+    $id = $entity3->pid;
 
     // v1.0 - Simple entity view (id, label, self).
     $handler = restful_get_restful_handler('entity_tests', 1, 0);
@@ -51,6 +161,13 @@ class RestfulCRUDTestCase extends DrupalWebTestCase {
     $this->assertEqual($result, $expected_result);
 
     // v1.1 - Text field.
+    $handler = restful_get_restful_handler('entity_tests', 1, 0);
+    $result = $handler->get($id);
+    $expected_result['text_single'] = "<p>$text1</p>";
+    $this->assertEqual($result, $expected_result);
+
+    // v1.1 - Text field multiple.
+
   }
 
   /**
