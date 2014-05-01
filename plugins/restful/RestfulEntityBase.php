@@ -27,29 +27,23 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
   protected $plugin;
 
   /**
-   * The public fields that exposed to the API.
+   * The public fields that are exposed to the API.
    *
-   *  Optional; Array with the optional values:
-   *    - "property": The entity property.
-   *    - "sub_property": A sub property name of a property to take from it the
-   *      content. Defaults to FALSE.
-   *    - "wrapper_method": The wrapper's method name to perform on the field.
-   *      Defaults to "value".
-   *    - "wrapper_method_on_entity": A Boolean to indicate on what to perform
-   *      the wrapper method. If TRUE the method will perform on the entity and
-   *      FALSE on the property or sub property. Defaults to FALSE.
-   *    - "process_callback": A callable callback to perform on the returned
-   *      value. Defaults to FALSE.
-   *
-   *  For example to execute:
-   *    $wrapper->body->value->value()
-   *
-   *    The definitions is:
-   *    'content' => array(
-   *      'property' => 'body'
-   *      'sub_property' => 'value'
-   *      'wrapper_method' => 'value',
-   *    )
+   *  Array with the optional values:
+   *  - "property": The entity property (e.g. "title", "nid").
+   *  - "sub_property": A sub property name of a property to take from it the
+   *    content. This can be used for example on a text field with filtered text
+   *    input format where we would need to do $wrapper->body->value->value().
+   *    Defaults to FALSE.
+   *  - "wrapper_method": The wrapper's method name to perform on the field.
+   *    This can be used for example to get the entity label, by setting the
+   *    value to "label". Defaults to "value".
+   *  - "wrapper_method_on_entity": A Boolean to indicate on what to perform
+   *    the wrapper method. If TRUE the method will perform on the entity (e.g.
+   *    $wrapper->label()) and FALSE on the property or sub property
+   *    (e.g. $wrapper->field_reference->label()). Defaults to FALSE.
+   *  - "process_callback": A callable callback to perform on the returned
+   *    value, or an array with the object and method. Defaults To FALSE.
    */
   protected $publicFields = array();
 
