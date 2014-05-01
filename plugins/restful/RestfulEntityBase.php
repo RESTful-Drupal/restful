@@ -41,9 +41,8 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *    - "process_callback": A callable callback to perform on the returned
    *      value. Defaults TO FALSE.
    *
-   *  For Example:
-   *    To execute:
-   *      $wrapper->body->value->value()
+   *  For example to execute:
+   *    $wrapper->body->value->value()
    *
    *    The definitions is:
    *    'content' => array(
