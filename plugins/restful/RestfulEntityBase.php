@@ -341,7 +341,18 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
           }
         }
 
-        $value = $sub_wrapper->{$info['wrapper_method']}();
+        $method = $info['wrapper_method'];
+
+        if ($sub_wrapper instanceof EntityListWrapper) {
+          // Multiple value.
+          foreach ($sub_wrapper as $item_wrapper) {
+            $value[] = $item_wrapper->{$method}();
+          }
+        }
+        else {
+          // Single value.
+          $value = $sub_wrapper->{$method}();
+        }
       }
 
       // @todo: Let process callback change the value, even if it is NULL?
