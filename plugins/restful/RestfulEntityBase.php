@@ -29,27 +29,20 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
   /**
    * The public fields that exposed to the API.
    *
-   *  Field properties allowed:
+   *  Optional; Array with the optional values:
+   *    - "property": Te entity property.
+   *    - "sub_property": A sub property name of a property to take from it the
+   *      content. Defaults to FALSE.
+   *    - "wrapper_method": The wrapper's method name to perform on the field.
+   *      Defaults to "value".
+   *    - "wrapper_method_on_entity": A Boolean to indicate on what to perform
+   *      the wrapper method. If TRUE the method will perform on the entity and
+   *      FALSE on the property or sub property. Defaults to FALSE.
+   *    - "process_callback": A callable callback to perform on the returned
+   *      value. Defaults TO FALSE.
    *
-   *    @property property
-   *      The entity property.
-   *
-   *    @property (optional) sub_property
-   *      A sub property name of a property
-   *      (default: FALSE)
-   *
-   *    @property wrapper_method
-   *      The wrapper's method name to perform on the field.
-   *
-   *    @property wrapper_method_on_entity
-   *      A Boolean to indicate on what to perform the wrapper method.
-   *      (default: FALSE)
-   *      TRUE - on the entity.
-   *      FALSE - on the property.
-   *
-   *  For Example:
-   *    To execute:
-   *      $wrapper->body->value->value()
+   *  For example to execute:
+   *    $wrapper->body->value->value()
    *
    *    The definitions is:
    *    'content' => array(
@@ -320,6 +313,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
         'wrapper_method' => 'value',
         'wrapper_method_on_entity' => FALSE,
         'sub_property' => FALSE,
+        'process_callback' => FALSE,
       );
 
       $property = $info['property'];
@@ -331,14 +325,26 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
         }
 
         if ($info['sub_property']) {
-          $sub_wrapper = $wrapper->{$property}->{$info['sub_property']};
+          if ($wrapper->{$property}->value()) {
+            $sub_wrapper = $wrapper->{$property}->{$info['sub_property']};
+          }
         }
         else {
           $sub_wrapper = $wrapper->{$property};
         }
 
-        if (!$value = $sub_wrapper->value()) {
-          continue;
+        $value = $sub_wrapper->value();
+
+        if (!empty($info['process_callback'])) {
+          if (!$value = call_user_func($info['process_callback'], $value)) {
+
+            $callback_name = is_array($info['process_callback']) ? $info['process_callback'][1] : $info['process_callback'];
+            $args = array('@callback' => $callback_name);
+
+            throw new Exception(
+              format_string('Process callback function: @callback does not exists.', $args)
+            );
+          }
         }
       }
       else {
