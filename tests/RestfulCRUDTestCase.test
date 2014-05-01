@@ -167,6 +167,10 @@ class RestfulCRUDTestCase extends DrupalWebTestCase {
     $result = $handler->get($id);
     $expected_result = $base_expected_result;
     $expected_result['single'] = "<p>$text1</p>";
+    $expected_result['multiple'] = array(
+      "<p>$text1</p>",
+      "<p>$text2</p>",
+    );
     $this->assertEqual($result, $expected_result);
 
     // Empty the text fields.

@@ -8,5 +8,5 @@ $plugin = array(
   'entity_type' => 'entity_test',
   'bundle' => 'main',
   'class' => 'RestfulTestEntityTestsResource__1_1',
-  'restful_minor_version' => 1,
+  'minor_version' => 1,
 );

@@ -84,6 +84,18 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
   }
 
   /**
+   * Return array keyed with the major and minor version of the resource.
+   *
+   * @return array
+   */
+  public function getVersion() {
+    return array(
+      'major' => $this->plugin['major_version'],
+      'minor' => $this->plugin['minor_version'],
+    );
+  }
+
+  /**
    * Call resource using the GET http method.
    *
    * @param string $path
