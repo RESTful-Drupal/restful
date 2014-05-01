@@ -21,6 +21,18 @@ class RestfulCRUDTestCase extends DrupalWebTestCase {
 
   /**
    * Test viewing an entity (GET method).
+   *
+   * v1.0 - Simple entity view (id, label, self).
+   * v1.1 - Text field.
+   * v1.2 - Multiple text field.
+   * v1.3 - Entity reference label.
+   * v1.4 - Multiple entity reference label.
+   * v1.5 - Entity reference as resource.
+   * v1.6 - Multiple entity reference as resource.
+   * v1.7 - "Callback" property.
+   * v1.8 - Non-existing "callback" property.
+   * v1.9 - "Process callback" property.
+   * v1.10 - Non-existing "process callback" property.
    */
   function testViewEntity() {
     $handler = restful_get_restful_handler('articles');
