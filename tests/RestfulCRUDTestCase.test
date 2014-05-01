@@ -153,7 +153,7 @@ class RestfulCRUDTestCase extends DrupalWebTestCase {
     $base_expected_result = array(
       'id' => $id,
       'label' => 'Main test type',
-      'self' => url('custom/' . $id)
+      'self' => url('custom/' . $id, array('absolute' => TRUE)),
     );
 
     // v1.0 - Simple entity view (id, label, self).
