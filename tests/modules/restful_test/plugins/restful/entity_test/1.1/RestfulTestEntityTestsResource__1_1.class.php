@@ -17,6 +17,11 @@ class RestfulTestEntityTestsResource__1_1 extends RestfulTestEntityTestsResource
       'property' => 'text_single',
       'sub_property' => 'value',
     );
+
+    $public_fields['text_multiple'] = array(
+      'property' => 'text_multiple',
+      'sub_property' => 'value',
+    );
     return $public_fields;
   }
 }

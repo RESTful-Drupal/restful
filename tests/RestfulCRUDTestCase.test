@@ -166,7 +166,6 @@ class RestfulCRUDTestCase extends DrupalWebTestCase {
     $expected_result['text_single'] = "<p>$text1</p>";
     $this->assertEqual($result, $expected_result);
 
-    // v1.1 - Text field multiple.
 
   }
 
