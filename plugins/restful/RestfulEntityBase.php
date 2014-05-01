@@ -314,6 +314,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
 
       // Set default values.
       $info += array(
+        'property' => FALSE,
         'wrapper_method' => 'value',
         'wrapper_method_on_entity' => FALSE,
         'sub_property' => FALSE,
@@ -334,8 +335,8 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
       }
       else {
         // Exposing an entity field.
-
         $property = $info['property'];
+
 
         if ($info['wrapper_method'] == 'value') {
 

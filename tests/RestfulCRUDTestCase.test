@@ -16,7 +16,7 @@ class RestfulCRUDTestCase extends DrupalWebTestCase {
   }
 
   function setUp() {
-    parent::setUp('restful_example');
+    parent::setUp('restful_example', 'entity_feature');
   }
 
   /**
@@ -35,22 +35,16 @@ class RestfulCRUDTestCase extends DrupalWebTestCase {
    * v1.10 - Non-existing "process callback" property.
    */
   function testViewEntity() {
-    $handler = restful_get_restful_handler('articles');
+    $entity1 = entity_create('entity_test', array('name' => 'main', 'uid' => $user1->uid));
+    $entity1->save();
 
-    $title = $this->randomName();
+    $id = $entity1->pid;
 
-    $settings = array(
-      'type' => 'article',
-      'title' => $title,
-    );
-    $node1 = $this->drupalCreateNode($settings);
-    $id = $node1->nid;
-
-    $request['fields'] = 'id,label';
-    $result = $handler->get($id, $request);
+    $handler = restful_get_restful_handler('entity_tests');
+    $result = $handler->get($id);
     $expected_result = array(
       'id' => $id,
-      'label' => $title,
+      'label' => '',
     );
 
     $this->assertEqual($result, $expected_result);
