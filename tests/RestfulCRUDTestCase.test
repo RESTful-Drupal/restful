@@ -150,23 +150,32 @@ class RestfulCRUDTestCase extends DrupalWebTestCase {
 
     $id = $entity3->pid;
 
-    // v1.0 - Simple entity view (id, label, self).
-    $handler = restful_get_restful_handler('entity_tests', 1, 0);
-    $result = $handler->get($id);
-    $expected_result = array(
+    $base_expected_result = array(
       'id' => $id,
       'label' => 'Main test type',
       'self' => url('custom/' . $id)
     );
+
+    // v1.0 - Simple entity view (id, label, self).
+    $handler = restful_get_restful_handler('entity_tests', 1, 0);
+    $expected_result = $base_expected_result;
+    $result = $handler->get($id);
     $this->assertEqual($result, $expected_result);
 
     // v1.1 - Text field.
-    $handler = restful_get_restful_handler('entity_tests', 1, 0);
+    $handler = restful_get_restful_handler('entity_tests', 1, 1);
     $result = $handler->get($id);
+    $expected_result = $base_expected_result;
     $expected_result['single'] = "<p>$text1</p>";
     $this->assertEqual($result, $expected_result);
 
 
+    // v1.2 - Entity reference field.
+    $handler = restful_get_restful_handler('entity_tests', 1, 2);
+    $result = $handler->get($id);
+    $expected_result = $base_expected_result;
+    $expected_result['single'] = 'Main test type';
+    $this->assertEqual($result, $expected_result);
   }
 
   /**
