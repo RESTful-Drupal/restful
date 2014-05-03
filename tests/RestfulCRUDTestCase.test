@@ -190,6 +190,10 @@ class RestfulCRUDTestCase extends DrupalWebTestCase {
     $result = $handler->get($id);
     $expected_result = $base_expected_result;
     $expected_result['single'] = 'Main test type';
+    $expected_result['multiple'] = array(
+      'Main test type',
+      'Main test type',
+    );
     $this->assertEqual($result, $expected_result);
   }
 
