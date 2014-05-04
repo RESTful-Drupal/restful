@@ -84,6 +84,18 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
   }
 
   /**
+   * Return array keyed with the major and minor version of the resource.
+   *
+   * @return array
+   */
+  public function getVersion() {
+    return array(
+      'major' => $this->plugin['major_version'],
+      'minor' => $this->plugin['minor_version'],
+    );
+  }
+
+  /**
    * Call resource using the GET http method.
    *
    * @param string $path
@@ -304,9 +316,6 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
     $limit_fields = !empty($request['fields']) ? explode(',', $request['fields']) : array();
 
     foreach ($this->getPublicFields() as $public_property => $info) {
-      $sub_wrapper = NULL;
-      $value = NULL;
-
       if ($limit_fields && !in_array($public_property, $limit_fields)) {
         // Limit fields doesn't include this property.
         continue;
@@ -314,6 +323,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
 
       // Set default values.
       $info += array(
+        'property' => FALSE,
         'wrapper_method' => 'value',
         'wrapper_method_on_entity' => FALSE,
         'sub_property' => FALSE,
@@ -321,60 +331,52 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
         'callback' => FALSE,
       );
 
-      if (!empty($info['callback'])) {
+      $value = NULL;
+
+      if ($info['callback']) {
         // Calling a callback to receive the value.
-
-        if (!$value = call_user_func($info['callback'], $value)) {
-
+        if (!is_callable($info['callback'])) {
           $callback_name = is_array($info['callback']) ? $info['callback'][1] : $info['callback'];
-          $params = array('@callback' => $callback_name);
-
-          throw new Exception(format_string('Process callback function: @callback does not exists.', $params));
+          throw new Exception(format_string('Process callback function: @callback does not exists.', array('@callback' => $callback_name)));
         }
+
+        $value = call_user_func($info['callback']);
       }
       else {
         // Exposing an entity field.
-
         $property = $info['property'];
+        $sub_wrapper = $info['wrapper_method_on_entity'] ? $wrapper : $wrapper->{$property};
 
-        if ($info['wrapper_method'] == 'value') {
+        $method = $info['wrapper_method'];
 
-          if (empty($wrapper->{$property})) {
-            throw new Exception(format_string('Property @property does not exist.', array('@property' => $property)));
-          }
+        if ($sub_wrapper instanceof EntityListWrapper) {
+          // Multiple value.
+          foreach ($sub_wrapper as $item_wrapper) {
 
-          if ($info['sub_property']) {
-            if ($wrapper->{$property}->value()) {
-              $sub_wrapper = $wrapper->{$property}->{$info['sub_property']};
+            if ($info['sub_property'] && $item_wrapper->value()) {
+              $item_wrapper = $item_wrapper->{$info['sub_property']};
             }
-          }
-          else {
-            $sub_wrapper = $wrapper->{$property};
-          }
 
-          if (!empty($sub_wrapper)) {
-            $value = $sub_wrapper->value();
-          }
-
-          if (!empty($value) && !empty($info['process_callback'])) {
-            if (!$value = call_user_func($info['process_callback'], $value)) {
-
-              $callback_name = is_array($info['process_callback']) ? $info['process_callback'][1] : $info['process_callback'];
-              $params = array('@callback' => $callback_name);
-
-              throw new Exception(format_string('Process callback function: @callback does not exists.', $params));
-            }
+            $value[] = $item_wrapper->{$method}();
           }
         }
         else {
-          $sub_wrapper = $info['wrapper_method_on_entity'] ? $wrapper : $wrapper->{$property};
-
-          if ($info['sub_property']) {
+          // Single value.
+          if ($info['sub_property'] && $sub_wrapper->value()) {
             $sub_wrapper = $sub_wrapper->{$info['sub_property']};
           }
-
-          $value = $sub_wrapper->{$info['wrapper_method']}();
+          $value = $sub_wrapper->{$method}();
         }
+      }
+
+      // @todo: Let process callback change the value, even if it is NULL?
+      if ($value && $info['process_callback']) {
+        if (!is_callable($info['process_callback'])) {
+          $callback_name = is_array($info['process_callback']) ? $info['process_callback'][1] : $info['process_callback'];
+          throw new Exception(format_string('Process callback function: @callback does not exists.', array('@callback' => $callback_name)));
+        }
+
+        $value = call_user_func($info['process_callback'], $value);
       }
 
       $values[$public_property] = $value;
