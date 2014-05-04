@@ -374,7 +374,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
             }
 
             if ($resource) {
-              $value[] = $this->getValueFromResource($item_wrapper, $property);
+              $value[] = $this->getValueFromResource($item_wrapper, $property, $resource, $request, $account);
             }
             else {
               // Wrapper method.
@@ -389,7 +389,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
           }
 
           if ($resource) {
-            $value = $this->getValueFromResource($sub_wrapper, $property);
+            $value = $this->getValueFromResource($sub_wrapper, $property, $resource, $request, $account);
           }
           else {
             // Wrapper method.
@@ -447,7 +447,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    * @return mixed
    *   The value if found, or NULL if bundle not defined.
    */
-  protected function getValueFromResource(EntityMetadataWrapper $wrapper, $property) {
+  protected function getValueFromResource(EntityMetadataWrapper $wrapper, $property, $resource, $request, $account) {
     $handlers = &drupal_static(__FUNCTION__, array());
 
     $target_type = $this->getTargetTypeFromEntityReference($property);
@@ -461,10 +461,10 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
 
     if (empty($handlers[$bundle])) {
       $version = $this->getVersion();
-      $handlers[$bundle] = restful_get_restful_handler($handlers[$bundle], $version['major'], $version['minor']);
+      $handlers[$bundle] = restful_get_restful_handler($resource[$bundle], $version['major'], $version['minor']);
     }
 
-    return $handlers[$bundle]->viewEntity($id);
+    return $handlers[$bundle]->viewEntity($id, $request, $account);
   }
 
   /**
