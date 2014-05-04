@@ -374,21 +374,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
             }
 
             if ($resource) {
-              $target_type = $this->getTargetTypeFromEntityReference($property);
-              foreach ($item_wrapper->value() as $entity) {
-                list($id,, $bundle) = entity_extract_ids($target_type, $entity);
-                if (empty($resource[$bundle])) {
-                  // Bundle not mapped to a resource.
-                  continue;
-                }
-
-                if (empty($handlers[$bundle])) {
-                  $version = $this->getVersion();
-                  $handlers[$bundle] = restful_get_restful_handler($handlers[$bundle], $version['major'], $version['minor']);
-                }
-
-                $value[] = $handlers[$bundle]->viewEntity($id);
-              }
+              $value[] = $this->getValueFromResource($item_wrapper, $property);
             }
             else {
               // Wrapper method.
@@ -403,21 +389,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
           }
 
           if ($resource) {
-            $target_type = $this->getTargetTypeFromEntityReference($property);
-            $entity = $sub_wrapper->value();
-
-            list($id,, $bundle) = entity_extract_ids($target_type, $entity);
-            if (empty($resource[$bundle])) {
-              // Bundle not mapped to a resource.
-              continue;
-            }
-
-            if (empty($handlers[$bundle])) {
-              $version = $this->getVersion();
-              $handlers[$bundle] = restful_get_restful_handler($handlers[$bundle], $version['major'], $version['minor']);
-            }
-
-            $value = $handlers[$bundle]->viewEntity($id);
+            $value = $this->getValueFromResource($sub_wrapper, $property);
           }
           else {
             // Wrapper method.
@@ -461,7 +433,38 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
       throw new Exception('Property is not an entity reference field.');
     }
 
-    return $field['target_type'];
+    return $field['settings']['target_type'];
+  }
+
+  /**
+   * Get value from an entity reference field with "resource" property.
+   *
+   * @param EntityMetadataWrapper $wrapper
+   *   The wrapped object.
+   * @param $property
+   *   The property name (i.e. the field name).
+   *
+   * @return mixed
+   *   The value if found, or NULL if bundle not defined.
+   */
+  protected function getValueFromResource(EntityMetadataWrapper $wrapper, $property) {
+    $handlers = &drupal_static(__FUNCTION__, array());
+
+    $target_type = $this->getTargetTypeFromEntityReference($property);
+    $entity = $wrapper->value();
+
+    list($id,, $bundle) = entity_extract_ids($target_type, $entity);
+    if (empty($resource[$bundle])) {
+      // Bundle not mapped to a resource.
+      return;
+    }
+
+    if (empty($handlers[$bundle])) {
+      $version = $this->getVersion();
+      $handlers[$bundle] = restful_get_restful_handler($handlers[$bundle], $version['major'], $version['minor']);
+    }
+
+    return $handlers[$bundle]->viewEntity($id);
   }
 
   /**
