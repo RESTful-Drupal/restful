@@ -42,6 +42,8 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *    the wrapper method. If TRUE the method will perform on the entity (e.g.
    *    $wrapper->label()) and FALSE on the property or sub property
    *    (e.g. $wrapper->field_reference->label()). Defaults to FALSE.
+   *  - "callback": A callable callback to get a computed value. Defaults To
+   *    FALSE.
    *  - "process_callback": A callable callback to perform on the returned
    *    value, or an array with the object and method. Defaults To FALSE.
    */

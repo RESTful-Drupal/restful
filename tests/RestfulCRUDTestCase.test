@@ -112,16 +112,10 @@ class RestfulCRUDTestCase extends DrupalWebTestCase {
    * Test viewing an entity (GET method).
    *
    * v1.0 - Simple entity view (id, label, self).
-   * v1.1 - Text field with filtered text.
-   * v1.2 - Multiple text field with filtered text.
-   * v1.3 - Entity reference label.
-   * v1.4 - Multiple entity reference label.
-   * v1.5 - Entity reference as resource.
-   * v1.6 - Multiple entity reference as resource.
-   * v1.7 - "Callback" property.
-   * v1.8 - Non-existing "callback" property.
-   * v1.9 - "Process callback" property.
-   * v1.10 - Non-existing "process callback" property.
+   * v1.1 - Text and entity reference fields.
+   * v1.2 - "callback" and "process callback".
+   * v1.3 - Non-existing "callback" property.
+   * v1.4 - Non-existing "process callback" property.
    */
   function testViewEntity() {
     $user1 = $this->drupalCreateUser();
@@ -162,45 +156,53 @@ class RestfulCRUDTestCase extends DrupalWebTestCase {
     $result = $handler->get($id);
     $this->assertEqual($result, $expected_result);
 
-    // v1.1 - Text field.
+    // v1.1 - Text and entity reference field.
     $handler = restful_get_restful_handler('entity_tests', 1, 1);
     $result = $handler->get($id);
     $expected_result = $base_expected_result;
-    $expected_result['single'] = "<p>$text1</p>\n";
-    $expected_result['multiple'] = array(
+    $expected_result['text_single'] = "<p>$text1</p>\n";
+    $expected_result['text_multiple'] = array(
       "<p>$text1</p>\n",
       "<p>$text2</p>\n",
     );
+    $expected_result['entity_reference_single'] = $entity1->pid;
+    $expected_result['entity_reference_multiple'] = array(
+      $entity1->pid,
+      $entity2->pid,
+    );
+
     $this->assertEqual($result, $expected_result);
 
-    // Empty the text fields.
+    // Empty the text and entity referenec fields.
     $wrapper->text_single->set(NULL);
     $wrapper->text_multiple->set(NULL);
+    $wrapper->entity_reference_single->set(NULL);
+    $wrapper->entity_reference_multiple->set(NULL);
     $wrapper->save();
 
     $result = $handler->get($id);
     $expected_result = $base_expected_result;
-    $expected_result['single'] = NULL;
-    $expected_result['multiple'] = NULL;
+    $expected_result['text_single'] = NULL;
+    $expected_result['text_multiple'] = NULL;
+    $expected_result['entity_reference_single'] = NULL;
+    $expected_result['entity_reference_multiple'] = NULL;
     $this->assertEqual($result, $expected_result);
 
 
-    // v1.2 - Entity reference field.
+    // v1.2 - "callback" and "process callback".
     $handler = restful_get_restful_handler('entity_tests', 1, 2);
     $result = $handler->get($id);
     $expected_result = $base_expected_result;
-    $expected_result['single'] = 'Main test type';
-    $expected_result['multiple'] = array(
-      'Main test type',
-      'Main test type',
-    );
+    $expected_result['callback'] = 'callback';
+    $expected_result['process_callback_from_callback'] = 'callback processed from callback';
+    $expected_result['process_callback_from_value'] = $id . ' processed from value';
     $this->assertEqual($result, $expected_result);
   }
 
   /**
    * Test creating an entity (POST method).
    */
-  function testCreateEntity() {
+  function __testCreateEntity() {
     $handler = restful_get_restful_handler('articles');
     $label = $this->randomName();
     $request = array(
