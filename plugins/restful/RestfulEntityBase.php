@@ -371,7 +371,6 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
         }
       }
 
-      // @todo: Let process callback change the value, even if it is NULL?
       if ($value && $info['process_callback']) {
         if (!is_callable($info['process_callback'])) {
           $callback_name = is_array($info['process_callback']) ? $info['process_callback'][1] : $info['process_callback'];
