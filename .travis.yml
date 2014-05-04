@@ -28,7 +28,7 @@ before_script:
   # reference and enable restful in build site
   - ln -s $(readlink -e $(cd -)) restful/drupal/sites/all/modules/restful
   - cd restful/drupal
-  - drush --yes pm-enable restful
+  - drush --yes pm-enable restful restful_test
 
   # start a web server on port 8080, run in the background; wait for initialization
   - drush runserver 127.0.0.1:8080 &
