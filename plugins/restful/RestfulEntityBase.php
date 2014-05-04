@@ -46,6 +46,16 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *    FALSE.
    *  - "process_callback": A callable callback to perform on the returned
    *    value, or an array with the object and method. Defaults To FALSE.
+   *  - "resource": This property can be assigned only to an entity reference
+   *    field. Array of restful resources keyed by the target bundle. For
+   *    example, if the field is referencing a node entity, with "Article" and
+   *    "Page" bundles, we are able to map those bundles to their related
+   *    resource. Items with bundles that were not explicetly set would be
+   *    ignored.
+   *    array(
+   *      'article' => 'ExampleRestfulNodeArticles',
+   *      'page' => 'ExampleRestfulNodePages',
+   *    );
    */
   protected $publicFields = array();
 
