@@ -374,7 +374,9 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
             }
 
             if ($resource) {
-              $value[] = $this->getValueFromResource($item_wrapper, $property, $resource, $request, $account);
+              if ($value_from_resource = $this->getValueFromResource($item_wrapper, $property, $resource, $request, $account)) {
+                $value[] = $value_from_resource;
+              }
             }
             else {
               // Wrapper method.
