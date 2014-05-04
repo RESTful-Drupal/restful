@@ -1,0 +1,7 @@
+name = RESTful Test
+description = Helper module for testing the RESTful module.
+core = 7.x
+dependencies[] = restful
+dependencies[] = entity_feature
+dependencies[] = entityreference
+hidden = TRUE

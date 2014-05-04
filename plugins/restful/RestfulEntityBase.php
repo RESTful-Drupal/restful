@@ -42,6 +42,8 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *    the wrapper method. If TRUE the method will perform on the entity (e.g.
    *    $wrapper->label()) and FALSE on the property or sub property
    *    (e.g. $wrapper->field_reference->label()). Defaults to FALSE.
+   *  - "callback": A callable callback to get a computed value. Defaults To
+   *    FALSE.
    *  - "process_callback": A callable callback to perform on the returned
    *    value, or an array with the object and method. Defaults To FALSE.
    */
@@ -72,6 +74,27 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
     $this->plugin = $plugin;
     $this->entityType = $plugin['entity_type'];
     $this->bundle = $plugin['bundle'];
+  }
+
+  /**
+   * Return the resource name.
+   *
+   * @return string
+   */
+  public function getResourceName() {
+    return $this->plugin['resource'];
+  }
+
+  /**
+   * Return array keyed with the major and minor version of the resource.
+   *
+   * @return array
+   */
+  public function getVersion() {
+    return array(
+      'major' => $this->plugin['major_version'],
+      'minor' => $this->plugin['minor_version'],
+    );
   }
 
   /**
@@ -295,9 +318,6 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
     $limit_fields = !empty($request['fields']) ? explode(',', $request['fields']) : array();
 
     foreach ($this->getPublicFields() as $public_property => $info) {
-      $sub_wrapper = NULL;
-      $value = NULL;
-
       if ($limit_fields && !in_array($public_property, $limit_fields)) {
         // Limit fields doesn't include this property.
         continue;
@@ -305,51 +325,59 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
 
       // Set default values.
       $info += array(
+        'property' => FALSE,
         'wrapper_method' => 'value',
         'wrapper_method_on_entity' => FALSE,
         'sub_property' => FALSE,
         'process_callback' => FALSE,
+        'callback' => FALSE,
       );
 
-      $property = $info['property'];
+      $value = NULL;
 
-      if ($info['wrapper_method'] == 'value') {
-
-        if (empty($wrapper->{$property})) {
-          throw new Exception(format_string('Property @property does not exist.', array('@property' => $property)));
+      if ($info['callback']) {
+        // Calling a callback to receive the value.
+        if (!is_callable($info['callback'])) {
+          $callback_name = is_array($info['callback']) ? $info['callback'][1] : $info['callback'];
+          throw new Exception(format_string('Process callback function: @callback does not exists.', array('@callback' => $callback_name)));
         }
 
-        if ($info['sub_property']) {
-          if ($wrapper->{$property}->value()) {
-            $sub_wrapper = $wrapper->{$property}->{$info['sub_property']};
+        $value = call_user_func($info['callback']);
+      }
+      else {
+        // Exposing an entity field.
+        $property = $info['property'];
+        $sub_wrapper = $info['wrapper_method_on_entity'] ? $wrapper : $wrapper->{$property};
+
+        $method = $info['wrapper_method'];
+
+        if ($sub_wrapper instanceof EntityListWrapper) {
+          // Multiple value.
+          foreach ($sub_wrapper as $item_wrapper) {
+
+            if ($info['sub_property'] && $item_wrapper->value()) {
+              $item_wrapper = $item_wrapper->{$info['sub_property']};
+            }
+
+            $value[] = $item_wrapper->{$method}();
           }
         }
         else {
-          $sub_wrapper = $wrapper->{$property};
-        }
-
-        if (!empty($sub_wrapper)) {
-          $value = $sub_wrapper->value();
-        }
-
-        if (!empty($value) && !empty($info['process_callback'])) {
-          if (!$value = call_user_func($info['process_callback'], $value)) {
-
-            $callback_name = is_array($info['process_callback']) ? $info['process_callback'][1] : $info['process_callback'];
-            $params = array('@callback' => $callback_name);
-
-            throw new Exception(format_string('Process callback function: @callback does not exists.', $params));
+          // Single value.
+          if ($info['sub_property'] && $sub_wrapper->value()) {
+            $sub_wrapper = $sub_wrapper->{$info['sub_property']};
           }
+          $value = $sub_wrapper->{$method}();
         }
       }
-      else {
-        $sub_wrapper = $info['wrapper_method_on_entity'] ? $wrapper : $wrapper->{$property};
 
-        if ($info['sub_property']) {
-          $sub_wrapper = $sub_wrapper->{$info['sub_property']};
+      if ($value && $info['process_callback']) {
+        if (!is_callable($info['process_callback'])) {
+          $callback_name = is_array($info['process_callback']) ? $info['process_callback'][1] : $info['process_callback'];
+          throw new Exception(format_string('Process callback function: @callback does not exists.', array('@callback' => $callback_name)));
         }
 
-        $value = $sub_wrapper->{$info['wrapper_method']}();
+        $value = call_user_func($info['process_callback'], $value);
       }
 
       $values[$public_property] = $value;
