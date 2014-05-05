@@ -188,7 +188,6 @@ class RestfulCRUDTestCase extends DrupalWebTestCase {
     $expected_result['entity_reference_multiple'] = NULL;
     $this->assertEqual($result, $expected_result);
 
-
     // v1.2 - "callback" and "process callback".
     $handler = restful_get_restful_handler('entity_tests', 1, 2);
     $result = $handler->get($id);
