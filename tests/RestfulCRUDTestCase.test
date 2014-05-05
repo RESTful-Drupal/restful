@@ -171,9 +171,15 @@ class RestfulCRUDTestCase extends DrupalWebTestCase {
       $entity2->pid,
     );
 
+    $expected_result['entity_reference_single_resource'] = $handler->get($entity1->pid);
+    $expected_result['entity_reference_multiple_resource'] = array(
+      $handler->get($entity1->pid),
+      $handler->get($entity2->pid),
+    );
+
     $this->assertEqual($result, $expected_result);
 
-    // Empty the text and entity referenec fields.
+    // Empty the text and entity reference fields.
     $wrapper->text_single->set(NULL);
     $wrapper->text_multiple->set(NULL);
     $wrapper->entity_reference_single->set(NULL);
@@ -186,6 +192,8 @@ class RestfulCRUDTestCase extends DrupalWebTestCase {
     $expected_result['text_multiple'] = NULL;
     $expected_result['entity_reference_single'] = NULL;
     $expected_result['entity_reference_multiple'] = NULL;
+    $expected_result['entity_reference_single_resource'] = NULL;
+    $expected_result['entity_reference_multiple_resource'] = NULL;
     $this->assertEqual($result, $expected_result);
 
     // v1.2 - "callback" and "process callback".
