@@ -9,7 +9,7 @@ class RestfulViewEntityTestCase extends DrupalWebTestCase {
 
   public static function getInfo() {
     return array(
-      'name' => 'Entity view',
+      'name' => 'View entity',
       'description' => 'Test the viewing of an entity.',
       'group' => 'Restful',
     );
@@ -25,7 +25,7 @@ class RestfulViewEntityTestCase extends DrupalWebTestCase {
       'entity_types' => array('entity_test'),
       'cardinality' => 1,
     );
-    $field = field_create_field($field);
+    field_create_field($field);
 
     $instance = array(
       'field_name' => 'text_single',
@@ -46,7 +46,7 @@ class RestfulViewEntityTestCase extends DrupalWebTestCase {
       'entity_types' => array('entity_test'),
       'cardinality' => FIELD_CARDINALITY_UNLIMITED,
     );
-    $field = field_create_field($field);
+    field_create_field($field);
 
     $instance = array(
       'field_name' => 'text_multiple',

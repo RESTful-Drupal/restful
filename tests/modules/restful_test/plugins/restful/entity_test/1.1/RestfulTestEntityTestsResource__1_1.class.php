@@ -37,7 +37,7 @@ class RestfulTestEntityTestsResource__1_1 extends RestfulTestEntityTestsResource
     $public_fields['entity_reference_single_resource'] = array(
       'property' => 'entity_reference_single',
       'resource' => array(
-        'entity_test' => 'entity_tests'
+        'main' => 'entity_tests'
       ),
     );
 
@@ -45,7 +45,7 @@ class RestfulTestEntityTestsResource__1_1 extends RestfulTestEntityTestsResource
     $public_fields['entity_reference_multiple_resource'] = array(
       'property' => 'entity_reference_multiple',
       'resource' => array(
-        'entity_test' => 'entity_tests'
+        'main' => 'entity_tests'
       ),
     );
 
