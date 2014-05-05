@@ -2,15 +2,15 @@
 
 /**
  * @file
- * Contains RestfulCRUDTestCase
+ * Contains RestfulViewEntityTestCase
  */
 
-class RestfulCRUDTestCase extends DrupalWebTestCase {
+class RestfulViewEntityTestCase extends DrupalWebTestCase {
 
   public static function getInfo() {
     return array(
-      'name' => 'Entity CRUD',
-      'description' => 'Test the create, update and delete of an entity.',
+      'name' => 'Entity view',
+      'description' => 'Test the viewing of an entity.',
       'group' => 'Restful',
     );
   }
@@ -225,26 +225,4 @@ class RestfulCRUDTestCase extends DrupalWebTestCase {
       $this->pass('Non-existing "process callback" property triggered an exception.');
     }
   }
-
-  /**
-   * Test creating an entity (POST method).
-   */
-  function __testCreateEntity() {
-    $handler = restful_get_restful_handler('articles');
-    $label = $this->randomName();
-    $request = array(
-      'label' => $label,
-    );
-    $result = $handler->post('', $request);
-
-    $node = node_load($result['id']);
-    $expected_result = array(
-      'id' => $node->nid,
-      'label' => $node->title,
-      'self' => url('node/' . $node->nid, array('absolute' => TRUE)),
-    );
-
-    $this->assertEqual($result, $expected_result, 'Entity was created.');
-  }
-
 }
