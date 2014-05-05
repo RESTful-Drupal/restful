@@ -33,6 +33,22 @@ class RestfulTestEntityTestsResource__1_1 extends RestfulTestEntityTestsResource
       'wrapper_method' => 'getIdentifier',
     );
 
+    // Single entity reference field with "resource".
+    $public_fields['entity_reference_single_resource'] = array(
+      'property' => 'entity_reference_single',
+      'resource' => array(
+        'main' => 'entity_tests'
+      ),
+    );
+
+    // Multiple entity reference field with "resource".
+    $public_fields['entity_reference_multiple_resource'] = array(
+      'property' => 'entity_reference_multiple',
+      'resource' => array(
+        'main' => 'entity_tests'
+      ),
+    );
+
     return $public_fields;
   }
 }

@@ -46,6 +46,16 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *    FALSE.
    *  - "process_callback": A callable callback to perform on the returned
    *    value, or an array with the object and method. Defaults To FALSE.
+   *  - "resource": This property can be assigned only to an entity reference
+   *    field. Array of restful resources keyed by the target bundle. For
+   *    example, if the field is referencing a node entity, with "Article" and
+   *    "Page" bundles, we are able to map those bundles to their related
+   *    resource. Items with bundles that were not explicetly set would be
+   *    ignored.
+   *    array(
+   *      'article' => 'articles',
+   *      'page' => 'pages',
+   *    );
    */
   protected $publicFields = array();
 
@@ -217,7 +227,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *   (optional) The user object.
    *
    * @return
-   *   Array of entities, as passed to RestfulEntityBase::getView().
+   *   Array of entities, as passed to RestfulEntityBase::viewEntity().
    *
    * @throws RestfulBadRequestException
    */
@@ -331,6 +341,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
         'sub_property' => FALSE,
         'process_callback' => FALSE,
         'callback' => FALSE,
+        'resource' => array(),
       );
 
       $value = NULL;
@@ -350,6 +361,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
         $sub_wrapper = $info['wrapper_method_on_entity'] ? $wrapper : $wrapper->{$property};
 
         $method = $info['wrapper_method'];
+        $resource = $info['resource'];
 
         if ($sub_wrapper instanceof EntityListWrapper) {
           // Multiple value.
@@ -359,7 +371,15 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
               $item_wrapper = $item_wrapper->{$info['sub_property']};
             }
 
-            $value[] = $item_wrapper->{$method}();
+            if ($resource) {
+              if ($value_from_resource = $this->getValueFromResource($item_wrapper, $property, $resource, $request, $account)) {
+                $value[] = $value_from_resource;
+              }
+            }
+            else {
+              // Wrapper method.
+              $value[] = $item_wrapper->{$method}();
+            }
           }
         }
         else {
@@ -367,7 +387,14 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
           if ($info['sub_property'] && $sub_wrapper->value()) {
             $sub_wrapper = $sub_wrapper->{$info['sub_property']};
           }
-          $value = $sub_wrapper->{$method}();
+
+          if ($resource) {
+            $value = $this->getValueFromResource($sub_wrapper, $property, $resource, $request, $account);
+          }
+          else {
+            // Wrapper method.
+            $value = $sub_wrapper->{$method}();
+          }
         }
       }
 
@@ -384,6 +411,62 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
     }
 
     return $values;
+  }
+
+  /**
+   * Get the "target_type" property from an entity reference field.
+   *
+   * @param $property
+   *   The field name.
+   * @return string
+   *   The target type of the referenced entity.
+   *
+   * @throws Exception
+   *   Errors is the passed field name is invalid.
+   */
+  protected function getTargetTypeFromEntityReference($property) {
+    if (!$field = field_info_field($property)) {
+      throw new Exception('Property is not a field.');
+    }
+
+    if ($field['type'] != 'entityreference') {
+      throw new Exception('Property is not an entity reference field.');
+    }
+
+    return $field['settings']['target_type'];
+  }
+
+  /**
+   * Get value from an entity reference field with "resource" property.
+   *
+   * @param EntityMetadataWrapper $wrapper
+   *   The wrapped object.
+   * @param $property
+   *   The property name (i.e. the field name).
+   *
+   * @return mixed
+   *   The value if found, or NULL if bundle not defined.
+   */
+  protected function getValueFromResource(EntityMetadataWrapper $wrapper, $property, $resource, $request, $account) {
+    $handlers = &drupal_static(__FUNCTION__, array());
+
+    $target_type = $this->getTargetTypeFromEntityReference($property);
+    if (!$entity = $wrapper->value()) {
+      return;
+    }
+
+    list($id,, $bundle) = entity_extract_ids($target_type, $entity);
+    if (empty($resource[$bundle])) {
+      // Bundle not mapped to a resource.
+      return;
+    }
+
+    if (empty($handlers[$bundle])) {
+      $version = $this->getVersion();
+      $handlers[$bundle] = restful_get_restful_handler($resource[$bundle], $version['major'], $version['minor']);
+    }
+
+    return $handlers[$bundle]->viewEntity($id, $request, $account);
   }
 
   /**

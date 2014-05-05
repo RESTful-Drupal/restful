@@ -18,8 +18,9 @@ files[] = exceptions/RestfulUnsupportedMediaTypeException.php
 files[] = exceptions/RestfulUnprocessableEntityException.php
 
 ; Tests
-files[] = tests/RestfulCRUDTestCase.test
+files[] = tests/RestfulCreateEntityTestCase.test
 files[] = tests/RestfulExceptionHandleTestCase.test
 files[] = tests/RestfulGetHandlersTestCase.test
 files[] = tests/RestfulHookMenuTestCase.test
 files[] = tests/RestfulListTestCase.test
+files[] = tests/RestfulViewEntityTestCase.test

@@ -46,7 +46,7 @@ class RestfulTestEntityTestsResource__1_2 extends RestfulTestEntityTestsResource
   }
 
   /**
-   * Return a property value.
+   * Process a property value.
    */
   protected function processCallbackFromValue($value) {
     return $value . ' processed from value';
