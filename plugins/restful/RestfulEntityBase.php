@@ -327,8 +327,6 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
 
     $limit_fields = !empty($request['fields']) ? explode(',', $request['fields']) : array();
 
-    $handlers = array();
-
     foreach ($this->getPublicFields() as $public_property => $info) {
       if ($limit_fields && !in_array($public_property, $limit_fields)) {
         // Limit fields doesn't include this property.
@@ -453,7 +451,9 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
     $handlers = &drupal_static(__FUNCTION__, array());
 
     $target_type = $this->getTargetTypeFromEntityReference($property);
-    $entity = $wrapper->value();
+    if (!$entity = $wrapper->value()) {
+      return;
+    }
 
     list($id,, $bundle) = entity_extract_ids($target_type, $entity);
     if (empty($resource[$bundle])) {
