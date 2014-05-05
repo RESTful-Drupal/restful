@@ -451,7 +451,9 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
     $handlers = &drupal_static(__FUNCTION__, array());
 
     $target_type = $this->getTargetTypeFromEntityReference($property);
-    $entity = $wrapper->value();
+    if (!$entity = $wrapper->value()) {
+      return;
+    }
 
     list($id,, $bundle) = entity_extract_ids($target_type, $entity);
     if (empty($resource[$bundle])) {
