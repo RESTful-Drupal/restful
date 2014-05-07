@@ -10,7 +10,8 @@ class RestfulEntityBaseMultipleBundles extends RestfulEntityBase {
   /**
    * Define the bundles to expose to the API.
    *
-   * Bundle => Resource
+   * @var array
+   *  Array keyed by bundle machine, and the RESTful resource as the value.
    */
   protected $bundles = array();
 
