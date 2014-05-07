@@ -38,7 +38,7 @@ class RestfulEntityBaseMultipleBundles extends RestfulEntityBase {
   }
 
   /**
-   * Get a list of entities.
+   * Get a list of entities for each bundle.
    *
    * @param null $request
    *   (optional) The request.
@@ -46,7 +46,7 @@ class RestfulEntityBaseMultipleBundles extends RestfulEntityBase {
    *   (optional) The user object.
    *
    * @return array
-   *   Array of entities, as passed to RestfulEntityBase::getView().
+   *   Array of entities for each bundle, as passed to RestfulEntityBase::viewEntity().
    *
    * @throws RestfulBadRequestException
    */
