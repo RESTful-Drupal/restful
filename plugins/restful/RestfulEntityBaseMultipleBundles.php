@@ -22,7 +22,7 @@ class RestfulEntityBaseMultipleBundles extends RestfulEntityBase {
   );
 
   public function __construct($plugin) {
-    parent::__construct();
+    parent::__construct($plugin);
 
     $this->bundles = $plugin['bundles'];
   }
