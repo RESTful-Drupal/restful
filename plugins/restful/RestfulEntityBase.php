@@ -484,9 +484,17 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *   The request array.
    * @param $account
    *   The user object.
+   *
+   * @return array
+   *   Array with the output of the new entity, passed to
+   *   RestfulEntityInterface::entityView().
    */
   public function updateEntity($entity_id, $request, $account) {
     $this->isValidEntity('update', $entity_id, $account);
+    $wrapper = entity_metadata_wrapper($this->entityType, $entity_id);
+
+    $this->setPropertyValues($wrapper, $request, $account);
+    return $this->viewEntity($wrapper->getIdentifier(), NULL, $account);
   }
 
 
@@ -510,6 +518,21 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
     $entity = entity_create($this->entityType, $values);
     $wrapper = entity_metadata_wrapper($this->entityType, $entity);
 
+    $this->setPropertyValues($wrapper, $request, $account);
+    return $this->viewEntity($wrapper->getIdentifier(), NULL, $account);
+  }
+
+  /**
+   * Set properties of the entity based on the request, and save the entity.
+   *
+   * @param EntityMetadataWrapper $wrapper
+   *   The wrapped entity object, passed by reference.
+   * @param $request
+   *   The request array.
+   * @param $account
+   *   The user object.
+   */
+  protected function setPropertyValues(EntityMetadataWrapper $wrapper, $request, $account) {
     foreach ($this->getPublicFields() as $public_property => $info) {
       // @todo: Pass value to validators, even if it doesn't exist, so we can
       // validate required properties.
@@ -526,7 +549,6 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
     }
 
     $wrapper->save();
-    return $this->viewEntity($wrapper->getIdentifier(), NULL, $account);
   }
 
   /**
