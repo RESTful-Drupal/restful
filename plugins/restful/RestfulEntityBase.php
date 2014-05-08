@@ -658,8 +658,6 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
       throw new RestfulForbiddenException(format_string('You do not have access to entity ID @id of resource @resource', $params));
     }
 
-    throw new RestfulForbiddenException($account);
-
     return TRUE;
   }
 
