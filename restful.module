@@ -241,7 +241,7 @@ function restful_menu_process_callback($major_version, $resource_name) {
 
   if ($success) {
     // Allow the handler to change the HTTP headers.
-    foreach ($handler->getHttpHeader() as $key => $value) {
+    foreach ($handler->getHttpHeaders() as $key => $value) {
       drupal_add_http_header($key, $value);
     }
   }
