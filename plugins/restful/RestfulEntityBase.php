@@ -631,7 +631,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *   The user object.
    *
    * @return
-   *   TRUE if entity is valud, and user can access it.
+   *   TRUE if entity is valid, and user can access it.
    *
    * @throws RestfulUnprocessableEntityException
    * @throws RestfulUnprocessableEntityException
