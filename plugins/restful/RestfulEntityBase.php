@@ -494,8 +494,13 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    * Create a new entity.
    *
    * @param $request
+   *   The request array.
    * @param $account
+   *   The user object.
+   *
    * @return array
+   *   Array with the output of the new entity, passed to
+   *   RestfulEntityInterface::entityView().
    */
   public function createEntity($request, $account) {
     $entity_info = entity_get_info($this->entityType);
