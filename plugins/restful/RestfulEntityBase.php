@@ -74,10 +74,41 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
   );
 
   /**
+   * Array keyed by the header property, and the value.
+   *
+   * This can be used for example to change the "Status" code of the HTTP
+   * response, or to add a "Location" property.
+   *
+   * @var array
+   */
+  protected $httpHeaders = array();
+
+  /**
    * Return the defined controllers.
    */
   public function getControllers () {
     return $this->controllers;
+  }
+
+  /**
+   * Set the HTTP headers.
+   *
+   * @param string $key
+   *   The HTTP header key.
+   * @param string
+   * The HTTP header value.
+   */
+  public function setHttpHeaders($key, $value) {
+    $this->httpHeaders[$key] = $value;
+  }
+
+  /**
+   * Return the HTTP header values.
+   *
+   * @return array
+   */
+  public function getHttpHeaders() {
+    return $this->httpHeaders;
   }
 
   public function __construct($plugin) {
@@ -494,6 +525,15 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
     $wrapper = entity_metadata_wrapper($this->entityType, $entity_id);
 
     $this->setPropertyValues($wrapper, $request, $account);
+
+    // Set the HTTP headers.
+    $this->setHttpHeaders('Status', 201);
+
+    if (!empty($wrapper->url) && $url = $wrapper->url->value()); {
+      $this->setHttpHeaders('Location', $url);
+    }
+
+
     return $this->viewEntity($wrapper->getIdentifier(), NULL, $account);
   }
 
