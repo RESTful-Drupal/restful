@@ -314,9 +314,15 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    * View an entity.
    *
    * @param $entity_id
+   *   The entity ID.
    * @param $request
+   *   The request array.
    * @param $account
+   *   The user object.
+   *
    * @return array
+   *   Array with the public fields populated.
+   * 
    * @throws Exception
    */
   public function viewEntity($entity_id, $request, $account) {
@@ -468,6 +474,21 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
 
     return $handlers[$bundle]->viewEntity($id, $request, $account);
   }
+
+  /**
+   * Update an entity.
+   *
+   * @param $entity_id
+   *   The entity ID.
+   * @param $request
+   *   The request array.
+   * @param $account
+   *   The user object.
+   */
+  public function updateEntity($entity_id, $request, $account) {
+    $this->isValidEntity('update', $entity_id, $account);
+  }
+
 
   /**
    * Create a new entity.
