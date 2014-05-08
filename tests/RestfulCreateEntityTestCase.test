@@ -10,7 +10,7 @@ class RestfulCreateEntityTestCase extends DrupalWebTestCase {
   public static function getInfo() {
     return array(
       'name' => 'Create entity',
-      'description' => 'Test the createion of an entity.',
+      'description' => 'Test the creation of an entity.',
       'group' => 'Restful',
     );
   }
@@ -24,10 +24,7 @@ class RestfulCreateEntityTestCase extends DrupalWebTestCase {
    */
   function testCreateEntity() {
     $handler = restful_get_restful_handler('articles');
-    $label = $this->randomName();
-    $request = array(
-      'label' => $label,
-    );
+    $request = array('label' => $this->randomName());
     $result = $handler->post('', $request);
 
     $node = node_load($result['id']);
@@ -38,6 +35,30 @@ class RestfulCreateEntityTestCase extends DrupalWebTestCase {
     );
 
     $this->assertEqual($result, $expected_result, 'Entity was created.');
+  }
+
+  /**
+   * Test access control for creating an entity.
+   */
+  function testAccess() {
+    $handler = restful_get_restful_handler('articles');
+    $request = array('label' => $this->randomName());
+
+
+    // Non-privileged user.
+    $user1 = $this->drupalCreateUser();
+    try {
+      $handler->post('', $request, $user1);
+      $this->fail('Non-privileged user can create entity.');
+    }
+    catch (Exception $e) {
+      $this->pass('Non-privileged user cannot create entity.');
+    }
+
+    // Privileged user.
+    $user2 = $this->drupalCreateUser(array('access content', 'create article content'));
+    $result = $handler->post('', $request, $user2);
+    $this->assertTrue($result, 'Privileged user can create entity.');
   }
 
 }
