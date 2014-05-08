@@ -246,7 +246,5 @@ function restful_menu_process_callback($major_version, $resource_name) {
     }
   }
 
-
-
   return drupal_json_output($result);
 }
