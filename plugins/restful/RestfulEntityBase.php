@@ -631,8 +631,9 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *   The user object.
    *
    * @return
-   *   TRUE if user can access entity.
+   *   TRUE if entity is valud, and user can access it.
    *
+   * @throws RestfulUnprocessableEntityException
    * @throws RestfulUnprocessableEntityException
    */
   protected function isValidEntity($op, $entity_id, $account) {
@@ -653,7 +654,13 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
       throw new RestfulUnprocessableEntityException(format_string('The specified entity ID @id is not a valid @resource.', $params));
     }
 
-    return entity_access($op, $entity_type, $entity, $account);
+    if (!entity_access($op, $entity_type, $entity, $account)) {
+      throw new RestfulForbiddenException(format_string('You do not have access to entity ID @id of resource @resource', $params));
+    }
+
+    throw new RestfulForbiddenException($account);
+
+    return TRUE;
   }
 
   public function getPublicFields() {
