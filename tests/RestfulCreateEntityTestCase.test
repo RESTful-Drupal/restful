@@ -10,7 +10,7 @@ class RestfulCreateEntityTestCase extends DrupalWebTestCase {
   public static function getInfo() {
     return array(
       'name' => 'Create entity',
-      'description' => 'Test the createion of an entity.',
+      'description' => 'Test the creation of an entity.',
       'group' => 'Restful',
     );
   }
@@ -24,10 +24,7 @@ class RestfulCreateEntityTestCase extends DrupalWebTestCase {
    */
   function testCreateEntity() {
     $handler = restful_get_restful_handler('articles');
-    $label = $this->randomName();
-    $request = array(
-      'label' => $label,
-    );
+    $request = array('label' => $this->randomName());
     $result = $handler->post('', $request);
 
     $node = node_load($result['id']);
@@ -38,6 +35,24 @@ class RestfulCreateEntityTestCase extends DrupalWebTestCase {
     );
 
     $this->assertEqual($result, $expected_result, 'Entity was created.');
-  }
 
+    // Create an entity with empty request.
+    try {
+      $handler->post();
+      $this->fail('User can create an entity with empty request.');
+    }
+    catch (Exception $e) {
+      $this->pass('User cannot create an entity with empty request.');
+    }
+
+    // Create an entity with invalid property name.
+    $request['invalid'] = 'wrong';
+    try {
+      $handler->post('', $request);
+      $this->fail('User can create an entity with invalid property name.');
+    }
+    catch (Exception $e) {
+      $this->pass('User cannot create an entity with invalid property name.');
+    }
+  }
 }

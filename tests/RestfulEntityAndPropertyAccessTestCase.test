@@ -1,0 +1,126 @@
+<?php
+
+/**
+ * @file
+ * Contains RestfulEntityAndPropertyAccessTestCase
+ */
+
+class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Entity and property access',
+      'description' => 'Test access for the entity and the properties.',
+      'group' => 'Restful',
+    );
+  }
+
+  function setUp() {
+    parent::setUp('restful_test');
+
+    // Text - single.
+    $field = array(
+      'field_name' => 'text_single',
+      'type' => 'text_long',
+      'entity_types' => array('node'),
+      'cardinality' => 1,
+    );
+    field_create_field($field);
+
+    $instance = array(
+      'field_name' => 'text_single',
+      'bundle' => 'article',
+      'entity_type' => 'node',
+      'label' => t('Text single'),
+      'settings' => array(
+        'text_processing' => 1,
+      ),
+    );
+    field_create_instance($instance);
+  }
+
+  /**
+   * Test access control for creating an entity.
+   */
+  function testCreateAccess() {
+    $handler = restful_get_restful_handler('articles', 1, 2);
+    $request = array('label' => $this->randomName());
+
+    // Non-privileged user.
+    $user1 = $this->drupalCreateUser();
+    try {
+      $handler->post('', $request, $user1);
+      $this->fail('Non-privileged user can create entity.');
+    }
+    catch (Exception $e) {
+      $this->pass('Non-privileged user cannot create entity.');
+    }
+
+    // Privileged user.
+    $user2 = $this->drupalCreateUser(array('create article content'));
+    $result = $handler->post('', $request, $user2);
+    $this->assertTrue($result, 'Privileged user can create entity.');
+
+    // Privileged user, with limited access to property.
+    restful_test_deny_access_field();
+    $result = $handler->post('', $request, $user2);
+    $this->assertTrue($result, 'Privileged user can create entity, with limited access to property.');
+
+    // Privileged user, with limited access to property, and that property
+    // passed in the request.
+    $text1 = $this->randomName();
+    $request['text_single'] = $text1;
+
+    try {
+      $handler->post('', $request, $user1);
+      $this->fail('Non-privileged user can create entity with unaccessible property that was passed in the request.');
+    }
+    catch (Exception $e) {
+      $this->pass('Non-privileged user cannot create entity with unaccessible property that was passed in the request.');
+    }
+    restful_test_clear_access();
+
+  }
+
+  /**
+   * Test access control for viewing an entity.
+   */
+  function testViewAccess() {
+    $user1 = $this->drupalCreateUser();
+    $label = $this->randomName();
+    $settings = array(
+      'type' => 'article',
+      'title' => $label,
+      'uid' => $user1->uid,
+    );
+    $node1 = $this->drupalCreateNode($settings);
+    $wrapper = entity_metadata_wrapper('node' ,$node1);
+
+    $text1 = $this->randomName();
+    $wrapper->text_single->set(array('value' => $text1));
+    $wrapper->save();
+
+    $handler = restful_get_restful_handler('articles', 1, 2);
+
+    // Privileged user.
+    $result = $handler->get($node1->nid, array(), $user1);
+    $this->assertTrue($result['text_single'], 'Privileged user can view entity.');
+
+    // Privileged user, with limited access to property.
+    restful_test_deny_access_field();
+    $result = $handler->get($node1->nid, array(), $user1);
+    $this->assertTrue(!isset($result['text_single']), 'Privileged user can view entity but without unaccessible properties.');
+    restful_test_clear_access();
+
+    // Non-privileged user (Revoke "access content" permission).
+    user_role_revoke_permissions(DRUPAL_ANONYMOUS_RID, array('access content'));
+    $user2 = drupal_anonymous_user();
+    try {
+      $handler->get($node1->nid, array(), $user2);
+      $this->fail('Non-privileged user can view entity.');
+    }
+    catch (Exception $e) {
+      $this->pass('Non-privileged user cannot view entity.');
+    }
+  }
+}

@@ -13,3 +13,33 @@ function restful_test_ctools_plugin_directory($module, $plugin) {
     return 'plugins/' . $plugin;
   }
 }
+
+/**
+ * Flag a field to not be accessible.
+ *
+ * @param $field_name
+ *   The field name. Defaults to "text_single".
+ */
+function restful_test_deny_access_field($field_name = 'text_single') {
+  variable_set('restful_test_deny_access_field', $field_name);
+}
+
+/**
+ * Clear un-accessible fields.
+ */
+function restful_test_clear_access() {
+  variable_del('restful_test_deny_access_field');
+}
+
+/**
+ * Implements hook_field_access().
+ */
+function restful_test_field_access($op, $field, $entity_type, $entity, $account) {
+  if (!$field_name = variable_get('restful_test_deny_access_field')) {
+    return;
+  }
+
+  if ($field_name == $field['field_name']) {
+    return FALSE;
+  }
+}
