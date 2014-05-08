@@ -322,7 +322,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *
    * @return array
    *   Array with the public fields populated.
-   * 
+   *
    * @throws Exception
    */
   public function viewEntity($entity_id, $request, $account) {
@@ -514,7 +514,6 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
         continue;
       }
 
-      // @todo: Check access to property.
       $property_name = !empty($info['property']) ? $info['property'] : FALSE;
       if ($property_name && $this->checkPropertyAccess($wrapper, $property_name)) {
         $wrapper->{$property_name}->set($request[$public_property]);
@@ -551,13 +550,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
       }
     }
 
-    // @todo: We should use $property->access(), but this causes a notice in
-    // entity_metadata_no_hook_node_access() as the $op is "upadted" instead of
-    // "create".
-    // return $property->access('edit');
-
-    return TRUE;
-
+    return $property->access('edit');
   }
 
   /**
