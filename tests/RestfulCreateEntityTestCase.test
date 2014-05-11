@@ -35,30 +35,24 @@ class RestfulCreateEntityTestCase extends DrupalWebTestCase {
     );
 
     $this->assertEqual($result, $expected_result, 'Entity was created.');
-  }
 
-  /**
-   * Test access control for creating an entity.
-   */
-  function testAccess() {
-    $handler = restful_get_restful_handler('articles');
-    $request = array('label' => $this->randomName());
-
-
-    // Non-privileged user.
-    $user1 = $this->drupalCreateUser();
+    // Create an entity with empty request.
     try {
-      $handler->post('', $request, $user1);
-      $this->fail('Non-privileged user can create entity.');
+      $handler->post();
+      $this->fail('User can create an entity with empty request.');
     }
     catch (Exception $e) {
-      $this->pass('Non-privileged user cannot create entity.');
+      $this->pass('User cannot create an entity with empty request.');
     }
 
-    // Privileged user.
-    $user2 = $this->drupalCreateUser(array('access content', 'create article content'));
-    $result = $handler->post('', $request, $user2);
-    $this->assertTrue($result, 'Privileged user can create entity.');
+    // Create an entity with invalid property name.
+    $request['invalid'] = 'wrong';
+    try {
+      $handler->post('', $request);
+      $this->fail('User can create an entity with invalid property name.');
+    }
+    catch (Exception $e) {
+      $this->pass('User cannot create an entity with invalid property name.');
+    }
   }
-
 }

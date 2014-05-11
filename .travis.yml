@@ -30,6 +30,13 @@ before_script:
   - cd restful/drupal
   - drush --yes pm-enable restful restful_test
 
+  # Patch Entity API.
+  - curl -O https://drupal.org/files/issues/2086225-entity-access-check-node-create-3.patch
+  - patch -p1 /home/travis/build/restful/drupal/sites/all/modules/entity/modules/callbacks.inc  < 2086225-entity-access-check-node-create-3.patch
+
+  - curl -O https://drupal.org/files/issues/2264079-entity-wrapper-access-single-entity-reference-1.patch
+  - patch -p1 /home/travis/build/restful/drupal/sites/all/modules/entity/includes/entity.wrapper.inc < 2264079-entity-wrapper-access-single-entity-reference-1.patch
+
   # start a web server on port 8080, run in the background; wait for initialization
   - drush runserver 127.0.0.1:8080 &
   - until netstat -an 2>/dev/null | grep '8080.*LISTEN'; do true; done
