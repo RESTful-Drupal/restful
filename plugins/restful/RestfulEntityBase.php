@@ -513,6 +513,38 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
   }
 
   /**
+   * Update an entity.
+   *
+   * @param $entity_id
+   *   The entity ID.
+   * @param $request
+   *   The request array.
+   * @param $account
+   *   The user object.
+   *
+   * @return array
+   *   Array with the output of the new entity, passed to
+   *   RestfulEntityInterface::entityView().
+   */
+  public function updateEntity($entity_id, $request, $account) {
+    $this->isValidEntity('update', $entity_id, $account);
+    $wrapper = entity_metadata_wrapper($this->entityType, $entity_id);
+
+    $this->setPropertyValues($wrapper, $request, $account);
+
+    // Set the HTTP headers.
+    $this->setHttpHeaders('Status', 201);
+
+    if (!empty($wrapper->url) && $url = $wrapper->url->value()); {
+      $this->setHttpHeaders('Location', $url);
+    }
+
+
+    return $this->viewEntity($wrapper->getIdentifier(), NULL, $account);
+  }
+
+
+  /**
    * Create a new entity.
    *
    * @param $request
@@ -539,9 +571,23 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
 
     $wrapper = entity_metadata_wrapper($this->entityType, $entity);
 
+    $this->setPropertyValues($wrapper, $request, $account);
+    return $this->viewEntity($wrapper->getIdentifier(), NULL, $account);
+  }
+
+  /**
+   * Set properties of the entity based on the request, and save the entity.
+   *
+   * @param EntityMetadataWrapper $wrapper
+   *   The wrapped entity object, passed by reference.
+   * @param $request
+   *   The request array.
+   * @param $account
+   *   The user object.
+   */
+  protected function setPropertyValues(EntityMetadataWrapper $wrapper, $request, $account) {
     $save = FALSE;
     $original_request = $request;
-
     foreach ($this->getPublicFields() as $public_property => $info) {
       // @todo: Pass value to validators, even if it doesn't exist, so we can
       // validate required properties.
@@ -550,7 +596,6 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
         // No property to set.
         continue;
       }
-
 
 
       $property_name = $info['property'];
@@ -574,7 +619,6 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
     }
 
     $wrapper->save();
-    return $this->viewEntity($wrapper->getIdentifier(), NULL, $account);
   }
 
   /**
