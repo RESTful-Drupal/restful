@@ -47,7 +47,6 @@ $id = $result['id'];
 // PUT method, to update.
 $request['label'] = 'new title';
 $handler->put($id, $request);
-
 ```
 
 ### View an entity
@@ -74,7 +73,6 @@ array(
   'id' => 1,
   'label' => 'example title',
 );
-
 ```
 
 #### Filtering fields
@@ -144,7 +142,6 @@ array(
     );
   ),
 );
-
 ```
 
 ### API via URL
