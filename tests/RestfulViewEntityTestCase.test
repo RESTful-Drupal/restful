@@ -225,4 +225,35 @@ class RestfulViewEntityTestCase extends DrupalWebTestCase {
       $this->pass('Non-existing "process callback" property triggered an exception.');
     }
   }
+
+  /**
+   * Test access control for viewing an entity.
+   */
+  function testAccess() {
+    $user1 = $this->drupalCreateUser();
+    $label = $this->randomName();
+    $settings = array(
+      'type' => 'article',
+      'title' => $label,
+      'uid' => $user1->uid,
+    );
+    $node1 = $this->drupalCreateNode($settings);
+
+    $handler = restful_get_restful_handler('articles');
+
+    // Privileged user.
+    $result = $handler->get($node1->nid, array(), $user1);
+    $this->assertTrue($result, 'Privileged user can view entity.');
+
+    // Non-privileged user (Revoke "access content" permission).
+    user_role_revoke_permissions(DRUPAL_ANONYMOUS_RID, array('access content'));
+    $user2 = drupal_anonymous_user();
+    try {
+      $handler->get($node1->nid, array(), $user2);
+      $this->fail('Non-privileged user can view entity.');
+    }
+    catch (Exception $e) {
+      $this->pass('Non-privileged user cannot view entity.');
+    }
+  }
 }

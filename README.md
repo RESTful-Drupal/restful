@@ -175,6 +175,11 @@ Will result with an HTTP code 400, and the following JSON:
 }
 ```
 
+## Module dependencies
+* [Entity API](https://drupal.org/project/entity), with the following patches:
+  * [$wrapper->access() might be wrong for single entity reference field](https://drupal.org/node/2264079#comment-8768581)
+  * [Prevent notice in entity_metadata_no_hook_node_access() when node is not saved](https://drupal.org/node/2086225#comment-8768373)
+
 ## Credits
 
 Developed by [Gizra](http://gizra.com)
