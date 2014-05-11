@@ -79,7 +79,59 @@ class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
       $this->pass('Non-privileged user cannot create entity with unaccessible property that was passed in the request.');
     }
     restful_test_clear_access();
+  }
 
+  /**
+   * Test access control for updating an entity.
+   */
+  function testUpadteAccess() {
+    $label = $this->randomName();
+    $new_label = $this->randomName();
+
+    $settings = array(
+      'type' => 'article',
+      'title' => $label,
+    );
+
+    $node = $this->drupalCreateNode($settings);
+    $id = $node->nid;
+
+    $handler = restful_get_restful_handler('articles', 1, 2);
+    $request = array('label' => $new_label);
+
+    // Non-privileged user.
+    $user1 = $this->drupalCreateUser();
+    try {
+      $handler->put($id, $request, $user1);
+      $this->fail('Non-privileged user can update entity.');
+    }
+    catch (Exception $e) {
+      $this->pass('Non-privileged user cannot update entity.');
+    }
+
+    // Privileged user.
+    $user2 = $this->drupalCreateUser(array('edit any article content'));
+    $result = $handler->put($id, $request, $user2);
+    $this->assertTrue($result, 'Privileged user can update entity.');
+
+    // Privileged user, with limited access to property.
+    restful_test_deny_access_field();
+    $result = $handler->put($id, $request, $user2);
+    $this->assertTrue($result, 'Privileged user can update entity, with limited access to property.');
+
+    // Privileged user, with limited access to property, and that property
+    // passed in the request.
+    $text1 = $this->randomName();
+    $request['text_single'] = $text1;
+
+    try {
+      $handler->put($id, $request, $user1);
+      $this->fail('Non-privileged user can update entity with unaccessible property that was passed in the request.');
+    }
+    catch (Exception $e) {
+      $this->pass('Non-privileged user cannot update entity with unaccessible property that was passed in the request.');
+    }
+    restful_test_clear_access();
   }
 
   /**
