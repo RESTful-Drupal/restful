@@ -37,11 +37,17 @@ $handler = restful_get_restful_handler('articles');
 $handler = restful_get_restful_handler('articles', 1, 1);
 ```
 
-### Create a new entity
+### Create and update an entity
 ```php
 $handler = restful_get_restful_handler('articles');
-// POST method.
-$handler->post('', array('label' => 'example title'));
+// POST method, to create.
+$result = $handler->post('', array('label' => 'example title'));
+$id = $result['id'];
+
+// PUT method, to update.
+$request['label'] = 'new title';
+$handler->put($id, $request);
+
 ```
 
 ### View an entity
