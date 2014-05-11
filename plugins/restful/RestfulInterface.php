@@ -12,8 +12,7 @@ interface RestfulInterface {
    * Constructor for the RESTful handler.
    *
    * @param $plugin
-   *   The notifier plugin object. Note the "options" values might have
-   *   been overriden in message_notify_send_message().
+   *   The restful plugin object.
    */
   public function __construct($plugin);
 
@@ -26,7 +25,7 @@ interface RestfulInterface {
   public function process($path = '', $request = NULL, $account = NULL, $method = 'get');
 
   /**
-   * Return the fields and properties that should be public.
+   * Return the properties that should be public.
    *
    * @return array
    */
@@ -43,7 +42,7 @@ interface RestfulInterface {
   public function getHttpHeaders();
 
   /**
-   * Determine if user can access notifier.
+   * Determine if user can access the handler.
    */
   public function access();
 }

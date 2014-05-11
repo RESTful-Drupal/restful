@@ -345,9 +345,15 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    * View an entity.
    *
    * @param $entity_id
+   *   The entity ID.
    * @param $request
+   *   The request array.
    * @param $account
+   *   The user object.
+   *
    * @return array
+   *   Array with the public fields populated.
+   *
    * @throws Exception
    */
   public function viewEntity($entity_id, $request, $account) {
@@ -510,8 +516,13 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    * Create a new entity.
    *
    * @param $request
+   *   The request array.
    * @param $account
+   *   The user object.
+   *
    * @return array
+   *   Array with the output of the new entity, passed to
+   *   RestfulEntityInterface::entityView().
    */
   public function createEntity($request, $account) {
     $entity_info = entity_get_info($this->entityType);
