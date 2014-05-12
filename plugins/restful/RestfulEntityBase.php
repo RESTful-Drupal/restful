@@ -662,7 +662,8 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
       }
     }
 
-    return $property->access($op);
+    $access = $property->access($op);
+    return $access === TRUE || $access === NULL ? TRUE : FALSE;
   }
 
   /**
