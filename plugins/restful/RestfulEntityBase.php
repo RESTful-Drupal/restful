@@ -148,6 +148,15 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
   }
 
   /**
+   * Return the bundle of the resource if exists.
+   *
+   * @return string | bool
+   */
+  public function getBundle() {
+    return !empty($this->bundle) ? $this->bundle : FALSE;
+  }
+
+  /**
    * Call resource using the GET http method.
    *
    * @param string $path
@@ -685,7 +694,8 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
 
     list(,, $bundle) = entity_extract_ids($entity_type, $entity);
 
-    if ($bundle != $this->plugin['bundle']) {
+    $resource_bundle = $this->getBundle();
+    if ($resource_bundle && $bundle != $resource_bundle) {
       throw new RestfulUnprocessableEntityException(format_string('The specified entity ID @id is not a valid @resource.', $params));
     }
 
