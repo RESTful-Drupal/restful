@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains RestfulTestEntityTestsResource__1_1.
+ * Contains RestfulTestMainResource__1_1.
  */
 
-class RestfulTestEntityTestsResource__1_1 extends RestfulTestEntityTestsResource {
+class RestfulTestMainResource__1_1 extends RestfulTestMainResource {
 
   /**
    * Overrides RestfulTestEntityTestsResource::getPublicFields().
@@ -37,7 +37,7 @@ class RestfulTestEntityTestsResource__1_1 extends RestfulTestEntityTestsResource
     $public_fields['entity_reference_single_resource'] = array(
       'property' => 'entity_reference_single',
       'resource' => array(
-        'main' => 'entity_tests'
+        'main' => 'main',
       ),
     );
 
@@ -45,7 +45,7 @@ class RestfulTestEntityTestsResource__1_1 extends RestfulTestEntityTestsResource
     $public_fields['entity_reference_multiple_resource'] = array(
       'property' => 'entity_reference_multiple',
       'resource' => array(
-        'main' => 'entity_tests'
+        'main' => 'main',
       ),
     );
 
