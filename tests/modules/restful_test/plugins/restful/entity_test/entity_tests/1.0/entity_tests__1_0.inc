@@ -8,6 +8,7 @@ $plugin = array(
   'entity_type' => 'entity_test',
   'bundles' => array(
     'main' => 'main',
+    'test' => 'tests',
   ),
   'class' => 'RestfulTestEntityTestsResource',
 );

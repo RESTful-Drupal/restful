@@ -292,6 +292,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
     }
 
     $ids = array_keys($result[$entity_type]);
+
     // Pre-load all entities.
     entity_load($entity_type, $ids);
 
@@ -471,6 +472,8 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
       $values[$public_property] = $value;
     }
 
+    dpm()
+
     return $values;
   }
 
@@ -542,7 +545,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *
    * @return array
    *   Array with the output of the new entity, passed to
-   *   RestfulEntityInterface::entityView().
+   *   RestfulEntityInterface::viewEntity().
    */
   public function updateEntity($entity_id, $request, $account) {
     $this->isValidEntity('update', $entity_id, $account);
@@ -572,7 +575,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *
    * @return array
    *   Array with the output of the new entity, passed to
-   *   RestfulEntityInterface::entityView().
+   *   RestfulEntityInterface::viewEntity().
    */
   public function createEntity($request, $account) {
     $entity_info = entity_get_info($this->entityType);
