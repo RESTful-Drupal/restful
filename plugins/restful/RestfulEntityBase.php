@@ -701,7 +701,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
     $public_fields = $this->publicFields;
 
     $entity_info = entity_get_info($this->getEntityType());
-    $id_key = $entity_info['entity_keys']['id'];
+    $id_key = $entity_info['entity keys']['id'];
 
     $public_fields += array(
       'id' => array(
