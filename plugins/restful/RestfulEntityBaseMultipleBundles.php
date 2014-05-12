@@ -8,7 +8,7 @@
 class RestfulEntityBaseMultipleBundles extends RestfulEntityBase {
 
   /**
-   * Define the bundles to expose to the API.
+   * Define the bundles to exposed to the API.
    *
    * @var array
    *  Array keyed by bundle machine, and the RESTful resource as the value.
@@ -32,36 +32,18 @@ class RestfulEntityBaseMultipleBundles extends RestfulEntityBase {
    * Return the bundles.
    *
    * @return array
-   *  An array of the exposed bundles.
+   *  An array of the exposed bundles as key and resource as value.
    */
   protected function getBundles() {
     return $this->bundles;
   }
 
   /**
-   * Get a list of entities for each bundle.
-   *
-   * @param null $request
-   *   (optional) The request.
-   * @param null $account
-   *   (optional) The user object.
-   *
-   * @return array
-   *   Array of entities for each bundle, as passed to RestfulEntityBase::viewEntity().
-   *
-   * @throws RestfulBadRequestException
+   * Overrides RestfulEntityBase::getQueryForList().
    */
-  public function getList($request, $account) {
-    $handlers = array();
-    $return = array();
-    foreach ($this->getBundles() as $bundle => $resource) {
-      $handlers[$bundle] = restful_get_restful_handler($resource);
-
-      $results = $handlers[$bundle]->getList($request, $account);
-      $return['list'][$bundle] = $results['list'];
-    }
-
-    return $return;
+  public function getQueryForList($request, $account) {
+    $query = parent::getQueryForList($request, $account);
+    $query->entityCondition('bundle', array_keys($this->getBundles()), 'IN');
+    return $query;
   }
-
 }

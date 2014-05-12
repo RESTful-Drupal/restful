@@ -139,6 +139,15 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
   }
 
   /**
+   * Return the entity type of the resource.
+   *
+   * @return string
+   */
+  public function getEntityType() {
+    return $this->entityType;
+  }
+
+  /**
    * Call resource using the GET http method.
    *
    * @param string $path
@@ -690,19 +699,22 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
 
   public function getPublicFields() {
     $public_fields = $this->publicFields;
-    if (!empty($this->entityType)) {
-      $public_fields += array(
-        'id' => array(
-          'wrapper_method' => 'getIdentifier',
-          'wrapper_method_on_entity' => TRUE,
-        ),
-        'label' => array(
-          'wrapper_method' => 'label',
-          'wrapper_method_on_entity' => TRUE,
-        ),
-        'self' => array('property' => 'url'),
-      );
-    }
+
+    $entity_info = entity_get_info($this->getEntityType());
+    $id_key = $entity_info['entity_keys']['id'];
+
+    $public_fields += array(
+      'id' => array(
+        'wrapper_method' => 'getIdentifier',
+        'wrapper_method_on_entity' => TRUE,
+        'property' => $id_key,
+      ),
+      'label' => array(
+        'wrapper_method' => 'label',
+        'wrapper_method_on_entity' => TRUE,
+      ),
+      'self' => array('property' => 'url'),
+    );
     return $public_fields;
   }
 
