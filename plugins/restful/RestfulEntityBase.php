@@ -472,8 +472,6 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
       $values[$public_property] = $value;
     }
 
-    dpm()
-
     return $values;
   }
 
