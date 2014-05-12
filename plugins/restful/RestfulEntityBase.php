@@ -74,10 +74,41 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
   );
 
   /**
+   * Array keyed by the header property, and the value.
+   *
+   * This can be used for example to change the "Status" code of the HTTP
+   * response, or to add a "Location" property.
+   *
+   * @var array
+   */
+  protected $httpHeaders = array();
+
+  /**
    * Return the defined controllers.
    */
   public function getControllers () {
     return $this->controllers;
+  }
+
+  /**
+   * Set the HTTP headers.
+   *
+   * @param string $key
+   *   The HTTP header key.
+   * @param string
+   *   The HTTP header value.
+   */
+  public function setHttpHeaders($key, $value) {
+    $this->httpHeaders[$key] = $value;
+  }
+
+  /**
+   * Return the HTTP header values.
+   *
+   * @return array
+   */
+  public function getHttpHeaders() {
+    return $this->httpHeaders;
   }
 
   public function __construct($plugin) {
@@ -314,9 +345,15 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    * View an entity.
    *
    * @param $entity_id
+   *   The entity ID.
    * @param $request
+   *   The request array.
    * @param $account
+   *   The user object.
+   *
    * @return array
+   *   Array with the public fields populated.
+   *
    * @throws Exception
    */
   public function viewEntity($entity_id, $request, $account) {
@@ -358,7 +395,13 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
       else {
         // Exposing an entity field.
         $property = $info['property'];
+
         $sub_wrapper = $info['wrapper_method_on_entity'] ? $wrapper : $wrapper->{$property};
+
+        // Check user has access to the property.
+        if ($property && !$this->checkPropertyAccess($sub_wrapper, 'view')) {
+          continue;
+        }
 
         $method = $info['wrapper_method'];
         $resource = $info['resource'];
@@ -470,11 +513,48 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
   }
 
   /**
+   * Update an entity.
+   *
+   * @param $entity_id
+   *   The entity ID.
+   * @param $request
+   *   The request array.
+   * @param $account
+   *   The user object.
+   *
+   * @return array
+   *   Array with the output of the new entity, passed to
+   *   RestfulEntityInterface::entityView().
+   */
+  public function updateEntity($entity_id, $request, $account) {
+    $this->isValidEntity('update', $entity_id, $account);
+    $wrapper = entity_metadata_wrapper($this->entityType, $entity_id);
+
+    $this->setPropertyValues($wrapper, $request, $account);
+
+    // Set the HTTP headers.
+    $this->setHttpHeaders('Status', 201);
+
+    if (!empty($wrapper->url) && $url = $wrapper->url->value()); {
+      $this->setHttpHeaders('Location', $url);
+    }
+
+
+    return $this->viewEntity($wrapper->getIdentifier(), NULL, $account);
+  }
+
+
+  /**
    * Create a new entity.
    *
    * @param $request
+   *   The request array.
    * @param $account
+   *   The user object.
+   *
    * @return array
+   *   Array with the output of the new entity, passed to
+   *   RestfulEntityInterface::entityView().
    */
   public function createEntity($request, $account) {
     $entity_info = entity_get_info($this->entityType);
@@ -482,8 +562,32 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
     $values = array($bundle_key => $this->bundle);
 
     $entity = entity_create($this->entityType, $values);
+
+    if (!entity_access('create', $this->entityType, $entity, $account)) {
+      // User does not have access to create entity.
+      $params = array('@resource' => $this->plugin['label']);
+      throw new RestfulForbiddenException(format_string('You do not have access to create a new @resource resource.', $params));
+    }
+
     $wrapper = entity_metadata_wrapper($this->entityType, $entity);
 
+    $this->setPropertyValues($wrapper, $request, $account);
+    return $this->viewEntity($wrapper->getIdentifier(), NULL, $account);
+  }
+
+  /**
+   * Set properties of the entity based on the request, and save the entity.
+   *
+   * @param EntityMetadataWrapper $wrapper
+   *   The wrapped entity object, passed by reference.
+   * @param $request
+   *   The request array.
+   * @param $account
+   *   The user object.
+   */
+  protected function setPropertyValues(EntityMetadataWrapper $wrapper, $request, $account) {
+    $save = FALSE;
+    $original_request = $request;
     foreach ($this->getPublicFields() as $public_property => $info) {
       // @todo: Pass value to validators, even if it doesn't exist, so we can
       // validate required properties.
@@ -493,56 +597,59 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
         continue;
       }
 
-      // @todo: Check access to property.
-      $property_name = !empty($info['property']) ? $info['property'] : FALSE;
-      if ($property_name && $this->checkPropertyAccess($wrapper, $property_name)) {
-        $wrapper->{$property_name}->set($request[$public_property]);
+
+      $property_name = $info['property'];
+      if (!$this->checkPropertyAccess($wrapper->{$property_name})) {
+        throw new RestfulBadRequestException(format_string('Property @name cannot be set.', array('@name' => $public_property)));
       }
+      $wrapper->{$property_name}->set($request[$public_property]);
+      unset($original_request[$public_property]);
+      $save = TRUE;
+    }
+
+    if (!$save) {
+      // No request was sent.
+      throw new RestfulBadRequestException('No values were sent with the request');
+    }
+
+    if ($original_request) {
+      // Request had illegal values.
+      $error_message = format_plural(count($original_request), 'Property @names is invalid.', 'Property @names are invalid.', array('@names' => implode(', ', array_keys($original_request))));
+      throw new RestfulBadRequestException($error_message);
     }
 
     $wrapper->save();
-    return $this->viewEntity($wrapper->getIdentifier(), NULL, $account);
   }
 
   /**
    * Helper method to check access on a property.
    *
-   * @todo Remove this once Entity API properly handles text format access.
-   *
-   * @param EntityMetadataWrapper $wrapper
-   *   The parent entity.
-   * @param string $property_name
-   *   The property name on the entity.
    * @param EntityMetadataWrapper $property
-   *   The property whose access is to be checked.
+   *   The wrapped property.
+   * @param $op
+   *   The operation that access should be checked for. Can be "view" or "edit".
+   *   Defaults to "edit".
    *
    * @return bool
    *   TRUE if the current user has access to set the property, FALSE otherwise.
    */
-  protected function checkPropertyAccess($wrapper, $property_name) {
-    $property = $wrapper->{$property_name};
+  protected function checkPropertyAccess(EntityMetadataWrapper $property, $op = 'edit') {
     // @todo Hack to check format access for text fields. Should be removed once
     // this is handled properly on the Entity API level.
-    if ($property->type() == 'text_formatted' && $property->format->value()) {
+    if ($property->type() == 'text_formatted' && $property->value() && $property->format->value()) {
       $format = (object) array('format' => $property->format->value());
       if (!filter_access($format)) {
         return FALSE;
       }
     }
 
-    // @todo: We should use $property->access(), but this causes a notice in
-    // entity_metadata_no_hook_node_access() as the $op is "upadted" instead of
-    // "create".
-    // return $property->access('edit');
-
-    return TRUE;
-
+    return $property->access($op);
   }
 
   /**
    * Determine if an entity is valid, and accessible.
    *
-   * @params $action
+   * @params $op
    *   The operation to perform on the entity (view, update, delete).
    * @param $entity_id
    *   The entity ID.
@@ -550,8 +657,9 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *   The user object.
    *
    * @return
-   *   TRUE if user can access entity.
+   *   TRUE if entity is valid, and user can access it.
    *
+   * @throws RestfulUnprocessableEntityException
    * @throws RestfulUnprocessableEntityException
    */
   protected function isValidEntity($op, $entity_id, $account) {
@@ -572,7 +680,12 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
       throw new RestfulUnprocessableEntityException(format_string('The specified entity ID @id is not a valid @resource.', $params));
     }
 
-    return entity_access($op, $entity_type, $entity, $account);
+    if (entity_access($op, $entity_type, $entity, $account) === FALSE) {
+      // Entity was explicitly denied.
+      throw new RestfulForbiddenException(format_string('You do not have access to entity ID @id of resource @resource', $params));
+    }
+
+    return TRUE;
   }
 
   public function getPublicFields() {

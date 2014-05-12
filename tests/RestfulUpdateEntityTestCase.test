@@ -2,15 +2,15 @@
 
 /**
  * @file
- * Contains RestfulCreateEntityTestCase
+ * Contains RestfulUpdateEntityTestCase
  */
 
-class RestfulCreateEntityTestCase extends DrupalWebTestCase {
+class RestfulUpdateEntityTestCase extends DrupalWebTestCase {
 
   public static function getInfo() {
     return array(
-      'name' => 'Create entity',
-      'description' => 'Test the creation of an entity.',
+      'name' => 'Update entity',
+      'description' => 'Test the updating of an entity.',
       'group' => 'Restful',
     );
   }
@@ -22,33 +22,44 @@ class RestfulCreateEntityTestCase extends DrupalWebTestCase {
   /**
    * Test creating an entity (POST method).
    */
-  function testCreateEntity() {
-    $handler = restful_get_restful_handler('articles');
-    $request = array('label' => $this->randomName());
-    $result = $handler->post('', $request);
+  function testUpdateEntity() {
+    $label = $this->randomName();
+    $new_label = $this->randomName();
 
+    $settings = array(
+      'type' => 'article',
+      'title' => $label,
+    );
+
+    $node = $this->drupalCreateNode($settings);
+
+    $handler = restful_get_restful_handler('articles');
+    $request = array('label' => $new_label);
+    $result = $handler->put('', $request);
+
+    // Reload node.
     $node = node_load($result['id']);
     $expected_result = array(
       'id' => $node->nid,
-      'label' => $node->title,
+      'label' => $new_label,
       'self' => url('node/' . $node->nid, array('absolute' => TRUE)),
     );
 
     $this->assertEqual($result, $expected_result, 'Entity was created.');
 
-    // Create an entity with empty request.
+    // Update an entity with empty request.
     try {
-      $handler->post();
+      $handler->put();
       $this->fail('User can create an entity with empty request.');
     }
     catch (Exception $e) {
       $this->pass('User cannot create an entity with empty request.');
     }
 
-    // Create an entity with invalid property name.
+    // Update an entity with invalid property name.
     $request['invalid'] = 'wrong';
     try {
-      $handler->post('', $request);
+      $handler->put('', $request);
       $this->fail('User can create an entity with invalid property name.');
     }
     catch (Exception $e) {
