@@ -2,8 +2,8 @@
 
 /**
  * @file
- * Contains RestfulTestEntityTestsResource.
+ * Contains RestfulTestMainResource.
  */
 
-class RestfulTestEntityTestsResource extends RestfulEntityBase {
+class RestfulTestMainResource extends RestfulEntityBase {
 }

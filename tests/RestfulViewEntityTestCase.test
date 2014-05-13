@@ -151,13 +151,13 @@ class RestfulViewEntityTestCase extends DrupalWebTestCase {
     );
 
     // v1.0 - Simple entity view (id, label, self).
-    $handler = restful_get_restful_handler('entity_tests', 1, 0);
+    $handler = restful_get_restful_handler('main', 1, 0);
     $expected_result = $base_expected_result;
     $result = $handler->get($id);
     $this->assertEqual($result, $expected_result);
 
     // v1.1 - Text and entity reference field.
-    $handler = restful_get_restful_handler('entity_tests', 1, 1);
+    $handler = restful_get_restful_handler('main', 1, 1);
     $result = $handler->get($id);
     $expected_result = $base_expected_result;
     $expected_result['text_single'] = "<p>$text1</p>\n";
@@ -197,7 +197,7 @@ class RestfulViewEntityTestCase extends DrupalWebTestCase {
     $this->assertEqual($result, $expected_result);
 
     // v1.2 - "callback" and "process callback".
-    $handler = restful_get_restful_handler('entity_tests', 1, 2);
+    $handler = restful_get_restful_handler('main', 1, 2);
     $result = $handler->get($id);
     $expected_result = $base_expected_result;
     $expected_result['callback'] = 'callback';
@@ -206,7 +206,7 @@ class RestfulViewEntityTestCase extends DrupalWebTestCase {
     $this->assertEqual($result, $expected_result);
 
     // v1.3 - Non-existing "callback" property.
-    $handler = restful_get_restful_handler('entity_tests', 1, 3);
+    $handler = restful_get_restful_handler('main', 1, 3);
     try {
       $handler->get($id);
       $this->fail('Non-existing "callback" property did not trigger an exception.');
@@ -216,7 +216,7 @@ class RestfulViewEntityTestCase extends DrupalWebTestCase {
     }
 
     // v1.4 - Non-existing "process callback" property.
-    $handler = restful_get_restful_handler('entity_tests', 1, 4);
+    $handler = restful_get_restful_handler('main', 1, 4);
     try {
       $handler->get($id);
       $this->fail('Non-existing "process callback" property did not trigger an exception.');
