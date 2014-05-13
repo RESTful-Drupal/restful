@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains RestfulTestEntityTestsResource__1_4.
+ * Contains RestfulTestMainResource__1_4.
  */
 
-class RestfulTestEntityTestsResource__1_4 extends RestfulTestEntityTestsResource {
+class RestfulTestMainResource__1_4 extends RestfulTestMainResource {
 
   /**
    * Overrides RestfulTestEntityTestsResource::getPublicFields().

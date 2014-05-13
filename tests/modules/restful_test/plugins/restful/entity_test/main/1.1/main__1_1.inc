@@ -1,11 +1,12 @@
 <?php
 
 $plugin = array(
-  'label' => t('Entity Test'),
+  'label' => t('Main'),
   'description' => t('Export the entity test "main" bundle.'),
-  'resource' => 'entity_tests',
-  'name' => 'entity_tests__1_0',
+  'resource' => 'main',
+  'name' => 'main__1_1',
   'entity_type' => 'entity_test',
   'bundle' => 'main',
-  'class' => 'RestfulTestEntityTestsResource',
+  'class' => 'RestfulTestMainResource__1_1',
+  'minor_version' => 1,
 );
