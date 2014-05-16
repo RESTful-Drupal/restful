@@ -15,6 +15,7 @@ class RestfulTestTestsResource extends RestfulEntityBase {
     $public_fields['type'] = array(
       'property' => 'name',
       'wrapper_method' => 'getBundle',
+      'wrapper_method_on_entity' => TRUE,
     );
     return $public_fields;
   }
