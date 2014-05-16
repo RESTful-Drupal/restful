@@ -39,6 +39,44 @@ class RestfulEntityBaseMultipleBundles extends RestfulEntityBase {
   }
 
   /**
+   * Overrides RestfulEntityBase::getList().
+   */
+  public function getList($request, $account) {
+    $entity_type = $this->entityType;
+    $result = $this
+      ->getQueryForList($request, $account)
+      ->execute();
+
+
+    if (empty($result[$entity_type])) {
+      return;
+    }
+
+    $ids = array_keys($result[$entity_type]);
+
+    // Pre-load all entities.
+    $entities = entity_load($entity_type, $ids);
+
+    $return = array('list' => array());
+
+    $handlers = array();
+
+    $resources_info = $this->getBundles();
+
+    foreach ($entities as $entity) {
+      list($id,, $bundle) = entity_extract_ids($this->getEntityType(), $entity);
+      if (empty($handlers[$bundle])) {
+        $version = $this->getVersion();
+        $resource = $resources_info[$bundle];
+        $handlers[$bundle] = restful_get_restful_handler($resource[$bundle], $version['major'], $version['minor']);
+      }
+      $return['list'][] = $handlers[$bundle]->viewEntity($id, $request, $account);
+    }
+
+    return $return;
+  }
+
+  /**
    * Overrides RestfulEntityBase::getQueryForList().
    */
   public function getQueryForList($request, $account) {
