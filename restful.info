@@ -25,6 +25,7 @@ files[] = tests/RestfulEntityAndPropertyAccessTestCase.test
 files[] = tests/RestfulExceptionHandleTestCase.test
 files[] = tests/RestfulGetHandlersTestCase.test
 files[] = tests/RestfulHookMenuTestCase.test
+files[] = tests/RestfulListEntityMultipleBundlesTestCase.test
 files[] = tests/RestfulListTestCase.test
 files[] = tests/RestfulUpdateEntityTestCase
 files[] = tests/RestfulViewEntityTestCase.test

@@ -1,0 +1,62 @@
+<?php
+
+/**
+ * @file
+ * Contains RestfulListEntityMultipleBundlesTestCase
+ */
+
+class RestfulListEntityMultipleBundlesTestCase extends DrupalWebTestCase {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'List entity with multiple bundles',
+      'description' => 'Test listing an entity with multiple bundles.',
+      'group' => 'Restful',
+    );
+  }
+
+  function setUp() {
+    parent::setUp('restful_test');
+  }
+
+  /**
+   * Test listing an entity with multiple bundles.
+   */
+  function testList() {
+    $user1 = $this->drupalCreateUser();
+    $entity1 = entity_create('entity_test', array('name' => 'main', 'uid' => $user1->uid));
+    $entity1->save();
+
+    $entity2 = entity_create('entity_test', array('name' => 'main', 'uid' => $user1->uid));
+    $entity2->save();
+
+    $entity3 = entity_create('entity_test', array('name' => 'test', 'uid' => $user1->uid));
+    $entity3->save();
+
+    $expected_result = array(
+      'list' => array(
+        array(
+          'id' => $entity1->pid,
+          'label' => 'Main test type',
+          'self' => url('custom/' . $entity1->pid, array('absolute' => TRUE)),
+        ),
+        array(
+          'id' => $entity2->pid,
+          'label' => 'Main test type',
+          'self' => url('custom/' . $entity2->pid, array('absolute' => TRUE)),
+        ),
+        array(
+          'id' => $entity3->pid,
+          'label' => 'Main test type',
+          'self' => url('custom/' . $entity3->pid, array('absolute' => TRUE)),
+          // The "test" bundle also exposes the "type" property.
+          'type' => 'test',
+        ),
+      ),
+    );
+
+    $handler = restful_get_restful_handler('entity_tests');
+    $result = $handler->get();
+    $this->assertEqual($result, $expected_result);
+  }
+}
