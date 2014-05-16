@@ -5,5 +5,5 @@
  * Contains RestfulTestEntityTestsResource.
  */
 
-class RestfulTestEntityTestsResource extends RestfulEntityBase {
+class RestfulTestEntityTestsResource extends RestfulEntityBaseMultipleBundles {
 }

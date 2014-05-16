@@ -60,16 +60,16 @@ class RestfulEntityBaseMultipleBundles extends RestfulEntityBase {
     $return = array('list' => array());
 
     $handlers = array();
-
     $resources_info = $this->getBundles();
 
     foreach ($entities as $entity) {
+      // Call each handler by its registered bundle.
       list($id,, $bundle) = entity_extract_ids($this->getEntityType(), $entity);
       if (empty($handlers[$bundle])) {
         $version = $this->getVersion();
-        $resource = $resources_info[$bundle];
-        $handlers[$bundle] = restful_get_restful_handler($resource[$bundle], $version['major'], $version['minor']);
+        $handlers[$bundle] = restful_get_restful_handler($resources_info[$bundle], $version['major'], $version['minor']);
       }
+
       $return['list'][] = $handlers[$bundle]->viewEntity($id, $request, $account);
     }
 
