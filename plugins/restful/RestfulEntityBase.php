@@ -139,6 +139,24 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
   }
 
   /**
+   * Return the entity type of the resource.
+   *
+   * @return string
+   */
+  public function getEntityType() {
+    return $this->entityType;
+  }
+
+  /**
+   * Return the bundle of the resource if exists.
+   *
+   * @return string | bool
+   */
+  public function getBundle() {
+    return !empty($this->bundle) ? $this->bundle : FALSE;
+  }
+
+  /**
    * Call resource using the GET http method.
    *
    * @param string $path
@@ -274,6 +292,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
     }
 
     $ids = array_keys($result[$entity_type]);
+
     // Pre-load all entities.
     entity_load($entity_type, $ids);
 
@@ -524,7 +543,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *
    * @return array
    *   Array with the output of the new entity, passed to
-   *   RestfulEntityInterface::entityView().
+   *   RestfulEntityInterface::viewEntity().
    */
   public function updateEntity($entity_id, $request, $account) {
     $this->isValidEntity('update', $entity_id, $account);
@@ -554,7 +573,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *
    * @return array
    *   Array with the output of the new entity, passed to
-   *   RestfulEntityInterface::entityView().
+   *   RestfulEntityInterface::viewEntity().
    */
   public function createEntity($request, $account) {
     $entity_info = entity_get_info($this->entityType);
@@ -643,7 +662,8 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
       }
     }
 
-    return $property->access($op);
+    $access = $property->access($op);
+    return $access === TRUE || $access === NULL ? TRUE : FALSE;
   }
 
   /**
@@ -676,7 +696,8 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
 
     list(,, $bundle) = entity_extract_ids($entity_type, $entity);
 
-    if ($bundle != $this->plugin['bundle']) {
+    $resource_bundle = $this->getBundle();
+    if ($resource_bundle && $bundle != $resource_bundle) {
       throw new RestfulUnprocessableEntityException(format_string('The specified entity ID @id is not a valid @resource.', $params));
     }
 
@@ -690,19 +711,22 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
 
   public function getPublicFields() {
     $public_fields = $this->publicFields;
-    if (!empty($this->entityType)) {
-      $public_fields += array(
-        'id' => array(
-          'wrapper_method' => 'getIdentifier',
-          'wrapper_method_on_entity' => TRUE,
-        ),
-        'label' => array(
-          'wrapper_method' => 'label',
-          'wrapper_method_on_entity' => TRUE,
-        ),
-        'self' => array('property' => 'url'),
-      );
-    }
+
+    $entity_info = entity_get_info($this->getEntityType());
+    $id_key = $entity_info['entity keys']['id'];
+
+    $public_fields += array(
+      'id' => array(
+        'wrapper_method' => 'getIdentifier',
+        'wrapper_method_on_entity' => TRUE,
+        'property' => $id_key,
+      ),
+      'label' => array(
+        'wrapper_method' => 'label',
+        'wrapper_method_on_entity' => TRUE,
+      ),
+      'self' => array('property' => 'url'),
+    );
     return $public_fields;
   }
 

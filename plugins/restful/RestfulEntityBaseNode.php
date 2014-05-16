@@ -16,7 +16,6 @@ class RestfulEntityBaseNode extends RestfulEntityBase {
    */
   public function getPublicFields() {
     $public_fields = parent::getPublicFields();
-    $public_fields['id']['property'] = 'nid';
     $public_fields['label']['property'] = 'title';
     return $public_fields;
   }
