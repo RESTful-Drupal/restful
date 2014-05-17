@@ -597,8 +597,8 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *   The user object.
    * @param bool $null_missing_fields
    *   Determine if properties that are missing form the request array should
-   *   be treated as NULL, or should be skipped. Defaults to TRUE, which will
-   *   set the fields to NULL.
+   *   be treated as NULL, or should be skipped. Defaults to FALSE, which will
+   *   skip missing the fields to NULL.
    *
    * @return array
    *   Array with the output of the new entity, passed to
@@ -664,10 +664,10 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *   The user object.
    * @param bool $null_missing_fields
    *   Determine if properties that are missing form the request array should
-   *   be treated as NULL, or should be skipped. Defaults to TRUE, which will
+   *   be treated as NULL, or should be skipped. Defaults to FALSE, which will
    *   set the fields to NULL.
    */
-  protected function setPropertyValues(EntityMetadataWrapper $wrapper, $request, $account, $null_missing_fields) {
+  protected function setPropertyValues(EntityMetadataWrapper $wrapper, $request, $account, $null_missing_fields = FALSE) {
     $save = FALSE;
     $original_request = $request;
     foreach ($this->getPublicFields() as $public_property => $info) {
