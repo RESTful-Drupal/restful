@@ -677,7 +677,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
       $property_name = $info['property'];
       if (!isset($request[$public_property])) {
         // No property to set in the request.
-        if ($null_missing_fields && isset($wrapper->{$property_name}) && $this->checkPropertyAccess($wrapper->{$property_name})) {
+        if ($null_missing_fields && $this->checkPropertyAccess($wrapper->{$property_name})) {
           // We need to set the value to NULL.
           $wrapper->{$property_name}->set(NULL);
         }
@@ -728,8 +728,15 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
       }
     }
 
+    $info = $property->info();
+    if ($op == 'edit' && empty($info['setter callback'])) {
+      // Property does not allow setting.
+      return;
+    }
+
+
     $access = $property->access($op);
-    return $access === TRUE || $access === NULL ? TRUE : FALSE;
+    return $access === FALSE ? FALSE : TRUE;
   }
 
   /**
