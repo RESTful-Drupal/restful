@@ -674,17 +674,16 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
       // @todo: Pass value to validators, even if it doesn't exist, so we can
       // validate required properties.
 
+      $property_name = $info['property'];
       if (!isset($request[$public_property])) {
         // No property to set in the request.
-        if ($null_missing_fields) {
+        if ($null_missing_fields && $this->checkPropertyAccess($wrapper->{$property_name})) {
           // We need to set the value to NULL.
           $wrapper->{$property_name}->set(NULL);
         }
         continue;
       }
 
-
-      $property_name = $info['property'];
       if (!$this->checkPropertyAccess($wrapper->{$property_name})) {
         throw new RestfulBadRequestException(format_string('Property @name cannot be set.', array('@name' => $public_property)));
       }
