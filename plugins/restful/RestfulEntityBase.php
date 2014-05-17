@@ -200,6 +200,20 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
   }
 
   /**
+   * Call resource using the PATCH http method.
+   *
+   * @param string $path
+   *   (optional) The path.
+   * @param null $request
+   *   (optional) The request.
+   * @param null $account
+   *   (optional) The user object.
+   */
+  public function patch($path = '', $request = NULL, $account = NULL) {
+    return $this->process($path, $request, $account, 'patch');
+  }
+
+  /**
    * Call resource using the DELETE http method.
    *
    * @param string $path
