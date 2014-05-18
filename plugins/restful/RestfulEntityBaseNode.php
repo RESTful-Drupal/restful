@@ -12,6 +12,15 @@
 class RestfulEntityBaseNode extends RestfulEntityBase {
 
   /**
+   * Overrides RestfulEntityBase::getPublicFields().
+   */
+  public function getPublicFields() {
+    $public_fields = parent::getPublicFields();
+    $public_fields['label']['property'] = 'title';
+    return $public_fields;
+  }
+
+  /**
    * Overrides RestfulEntityBase::getQueryForList().
    *
    * Expose only published nodes.
