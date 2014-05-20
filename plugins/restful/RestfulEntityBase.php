@@ -312,7 +312,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *
    * @throws RestfulBadRequestException
    */
-  public function getList($request = NULL, $account = NULL) {
+  public function getList($request = NULL, stdClass $account = NULL) {
     $entity_type = $this->entityType;
     $result = $this
       ->getQueryForList($request, $account)
@@ -349,7 +349,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *
    * @throws RestfulBadRequestException
    */
-  public function getQueryForList($request, $account = NULL) {
+  public function getQueryForList($request, stdClass $account = NULL) {
     $query = new EntityFieldQuery();
     $query->entityCondition('entity_type', $this->entityType);
 
