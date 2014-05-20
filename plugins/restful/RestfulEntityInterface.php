@@ -6,5 +6,5 @@
  * Contains RestfulEntityInterface.
  */
 
-interface RestfulEntityInterface extends RestfulInterface{
+interface RestfulEntityInterface extends RestfulInterface {
 }

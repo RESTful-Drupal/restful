@@ -19,8 +19,17 @@ interface RestfulInterface {
   /**
    * Entry point to process a request.
    *
-   * @return
-   *   TRUE or FALSE based on delivery status.
+   * @param string $path
+   *   The requested path.
+   * @param array $request
+   *   The request array
+   * @param stdClass $account
+   *   The user object.
+   * @param string $method
+   *   The HTTP method.
+   *
+   * @return mixed
+   *   The return value can depend on the controller for the current $method.
    */
   public function process($path = '', $request = NULL, $account = NULL, $method = 'get');
 
@@ -43,6 +52,10 @@ interface RestfulInterface {
 
   /**
    * Determine if user can access the handler.
+   *
+   * @return bool
+   *   TRUE if the current request has access to the requested resource. FALSE
+   *   otherwise.
    */
   public function access();
 }
