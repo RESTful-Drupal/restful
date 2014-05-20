@@ -1,0 +1,68 @@
+<?php
+
+/**
+ * @file
+ * Contains RestfulAuthorizationEntityTestCase
+ */
+
+class RestfulAuthorizationEntityTestCase extends DrupalWebTestCase {
+
+  /**
+   * Holds the generated account.
+   * @var stdClass
+   */
+  protected $account;
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Authentication',
+      'description' => 'Test the request authentication.',
+      'group' => 'Restful',
+    );
+  }
+
+  function setUp() {
+    parent::setUp('restful_test');
+    $this->account = $this->drupalCreateUser();
+    $this->drupalLogin($this->account);
+  }
+
+  /**
+   * Test authorizing an entity.
+   *
+   * v1.1 - Authorize GET request.
+   */
+  function testAuthenticationEntity() {
+    global $user;
+    // v1.1 - GET string authorization.
+    $handler = restful_get_restful_handler('entity_tests', 1, 1);
+
+    // Case 1. Check that the handler has the expected authentication providers.
+    $providers = $handler->authenticationManager->providerNames();
+    foreach ($handler->getPluginInfo('authentication types') as $provider_name) {
+      $this->assertTrue(in_array($provider_name, $providers), format_string('The %name authorization type was found.', array(
+        '%name' => $provider_name,
+      )));
+    }
+
+    // Case 2. Test that the account from the authentication manager is the
+    // logged in user.
+    $user = $this->account;
+    $this->assertEqual($this->account->uid, $handler->authenticationManager->getAccount()->uid, 'The authentication manager resolved the currently logged in user.');
+
+    $auth_plugin = restful_get_authentication_plugins('cookie_auth');
+    $auth_class = ctools_plugin_get_class($auth_plugin, 'class');
+    $cookie_provider = new $auth_class($auth_plugin);
+
+    // Case 3. Test the 'cookie_auth' authentication provider.
+    $this->assertEqual($this->loggedInUser->uid, $cookie_provider->authenticate()->uid, 'The authentication manager resolved the currently logged in user.');
+
+    $this->drupalLogout();
+    $user = drupal_anonymous_user();
+    // Case 4. Test that the 'cookie_auth' resolves the anonymous user.
+    $this->assertEqual(0, $cookie_provider->authenticate()->uid, 'The authentication manager resolved the anonymous user.');
+
+    // Put back the user object.
+    $user = $this->originalUser;
+  }
+}

@@ -84,6 +84,12 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
   protected $httpHeaders = array();
 
   /**
+   * Authentication manager.
+   * @var \RestfulAuthenticationManager
+   */
+  public $authenticationManager;
+
+  /**
    * Return the defined controllers.
    */
   public function getControllers () {
@@ -115,6 +121,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
     $this->plugin = $plugin;
     $this->entityType = $plugin['entity_type'];
     $this->bundle = $plugin['bundle'];
+    $this->authenticationManager = new \RestfulAuthenticationManager();
   }
 
   /**
@@ -213,13 +220,12 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
   }
 
   public function process($path = '', $request = NULL, $account = NULL, $method = 'get') {
-    global $user;
-    if (!$method_name = $this->getControllerFromPath($path, $method)) {
-      throw new RestfulBadRequestException('Path does not exist');
+    if (empty($account)) {
+      $account = $this->authenticationManager->getAccount();
     }
 
-    if (empty($account)) {
-      $account = user_load($user->uid);
+    if (!$method_name = $this->getControllerFromPath($path, $method)) {
+      throw new RestfulBadRequestException('Path does not exist');
     }
 
     if (!$path) {
@@ -737,4 +743,18 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
   public function access() {
     return TRUE;
   }
+
+  /**
+   * Gets information about the restful plugin.
+   *
+   * @param string
+   *   (optional) The name of the key to return.
+   *
+   * @return mixed
+   *   Depends on the requested value.
+   */
+  public function getPluginInfo($key = NULL) {
+    return isset($key) ? $this->plugin[$key] : $this->plugin;
+  }
+
 }
