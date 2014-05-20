@@ -26,10 +26,10 @@ interface RestfulInterface {
    * @param stdClass $account
    *   The user object.
    * @param string $method
-   *   The HTTP verb.
+   *   The HTTP method.
    *
-   * @return
-   *   TRUE or FALSE based on delivery status.
+   * @return mixed
+   *   The return value can depend on the controller for the current $method.
    */
   public function process($path = '', $request = NULL, $account = NULL, $method = 'get');
 

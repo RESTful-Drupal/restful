@@ -12,61 +12,66 @@
 abstract class RestfulEntityBase implements RestfulEntityInterface {
 
   /**
-   * @var string $entityType
-   *   The entity type.
+   * The entity type.
+   *
+   * @var string
    */
   protected $entityType;
 
   /**
-   * @var string $bundle
-   *   The bundle.
+   * The bundle.
+   *
+   * @var string
    */
   protected $bundle;
 
   /**
+   * The plugin definition.
+   *
    * @var array $plugin
-   *   The plugin definition.
    */
   protected $plugin;
 
   /**
-   * @var array $publicFields
-   *   The public fields that are exposed to the API.
+   * The public fields that are exposed to the API.
    *
-   *    Array with the optional values:
-   *    - "property": The entity property (e.g. "title", "nid").
-   *    - "sub_property": A sub property name of a property to take from it the
-   *      content. This can be used for example on a text field with filtered text
-   *      input format where we would need to do $wrapper->body->value->value().
-   *      Defaults to FALSE.
-   *    - "wrapper_method": The wrapper's method name to perform on the field.
-   *      This can be used for example to get the entity label, by setting the
-   *      value to "label". Defaults to "value".
-   *    - "wrapper_method_on_entity": A Boolean to indicate on what to perform
-   *      the wrapper method. If TRUE the method will perform on the entity (e.g.
-   *      $wrapper->label()) and FALSE on the property or sub property
-   *      (e.g. $wrapper->field_reference->label()). Defaults to FALSE.
-   *    - "callback": A callable callback to get a computed value. Defaults To
-   *      FALSE.
-   *    - "process_callback": A callable callback to perform on the returned
-   *      value, or an array with the object and method. Defaults To FALSE.
-   *    - "resource": This property can be assigned only to an entity reference
-   *      field. Array of restful resources keyed by the target bundle. For
-   *      example, if the field is referencing a node entity, with "Article" and
-   *      "Page" bundles, we are able to map those bundles to their related
-   *      resource. Items with bundles that were not explicitly set would be
-   *      ignored.
-   *      array(
-   *        'article' => 'articles',
-   *        'page' => 'pages',
-   *      );
+   *  Array with the optional values:
+   *  - "property": The entity property (e.g. "title", "nid").
+   *  - "sub_property": A sub property name of a property to take from it the
+   *    content. This can be used for example on a text field with filtered text
+   *    input format where we would need to do $wrapper->body->value->value().
+   *    Defaults to FALSE.
+   *  - "wrapper_method": The wrapper's method name to perform on the field.
+   *    This can be used for example to get the entity label, by setting the
+   *    value to "label". Defaults to "value".
+   *  - "wrapper_method_on_entity": A Boolean to indicate on what to perform
+   *    the wrapper method. If TRUE the method will perform on the entity (e.g.
+   *    $wrapper->label()) and FALSE on the property or sub property
+   *    (e.g. $wrapper->field_reference->label()). Defaults to FALSE.
+   *  - "callback": A callable callback to get a computed value. Defaults To
+   *    FALSE.
+   *  - "process_callback": A callable callback to perform on the returned
+   *    value, or an array with the object and method. Defaults To FALSE.
+   *  - "resource": This property can be assigned only to an entity reference
+   *    field. Array of restful resources keyed by the target bundle. For
+   *    example, if the field is referencing a node entity, with "Article" and
+   *    "Page" bundles, we are able to map those bundles to their related
+   *    resource. Items with bundles that were not explicitly set would be
+   *    ignored.
+   *    array(
+   *      'article' => 'articles',
+   *      'page' => 'pages',
+   *    );
+   *
+   * @var array
    */
   protected $publicFields = array();
 
   /**
+   * Nested array that provides information about what method to call for each
+   * route pattern.
+   *
    * @var array $controllers
-   *   Nested array that provides information about what method to call for each
-   *   route pattern.
    */
   protected $controllers = array(
     '' => array(
@@ -83,11 +88,12 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
   );
 
   /**
-   * @var array $httpHeaders
-   *   Array keyed by the header property, and the value.
+   * Array keyed by the header property, and the value.
    *
-   *   This can be used for example to change the "Status" code of the HTTP
-   *   response, or to add a "Location" property.
+   * This can be used for example to change the "Status" code of the HTTP
+   * response, or to add a "Location" property.
+   *
+   * @var array $httpHeaders
    */
   protected $httpHeaders = array();
 
@@ -180,8 +186,8 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    * @param null $account
    *   (optional) The user object.
    *
-   * @return bool
-   *   TRUE or FALSE based on delivery status.
+   * @return mixed
+   *   The return value can depend on the controller for the get method.
    */
   public function get($path = '', $request = NULL, $account = NULL) {
     return $this->process($path, $request, $account, 'get');
@@ -197,8 +203,8 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    * @param null $account
    *   (optional) The user object.
    *
-   * @return bool
-   *   TRUE or FALSE based on delivery status.
+   * @return mixed
+   *   The return value can depend on the controller for the post method.
    */
   public function post($path = '', $request = NULL, $account = NULL) {
     return $this->process($path, $request, $account, 'post');
@@ -214,8 +220,8 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    * @param null $account
    *   (optional) The user object.
    *
-   * @return bool
-   *   TRUE or FALSE based on delivery status.
+   * @return mixed
+   *   The return value can depend on the controller for the put method.
    */
   public function put($path = '', $request = NULL, $account = NULL) {
     return $this->process($path, $request, $account, 'put');
@@ -231,8 +237,8 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    * @param null $account
    *   (optional) The user object.
    *
-   * @return
-   *   TRUE or FALSE based on delivery status.
+   * @return mixed
+   *   The return value can depend on the controller for the delete method.
    */
   public function delete($path = '', $request = NULL, $account = NULL) {
     return $this->process($path, $request, $account, 'delete');
@@ -266,7 +272,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    * @param string $path
    *   The requested path.
    * @param string $http_method
-   *   The requested HTTP verb.
+   *   The requested HTTP method.
    * @return string
    *   The appropriate method to call.
    *
@@ -542,7 +548,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    * @param array $resource
    * @param array $request
    * @param stdClass $account
-   *   Drupal user.
+   *   The user object.
    *
    * @return mixed
    *   The value if found, or NULL if bundle not defined.
@@ -552,13 +558,13 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
 
     $target_type = $this->getTargetTypeFromEntityReference($property);
     if (!$entity = $wrapper->value()) {
-      return NULL;
+      return;
     }
 
     list($id,, $bundle) = entity_extract_ids($target_type, $entity);
     if (empty($resource[$bundle])) {
       // Bundle not mapped to a resource.
-      return NULL;
+      return;
     }
 
 
@@ -641,7 +647,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
   /**
    * Set properties of the entity based on the request, and save the entity.
    *
-   * @param EntityDrupalWrapper $wrapper
+   * @param EntityMetadataWrapper $wrapper
    *   The wrapped entity object, passed by reference.
    * @param array $request
    *   The request array.
@@ -649,7 +655,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *   The user object.
    * @throws RestfulBadRequestException
    */
-  protected function setPropertyValues(EntityDrupalWrapper $wrapper, $request, stdClass $account) {
+  protected function setPropertyValues(EntityMetadataWrapper $wrapper, $request, stdClass $account) {
     $save = FALSE;
     $original_request = $request;
     foreach ($this->getPublicFields() as $public_property => $info) {

@@ -49,7 +49,7 @@ class RestfulEntityBaseMultipleBundles extends RestfulEntityBase {
 
 
     if (empty($result[$entity_type])) {
-      return NULL;
+      return;
     }
 
     $ids = array_keys($result[$entity_type]);
