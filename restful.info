@@ -10,6 +10,8 @@ files[] = plugins/restful/RestfulEntityBaseNode.php
 files[] = plugins/restful/RestfulEntityBaseMultipleBundles.php
 files[] = plugins/restful/RestfulEntityInterface.php
 files[] = plugins/restful/RestfulInterface.php
+files[] = plugins/authorization/RestfulAuthorizationInterface.php
+files[] = plugins/authorization/RestfulAuthorizationBase.php
 
 ; Exceptions
 files[] = exceptions/RestfulException.php
