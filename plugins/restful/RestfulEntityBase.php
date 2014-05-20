@@ -663,7 +663,8 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
 
 
       $property_name = $info['property'];
-      if (!$this->checkPropertyAccess($wrapper->{$property_name})) {
+      $op = $wrapper->is_new->value() ? 'create' : 'edit';
+      if (!$this->checkPropertyAccess($wrapper->{$property_name}, $op)) {
         throw new RestfulBadRequestException(format_string('Property @name cannot be set.', array('@name' => $public_property)));
       }
       $wrapper->{$property_name}->set($request[$public_property]);
