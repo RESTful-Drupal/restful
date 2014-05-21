@@ -727,6 +727,11 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
       ),
       'self' => array('property' => 'url'),
     );
+
+    if (!empty($entity_info['entity keys']['label'])) {
+      $public_fields['label']['property'] = $entity_info['entity keys']['label'];
+    }
+
     return $public_fields;
   }
 
