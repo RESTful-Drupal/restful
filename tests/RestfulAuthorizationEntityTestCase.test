@@ -1,0 +1,130 @@
+<?php
+
+/**
+ * @file
+ * Contains RestfulAuthorizationEntityTestCase
+ */
+
+class RestfulAuthorizationEntityTestCase extends DrupalWebTestCase {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Authorize entity',
+      'description' => 'Test the authorization of an entity.',
+      'group' => 'Restful',
+    );
+  }
+
+  /**
+   * Get string credentials.
+   *
+   * @var array
+   */
+  protected $credentials = array();
+
+  function setUp() {
+    parent::setUp('restful_example', 'restful_test');
+
+    // Text - single.
+    $field = array(
+      'field_name' => 'text_single',
+      'type' => 'text_long',
+      'entity_types' => array('entity_test'),
+      'cardinality' => 1,
+    );
+    field_create_field($field);
+
+    $instance = array(
+      'field_name' => 'text_single',
+      'bundle' => 'main',
+      'entity_type' => 'entity_test',
+      'label' => t('Text single'),
+      'settings' => array(
+        'text_processing' => 1,
+      ),
+    );
+    field_create_instance($instance);
+
+    // Get the correct credentials.
+    $default_value = drupal_hmac_base64('restful_authentication_get_string_value', drupal_get_hash_salt());
+    $this->credentials = array(
+      'key' => variable_get('restful_authentication_get_string_name', 'token'),
+      'value' => variable_get('restful_authentication_get_string_value', $default_value),
+    );
+  }
+
+  /**
+   * Test authorizing an entity.
+   *
+   * v1.1 - Authorize GET request.
+   */
+  function testAuthorizeEntity() {
+    $author = $this->drupalCreateUser();
+    $entity = entity_create('entity_test', array('name' => 'main', 'uid' => $author->uid));
+    $wrapper = entity_metadata_wrapper('entity_test', $entity);
+
+    $wrapper->text_single->set(array('value' => $this->randomName()));
+    $wrapper->save();
+
+    $id = $entity->pid;
+
+    // v1.1 - GET string authorization.
+    $handler = restful_get_restful_handler('entity_tests', 1, 1);
+    // Case 1. Check that the handler has the expected authorizers.
+    $authorizers = array_keys($handler->getAuthorizers());
+    foreach ($handler->getPluginInfo('authorization types') as $authorizer_name) {
+      $this->assertTrue(in_array($authorizer_name, $authorizers), format_string('The %name authorization type was found.', array(
+        '%name' => $authorizer_name,
+      )));
+    }
+
+    // Case 2. Test unauthorized request w/ empty GET string.
+    try {
+      $handler->get($id);
+      $this->fail("Authorized a request that shouldn't be authorized.");
+    }
+    catch (\RestfulForbiddenException $e) {
+      $this->pass('The request was successfully unauthorized.');
+    }
+    catch (\Exception $e) {
+      $this->fail(format_string('Unhandled @type: @message', array(
+        '@type' => get_class($e),
+        '@message' => $e->getMessage(),
+      )));
+    }
+
+    // Case 3. Test unauthorized request w/ incorrect value.
+    $_GET[$this->credentials['key']] = $this->credentials['value'] . '_invalid';
+    try {
+      $handler->get($id);
+      $this->fail("Authorized a request that shouldn't be authorized.");
+    }
+    catch (\RestfulForbiddenException $e) {
+      $this->pass('The request was successfully unauthorized.');
+    }
+    catch (\Exception $e) {
+      // Fail on unhandled exceptions so other cases can be evaluated.
+      $this->fail(format_string('Unhandled @type: @message', array(
+        '@type' => get_class($e),
+        '@message' => $e->getMessage(),
+      )));
+    }
+
+    // Case 4. Test authorized request.
+    $_GET[$this->credentials['key']] = $this->credentials['value'];
+    try {
+      $handler->get($id);
+      $this->pass("Request successfully authorized.");
+    }
+    catch (\RestfulForbiddenException $e) {
+      $this->fail("Unauthorized valid request.");
+    }
+    catch (\Exception $e) {
+      $this->fail(format_string('Unhandled @type: @message', array(
+        '@type' => get_class($e),
+        '@message' => $e->getMessage(),
+      )));
+    }
+
+  }
+}

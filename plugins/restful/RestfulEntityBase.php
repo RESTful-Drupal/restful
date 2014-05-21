@@ -85,6 +85,11 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
   protected $httpHeaders = array();
 
   /**
+   * Array containing all the authorization classes that apply to this request.
+   */
+  protected $authorizers = array();
+
+  /**
    * Return the defined controllers.
    */
   public function getControllers () {
@@ -228,6 +233,22 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
   }
 
   public function process($path = '', $request = NULL, $account = NULL, $method = 'get') {
+    if (!empty($this->authorizers)) {
+      // If there are not authorizers then the request is granted access.
+      $access = FALSE;
+      foreach ($this->authorizers as $authorizer) {
+        if ($authorizer->authorize()) {
+          // Grant access to the first authorizer that says so.
+          $access = TRUE;
+          break;
+        }
+      }
+      if (!$access) {
+        throw new \RestfulForbiddenException('The request could not be authorized');
+      }
+    }
+
+    // @TODO: The user should come from the $authorizer->authenticate();
     global $user;
     if (!$method_name = $this->getControllerFromPath($path, $method)) {
       throw new RestfulBadRequestException('Path does not exist');
@@ -814,5 +835,38 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
 
   public function access() {
     return TRUE;
+  }
+
+  /**
+   * Adds the authorizer to the list.
+   *
+   * @param \RestfulAuthorizationInterface $authorizer
+   *   The authorization plugin object.
+   */
+  public function setAuthorizer(\RestfulAuthorizationInterface $authorizer) {
+    $this->authorizers[$authorizer->getName()] = $authorizer;
+  }
+
+  /**
+   * Return the array of authorizers.
+   *
+   * @return array
+   *   The authorizers.
+   */
+  public function getAuthorizers() {
+    return $this->authorizers;
+  }
+
+  /**
+   * Gets information about the restful plugin.
+   *
+   * @param string
+   *   (optional) The name of the key to return.
+   *
+   * @return mixed
+   *   Depends on the requested value.
+   */
+  public function getPluginInfo($key = NULL) {
+    return isset($key) ? $this->plugin[$key] : $this->plugin;
   }
 }
