@@ -68,7 +68,8 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
     ),
     '\d+' => array(
       'get' => 'viewEntity',
-      'put' => 'updateEntity',
+      'put' => 'putEntity',
+      'patch' => 'patchEntity',
       'delete' => 'deleteEntity',
     ),
   );
@@ -196,6 +197,20 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    */
   public function put($path = '', $request = NULL, $account = NULL) {
     return $this->process($path, $request, $account, 'put');
+  }
+
+  /**
+   * Call resource using the PATCH http method.
+   *
+   * @param string $path
+   *   (optional) The path.
+   * @param null $request
+   *   (optional) The request.
+   * @param null $account
+   *   (optional) The user object.
+   */
+  public function patch($path = '', $request = NULL, $account = NULL) {
+    return $this->process($path, $request, $account, 'patch');
   }
 
   /**
@@ -532,7 +547,9 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
   }
 
   /**
-   * Update an entity.
+   * Update an entity using PUT.
+   *
+   * Non existing properties are assumed to be exqual to NULL.
    *
    * @param $entity_id
    *   The entity ID.
@@ -545,11 +562,53 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *   Array with the output of the new entity, passed to
    *   RestfulEntityInterface::viewEntity().
    */
-  public function updateEntity($entity_id, $request, $account) {
+  public function putEntity($entity_id, $request, $account) {
+    return $this->updateEntity($entity_id, $request, $account, TRUE);
+  }
+
+  /**
+   * Update an entity using Patch.
+   *
+   * Non existing properties are skipped.
+   *
+   * @param $entity_id
+   *   The entity ID.
+   * @param $request
+   *   The request array.
+   * @param $account
+   *   The user object.
+   *
+   * @return array
+   *   Array with the output of the new entity, passed to
+   *   RestfulEntityInterface::viewEntity().
+   */
+  public function patchEntity($entity_id, $request, $account) {
+    return $this->updateEntity($entity_id, $request, $account, FALSE);
+  }
+
+  /**
+   * Update an entity.
+   *
+   * @param $entity_id
+   *   The entity ID.
+   * @param $request
+   *   The request array.
+   * @param $account
+   *   The user object.
+   * @param bool $null_missing_fields
+   *   Determine if properties that are missing form the request array should
+   *   be treated as NULL, or should be skipped. Defaults to FALSE, which will
+   *   skip missing the fields to NULL.
+   *
+   * @return array
+   *   Array with the output of the new entity, passed to
+   *   RestfulEntityInterface::viewEntity().
+   */
+  protected function updateEntity($entity_id, $request, $account, $null_missing_fields = FALSE) {
     $this->isValidEntity('update', $entity_id, $account);
     $wrapper = entity_metadata_wrapper($this->entityType, $entity_id);
 
-    $this->setPropertyValues($wrapper, $request, $account);
+    $this->setPropertyValues($wrapper, $request, $account, $null_missing_fields);
 
     // Set the HTTP headers.
     $this->setHttpHeaders('Status', 201);
@@ -603,21 +662,28 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *   The request array.
    * @param $account
    *   The user object.
+   * @param bool $null_missing_fields
+   *   Determine if properties that are missing form the request array should
+   *   be treated as NULL, or should be skipped. Defaults to FALSE, which will
+   *   set the fields to NULL.
    */
-  protected function setPropertyValues(EntityMetadataWrapper $wrapper, $request, $account) {
+  protected function setPropertyValues(EntityMetadataWrapper $wrapper, $request, $account, $null_missing_fields = FALSE) {
     $save = FALSE;
     $original_request = $request;
     foreach ($this->getPublicFields() as $public_property => $info) {
       // @todo: Pass value to validators, even if it doesn't exist, so we can
       // validate required properties.
 
+      $property_name = $info['property'];
       if (!isset($request[$public_property])) {
-        // No property to set.
+        // No property to set in the request.
+        if ($null_missing_fields && $this->checkPropertyAccess($wrapper->{$property_name})) {
+          // We need to set the value to NULL.
+          $wrapper->{$property_name}->set(NULL);
+        }
         continue;
       }
 
-
-      $property_name = $info['property'];
       if (!$this->checkPropertyAccess($wrapper->{$property_name})) {
         throw new RestfulBadRequestException(format_string('Property @name cannot be set.', array('@name' => $public_property)));
       }
@@ -662,8 +728,15 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
       }
     }
 
+    $info = $property->info();
+    if ($op == 'edit' && empty($info['setter callback'])) {
+      // Property does not allow setting.
+      return;
+    }
+
+
     $access = $property->access($op);
-    return $access === TRUE || $access === NULL ? TRUE : FALSE;
+    return $access === FALSE ? FALSE : TRUE;
   }
 
   /**
