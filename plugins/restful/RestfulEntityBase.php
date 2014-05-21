@@ -768,4 +768,27 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
   public function setAuthorizer(\RestfulAuthorizationInterface $authorizer) {
     $this->authorizers[$authorizer->getName()] = $authorizer;
   }
+
+  /**
+   * Return the array of authorizers.
+   *
+   * @return array
+   *   The authorizers.
+   */
+  public function getAuthorizers() {
+    return $this->authorizers;
+  }
+
+  /**
+   * Gets information about the restful plugin.
+   *
+   * @param string
+   *   (optional) The name of the key to return.
+   *
+   * @return mixed
+   *   Depends on the requested value.
+   */
+  public function getPluginInfo($key = NULL) {
+    return isset($key) ? $this->plugin[$key] : $this->plugin;
+  }
 }
