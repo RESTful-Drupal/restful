@@ -15,7 +15,7 @@ class RestfulAuthorizationBase implements RestfulAuthorizationInterface {
   protected $settings;
 
   /**
-   * Indicates if the request needs to be authenticated befor it can be
+   * Indicates if the request needs to be authenticated before it can be
    * authorized.
    *
    * @var bool
