@@ -32,7 +32,7 @@ class RestfulAuthenticationManager extends \ArrayObject {
    */
   public function getAccount() {
     // Return the previously resolved user, if any.
-    if (empty($this->account)) {
+    if (!empty($this->account)) {
       return $this->account;
     }
     else {
@@ -62,7 +62,7 @@ class RestfulAuthenticationManager extends \ArrayObject {
    *   The account to set.
    */
   public function setAccount(\stdClass $account) {
-    $this->$account = $account;
+    $this->account = $account;
   }
 
   /**

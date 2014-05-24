@@ -24,8 +24,8 @@ class RestfulAuthorizationEntityTestCase extends DrupalWebTestCase {
 
   function setUp() {
     parent::setUp('restful_test');
+    // Create a custom user that we'll use to identify.
     $this->account = $this->drupalCreateUser();
-    $this->drupalLogin($this->account);
   }
 
   /**
@@ -46,17 +46,16 @@ class RestfulAuthorizationEntityTestCase extends DrupalWebTestCase {
     // Case 2. Test that the account from the authentication manager is the
     // logged in user.
     $user = $this->account;
-    $this->assertEqual($this->account->uid, $handler->authenticationManager->getAccount()->uid, 'The authentication manager resolved the currently logged in user.');
+    $this->assertEqual($this->account->uid, $handler->getAccount()->uid, 'The authentication manager resolved the currently logged in user.');
 
-    $cookie_provider = restful_get_authentication_handler('cookie_auth');
+    $cookie_provider = restful_get_authentication_handler('cookie');
 
     // Case 3. Test the 'cookie_auth' authentication provider.
-    $this->assertEqual($this->loggedInUser->uid, $cookie_provider->authenticate()->uid, 'The authentication manager resolved the currently logged in user.');
+    $this->assertEqual($this->account->uid, $cookie_provider->authenticate()->uid, 'The cookie provider resolved the currently logged in user.');
 
-    $this->drupalLogout();
     $user = drupal_anonymous_user();
     // Case 4. Test that the 'cookie_auth' resolves the anonymous user.
-    $this->assertEqual(0, $cookie_provider->authenticate()->uid, 'The authentication manager resolved the anonymous user.');
+    $this->assertEqual(0, $cookie_provider->authenticate()->uid, 'The cookie provider resolved the anonymous user.');
 
     // Put back the user object.
     $user = $this->originalUser;
