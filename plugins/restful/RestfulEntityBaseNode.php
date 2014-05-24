@@ -16,9 +16,10 @@ class RestfulEntityBaseNode extends RestfulEntityBase {
    *
    * Expose only published nodes.
    */
-  public function getQueryForList($request, $account) {
+  public function getQueryForList($request, stdClass $account = NULL) {
     $query = parent::getQueryForList($request, $account);
     $query->propertyCondition('status', NODE_PUBLISHED);
     return $query;
   }
+
 }
