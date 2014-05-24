@@ -3,6 +3,6 @@
 $plugin = array(
   'label' => t('Cookie based authentication'),
   'description' => t('Authenticate requests based on the user cookie.'),
-  'name' => 'cookie_auth',
+  'name' => 'cookie',
   'class' => 'RestfulAuthenticationCookie',
 );

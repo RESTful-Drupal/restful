@@ -2,13 +2,14 @@
 
 /**
  * @file
- * Contains RestfulAuthorizationEntityTestCase
+ * Contains RestfulAuthorizationEntityTestCase.
  */
 
 class RestfulAuthorizationEntityTestCase extends DrupalWebTestCase {
 
   /**
    * Holds the generated account.
+   *
    * @var stdClass
    */
   protected $account;
@@ -28,13 +29,10 @@ class RestfulAuthorizationEntityTestCase extends DrupalWebTestCase {
   }
 
   /**
-   * Test authorizing an entity.
-   *
-   * v1.1 - Authorize GET request.
+   * Test authenticating a user.
    */
-  function testAuthenticationEntity() {
+  function testAuthentication() {
     global $user;
-    // v1.1 - GET string authorization.
     $handler = restful_get_restful_handler('entity_tests', 1, 1);
 
     // Case 1. Check that the handler has the expected authentication providers.
@@ -50,9 +48,7 @@ class RestfulAuthorizationEntityTestCase extends DrupalWebTestCase {
     $user = $this->account;
     $this->assertEqual($this->account->uid, $handler->authenticationManager->getAccount()->uid, 'The authentication manager resolved the currently logged in user.');
 
-    $auth_plugin = restful_get_authentication_plugins('cookie_auth');
-    $auth_class = ctools_plugin_get_class($auth_plugin, 'class');
-    $cookie_provider = new $auth_class($auth_plugin);
+    $cookie_provider = restful_get_authentication_handler('cookie_auth');
 
     // Case 3. Test the 'cookie_auth' authentication provider.
     $this->assertEqual($this->loggedInUser->uid, $cookie_provider->authenticate()->uid, 'The authentication manager resolved the currently logged in user.');

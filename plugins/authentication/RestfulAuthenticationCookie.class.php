@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * Contains RestfulAuthenticationCookie
+ * Contains RestfulAuthenticationCookie.
  */
 
 class RestfulAuthenticationCookie extends RestfulAuthenticationBase implements RestfulAuthenticationInterface {
@@ -10,12 +10,11 @@ class RestfulAuthenticationCookie extends RestfulAuthenticationBase implements R
    * Implements RestfulAuthenticationInterface::authenticate().
    */
   public function authenticate() {
-    global $user;
-    if (drupal_session_started()) {
-      return $user;
+    if (!drupal_session_started()) {
+      return NULL;
     }
-
-    return NULL;
+    global $user;
+    return user_load($user->uid);
   }
 
 }

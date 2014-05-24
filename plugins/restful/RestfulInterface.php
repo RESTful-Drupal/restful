@@ -14,7 +14,7 @@ interface RestfulInterface {
    * @param $plugin
    *   The restful plugin object.
    */
-  public function __construct($plugin);
+  public function __construct($plugin, \RestfulAuthenticationManager $auth_manager = NULL);
 
   /**
    * Entry point to process a request.
@@ -22,7 +22,7 @@ interface RestfulInterface {
    * @return
    *   TRUE or FALSE based on delivery status.
    */
-  public function process($path = '', $request = NULL, $account = NULL, $method = 'get');
+  public function process($path = '', $request = NULL, $method = 'get');
 
   /**
    * Return the properties that should be public.

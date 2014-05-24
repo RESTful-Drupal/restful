@@ -117,11 +117,12 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
     return $this->httpHeaders;
   }
 
-  public function __construct($plugin) {
+  public function __construct($plugin, \RestfulAuthenticationManager $auth_manager = NULL) {
     $this->plugin = $plugin;
     $this->entityType = $plugin['entity_type'];
     $this->bundle = $plugin['bundle'];
     $this->authenticationManager = new \RestfulAuthenticationManager();
+    $this->authenticationManager = $auth_manager ? $auth_manager : new \RestfulAuthenticationManager();
   }
 
   /**
@@ -170,11 +171,10 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *   (optional) The path.
    * @param null $request
    *   (optional) The request.
-   * @param null $account
-   *   (optional) The user object.
+   * @return mixed
    */
-  public function get($path = '', $request = NULL, $account = NULL) {
-    return $this->process($path, $request, $account, 'get');
+  public function get($path = '', $request = NULL) {
+    return $this->process($path, $request, 'get');
   }
 
   /**
@@ -184,11 +184,10 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *   (optional) The path.
    * @param null $request
    *   (optional) The request.
-   * @param null $account
-   *   (optional) The user object.
+   * @return mixed
    */
-  public function post($path = '', $request = NULL, $account = NULL) {
-    return $this->process($path, $request, $account, 'post');
+  public function post($path = '', $request = NULL) {
+    return $this->process($path, $request, 'post');
   }
 
   /**
@@ -198,11 +197,10 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *   (optional) The path.
    * @param null $request
    *   (optional) The request.
-   * @param null $account
-   *   (optional) The user object.
+   * @return mixed
    */
-  public function put($path = '', $request = NULL, $account = NULL) {
-    return $this->process($path, $request, $account, 'put');
+  public function put($path = '', $request = NULL) {
+    return $this->process($path, $request, 'put');
   }
 
   /**
@@ -212,17 +210,14 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *   (optional) The path.
    * @param null $request
    *   (optional) The request.
-   * @param null $account
-   *   (optional) The user object.
+   * @return mixed
    */
-  public function delete($path = '', $request = NULL, $account = NULL) {
-    return $this->process($path, $request, $account, 'delete');
+  public function delete($path = '', $request = NULL) {
+    return $this->process($path, $request, 'delete');
   }
 
-  public function process($path = '', $request = NULL, $account = NULL, $method = 'get') {
-    if (empty($account)) {
-      $account = $this->authenticationManager->getAccount();
-    }
+  public function process($path = '', $request = NULL, $method = 'get') {
+    $account = $this->getAccount();
 
     if (!$method_name = $this->getControllerFromPath($path, $method)) {
       throw new RestfulBadRequestException('Path does not exist');
@@ -755,6 +750,26 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    */
   public function getPluginInfo($key = NULL) {
     return isset($key) ? $this->plugin[$key] : $this->plugin;
+  }
+
+  /**
+   * Proxy method to get the account from the authenticationManager.
+   *
+   * @return \stdClass
+   *   The user object.
+   */
+  public function getAccount() {
+    return $this->authenticationManager->getAccount();
+  }
+
+  /**
+   * Proxy method to set the account from the authenticationManager.
+   *
+   * @param \stdClass $account
+   *   The account to set.
+   */
+  public function setAccount(\stdClass $account) {
+    $this->authenticationManager->setAccount($account);
   }
 
 }

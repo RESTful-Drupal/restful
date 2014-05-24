@@ -41,18 +41,18 @@ function restful_plugin_process(&$plugin, $info) {
       'minor_version' => 0,
       'entity_type' => FALSE,
       'bundle' => FALSE,
+      'authentication types' => array(),
     );
 
     $plugin['options'] += array(
+    );
+    $plugin['authentication types'] += array(
     );
   }
   else if ($info['type'] == 'authentication') {
     $plugin += array(
       'description' => '',
       'settings' => array(),
-    );
-
-    $plugin['settings'] += array(
     );
   }
 }
@@ -80,13 +80,25 @@ function restful_get_restful_plugins() {
 /**
  * Helper function to include CTools plugins and get all authentication plugins.
  *
+ * @return array
+ *   All plugins for restful authentication.
+ */
+function restful_get_authentication_plugins() {
+  ctools_include('plugins');
+  return ctools_get_plugins('restful', 'authentication');
+}
+
+/**
+ * Helper function to include CTools plugins and get the specified
+ * authentication plugin.
+ *
  * @param string $plugin_name
- *   (optional) If provided this function only returns the selected plugin.
+ *   If provided this function only returns the selected plugin.
  *
  * @return array
- *   The selected plugin or all plugins for restful authentication.
+ *   The selected plugin for restful authentication.
  */
-function restful_get_authentication_plugins($plugin_name = NULL) {
+function restful_get_authentication_plugin($plugin_name) {
   ctools_include('plugins');
   return ctools_get_plugins('restful', 'authentication', $plugin_name);
 }
@@ -174,21 +186,37 @@ function restful_get_restful_handler($resource_name, $major_version = 1, $minor_
   $handler = new $class($plugin);
   // If the restful plugin needs authentication load the corresponding
   // authentication plugin.
-  if (!empty($plugin['authentication types'])) {
-    // Since we can have multiple authentication plugins
-    foreach ($plugin['authentication types'] as $auth_plugin_name) {
-      $auth_plugin = restful_get_authentication_plugins($auth_plugin_name);
-      $auth_class = ctools_plugin_get_class($auth_plugin, 'class');
-      if (!empty($auth_class)) {
-        $handler->authenticationManager->setAuthNProvider(new $auth_class($auth_plugin));
-      }
-    }
+
+  // We can have multiple authentication plugins.
+  foreach ($plugin['authentication types'] as $auth_plugin_name) {
+    $auth_handler = restful_get_authentication_handler($auth_plugin_name);
+    $handler->authenticationManager
+      ->addAuthenticationProvider($auth_handler);
   }
   $cache[$identifier] = $handler;
 
   return $cache[$identifier];
 }
 
+/**
+ * Return the authentication handler based on the authentication plugin name.
+ *
+ * @param string $auth_plugin_name
+ *   Name of the authentication plugin.
+ *
+ * @return \RestfulAuthenticationInterface
+ *   The authentication provider object.
+ *
+ * @throws \RestfulException if the authentication provider does not exist.
+ */
+function restful_get_authentication_handler($auth_plugin_name) {
+  $auth_plugin = restful_get_authentication_plugin($auth_plugin_name);
+  $auth_class = ctools_plugin_get_class($auth_plugin, 'class');
+  if (empty($auth_class)) {
+    throw new \RestfulException('Unrecognized authentication provider.');
+  }
+  return new $auth_class($auth_plugin);
+}
 
 /**
  * Access callback; Determine access for an API call.

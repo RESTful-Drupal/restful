@@ -5,7 +5,7 @@ $plugin = array(
   'resource' => 'articles',
   'name' => 'articles__1_0',
   'authentication types' => array(
-    'cookie_auth',
+    'cookie',
   ),
   'entity_type' => 'node',
   'bundle' => 'article',
