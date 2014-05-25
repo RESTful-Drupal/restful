@@ -22,7 +22,8 @@ class RestfulAuthenticationToken extends \RestfulAuthenticationBase {
     $result = $query
       ->entityCondition('entity_type', 'restful_auth_token')
       ->propertyCondition('token', $_GET['access_token'])
-      ->range(0, 1);
+      ->range(0, 1)
+      ->execute();
 
     if (empty($result['restful_auth_token'])) {
       // No token exists.
@@ -32,7 +33,7 @@ class RestfulAuthenticationToken extends \RestfulAuthenticationBase {
     $id = key($result['restful_auth_token']);
     $auth_token = entity_load_single('restful_auth_token', $id);
 
-    // Retrun TRUE only if there is no expire value, or the expire is in the
+    // Return TRUE only if there is no expire value, or the expire is in the
     // future.
     return !empty($auth_token->expire) ? $auth_token->expire > REQUEST_TIME : TRUE;
   }

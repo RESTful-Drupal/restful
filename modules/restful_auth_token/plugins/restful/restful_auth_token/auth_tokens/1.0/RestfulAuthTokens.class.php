@@ -8,15 +8,16 @@
 class RestfulAuthTokens extends RestfulEntityBase {
 
   /**
-   * Overrides \RestfulEntityBase::publicFields
+   * Overrides RestfulEntityBase::getQueryForList().
    *
-   * @var array
+   * Keep only the "token" property.
    */
-  protected $publicFields = array(
-    'token' => array(
+  public function getPublicFields() {
+    $public_fields['token'] = array(
       'property' => 'token',
-    ),
-  );
+    );
+    return $public_fields;
+  }
 
   /**
    * Overrides \RestfulEntityBase::controllers
@@ -25,23 +26,22 @@ class RestfulAuthTokens extends RestfulEntityBase {
    */
   protected $controllers = array(
     '' => array(
-      // GET returns a list of entities.
-      'get' => 'createAndGetToken',
+      // Get or create a new token.
+      'get' => 'getOrCreateToken',
     ),
   );
 
   /**
    * Create a token for a user, and return its value.
    */
-  public function createAndGetToken($request = NULL, stdClass $account = NULL) {
-    $account = $this->getAccount();
-
+  public function getOrCreateToken($request = NULL, stdClass $account = NULL) {
     // Check if there is a token that did not expire yet.
     $query = new EntityFieldQuery();
     $result = $query
       ->entityCondition('entity_type', $this->entityType)
       ->propertyCondition('uid', $account->uid)
-      ->range(0, 1);
+      ->range(0, 1)
+      ->execute();
 
     $token_exists = FALSE;
 
@@ -49,7 +49,7 @@ class RestfulAuthTokens extends RestfulEntityBase {
       $id = key($result['restful_auth_token']);
       $auth_token = entity_load_single('restful_auth_token', $id);
 
-      if (empty($auth_token->expire) && $auth_token->expire < REQUEST_TIME) {
+      if (!empty($auth_token->expire) && $auth_token->expire < REQUEST_TIME) {
         // Token has expired, so we can delete this token.
         $auth_token->delete();
         $token_exists = FALSE;
@@ -66,6 +66,7 @@ class RestfulAuthTokens extends RestfulEntityBase {
         'type' => 'restful_auth_token',
         'created' => REQUEST_TIME,
         'name' => 'self',
+        'token' => md5(time()),
       );
       $auth_token = entity_create('restful_auth_token', $values);
       $auth_token->save();

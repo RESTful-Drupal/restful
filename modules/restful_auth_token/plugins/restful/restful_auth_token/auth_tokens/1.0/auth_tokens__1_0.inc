@@ -9,6 +9,6 @@ $plugin = array(
   'description' => t('Export the authentication token.'),
   'class' => 'RestfulAuthTokens',
   'authentication types' => array(
-    'basic_auth',
+    'cookie',
   ),
 );
