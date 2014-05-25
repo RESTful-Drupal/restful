@@ -1,0 +1,54 @@
+<?php
+
+/**
+ * @file
+ * RESTful token authentication.
+ */
+
+/**
+ * Implements hook_ctools_plugin_directory().
+ */
+function restful_auth_token_ctools_plugin_directory($module, $plugin) {
+  if ($module == 'restful') {
+    return 'plugins/' . $plugin;
+  }
+}
+
+/**
+ * Implements hook_entity_info().
+ */
+function restful_auth_token_entity_info() {
+  $items['restful_auth_token'] = array(
+    'label' => t('Authentication token'),
+    'entity class' => 'RestfulAuthToken',
+    'controller class' => 'EntityAPIController',
+    'base table' => 'restful_auth_token',
+    'fieldable' => TRUE,
+    'entity keys' => array(
+      'id' => 'id',
+      'label' => 'name',
+      'bundle' => 'type',
+    ),
+    'bundles' => array(),
+    'bundle keys' => array(
+      'bundle' => 'name',
+    ),
+    'module' => 'restful_auth_token',
+    'access callback' => 'restful_auth_token_entity_access_callback',
+    'entity cache' => module_exists('entitycache'),
+  );
+
+  return $items;
+}
+
+/**
+ * Access callback.
+ *
+ * @todo
+ *
+ * @return bool
+ *   Return TRUE if user has access to the entity.
+ */
+function restful_auth_token_entity_access_callback() {
+  return TRUE;
+}
