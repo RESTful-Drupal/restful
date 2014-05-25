@@ -11,8 +11,7 @@ class RestfulAuthenticationBasic extends RestfulAuthenticationBase implements Re
    * {@inheritdoc}
    */
   public function applies() {
-    $username = drupal_get_http_header('PHP_AUTH_USER');
-    $password = drupal_get_http_header('PHP_AUTH_PW');
+    list($username, $password) = $this->getCredentials();
     return isset($username) && isset($password);
   }
 
@@ -22,8 +21,7 @@ class RestfulAuthenticationBasic extends RestfulAuthenticationBase implements Re
    * @see user_login_authenticate_validate().
    */
   public function authenticate() {
-    $username = drupal_get_http_header('PHP_AUTH_USER');
-    $password = drupal_get_http_header('PHP_AUTH_PW');
+    list($username, $password) = $this->getCredentials();
 
     // Do not allow any login from the current user's IP if the limit has been
     // reached. Default is 50 failed attempts allowed in one hour. This is
@@ -67,4 +65,27 @@ class RestfulAuthenticationBasic extends RestfulAuthenticationBase implements Re
     }
   }
 
+  /**
+   * Get the credentials based on the $_SERVER variables.
+   *
+   * @return array
+   *   A numeric array with the username and password.
+   */
+  protected function getCredentials() {
+    $username = empty($_SERVER['PHP_AUTH_USER']) ? NULL : $_SERVER['PHP_AUTH_USER'];
+    $password = empty($_SERVER['PHP_AUTH_PW']) ? NULL : $_SERVER['PHP_AUTH_PW'];
+
+    // Try to fill PHP_AUTH_USER & PHP_AUTH_PW with REDIRECT_HTTP_AUTHORIZATION
+    // for compatibility with Apache PHP CGI/FastCGI.
+    // This requires the following line in your ".htaccess"-File:
+    // RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+    if (!empty($_SERVER['REDIRECT_HTTP_AUTHORIZATION']) && !isset($username) && !isset($password)) {
+      $authentication = base64_decode(substr($_SERVER['REDIRECT_HTTP_AUTHORIZATION'], 6));
+      list($username, $password) = explode(':', $authentication);
+      $_SERVER['PHP_AUTH_USER'] = $username;
+      $_SERVER['PHP_AUTH_PW'] = $password;
+    }
+
+    return array($username, $password);
+  }
 }
