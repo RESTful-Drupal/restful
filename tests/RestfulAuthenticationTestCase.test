@@ -33,7 +33,7 @@ class RestfulAuthorizationTestCase extends DrupalWebTestCase {
    */
   function testAuthentication() {
     global $user;
-    $handler = restful_get_restful_handler('entity_tests', 1, 1);
+    $handler = restful_get_restful_handler('main', 1, 5);
 
     // Case 1. Check that the handler has the expected authentication providers.
     $providers = array_keys($handler->authenticationManager->getArrayCopy());

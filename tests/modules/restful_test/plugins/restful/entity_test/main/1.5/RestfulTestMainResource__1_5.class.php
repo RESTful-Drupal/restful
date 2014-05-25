@@ -5,5 +5,5 @@
  * Contains RestfulTestEntityTestsResource.
  */
 
-class RestfulTestEntityTestsResource__1_1 extends RestfulEntityBase {
+class RestfulTestMainResource__1_5 extends RestfulEntityBase {
 }

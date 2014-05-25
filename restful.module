@@ -74,7 +74,7 @@ function restful_get_restful_plugins() {
 }
 
 /**
- * Helper function to include CTools plugins and get all authentication plugins.
+ * Include CTools plugins and get all authentication plugins.
  *
  * @return array
  *   All plugins for restful authentication.
@@ -85,8 +85,7 @@ function restful_get_authentication_plugins() {
 }
 
 /**
- * Helper function to include CTools plugins and get the specified
- * authentication plugin.
+ * Include CTools plugins and get the specified authentication plugin.
  *
  * @param string $plugin_name
  *   If provided this function only returns the selected plugin.
