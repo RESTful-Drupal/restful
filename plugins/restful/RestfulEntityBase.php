@@ -121,7 +121,6 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
     $this->plugin = $plugin;
     $this->entityType = $plugin['entity_type'];
     $this->bundle = $plugin['bundle'];
-    $this->authenticationManager = new \RestfulAuthenticationManager();
     $this->authenticationManager = $auth_manager ? $auth_manager : new \RestfulAuthenticationManager();
   }
 

@@ -16,7 +16,9 @@ interface RestfulAuthenticationInterface {
   public function authenticate();
 
   /**
-   * Determines if the request can be checked for authentication.
+   * Determines if the request can be checked for authentication. For example,
+   * when authenticating with HTTP header, return FALSE if the header values do
+   * not exist.
    *
    * @return bool
    *   TRUE if the request can be checked for authentication, FALSE otherwise.

@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains RestfulAuthenticationManager
+ * Contains RestfulAuthenticationManager.
  */
 
 class RestfulAuthenticationManager extends \ArrayObject {
@@ -35,24 +35,22 @@ class RestfulAuthenticationManager extends \ArrayObject {
     if (!empty($this->account)) {
       return $this->account;
     }
-    else {
-      // Resolve the user based on the providers in the manager.
-      $account = NULL;
-      foreach ($this as $provider) {
-        if ($provider->applies() && $account = $provider->authenticate()) {
-          // The account has been loaded, we can stop looking.
-          break;
-        }
+    // Resolve the user based on the providers in the manager.
+    $account = NULL;
+    foreach ($this as $provider) {
+      if ($provider->applies() && $account = $provider->authenticate()) {
+        // The account has been loaded, we can stop looking.
+        break;
       }
-
-      if (empty($account)) {
-        // If the account could not be authenticated default to the anonymous user.
-        // Most of the cases the cookie provider will do this for us.
-        $account = drupal_anonymous_user();
-      }
-      $this->setAccount($account);
-      return $account;
     }
+
+    if (empty($account)) {
+      // If the account could not be authenticated default to the anonymous user.
+      // Most of the cases the cookie provider will do this for us.
+      $account = drupal_anonymous_user();
+    }
+    $this->setAccount($account);
+    return $account;
   }
 
   /**
@@ -63,16 +61,6 @@ class RestfulAuthenticationManager extends \ArrayObject {
    */
   public function setAccount(\stdClass $account) {
     $this->account = $account;
-  }
-
-  /**
-   * Get the array of authorization provider names. The plugin names.
-   *
-   * @return array
-   *   Array of provider names.
-   */
-  public function providerNames() {
-    return array_keys($this->getArrayCopy());
   }
 
 }
