@@ -4,24 +4,25 @@
  * Contains RestfulAuthenticationToken.
  */
 
-class RestfulAuthenticationToken extends \RestfulAuthenticationBase {
+class RestfulAuthenticationToken extends \RestfulAuthenticationBase implements \RestfulAuthenticationInterface {
 
   /**
    * {@inheritdoc}
    */
-  public function applies() {
-    return !empty($_GET['access_token']);
+  public function applies($request = NULL) {
+    dpm($request);
+    return !empty($request['access_token']);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function authenticate() {
+  public function authenticate($request = array()) {
     // Check if there is a token that did not expire yet.
     $query = new EntityFieldQuery();
     $result = $query
       ->entityCondition('entity_type', 'restful_auth_token')
-      ->propertyCondition('token', $_GET['access_token'])
+      ->propertyCondition('token', $request['access_token'])
       ->range(0, 1)
       ->execute();
 
@@ -33,8 +34,11 @@ class RestfulAuthenticationToken extends \RestfulAuthenticationBase {
     $id = key($result['restful_auth_token']);
     $auth_token = entity_load_single('restful_auth_token', $id);
 
-    // Return TRUE only if there is no expire value, or the expire is in the
-    // future.
-    return !empty($auth_token->expire) ? $auth_token->expire > REQUEST_TIME : TRUE;
+    if (!empty($auth_token->expire) && $auth_token->expire > REQUEST_TIME) {
+      // Token is expired.
+      return;
+    }
+
+    return user_load($auth_token->uid);
   }
 }

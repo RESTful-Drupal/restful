@@ -11,4 +11,7 @@ $plugin = array(
   'bundle' => 'article',
   'description' => t('Export the article content type.'),
   'class' => 'RestfulExampleArticlesResource',
+  'authentication types' => array(
+    'token',
+  ),
 );

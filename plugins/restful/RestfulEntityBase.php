@@ -262,7 +262,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    * {@inheritdoc}
    */
   public function process($path = '', $request = NULL, $method = 'get') {
-    $account = $this->getAccount();
+    $account = $this->getAccount($request);
 
     if (!$method_name = $this->getControllerFromPath($path, $method)) {
       throw new RestfulBadRequestException('Path does not exist');
@@ -888,11 +888,14 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
   /**
    * Proxy method to get the account from the authenticationManager.
    *
+   * @param $request
+   *   The request.
+   *
    * @return \stdClass
    *   The user object.
    */
-  public function getAccount() {
-    return $this->authenticationManager->getAccount();
+  public function getAccount($request = NULL) {
+    return $this->authenticationManager->getAccount($request);
   }
 
   /**
