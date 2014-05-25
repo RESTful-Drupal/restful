@@ -7,7 +7,7 @@ $plugin = array(
   'entity_type' => 'restful_auth_token',
   'bundle' => 'restful_auth_token',
   'description' => t('Export the authentication token.'),
-  'class' => 'RestfulAuthTokenAuthTokens',
+  'class' => 'RestfulAuthTokens',
   'authentication types' => array(
     'basic_auth',
   ),

@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains RestfulAuthTokenAuthTokens.
+ * Contains RestfulAuthTokens.
  */
 
-class RestfulAuthTokenAuthTokens extends RestfulEntityBase {
+class RestfulAuthTokens extends RestfulEntityBase {
 
   /**
    * Overrides \RestfulEntityBase::publicFields
@@ -40,7 +40,6 @@ class RestfulAuthTokenAuthTokens extends RestfulEntityBase {
     $query = new EntityFieldQuery();
     $result = $query
       ->entityCondition('entity_type', $this->entityType)
-      ->entityCondition('bundle', $this->bundle)
       ->propertyCondition('uid', $account->uid)
       ->range(0, 1);
 
