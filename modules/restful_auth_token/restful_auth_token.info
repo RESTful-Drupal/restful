@@ -2,3 +2,6 @@ name = RESTful token authentication
 description = Authenticate a REST call using a token.
 core = 7.x
 dependencies[] = restful
+
+; Plugins
+files[] = includes/RestfulAuthToken.php

@@ -31,7 +31,7 @@ function restful_auth_token_entity_info() {
     ),
     'bundles' => array(),
     'bundle keys' => array(
-      'bundle' => 'name',
+      'bundle' => 'type',
     ),
     'module' => 'restful_auth_token',
     'access callback' => 'restful_auth_token_entity_access_callback',
