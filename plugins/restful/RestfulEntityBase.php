@@ -99,6 +99,12 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
   protected $httpHeaders = array();
 
   /**
+   * Authentication manager.
+   * @var \RestfulAuthenticationManager
+   */
+  public $authenticationManager;
+
+  /**
    * Get the defined controllers
    *
    * @return array
@@ -127,10 +133,11 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
     return $this->httpHeaders;
   }
 
-  public function __construct($plugin) {
+  public function __construct($plugin, \RestfulAuthenticationManager $auth_manager = NULL) {
     $this->plugin = $plugin;
     $this->entityType = $plugin['entity_type'];
     $this->bundle = $plugin['bundle'];
+    $this->authenticationManager = $auth_manager ? $auth_manager : new \RestfulAuthenticationManager();
   }
 
   /**
@@ -184,14 +191,12 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *   (optional) The path.
    * @param null $request
    *   (optional) The request.
-   * @param null $account
-   *   (optional) The user object.
    *
    * @return mixed
    *   The return value can depend on the controller for the get method.
    */
-  public function get($path = '', $request = NULL, $account = NULL) {
-    return $this->process($path, $request, $account, 'get');
+  public function get($path = '', $request = NULL) {
+    return $this->process($path, $request, 'get');
   }
 
   /**
@@ -201,14 +206,12 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *   (optional) The path.
    * @param null $request
    *   (optional) The request.
-   * @param null $account
-   *   (optional) The user object.
    *
    * @return mixed
    *   The return value can depend on the controller for the post method.
    */
-  public function post($path = '', $request = NULL, $account = NULL) {
-    return $this->process($path, $request, $account, 'post');
+  public function post($path = '', $request = NULL) {
+    return $this->process($path, $request, 'post');
   }
 
   /**
@@ -218,14 +221,12 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *   (optional) The path.
    * @param null $request
    *   (optional) The request.
-   * @param null $account
-   *   (optional) The user object.
    *
    * @return mixed
    *   The return value can depend on the controller for the put method.
    */
-  public function put($path = '', $request = NULL, $account = NULL) {
-    return $this->process($path, $request, $account, 'put');
+  public function put($path = '', $request = NULL) {
+    return $this->process($path, $request, 'put');
   }
 
   /**
@@ -249,27 +250,22 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *   (optional) The path.
    * @param null $request
    *   (optional) The request.
-   * @param null $account
-   *   (optional) The user object.
    *
    * @return mixed
    *   The return value can depend on the controller for the delete method.
    */
-  public function delete($path = '', $request = NULL, $account = NULL) {
-    return $this->process($path, $request, $account, 'delete');
+  public function delete($path = '', $request = NULL) {
+    return $this->process($path, $request, 'delete');
   }
 
   /**
    * {@inheritdoc}
    */
-  public function process($path = '', $request = NULL, $account = NULL, $method = 'get') {
-    global $user;
+  public function process($path = '', $request = NULL, $method = 'get') {
+    $account = $this->getAccount();
+
     if (!$method_name = $this->getControllerFromPath($path, $method)) {
       throw new RestfulBadRequestException('Path does not exist');
-    }
-
-    if (empty($account)) {
-      $account = user_load($user->uid);
     }
 
     if (!$path) {
@@ -875,4 +871,38 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
   public function access() {
     return TRUE;
   }
+
+  /**
+   * Gets information about the restful plugin.
+   *
+   * @param string
+   *   (optional) The name of the key to return.
+   *
+   * @return mixed
+   *   Depends on the requested value.
+   */
+  public function getPluginInfo($key = NULL) {
+    return isset($key) ? $this->plugin[$key] : $this->plugin;
+  }
+
+  /**
+   * Proxy method to get the account from the authenticationManager.
+   *
+   * @return \stdClass
+   *   The user object.
+   */
+  public function getAccount() {
+    return $this->authenticationManager->getAccount();
+  }
+
+  /**
+   * Proxy method to set the account from the authenticationManager.
+   *
+   * @param \stdClass $account
+   *   The account to set.
+   */
+  public function setAccount(\stdClass $account) {
+    $this->authenticationManager->setAccount($account);
+  }
+
 }

@@ -22,10 +22,13 @@ class RestfulEntityBaseMultipleBundles extends RestfulEntityBase {
     ),
   );
 
-  public function __construct($plugin) {
+  public function __construct($plugin, \RestfulAuthenticationManager $auth_manager = NULL) {
     parent::__construct($plugin);
 
-    $this->bundles = $plugin['bundles'];
+    if (!empty($plugin['bundles'])) {
+      $this->bundles = $plugin['bundles'];
+    }
+    $this->authenticationManager = $auth_manager ? $auth_manager : new \RestfulAuthenticationManager();
   }
 
   /**

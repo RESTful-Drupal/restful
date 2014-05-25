@@ -5,6 +5,9 @@ dependencies[] = ctools
 dependencies[] = entity
 
 ; Plugins
+files[] = plugins/authentication/RestfulAuthenticationBase.php
+files[] = plugins/authentication/RestfulAuthenticationInterface.php
+files[] = plugins/authentication/RestfulAuthenticationManager.php
 files[] = plugins/restful/RestfulEntityBase.php
 files[] = plugins/restful/RestfulEntityBaseNode.php
 files[] = plugins/restful/RestfulEntityBaseMultipleBundles.php
@@ -12,14 +15,15 @@ files[] = plugins/restful/RestfulEntityInterface.php
 files[] = plugins/restful/RestfulInterface.php
 
 ; Exceptions
+files[] = exceptions/RestfulBadRequestException.php
 files[] = exceptions/RestfulException.php
 files[] = exceptions/RestfulForbiddenException.php
-files[] = exceptions/RestfulBadRequestException.php
 files[] = exceptions/RestfulGoneException.php
 files[] = exceptions/RestfulUnsupportedMediaTypeException.php
 files[] = exceptions/RestfulUnprocessableEntityException.php
 
 ; Tests
+files[] = tests/RestfulAuthenticationTestCase.test
 files[] = tests/RestfulCreateEntityTestCase.test
 files[] = tests/RestfulEntityAndPropertyAccessTestCase.test
 files[] = tests/RestfulExceptionHandleTestCase.test
