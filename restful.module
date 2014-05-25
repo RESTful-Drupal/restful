@@ -263,7 +263,7 @@ function restful_menu_process_callback($major_version, $resource_name) {
   unset($path[0], $path[1]);
   $path = implode('/', $path);
 
-  $request = array();
+  $request = NULL;
   $method = strtolower($_SERVER['REQUEST_METHOD']);
 
   switch ($method) {

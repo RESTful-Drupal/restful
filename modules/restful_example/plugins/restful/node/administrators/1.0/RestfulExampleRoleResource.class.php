@@ -1,9 +1,10 @@
 <?php
 /**
+ * @file
  * Contains RestfulExampleRoleResource.
  */
 
-class RestfulExampleRoleResource extends \RestfulEntityBase implements \RestfulEntityInterface {
+class RestfulExampleRoleResource extends \RestfulEntityBaseMultipleBundles implements \RestfulEntityInterface {
 
   /**
    * Overrides \RestfulEntityBase::__construct().
@@ -11,11 +12,11 @@ class RestfulExampleRoleResource extends \RestfulEntityBase implements \RestfulE
   public function __construct($plugin, \RestfulAuthenticationManager $auth_manager = NULL) {
     parent::__construct($plugin, $auth_manager);
     // Remove all other controllers since we only need to GET a list.
-    $this->setControllers(array(
+    $this->controllers = array(
       '' => array(
         'get' => 'getList',
       )
-    ));
+    );
   }
 
   /**
@@ -35,9 +36,10 @@ class RestfulExampleRoleResource extends \RestfulEntityBase implements \RestfulE
   }
 
   /**
-   * Overrides \RestfulEntityBase::alterQueryForList().
+   * Overrides \RestfulEntityBase::getQueryForList().
    */
-  public function alterQueryForList(\EntityFieldQuery $query) {
+  public function getQueryForList($request, stdClass $account = NULL) {
+    $query = parent::getQueryForList($request, $account);
     // Get the configured roles.
     $options = $this->getPluginInfo('options');
 
@@ -50,7 +52,7 @@ class RestfulExampleRoleResource extends \RestfulEntityBase implements \RestfulE
       }
     }
     if (empty($selected_rids)) {
-      return;
+      return $query;
     }
 
     // Get the list of user ids belonging to the selected roles.
@@ -63,6 +65,8 @@ class RestfulExampleRoleResource extends \RestfulEntityBase implements \RestfulE
     if (!empty($uids)) {
       $query->propertyCondition('uid', array_keys($uids), 'IN');
     }
+
+    return $query;
   }
 
 }
