@@ -10,7 +10,6 @@ class RestfulAuthenticationToken extends \RestfulAuthenticationBase implements \
    * {@inheritdoc}
    */
   public function applies($request = NULL) {
-    dpm($request);
     return !empty($request['access_token']);
   }
 
