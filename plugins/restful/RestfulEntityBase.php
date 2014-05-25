@@ -110,8 +110,18 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    * @return array
    *   The defined controllers.
    */
-  public function getControllers () {
+  public function getControllers() {
     return $this->controllers;
+  }
+
+  /**
+   * Set the controllers.
+   *
+   * @param array $controllers
+   *   The controllers to set.
+   */
+  public function setControllers($controllers) {
+    $this->controllers = $controllers;
   }
 
   /**
@@ -407,7 +417,21 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
     // @todo: Remove hardocding, and allow pagination.
     $query->range(0, 50);
 
+    // Allow plugins to alter the query.
+    $this->alterQueryForList($query);
+
     return $query;
+  }
+
+  /**
+   * Alter an \EntityFieldQuery before it's executed.
+   *
+   * @param \EntityFieldQuery $query
+   *   The query to alter.
+   */
+  protected function alterQueryForList(\EntityFieldQuery $query) {
+    // Intentionally left blank. Override in a class that extends from this one
+    // to add extra conditions or logic to the query.
   }
 
   /**
