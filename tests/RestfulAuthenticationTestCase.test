@@ -14,6 +14,13 @@ class RestfulAuthorizationTestCase extends DrupalWebTestCase {
    */
   protected $account;
 
+  /**
+   * Holds the current value of the $_SERVER super global.
+   *
+   * @var array
+   */
+  protected $originalServer;
+
   public static function getInfo() {
     return array(
       'name' => 'Authentication',
@@ -26,8 +33,19 @@ class RestfulAuthorizationTestCase extends DrupalWebTestCase {
     parent::setUp('restful_test');
     // Create a custom user that we'll use to identify.
     $this->account = $this->drupalCreateUser();
+
+    $this->originalServer = $_SERVER;
   }
 
+  function tearDown() {
+    global $user;
+    // Put back the user object.
+    $user = $this->originalUser;
+
+    // Put back the $_SERVER array.
+    $_SERVER = $this->originalServer;
+    parent::tearDown();
+  }
   /**
    * Test authenticating a user.
    */
@@ -60,7 +78,36 @@ class RestfulAuthorizationTestCase extends DrupalWebTestCase {
     // Case 4. Test that the 'cookie_auth' resolves the anonymous user.
     $this->assertEqual(0, $cookie_provider->authenticate()->uid, 'The cookie provider resolved the anonymous user.');
 
-    // Put back the user object.
-    $user = $this->originalUser;
+    $basic_auth_provider = restful_get_authentication_handler('basic_auth');
+
+    // Case 5. Valid login using basic auth.
+    $_SERVER['PHP_AUTH_USER'] = $this->account->name;
+    $_SERVER['PHP_AUTH_PW'] = $this->account->pass_raw;
+    $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] = NULL;
+    $this->assertEqual($this->account->uid, $basic_auth_provider->authenticate()->uid, 'The basic auth provider resolved the currently logged in user.');
+
+    // Case 6. Valid login using REDIRECT_HTTP_AUTHORIZATION.
+    $_SERVER['PHP_AUTH_USER'] = NULL;
+    $_SERVER['PHP_AUTH_PW'] = NULL;
+    $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] = 'Basic: ' . base64_encode($this->account->name . ':' . $this->account->pass_raw);
+    $this->assertEqual($this->account->uid, $basic_auth_provider->authenticate()->uid, 'The basic auth provider resolved the currently logged in user. Using REDIRECT_HTTP_AUTHORIZATION.');
+
+    // Case 7. Invalid pass for basic auth.
+    $_SERVER['PHP_AUTH_USER'] = $this->account->name;
+    $_SERVER['PHP_AUTH_PW'] = $this->randomName();
+    $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] = NULL;
+    $this->assertNull($basic_auth_provider->authenticate(), 'The basic auth provider could not resolve a user with invalid password.');
+
+    // Case 8. Invalid username for basic auth.
+    $_SERVER['PHP_AUTH_USER'] = $this->randomName();
+    $_SERVER['PHP_AUTH_PW'] = $this->account->pass_raw;
+    $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] = NULL;
+    $this->assertNull($basic_auth_provider->authenticate(), 'The basic auth provider could not resolve a user with invalid username.');
+
+    // Case 9. Valid login using REDIRECT_HTTP_AUTHORIZATION.
+    $_SERVER['PHP_AUTH_USER'] = NULL;
+    $_SERVER['PHP_AUTH_PW'] = NULL;
+    $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] = 'Basic: ' . base64_encode($this->randomName() . ':' . $this->randomName());
+    $this->assertNull($basic_auth_provider->authenticate(), 'The basic auth provider could not resolve a user with invalid encoded username & password. Using REDIRECT_HTTP_AUTHORIZATION.');
   }
 }

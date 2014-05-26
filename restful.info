@@ -18,8 +18,9 @@ files[] = plugins/restful/RestfulInterface.php
 files[] = exceptions/RestfulBadRequestException.php
 files[] = exceptions/RestfulException.php
 files[] = exceptions/RestfulForbiddenException.php
-files[] = exceptions/RestfulUnauthorizedException.php
+files[] = exceptions/RestfulFloodException.php
 files[] = exceptions/RestfulGoneException.php
+
 files[] = exceptions/RestfulUnsupportedMediaTypeException.php
 files[] = exceptions/RestfulUnprocessableEntityException.php
 
