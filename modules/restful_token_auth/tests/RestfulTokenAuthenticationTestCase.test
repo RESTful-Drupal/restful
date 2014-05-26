@@ -1,0 +1,43 @@
+<?php
+
+/**
+ * @file
+ * Contains RestfulTokenAuthenticationTestCase.
+ */
+
+class RestfulTokenAuthenticationTestCase extends DrupalWebTestCase {
+
+  /**
+   * Holds the generated account.
+   *
+   * @var stdClass
+   */
+  protected $account;
+
+  /**
+   * Holds the current value of the $_SERVER super global.
+   *
+   * @var array
+   */
+  protected $originalServer;
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Authentication',
+      'description' => 'Test the request authentication.',
+      'group' => 'Restful',
+    );
+  }
+
+  function setUp() {
+    parent::setUp('restful_example');
+    // Create a custom user that we'll use to identify.
+    $this->account = $this->drupalCreateUser();
+  }
+
+  /**
+   * Test authenticating a user.
+   */
+  function testAuthentication() {
+  }
+}

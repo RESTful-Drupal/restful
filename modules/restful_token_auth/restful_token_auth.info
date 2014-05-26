@@ -5,3 +5,6 @@ dependencies[] = restful
 
 ; Plugins
 files[] = includes/RestfulAuthToken.php
+
+; Tests
+files[] = tests/RestfulTokenAuthenticationTestCase.test
