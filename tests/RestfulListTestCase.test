@@ -149,7 +149,12 @@ class RestfulListTestCase extends DrupalWebTestCase {
     }
 
     // Test the administrator's content listing.
-    $handler = restful_get_restful_handler('per_role_content');
+    $role_name = 'administrator';
+    $plugin = ctools_get_plugins('restful', 'restful', 'per_role_content__1_0:' . $role_name);
+    $class = ctools_plugin_load_class('restful', 'restful', $plugin['name'], 'class');
+    $handler = new $class($plugin);
+    // Force the user 1 to be identified.
+    $handler->setAccount(user_load(1));
     $settings = array(
       'type' => 'article',
       'title' => $this->randomName(),
@@ -161,7 +166,7 @@ class RestfulListTestCase extends DrupalWebTestCase {
     $response = $handler->get('', $request);
     foreach ($response['list'] as $item) {
       $roles = array_map('trim', explode(',', $item['roles']));
-      $this->assertTrue(in_array('administrator', $roles), "Administrator role found in administrator's content list.");
+      $this->assertTrue(in_array($role_name, $roles), format_string('%role role found in content list.', array('%role' => $role_name)));
     }
   }
 

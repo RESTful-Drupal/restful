@@ -9,11 +9,35 @@ $plugin = array(
   ),
   'entity_type' => 'node',
   'options' => array(
-    'roles' => array(
-      'administrator',
-    ),
+    'roles' => array(),
   ),
   'bundle' => 'article',
   'description' => t('Get a list of all the nodes authored by users with the administration role.'),
   'class' => 'RestfulExampleRoleResource',
+  'get children' => 'restful_restful_per_role_content_get_children',
+  'get child' => 'restful_restful_per_role_content_get_child',
 );
+
+/**
+ * Get children implementation.
+ */
+function restful_restful_per_role_content_get_children($plugin, $parent) {
+  $plugins = array();
+  foreach (user_roles() as $rid => $role_name) {
+    $plugins[$parent . ':' . $role_name] = $plugin;
+    $plugins[$parent . ':' . $role_name]['options'] = array(
+      'roles' => array($role_name),
+    );
+  }
+  return $plugins;
+}
+
+/**
+ * Get children implementation.
+ */
+function restful_restful_per_role_content_get_child($plugin, $parent, $child) {
+  $plugin['options'] = array(
+    'roles' => array($child),
+  );
+  return $plugin;
+}

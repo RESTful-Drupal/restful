@@ -61,6 +61,7 @@ function restful_ctools_plugin_type() {
     'classes' => array('class'),
     'process' => 'restful_plugin_process',
   );
+  $plugins['restful']['child plugins'] = TRUE;
   return $plugins;
 }
 
