@@ -4,7 +4,7 @@
  * Contains RestfulAuthenticationToken.
  */
 
-class RestfulAuthenticationToken extends \RestfulAuthenticationBase implements \RestfulAuthenticationInterface {
+class RestfulAuthenticationToken extends \RestfulAuthenticationBase {
 
   /**
    * {@inheritdoc}
