@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains RestfulAuthTokens.
+ * Contains RestfulTokenAuth.
  */
 
-class RestfulAuthTokens extends RestfulEntityBase {
+class RestfulTokenAuth extends RestfulEntityBase {
 
   /**
    * Overrides RestfulEntityBase::getQueryForList().
