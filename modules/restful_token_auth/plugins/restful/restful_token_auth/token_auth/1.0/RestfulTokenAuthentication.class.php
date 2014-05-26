@@ -5,7 +5,7 @@
  * Contains RestfulTokenAuth.
  */
 
-class RestfulTokenAuth extends RestfulEntityBase {
+class RestfulTokenAuthentication extends \RestfulEntityBase {
 
   /**
    * Overrides RestfulEntityBase::getQueryForList().
@@ -72,7 +72,7 @@ class RestfulTokenAuth extends RestfulEntityBase {
         'token' => md5(time()),
       );
       $auth_token = entity_create('restful_token_auth', $values);
-      $auth_token->save();
+      entity_save('restful_token_auth', $auth_token);
       $id = $auth_token->id;
     }
 
