@@ -8,6 +8,7 @@ $plugin = array(
   'entity_type' => 'entity_test',
   'bundle' => 'main',
   'authentication types' => array(
+    'basic_auth',
     'cookie',
   ),
   'class' => 'RestfulTestMainResource__1_5',
