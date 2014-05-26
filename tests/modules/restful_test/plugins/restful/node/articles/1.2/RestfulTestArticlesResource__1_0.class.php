@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains RestfulTestArticlesResource__1_2.
+ * Contains RestfulTestArticlesResource__1_0.
  */
 
-class RestfulTestArticlesResource__1_2 extends RestfulExampleArticlesResource {
+class RestfulTestArticlesResource__1_0 extends RestfulExampleArticlesResource {
 
   /**
    * Overrides RestfulExampleArticlesResource::getPublicFields().
