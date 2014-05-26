@@ -28,6 +28,8 @@ function restful_restful_per_role_content_get_children($plugin, $parent) {
     $plugins[$parent . ':' . $role_name]['options'] = array(
       'roles' => array($role_name),
     );
+    // Create endpoints like api/v1/administrator, api/v1/authenticated-user ...
+    $plugins[$parent . ':' . $role_name]['resource'] = preg_replace('/\s+/', '-', drupal_strtolower($role_name));
   }
   return $plugins;
 }
