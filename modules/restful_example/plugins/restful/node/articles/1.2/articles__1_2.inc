@@ -11,7 +11,7 @@ $plugin = array(
   'description' => t('Export the article content type with "token" authentication.'),
   'class' => 'RestfulExampleArticlesResource',
   // Set the minor version.
-  'minor_version' => 3,
+  'minor_version' => 2,
   // Set the authentication to token.
   // @todo: change the test's resources not to be articles.
   'authentication types' => array(
