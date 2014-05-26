@@ -21,7 +21,7 @@ function restful_token_auth_ctools_plugin_directory($module, $plugin) {
 function restful_token_auth_entity_info() {
   $items['restful_token_auth'] = array(
     'label' => t('Authentication token'),
-    'entity class' => 'RestfulAuthToken',
+    'entity class' => 'RestfulTokenAuth',
     'controller class' => 'EntityAPIController',
     'base table' => 'restful_token_auth',
     'fieldable' => TRUE,
