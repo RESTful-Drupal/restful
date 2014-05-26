@@ -1,5 +1,7 @@
 <?php
 
+if (module_exists('restful_token_auth')) {
+
 $plugin = array(
   'label' => t('Articles'),
   'resource' => 'articles',
@@ -11,9 +13,10 @@ $plugin = array(
   // Set the minor version.
   'minor_version' => 3,
   // Set the authentication to token.
-  // @todo: Depends on "RESTful auth token" module, so move to that module.
-  // Also change the test's resources not to be articles.
+  // @todo: change the test's resources not to be articles.
   'authentication types' => array(
     'token',
   ),
 );
+
+}
