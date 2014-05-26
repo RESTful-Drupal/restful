@@ -3,7 +3,7 @@
 $plugin = array(
   'label' => t('Articles'),
   'resource' => 'test_articles',
-  'name' => 'test_articles__1_2',
+  'name' => 'test_articles__1_0',
   'authentication types' => array(
     'cookie',
   ),
