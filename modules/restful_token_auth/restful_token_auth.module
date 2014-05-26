@@ -8,7 +8,7 @@
 /**
  * Implements hook_ctools_plugin_directory().
  */
-function restful_auth_token_ctools_plugin_directory($module, $plugin) {
+function restful_token_auth_ctools_plugin_directory($module, $plugin) {
   if ($module == 'restful') {
     return 'plugins/' . $plugin;
   }
@@ -18,12 +18,12 @@ function restful_auth_token_ctools_plugin_directory($module, $plugin) {
 /**
  * Implements hook_entity_info().
  */
-function restful_auth_token_entity_info() {
-  $items['restful_auth_token'] = array(
+function restful_token_auth_entity_info() {
+  $items['restful_token_auth'] = array(
     'label' => t('Authentication token'),
     'entity class' => 'RestfulAuthToken',
     'controller class' => 'EntityAPIController',
-    'base table' => 'restful_auth_token',
+    'base table' => 'restful_token_auth',
     'fieldable' => TRUE,
     'entity keys' => array(
       'id' => 'id',
@@ -34,8 +34,8 @@ function restful_auth_token_entity_info() {
     'bundle keys' => array(
       'bundle' => 'type',
     ),
-    'module' => 'restful_auth_token',
-    'access callback' => 'restful_auth_token_entity_access_callback',
+    'module' => 'restful_token_auth',
+    'access callback' => 'restful_token_auth_entity_access_callback',
     'entity cache' => module_exists('entitycache'),
   );
 
@@ -50,6 +50,6 @@ function restful_auth_token_entity_info() {
  * @return bool
  *   Return TRUE if user has access to the entity.
  */
-function restful_auth_token_entity_access_callback() {
+function restful_token_auth_entity_access_callback() {
   return TRUE;
 }

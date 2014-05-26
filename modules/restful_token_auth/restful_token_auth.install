@@ -9,9 +9,9 @@
 /**
  * Implements hook_schema().
  */
-function restful_auth_token_schema() {
+function restful_token_auth_schema() {
   $schema = array();
-  $schema['restful_auth_token'] = array(
+  $schema['restful_token_auth'] = array(
     'description' => 'The authentication token table.',
     'fields' => array(
       'id' => array(
@@ -71,7 +71,7 @@ function restful_auth_token_schema() {
 
   // Cache bins for Entity-cache module.
   $cache_schema = drupal_get_schema_unprocessed('system', 'cache');
-  $types = array('restful_auth_token');
+  $types = array('restful_token_auth');
 
   foreach ($types as $type) {
     $schema["cache_entity_$type"] = $cache_schema;

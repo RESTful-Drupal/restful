@@ -45,9 +45,9 @@ class RestfulAuthTokens extends RestfulEntityBase {
 
     $token_exists = FALSE;
 
-    if (!empty($result['restful_auth_token'])) {
-      $id = key($result['restful_auth_token']);
-      $auth_token = entity_load_single('restful_auth_token', $id);
+    if (!empty($result['restful_token_auth'])) {
+      $id = key($result['restful_token_auth']);
+      $auth_token = entity_load_single('restful_token_auth', $id);
 
       if (!empty($auth_token->expire) && $auth_token->expire < REQUEST_TIME) {
         // Token has expired, so we can delete this token.
@@ -63,12 +63,12 @@ class RestfulAuthTokens extends RestfulEntityBase {
       // Create a new token.
       $values = array(
         'uid' => $account->uid,
-        'type' => 'restful_auth_token',
+        'type' => 'restful_token_auth',
         'created' => REQUEST_TIME,
         'name' => 'self',
         'token' => md5(time()),
       );
-      $auth_token = entity_create('restful_auth_token', $values);
+      $auth_token = entity_create('restful_token_auth', $values);
       $auth_token->save();
       $id = $auth_token->id;
     }
