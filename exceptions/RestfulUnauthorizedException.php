@@ -5,7 +5,7 @@
  * Contains RestfulUnauthorizedException
  */
 
-class RestfulUnauthorizedException extends RestfulException {
+class RestfulUnauthorizedException extends \RestfulException {
 
   /**
    * Defines the HTTP error code.

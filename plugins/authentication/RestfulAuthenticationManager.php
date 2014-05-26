@@ -54,7 +54,7 @@ class RestfulAuthenticationManager extends \ArrayObject {
       if ($this->count()) {
         // User didn't authenticate against any provider, so we throw an error.
         // @todo: Let each provider register a better exception message?
-        throw new RestfulUnauthorizedException('Bad credentials');
+        throw new \RestfulUnauthorizedException('Bad credentials');
       }
 
       // If the account could not be authenticated default to the anonymous user.
