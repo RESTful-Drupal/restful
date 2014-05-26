@@ -4,7 +4,7 @@
  * Contains RestfulExampleRoleResource.
  */
 
-class RestfulExampleRoleResource extends \RestfulEntityBaseMultipleBundles implements \RestfulEntityInterface {
+class RestfulExampleRoleResource extends \RestfulEntityBase implements \RestfulEntityInterface {
 
   /**
    * Overrides \RestfulEntityBase::__construct().

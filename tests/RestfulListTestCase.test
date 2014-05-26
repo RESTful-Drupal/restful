@@ -149,7 +149,7 @@ class RestfulListTestCase extends DrupalWebTestCase {
     }
 
     // Test the administrator's content listing.
-    $handler = restful_get_restful_handler('administrators');
+    $handler = restful_get_restful_handler('per_role_content');
     $settings = array(
       'type' => 'article',
       'title' => $this->randomName(),
