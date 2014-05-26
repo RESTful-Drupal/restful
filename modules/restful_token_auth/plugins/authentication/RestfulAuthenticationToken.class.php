@@ -10,18 +10,21 @@ class RestfulAuthenticationToken extends \RestfulAuthenticationBase implements \
    * {@inheritdoc}
    */
   public function applies($request = NULL) {
-    return !empty($request['access_token']);
+    $key_name = !empty($this->plugin['options']['param_name']) ? $this->plugin['options']['param_name'] : 'access_token';
+    return !empty($request[$key_name]);
   }
 
   /**
    * {@inheritdoc}
    */
   public function authenticate($request = array()) {
+    $key_name = !empty($this->plugin['options']['param_name']) ? $this->plugin['options']['param_name'] : 'access_token';
+
     // Check if there is a token that did not expire yet.
     $query = new EntityFieldQuery();
     $result = $query
       ->entityCondition('entity_type', 'restful_token_auth')
-      ->propertyCondition('token', $request['access_token'])
+      ->propertyCondition('token', $request[$key_name])
       ->range(0, 1)
       ->execute();
 
