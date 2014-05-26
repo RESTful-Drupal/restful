@@ -15,22 +15,7 @@ function restful_ctools_plugin_directory($module, $plugin) {
 }
 
 /**
- * Add defaults values to the notifier plugins.
- *
- * - 'description': The description of the plugin.
- * - 'options': Array with the following keys:
- *   - 'save on fail': Save the message is delivery failed. Defaults to
- *     TRUE.
- *   - 'save on success': Save the message is delivery successded. Defaults to
- *     TRUE.
- *   - 'language override': Override user's language, and use the
- *     Message's language. Defaults to FALSE.
- *   - 'rendered fields': Array keyed with the view mode(s), and the text
- *     field(s) to save the rendered output.
- *     The rendered field is used when it is needed to save the message
- *     exactly as it was sent (for example for message logs), as it might
- *     change and show differently when viewed later - as a result of on
- *     the fly token replacement, or even editing the message type.
+ * Add defaults values to the restful related plugins.
  */
 function restful_plugin_process(&$plugin, $info) {
   if ($info['type'] == 'restful') {
@@ -66,7 +51,10 @@ function restful_ctools_plugin_type() {
 
 
 /**
- * Helper function to include CTools plugins and get all restful plugins.
+ * Include CTools plugins and get all restful plugins.
+ *
+ * @return array
+ *   All plugins for restful resources.
  */
 function restful_get_restful_plugins() {
   ctools_include('plugins');
@@ -145,7 +133,7 @@ function restful_get_restful_handler($resource_name, $major_version = 1, $minor_
   // We get all of them, so we can find the correct one if minor version is
   // present.
   $valid_plugins = array();
-  foreach (restful_get_restful_plugins() as $name => $plugin) {
+  foreach (restful_get_restful_plugins() as $plugin) {
     if ($plugin['major_version'] != $major_version) {
       continue;
     }
@@ -217,7 +205,7 @@ function restful_get_authentication_handler($auth_plugin_name) {
  * @param $resource_name
  *   The name of the resource (e.g. "articles").
  *
- * @return
+ * @return bool
  *   TRUE if user is allowed to access resource.
  */
 function restful_menu_access_callback($major_version, $resource_name) {
