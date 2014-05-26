@@ -50,8 +50,11 @@ class RestfulTokenAuth extends RestfulEntityBase {
       $auth_token = entity_load_single('restful_token_auth', $id);
 
       if (!empty($auth_token->expire) && $auth_token->expire < REQUEST_TIME) {
-        // Token has expired, so we can delete this token.
-        $auth_token->delete();
+        if (variable_get('restful_token_auth_delete_expired_tokens', TRUE)) {
+          // Token has expired, so we can delete this token.
+          $auth_token->delete();
+        }
+
         $token_exists = FALSE;
       }
       else {
