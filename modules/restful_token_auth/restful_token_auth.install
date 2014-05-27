@@ -57,7 +57,7 @@ function restful_token_auth_schema() {
         'description' => 'The Unix timestamp when the authentication token will expire.',
         'type' => 'int',
         'not null' => FALSE,
-        'default' => 0,
+        'default' => NULL,
       ),
     ),
     'foreign keys' => array(

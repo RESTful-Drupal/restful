@@ -35,7 +35,6 @@ function restful_token_auth_entity_info() {
       'bundle' => 'type',
     ),
     'module' => 'restful_token_auth',
-    'access callback' => 'restful_token_auth_entity_access_callback',
     'entity cache' => module_exists('entitycache'),
   );
 
@@ -43,13 +42,28 @@ function restful_token_auth_entity_info() {
 }
 
 /**
- * Access callback.
+ * Implements hook_cron().
  *
- * @todo
- *
- * @return bool
- *   Return TRUE if user has access to the entity.
+ * Delete expired token auth entities.
  */
-function restful_token_auth_entity_access_callback() {
-  return TRUE;
+function restful_token_auth_cron() {
+  if (!variable_get('restful_token_auth_delete_expired_tokens', TRUE)) {
+    // We should not delete expired tokens.
+    return;
+  }
+
+  $query = new EntityFieldQuery();
+  $result = $query
+    ->entityCondition('entity_type', 'restful_token_auth')
+    ->propertyCondition('expire', REQUEST_TIME, '<')
+    ->range(0, 50)
+    ->execute();
+
+  if (empty($result['restful_token_auth'])) {
+    // No expired tokens.
+    return;
+  }
+
+  $ids = array_keys($result['restful_token_auth']);
+  entity_delete_multiple('restful_token_auth', $ids);
 }
