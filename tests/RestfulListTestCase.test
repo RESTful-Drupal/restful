@@ -150,9 +150,7 @@ class RestfulListTestCase extends DrupalWebTestCase {
 
     // Test the administrator's content listing.
     $role_name = 'administrator';
-    $plugin = ctools_get_plugins('restful', 'restful', 'per_role_content__1_0:' . $role_name);
-    $class = ctools_plugin_load_class('restful', 'restful', $plugin['name'], 'class');
-    $handler = new $class($plugin);
+    $handler = restful_get_restful_handler_by_name('per_role_content__1_0:' . $role_name);
     // Force the user 1 to be identified.
     $handler->setAccount(user_load(1));
     $settings = array(
