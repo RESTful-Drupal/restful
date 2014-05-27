@@ -7,20 +7,6 @@
 
 class RestfulTokenAuthenticationTestCase extends DrupalWebTestCase {
 
-  /**
-   * Holds the generated account.
-   *
-   * @var stdClass
-   */
-  protected $account;
-
-  /**
-   * Holds the current value of the $_SERVER super global.
-   *
-   * @var array
-   */
-  protected $originalServer;
-
   public static function getInfo() {
     return array(
       'name' => 'Authentication',
@@ -30,7 +16,7 @@ class RestfulTokenAuthenticationTestCase extends DrupalWebTestCase {
   }
 
   function setUp() {
-    parent::setUp('restful_example');
+    parent::setUp('restful_example', 'restful_token_auth');
   }
 
   /**
