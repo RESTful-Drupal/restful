@@ -63,7 +63,7 @@ class RestfulTokenAuthenticationTestCase extends DrupalWebTestCase {
 
 
     // Get a "protected" resource without the access token.
-    $handler = restful_get_restful_handler('articles', 1, 2);
+    $handler = restful_get_restful_handler('articles', 1, 3);
     try {
       $result = $handler->get($id);
       $this->fail('"Unauthorized" exception not thrown.');
