@@ -110,7 +110,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    * @return array
    *   The defined controllers.
    */
-  public function getControllers () {
+  public function getControllers() {
     return $this->controllers;
   }
 

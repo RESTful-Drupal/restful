@@ -147,5 +147,25 @@ class RestfulListTestCase extends DrupalWebTestCase {
     catch (RestfulBadRequestException $e) {
       $this->pass('Exception thrown on illegal sort property, descending.');
     }
+
+    // Test the administrator's content listing.
+    $role_name = 'administrator';
+    $handler = restful_get_restful_handler_by_name('per_role_content__1_0:' . $role_name);
+    // Force the user 1 to be identified.
+    $handler->setAccount(user_load(1));
+    $settings = array(
+      'type' => 'article',
+      'title' => $this->randomName(),
+      'uid' => 1,
+    );
+    $this->drupalCreateNode($settings);
+
+    $request = array('fields' => 'roles');
+    $response = $handler->get('', $request);
+    foreach ($response['list'] as $item) {
+      $roles = array_map('trim', explode(',', $item['roles']));
+      $this->assertTrue(in_array($role_name, $roles), format_string('%role role found in content list.', array('%role' => $role_name)));
+    }
   }
+
 }
