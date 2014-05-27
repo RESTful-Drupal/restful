@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains RestfulUnauthorizedException
+ * Contains RestfulUnauthorizedException.
  */
 
 class RestfulUnauthorizedException extends \RestfulException {
