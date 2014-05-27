@@ -94,16 +94,14 @@ function restful_menu() {
   $items = array();
   $base_path = variable_get('restful_hook_menu_base_path', 'api/%');
   foreach (restful_get_restful_plugins() as $plugin) {
-    if ($plugin['hook_menu'] === FALSE) {
+    if (!$plugin['hook_menu']) {
       // Plugin explicitly declared no hook menu should be created automatically
       // for it.
       continue;
     }
 
     $resource = $plugin['resource'];
-    $path = $plugin['hook_menu'] === TRUE ? $base_path . '/' . $resource : $plugin['hook_menu'];
-
-    $items[$path] = array(
+    $items[$base_path . '/' . $resource] = array(
       'title' => $plugin['name'],
       'access callback' => 'restful_menu_access_callback',
       'access arguments' => array(1, 2),

@@ -5,6 +5,29 @@
  * RESTful token authentication.
  */
 
+
+/**
+ * Implements hook_menu().
+ */
+function restful_token_auth_menu() {
+  if (!$path = variable_get('restful_token_auth_plugin_menu_item', 'api/login')) {
+    // Menu item was disabled, and may be declared by an implementing module.
+    return;
+  }
+
+
+  $items[$path] = array(
+    'title' => 'Login',
+    'description' => 'Login with an access token response.',
+    'access callback' => 'user_is_anonymous',
+    'page callback' => 'restful_menu_process_callback',
+    'page arguments' => array('1', 'token_auth'),
+  );
+
+  return $items;
+}
+
+
 /**
  * Implements hook_ctools_plugin_directory().
  */

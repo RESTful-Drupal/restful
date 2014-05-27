@@ -12,5 +12,6 @@ $plugin = array(
     'cookie',
     'basic_auth',
   ),
-  'hook_menu' => variable_get('restful_token_auth_plugin_menu_item', 'api/login'),
+  // We will implement hook_menu() with a custom settings.
+  'hook_menu' => FALSE,
 );
