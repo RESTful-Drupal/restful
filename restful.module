@@ -27,6 +27,7 @@ function restful_plugin_process(&$plugin, $info) {
       'entity_type' => FALSE,
       'bundle' => FALSE,
       'authentication types' => array(),
+      'hook_menu' => TRUE,
     );
 
   }
@@ -93,8 +94,16 @@ function restful_menu() {
   $items = array();
   $base_path = variable_get('restful_hook_menu_base_path', 'api/%');
   foreach (restful_get_restful_plugins() as $plugin) {
+    if ($plugin['hook_menu'] === FALSE) {
+      // Plugin explicitly declared no hook menu should be created automatically
+      // for it.
+      continue;
+    }
+
     $resource = $plugin['resource'];
-    $items[$base_path . '/' . $resource] = array(
+    $path = $plugin['hook_menu'] === TRUE ? $base_path . '/' . $resource : $plugin['hook_menu'];
+
+    $items[$path] = array(
       'title' => $plugin['name'],
       'access callback' => 'restful_menu_access_callback',
       'access arguments' => array(1, 2),
