@@ -13,7 +13,7 @@ class RestfulTokenAuthentication extends \RestfulEntityBase {
    * Keep only the "token" property.
    */
   public function getPublicFields() {
-    $public_fields['token'] = array(
+    $public_fields['access_token'] = array(
       'property' => 'token',
     );
     return $public_fields;

@@ -31,13 +31,64 @@ class RestfulTokenAuthenticationTestCase extends DrupalWebTestCase {
 
   function setUp() {
     parent::setUp('restful_example');
-    // Create a custom user that we'll use to identify.
-    $this->account = $this->drupalCreateUser();
   }
 
   /**
    * Test authenticating a user.
    */
   function testAuthentication() {
+    // Create user.
+    $user1 = $this->drupalCreateUser();
+    $this->drupalLogin($user1);
+
+    // Create "Article" node.
+    $title1 = $this->randomName();
+    $settings = array(
+      'type' => 'article',
+      'title' => $title1,
+      'uid' => $user1->uid,
+    );
+    $node1 = $this->drupalCreateNode($settings);
+    $id= $node1->nid;
+
+    // Get a token for the user, using the handler.
+    $handler = restful_get_restful_handler('token_auth');
+    $result = $handler->get();
+    $access_token = $result['access_token'];
+    $this->assertEqual($access_token, $result['access_token'], 'Access token was created.');
+
+    // Assert the token did not change.
+    $result = $handler->get();
+    $this->assertEqual($access_token, $result['access_token'], 'Access token did not change.');
+
+
+    // Get a "protected" resource without the access token.
+    $handler = restful_get_restful_handler('articles', 1, 2);
+    try {
+      $result = $handler->get($id);
+      $this->fail('"Unauthorized" exception not thrown.');
+    }
+    catch (\RestfulUnauthorizedException $e) {
+      $this->pass('"Unauthorized" exception was thrown.');
+    }
+    catch (\Exception $e) {
+      $this->fail('Exception different from "Unauthorized" exception was thrown.');
+    }
+
+    // Get a "protected" resource with invalid access token.
+    try {
+      $result = $handler->get($id, array('access_token' => 'invalid'));
+      $this->fail('"Unauthorized" exception not thrown.');
+    }
+    catch (\RestfulUnauthorizedException $e) {
+      $this->pass('"Unauthorized" exception was thrown.');
+    }
+    catch (\Exception $e) {
+      $this->fail('Exception different from "Unauthorized" exception was thrown.');
+    }
+
+    // Get a "protected" resource with the access token.
+    $result = $handler->get(1, array('access_token' => $access_token));
+    $this->assertEqual($result['label'], $title1, 'Article resource can be accessed with valid access token.');
   }
 }
