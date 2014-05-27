@@ -167,10 +167,10 @@ Restful comes with ``cookie``, ``base_auth`` (user name and password in the HTTP
 curl -u "username:password" https://example.com/api/login
 
 # Response has access token.
-{"access_token":"6f3d0aed7619e5865ec9d0029e47601a"}
+{"access_token":"YOUR_TOKEN"}
 
 # Call a "protected" with token resource (Articles resource version 1.3 in "Restful example")
-curl https://example.com/api/v1/articles/1?access_token=6f3d0aed7619e5865ec9d0029e47601a \
+curl https://example.com/api/v1/articles/1?access_token=YOUR_TOKEN \
   -H "Restful-Minor-Version: 3"
 ```
 
