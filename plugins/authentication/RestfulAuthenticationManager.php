@@ -34,6 +34,7 @@ class RestfulAuthenticationManager extends \ArrayObject {
    *   The user object.
    */
   public function getAccount($request = NULL) {
+    global $user;
     // Return the previously resolved user, if any.
     if (!empty($this->account)) {
       return $this->account;
@@ -57,9 +58,9 @@ class RestfulAuthenticationManager extends \ArrayObject {
         throw new \RestfulUnauthorizedException('Bad credentials');
       }
 
-      // If the account could not be authenticated default to the anonymous user.
+      // If the account could not be authenticated default to the global user.
       // Most of the cases the cookie provider will do this for us.
-      $account = drupal_anonymous_user();
+      $account = $user->uid ? user_load($user->uid) : drupal_anonymous_user();
     }
     $this->setAccount($account);
     return $account;
