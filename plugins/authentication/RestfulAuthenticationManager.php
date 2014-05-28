@@ -61,7 +61,7 @@ class RestfulAuthenticationManager extends \ArrayObject {
       // Most of the cases the cookie provider will do this for us.
       $account = drupal_anonymous_user();
 
-      if (empty($request['rest_call']) && !in_array('cookie', array_keys($this->getArrayCopy()))) {
+      if (empty($request['rest_call'])) {
         global $user;
         // If we are using the API from within Drupal and we have not tried to
         // authenticate using the 'cookie' provider, then we expect to be logged
