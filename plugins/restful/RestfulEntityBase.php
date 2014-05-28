@@ -439,7 +439,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
     // in the query range.
     $page = !empty($request['page']) ? $request['page'] : 1;
 
-    if (!ctype_digit($page) || $page < 1) {
+    if (!ctype_digit((string)$page) || $page < 1) {
       throw new \RestfulBadRequestException('"Page" property should be numeric and equal or higher than 1.');
     }
 
