@@ -1,0 +1,91 @@
+<?php
+
+/**
+ * @file
+ * Install, update, and uninstall functions for the RESTful token authentication
+ * module.
+ */
+
+/**
+ * Implements hook_schema().
+ */
+function restful_token_auth_schema() {
+  $schema = array();
+  $schema['restful_token_auth'] = array(
+    'description' => 'The authentication token table.',
+    'fields' => array(
+      'id' => array(
+        'description' => 'The authentication token unique ID.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'type' => array(
+        'description' => 'The authentication token type.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'uid' => array(
+        'description' => 'The user the authentication token belongs to.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'name' => array(
+        'description' => 'The authentication token name.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+        'default' => '',
+      ),
+      'token' => array(
+        'description' => 'The authentication token security token.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'created' => array(
+        'description' => 'The Unix timestamp when the authentication token was created.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'expire' => array(
+        'description' => 'The Unix timestamp when the authentication token will expire.',
+        'type' => 'int',
+        'not null' => FALSE,
+        'default' => NULL,
+      ),
+    ),
+    'foreign keys' => array(
+      'uid' => array(
+        'table' => 'users',
+        'columns' => array('uid' => 'uid'),
+      ),
+    ),
+    'primary key' => array('id'),
+  );
+
+  // Cache bins for Entity-cache module.
+  $cache_schema = drupal_get_schema_unprocessed('system', 'cache');
+  $types = array('restful_token_auth');
+
+  foreach ($types as $type) {
+    $schema["cache_entity_$type"] = $cache_schema;
+    $schema["cache_entity_$type"]['description'] = "Cache table used to store $type entity records.";
+  }
+
+  return $schema;
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function restful_token_auth_uninstall() {
+  variable_del('restful_token_auth_delete_expired_tokens');
+  variable_del('restful_token_auth_plugin_menu_item');
+}
+

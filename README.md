@@ -144,7 +144,7 @@ array(
 );
 ```
 
-### API via URL
+## API via URL
 
 ### View an Article
 
@@ -155,6 +155,23 @@ curl https://example.com/api/v1/articles/1
 # Handler v1.1
 curl https://example.com/api/v1/articles/1 \
   -H "Restful-Minor-Version: 1"
+```
+
+## Authentication providers
+
+Restful comes with ``cookie``, ``base_auth`` (user name and password in the HTTP header) authentications providers, as well as a "RESTful token auth" module that has a ``token`` authentication provider.
+
+
+```bash
+# (Change username and password)
+curl -u "username:password" https://example.com/api/login
+
+# Response has access token.
+{"access_token":"YOUR_TOKEN"}
+
+# Call a "protected" with token resource (Articles resource version 1.3 in "Restful example")
+curl https://example.com/api/v1/articles/1?access_token=YOUR_TOKEN \
+  -H "Restful-Minor-Version: 3"
 ```
 
 ### Error handling

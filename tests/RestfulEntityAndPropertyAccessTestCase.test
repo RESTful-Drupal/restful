@@ -43,7 +43,7 @@ class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
    * Test access control for creating an entity.
    */
   function testCreateAccess() {
-    $handler = restful_get_restful_handler('articles', 1, 2);
+    $handler = restful_get_restful_handler('test_articles');
     $request = array('label' => $this->randomName());
 
     // Non-privileged user.
@@ -100,7 +100,7 @@ class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
     $node = $this->drupalCreateNode($settings);
     $id = $node->nid;
 
-    $handler = restful_get_restful_handler('articles', 1, 2);
+    $handler = restful_get_restful_handler('test_articles');
     $request = array('label' => $new_label);
 
     // Non-privileged user.
@@ -162,7 +162,7 @@ class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
     $wrapper->text_single->set(array('value' => $text1));
     $wrapper->save();
 
-    $handler = restful_get_restful_handler('articles', 1, 2);
+    $handler = restful_get_restful_handler('test_articles');
 
     // Privileged user.
     $handler->setAccount($user1);
