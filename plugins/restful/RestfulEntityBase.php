@@ -439,7 +439,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
     // in the query range.
     $page = !empty($request['page']) ? $request['page'] : 1;
 
-    if (!is_int($page) || $page < 1) {
+    if (!ctype_digit($page) || $page < 1) {
       throw new \RestfulBadRequestException('"Page" property should be numeric and equal or higher than 1.');
     }
 
@@ -471,15 +471,20 @@ Passed by reference, as this will add a "_links" property to that array.
 
     $resource_url = $this->getPluginInfo('menu_item');
     $dummy_request = $request;
+    unset($dummy_request['rest_call'], $dummy_request['q']);
+
+    $options = array('absolute' => TRUE);
 
     if ($page > 1) {
       $dummy_request['page'] = $page - 1;
-      $return['_links']['previous'] = $resource_url . drupal_http_build_query($dummy_request);
+      $options['query'] = $dummy_request;
+      $return['_links']['previous'] = url($resource_url, $options);
     }
 
     if (count($ids) > $this->getRange()) {
       $dummy_request['page'] = $page + 1;
-      $return['_links']['next'] = $resource_url . drupal_http_build_query($dummy_request);
+      $options['query'] = $dummy_request;
+      $return['_links']['next'] = url($resource_url, $options);
 
       // Remove the last ID, as it was just used to determine if there is a
       // "next" page.
