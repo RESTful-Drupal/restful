@@ -181,7 +181,9 @@ with ``code``, ``message`` and ``description`` would be returned.
 
 The RESTful module adheres to the [Problem Details for HTTP
 APIs](http://tools.ietf.org/html/draft-nottingham-http-problem-06) draft to
-improve DX when dealing with HTTP API errors.
+improve DX when dealing with HTTP API errors. Download and enable the [Advanced
+Help](https://drupal.org/project/advanced_help) module for more information
+about the errors.
 
 For example, trying to sort a list by an invalid key
 
