@@ -34,13 +34,12 @@ class RestfulAuthenticationManager extends \ArrayObject {
    *   The user object.
    */
   public function getAccount($request = NULL) {
+    global $user;
     // Return the previously resolved user, if any.
     if (!empty($this->account)) {
       return $this->account;
     }
     // Resolve the user based on the providers in the manager.
-    // @todo: Move flood control here, so we don't mark an authentication
-    // attempt for each provider.
     $account = NULL;
     foreach ($this as $provider) {
       if ($provider->applies($request) && $account = $provider->authenticate($request)) {
@@ -53,7 +52,6 @@ class RestfulAuthenticationManager extends \ArrayObject {
 
       if ($this->count()) {
         // User didn't authenticate against any provider, so we throw an error.
-        // @todo: Let each provider register a better exception message?
         throw new \RestfulUnauthorizedException('Bad credentials');
       }
 
@@ -62,7 +60,6 @@ class RestfulAuthenticationManager extends \ArrayObject {
       $account = drupal_anonymous_user();
 
       if (empty($request['rest_call'])) {
-        global $user;
         // If we are using the API from within Drupal and we have not tried to
         // authenticate using the 'cookie' provider, then we expect to be logged
         // in using the cookie authentication as a last resort.
