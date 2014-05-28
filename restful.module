@@ -30,6 +30,10 @@ function restful_plugin_process(&$plugin, $info) {
       'hook_menu' => TRUE,
     );
 
+    if ($plugin['hook_menu'] && empty($plugin['menu_item'])) {
+      // Set a default menu item.
+      $plugin['menu_item'] = variable_get('restful_hook_menu_base_path', 'api/%') . '/' . $plugin['resource'];
+    }
   }
   elseif ($info['type'] == 'authentication') {
     $plugin += array(
@@ -93,7 +97,6 @@ function restful_get_authentication_plugin($plugin_name) {
  */
 function restful_menu() {
   $items = array();
-  $base_path = variable_get('restful_hook_menu_base_path', 'api/%');
   foreach (restful_get_restful_plugins() as $plugin) {
     if (!$plugin['hook_menu']) {
       // Plugin explicitly declared no hook menu should be created automatically
@@ -101,8 +104,7 @@ function restful_menu() {
       continue;
     }
 
-    $resource = $plugin['resource'];
-    $items[$base_path . '/' . $resource] = array(
+    $items[$plugin['menu_item']] = array(
       'title' => $plugin['name'],
       'access callback' => 'restful_menu_access_callback',
       'access arguments' => array(1, 2),

@@ -468,12 +468,18 @@ Passed by reference, as this will add a "_links" property to that array.
   public function getListAddHateos(&$return, &$ids, $request){
     $return['_links'] = array();
     $page = !empty($request['page']) ? $request['page'] : 1;
+
+    $resource_url = $this->getPluginInfo('menu_item');
+    $dummy_request = $request;
+
     if ($page > 1) {
-      $return['_links']['previous'] = '';
+      $dummy_request['page'] = $page - 1;
+      $return['_links']['previous'] = $resource_url . drupal_http_build_query($dummy_request);
     }
 
     if (count($ids) > $this->getRange()) {
-      $return['_links']['next'] = '';
+      $dummy_request['page'] = $page + 1;
+      $return['_links']['next'] = $resource_url . drupal_http_build_query($dummy_request);
 
       // Remove the last ID, as it was just used to determine if there is a
       // "next" page.
