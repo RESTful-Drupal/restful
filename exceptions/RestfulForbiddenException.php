@@ -20,4 +20,12 @@ class RestfulForbiddenException extends RestfulException {
    * @var string
    */
   protected $description = 'Forbidden.';
+
+  /**
+   * Defines the problem instance.
+   *
+   * @var string
+   */
+  protected $instance = 'help/restful/problem-instances-forbidden';
+
 }
