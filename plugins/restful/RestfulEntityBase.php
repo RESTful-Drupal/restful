@@ -99,7 +99,15 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
   protected $httpHeaders = array();
 
   /**
+   * Determines the number of items that should be returned when viewing lists.
+   *
+   * @var int
+   */
+  protected $range = 50;
+
+  /**
    * Authentication manager.
+   *
    * @var \RestfulAuthenticationManager
    */
   public $authenticationManager;
@@ -131,6 +139,25 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    */
   public function getHttpHeaders() {
     return $this->httpHeaders;
+  }
+
+  /**
+   * Set the pager range.
+   *
+   * @param int $range
+   */
+  public function setRange($range) {
+    $this->range = $range;
+  }
+
+  /**
+   * Get the pager range.
+   *
+   * @return int
+   *  The range.
+   */
+  public function getRange() {
+    return $this->range;
   }
 
   public function __construct($plugin, \RestfulAuthenticationManager $auth_manager = NULL) {
@@ -346,6 +373,9 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
     entity_load($entity_type, $ids);
 
     $return = array('list' => array());
+
+    $this->getListAddHateos($return, $ids, $request);
+
     foreach ($ids as $id) {
       $return['list'][] = $this->viewEntity($id, $request, $account);
     }
@@ -404,10 +434,51 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
       }
     }
 
-    // @todo: Remove hardocding, and allow pagination.
-    $query->range(0, 50);
+
+    // Determine the page that should be seen. Page 1, is actually offset 0
+    // in the query range.
+    $page = !empty($request['page']) ? $request['page'] : 1;
+
+    if (!is_int($page) || $page < 1) {
+      throw new \RestfulBadRequestException('"Page" property should be numeric and equal or higher than 1.');
+    }
+
+    // We get 1 more item more than the range, in order to know if there is a
+    // "next" page.
+    $range = $this->getRange() + 1;
+    $offset = ($page - 1) * $range;
+
+    $query->range($offset, $range);
 
     return $query;
+  }
+
+  /**
+   * Add HATEOS links to list of item.
+   *
+   * @param $return
+   *   The array that will be returned from \RestfulEntityBase::getList().
+Passed by reference, as this will add a "_links" property to that array.
+   * @param $ids
+   *   Array of entity IDs retrieved for the list. Passed by reference, so we
+   *   can check if there is an extra item, thus know there is a "next" page.
+   * @param $request
+   *   The request array.
+   */
+  public function getListAddHateos(&$return, &$ids, $request){
+    $return['_links'] = array();
+    $page = !empty($request['page']) ? $request['page'] : 1;
+    if ($page > 1) {
+      $return['_links']['previous'] = '';
+    }
+
+    if (count($ids) > $this->getRange()) {
+      $return['_links']['next'] = '';
+
+      // Remove the last ID, as it was just used to determine if there is a
+      // "next" page.
+      array_pop($ids);
+    }
   }
 
   /**
