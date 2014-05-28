@@ -269,6 +269,9 @@ function restful_menu_process_callback($major_version, $resource_name) {
     case 'post':
       $request = $_POST;
   }
+  // This flag is used to identify if the request is done "via Drupal" or "via
+  // CURL";
+  $request['rest_call'] = TRUE;
 
   // Determine if request was successful.
   $success = FALSE;

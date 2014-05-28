@@ -34,7 +34,6 @@ class RestfulAuthenticationManager extends \ArrayObject {
    *   The user object.
    */
   public function getAccount($request = NULL) {
-    global $user;
     // Return the previously resolved user, if any.
     if (!empty($this->account)) {
       return $this->account;
@@ -60,7 +59,15 @@ class RestfulAuthenticationManager extends \ArrayObject {
 
       // If the account could not be authenticated default to the global user.
       // Most of the cases the cookie provider will do this for us.
-      $account = $user->uid ? user_load($user->uid) : drupal_anonymous_user();
+      $account = drupal_anonymous_user();
+
+      if (empty($request['rest_call']) && !in_array('cookie', array_keys($this->getArrayCopy()))) {
+        global $user;
+        // If we are using the API from within Drupal and we have not tried to
+        // authenticate using the 'cookie' provider, then we expect to be logged
+        // in using the cookie authentication as a last resort.
+        $account = $user->uid ? user_load($user->uid) : $account;
+      }
     }
     $this->setAccount($account);
     return $account;
