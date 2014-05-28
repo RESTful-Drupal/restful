@@ -29,11 +29,14 @@ class RestfulExceptionHandleTestCase extends DrupalWebTestCase {
     $options['query'] = array('sort' => 'wrong_key');
     $this->drupalGet('api/v1/articles', $options);
     $expected_result = array(
-      'code' => 400,
-      'message' => 'The sort wrong_key is not allowed for this path.',
-      'description' => 'Bad Request.',
+      'type' => 'http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.1',
+      'title' => 'The sort wrong_key is not allowed for this path.',
+      'status' => 400,
+      'detail' => 'Bad Request.',
+      'instance' => NULL,
     );
     $this->assertText(drupal_json_encode($expected_result), 'Exception was converted to JSON.');
     $this->assertResponse('400', 'Correct HTTP code.');
   }
+
 }
