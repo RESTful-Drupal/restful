@@ -374,7 +374,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
 
     $return = array('list' => array());
 
-    $this->getListAddHateos($return, $ids, $request);
+    $this->getListAddHateoas($return, $ids, $request);
 
     foreach ($ids as $id) {
       $return['list'][] = $this->viewEntity($id, $request, $account);
@@ -454,7 +454,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
   }
 
   /**
-   * Add HATEOS links to list of item.
+   * Add HATEOAS links to list of item.
    *
    * @param $return
    *   The array that will be returned from \RestfulEntityBase::getList().
@@ -465,7 +465,7 @@ Passed by reference, as this will add a "_links" property to that array.
    * @param $request
    *   The request array.
    */
-  public function getListAddHateos(&$return, &$ids, $request){
+  public function getListAddHateoas(&$return, &$ids, $request){
     $return['_links'] = array();
     $page = !empty($request['page']) ? $request['page'] : 1;
 
