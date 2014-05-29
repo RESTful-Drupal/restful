@@ -112,6 +112,7 @@ function restful_menu() {
       'access arguments' => array(1, 2),
       'page callback' => 'restful_menu_process_callback',
       'page arguments' => array(1, 2),
+      'delivery callback' => 'drupal_json_output',
     );
   }
   return $items;
@@ -294,16 +295,15 @@ function restful_menu_process_callback($major_version, $resource_name) {
   // CURL";
   $request['rest_call'] = TRUE;
 
-  // Determine if request was successful.
-  $success = FALSE;
-
   try {
     $result = $handler->{$method}($path, $request);
     // Allow the handler to change the HTTP headers.
     foreach ($handler->getHttpHeaders() as $key => $value) {
       drupal_add_http_header($key, $value);
     }
-    return drupal_json_output($result);
+
+    drupal_add_http_header('Content-Type', 'application/hal+json; charset=utf-8');
+    return $result;
   }
   catch (RestfulException $e) {
     $result = array(
@@ -322,9 +322,8 @@ function restful_menu_process_callback($major_version, $resource_name) {
     );
   }
 
-  $output = drupal_json_output($result);
   // Adhere to the API Problem draft proposal.
   drupal_add_http_header('Status', $result['status']);
   drupal_add_http_header('Content-Type', 'application/problem+json; charset=utf-8');
-  return $output;
+  return $result;
 }
