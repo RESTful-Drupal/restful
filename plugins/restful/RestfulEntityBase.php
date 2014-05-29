@@ -470,21 +470,15 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
     $page = !empty($request['page']) ? $request['page'] : 1;
 
     $resource_url = $this->getPluginInfo('menu_item');
-    $dummy_request = $request;
-    unset($dummy_request['rest_call'], $dummy_request['q']);
-
-    $options = array('absolute' => TRUE);
 
     if ($page > 1) {
-      $dummy_request['page'] = $page - 1;
-      $options['query'] = $dummy_request;
-      $return['_links']['previous'] = url($resource_url, $options);
+      $request['page'] = $page - 1;
+      $return['_links']['previous'] = $this->getUrl($request);
     }
 
     if (count($ids) > $this->getRange()) {
-      $dummy_request['page'] = $page + 1;
-      $options['query'] = $dummy_request;
-      $return['_links']['next'] = url($resource_url, $options);
+      $request['page'] = $page + 1;
+      $return['_links']['next'] = $this->getUrl($request);
 
       // Remove the last ID, as it was just used to determine if there is a
       // "next" page.
@@ -990,4 +984,26 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
     $this->authenticationManager->setAccount($account);
   }
 
+  /**
+   * Helper method; Get the URL of the resource and query strings.
+   *
+   * By default the URL is absolute.
+   *
+   * @param $request
+   *   The request array.
+   * @param $options
+   *   Array with options passed to url().
+   *
+   * @return string
+   *   The URL address.
+   */
+  public function getUrl($request = NULL, $options = array()) {
+    // Remove special params.
+    unset($request['q'], $request['rest_call']);
+
+    // By default set URL to be absolute.
+    $options += array('absolute' => TRUE);
+
+    return url($this->getPluginInfo('menu_item'), $options);
+  }
 }
