@@ -61,7 +61,7 @@ function restful_plugin_process(&$plugin, $info) {
       'hook_menu' => TRUE,
       'cache_render' => TRUE,
       'cache_class' => NULL,
-      'cache_bin' => 'cache',
+      'cache_bin' => 'cache_restful',
       'cache_expiration' => CACHE_PERMANENT,
     );
 
@@ -368,7 +368,7 @@ function restful_menu_process_callback($major_version, $resource_name) {
  */
 function restful_entity_update($entity, $type) {
   list($entity_id,,) = entity_extract_ids($type, $entity);
-  $cid = $type . '::ei' . $entity_id . '::uu';
+  $cid = 'et' . $type . '::ei' . $entity_id . '::uu';
   _restful_invalidate_entity_cache($cid);
 }
 
@@ -377,7 +377,7 @@ function restful_entity_update($entity, $type) {
  */
 function restful_entity_delete($entity, $type) {
   list($entity_id,,) = entity_extract_ids($type, $entity);
-  $cid = $type . '::ei' . $entity_id . '::uu';
+  $cid = 'et' . $type . '::ei' . $entity_id . '::uu';
   _restful_invalidate_entity_cache($cid);
 }
 
@@ -385,16 +385,18 @@ function restful_entity_delete($entity, $type) {
  * Implements hook_user_update().
  */
 function restful_user_update(&$edit, $account, $category) {
-  $cid = '::uu' . $account->uid . '::pa';
-  _restful_invalidate_entity_cache($cid);
+  // Due to the limitations for cid matching on clearing caches, we need to
+  // clear all the bin. We cannot do $cid = '%::uu' . $account->uid . '::pa';
+  _restful_invalidate_entity_cache('*');
 }
 
 /**
  * Implements hook_user_delete().
  */
 function restful_user_delete($account) {
-  $cid = '::uu' . $account->uid . '::pa';
-  _restful_invalidate_entity_cache($cid);
+  // Due to the limitations for cid matching on clearing caches, we need to
+  // clear all the bin. We cannot do $cid = '%::uu' . $account->uid . '::pa';
+  _restful_invalidate_entity_cache('*');
 }
 
 /**
@@ -410,7 +412,9 @@ function _restful_invalidate_entity_cache($cid) {
     $handler = restful_get_restful_handler($plugin['resource'], $plugin['major_version'], $plugin['minor_version']);
     $reflector = new \ReflectionClass($handler);
     if ($reflector->hasMethod('cacheInvalidate')) {
-      $handler->cacheInvalidate($cid);
+      $version = $handler->getVersion();
+      $version_cid = 'v' . $version['major'] . '.' . $version['minor'];
+      $handler->cacheInvalidate($version_cid . '::' . $cid);
     }
   }
 }

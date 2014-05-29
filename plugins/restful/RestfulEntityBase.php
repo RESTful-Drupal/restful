@@ -1141,7 +1141,8 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    */
   protected function generateCacheId($entity_id, $uid, $request) {
     // Get the cache ID from the selected params.
-    $cid = $this->getEntityType() . '::ei' . $entity_id . '::uu' . $uid . '::pa';
+    $version = $this->getVersion();
+    $cid = 'v' . $version['major'] . '.' . $version['minor'] . '::et' . $this->getEntityType() . '::ei' . $entity_id . '::uu' . $uid . '::pa';
     $cid_params = array();
     $request = $request ? $request : array();
     foreach ($request as $param => $value) {

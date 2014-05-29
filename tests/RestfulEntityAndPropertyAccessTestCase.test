@@ -172,6 +172,8 @@ class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
     // Privileged user, with limited access to property.
     restful_test_deny_access_field();
     $handler->setAccount($user1);
+    // Remove all caches for rendered nodes.
+    $handler->cacheInvalidate('v1.0::etnode::ei');
     $result = $handler->get($node1->nid, array());
     $this->assertTrue(!isset($result['text_single']), 'Privileged user can view entity but without unaccessible properties.');
     restful_test_clear_access();
