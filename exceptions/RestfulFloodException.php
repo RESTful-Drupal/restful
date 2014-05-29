@@ -20,4 +20,12 @@ class RestfulFloodException extends RestfulException {
    * @var string
    */
   protected $description = 'Too Many Requests.';
+
+  /**
+   * Defines the problem instance.
+   *
+   * @var string
+   */
+  protected $instance = 'help/restful/problem-instances-flood';
+
 }

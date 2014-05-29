@@ -21,4 +21,12 @@ class RestfulUnprocessableEntityException extends Exception {
    */
   protected $description = 'Unprocessable Entity; Validation errors.';
 
+
+  /**
+   * Defines the problem instance.
+   *
+   * @var string
+   */
+  protected $instance = 'help/restful/problem-instances-unprocessable-entity';
+
 }

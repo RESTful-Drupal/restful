@@ -179,6 +179,12 @@ While a PHP ``Exception`` is thrown when using the API via Drupal, this is not t
 case when consuming the API externally. Instead of the exception a valid JSON
 with ``code``, ``message`` and ``description`` would be returned.
 
+The RESTful module adheres to the [Problem Details for HTTP
+APIs](http://tools.ietf.org/html/draft-nottingham-http-problem-06) draft to
+improve DX when dealing with HTTP API errors. Download and enable the [Advanced
+Help](https://drupal.org/project/advanced_help) module for more information
+about the errors.
+
 For example, trying to sort a list by an invalid key
 
 ```shell
@@ -189,9 +195,11 @@ Will result with an HTTP code 400, and the following JSON:
 
 ```javascript
 {
-  code: 400,
-  message: "The sort wrong_key is not allowed for this path.",
-  description: "Bad Request."
+  'type' => 'http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.1',
+  'title' => 'The sort wrong_key is not allowed for this path.',
+  'status' => 400,
+  'detail' => 'Bad Request.',
+  'instance' => NULL,
 }
 ```
 

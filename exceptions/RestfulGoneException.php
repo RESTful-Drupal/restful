@@ -21,4 +21,11 @@ class RestfulGoneException extends Exception {
    */
   protected $description = 'The resource at this end point is no longer available.';
 
+  /**
+   * Defines the problem instance.
+   *
+   * @var string
+   */
+  protected $instance = 'help/restful/problem-instances-gone';
+
 }
