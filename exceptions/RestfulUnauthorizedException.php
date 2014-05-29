@@ -20,4 +20,12 @@ class RestfulUnauthorizedException extends \RestfulException {
    * @var string
    */
   protected $description = 'Unauthorized.';
+
+  /**
+   * Defines the problem instance.
+   *
+   * @var string
+   */
+  protected $instance = 'help/restful/problem-instances-unauthorized';
+
 }

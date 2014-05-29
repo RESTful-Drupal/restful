@@ -265,8 +265,10 @@ function restful_menu_access_callback($major_version, $resource_name) {
  * @param $resource_name
  *   The name of the resource (e.g. "articles").
  *
- * @return
+ * @return string
  *   JSON output with the result of the API call.
+ *
+ * @see http://tools.ietf.org/html/draft-nottingham-http-problem-06
  */
 function restful_menu_process_callback($major_version, $resource_name) {
   $major_version = intval(str_replace('v', '', $major_version));
@@ -297,29 +299,32 @@ function restful_menu_process_callback($major_version, $resource_name) {
 
   try {
     $result = $handler->{$method}($path, $request);
-    $success = TRUE;
-  }
-  catch (RestfulException $e) {
-    drupal_add_http_header('Status', $e->getCode());
-    $result = array(
-      'code' => $e->getCode(),
-      'message' => $e->getMessage(),
-      'description' => $e->getDescription(),
-    );
-  }
-  catch (Exception $e) {
-    $result = array(
-      'code' => 500,
-      'message' => $e->getMessage(),
-    );
-  }
-
-  if ($success) {
     // Allow the handler to change the HTTP headers.
     foreach ($handler->getHttpHeaders() as $key => $value) {
       drupal_add_http_header($key, $value);
     }
+    return drupal_json_output($result);
+  }
+  catch (RestfulException $e) {
+    $result = array(
+      'type' => $e->getType(),
+      'title' => $e->getMessage(),
+      'status' => $e->getCode(),
+      'detail' => $e->getDescription(),
+      'instance' => $e->getInstance(),
+    );
+  }
+  catch (Exception $e) {
+    $result = array(
+      'type' => 'http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.5.1',
+      'title' => $e->getMessage(),
+      'status' => 500,
+    );
   }
 
-  return drupal_json_output($result);
+  $output = drupal_json_output($result);
+  // Adhere to the API Problem draft proposal.
+  drupal_add_http_header('Status', $result['status']);
+  drupal_add_http_header('Content-Type', 'application/problem+json; charset=utf-8');
+  return $output;
 }
