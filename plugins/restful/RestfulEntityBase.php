@@ -458,7 +458,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *
    * @param $return
    *   The array that will be returned from \RestfulEntityBase::getList().
-Passed by reference, as this will add a "_links" property to that array.
+   *   Passed by reference, as this will add a "_links" property to that array.
    * @param $ids
    *   Array of entity IDs retrieved for the list. Passed by reference, so we
    *   can check if there is an extra item, thus know there is a "next" page.
