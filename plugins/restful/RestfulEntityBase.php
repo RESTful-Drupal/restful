@@ -437,7 +437,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
 
     // Determine the page that should be seen. Page 1, is actually offset 0
     // in the query range.
-    $page = !empty($request['page']) ? $request['page'] : 1;
+    $page = isset($request['page']) ? $request['page'] : 1;
 
     if (!ctype_digit((string)$page) || $page < 1) {
       throw new \RestfulBadRequestException('"Page" property should be numeric and equal or higher than 1.');
