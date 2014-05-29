@@ -59,6 +59,10 @@ function restful_plugin_process(&$plugin, $info) {
       'bundle' => FALSE,
       'authentication_types' => array(),
       'hook_menu' => TRUE,
+      'cache_render' => TRUE,
+      'cache_class' => NULL,
+      'cache_bin' => 'cache',
+      'cache_expiration' => CACHE_PERMANENT,
     );
 
     if ($plugin['hook_menu'] && empty($plugin['menu_item'])) {
@@ -357,4 +361,56 @@ function restful_menu_process_callback($major_version, $resource_name) {
   drupal_add_http_header('Status', $result['status']);
   drupal_add_http_header('Content-Type', 'application/problem+json; charset=utf-8');
   return $result;
+}
+
+/**
+ * Implements hook_entity_update().
+ */
+function restful_entity_update($entity, $type) {
+  list($entity_id,,) = entity_extract_ids($type, $entity);
+  $cid = $type . '::ei' . $entity_id . '::uu';
+  _restful_invalidate_entity_cache($cid);
+}
+
+/**
+ * Implements hook_entity_delete().
+ */
+function restful_entity_delete($entity, $type) {
+  list($entity_id,,) = entity_extract_ids($type, $entity);
+  $cid = $type . '::ei' . $entity_id . '::uu';
+  _restful_invalidate_entity_cache($cid);
+}
+
+/**
+ * Implements hook_user_update().
+ */
+function restful_user_update(&$edit, $account, $category) {
+  $cid = '::uu' . $account->uid . '::pa';
+  _restful_invalidate_entity_cache($cid);
+}
+
+/**
+ * Implements hook_user_delete().
+ */
+function restful_user_delete($account) {
+  $cid = '::uu' . $account->uid . '::pa';
+  _restful_invalidate_entity_cache($cid);
+}
+
+/**
+ * Delete cached entities from all the cache bins associated to restful
+ * resources.
+ *
+ * @param string $cid
+ *   The wildcard cache id to invalidate.
+ */
+function _restful_invalidate_entity_cache($cid) {
+  $plugins = restful_get_restful_plugins();
+  foreach ($plugins as $plugin) {
+    $handler = restful_get_restful_handler($plugin['resource'], $plugin['major_version'], $plugin['minor_version']);
+    $reflector = new \ReflectionClass($handler);
+    if ($reflector->hasMethod('cacheInvalidate')) {
+      $handler->cacheInvalidate($cid);
+    }
+  }
 }
