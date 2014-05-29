@@ -469,8 +469,6 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
     $return['_links'] = array();
     $page = !empty($request['page']) ? $request['page'] : 1;
 
-    $resource_url = $this->getPluginInfo('menu_item');
-
     if ($page > 1) {
       $request['page'] = $page - 1;
       $return['_links']['previous'] = $this->getUrl($request);
