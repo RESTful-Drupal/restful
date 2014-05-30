@@ -1008,8 +1008,6 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
     // Add the request as query strings.
     $options['query'] += $request;
 
-
-
     return url($this->getPluginInfo('menu_item'), $options);
   }
 }
