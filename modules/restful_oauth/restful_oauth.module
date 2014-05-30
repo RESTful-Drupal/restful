@@ -1,0 +1,127 @@
+<?php
+
+/**
+ * @file
+ * Module implementation file.
+ */
+
+/**
+ * Implements hook_ctools_plugin_directory().
+ */
+function restful_oauth_ctools_plugin_directory($module, $plugin) {
+  if ($module == 'restful') {
+    return 'plugins/' . $plugin;
+  }
+}
+
+/**
+ * Implements hook_menu().
+ */
+function restful_oauth_menu() {
+  if (!$path = variable_get('restful_oauth_plugin_menu_item', 'api/login/oauth')) {
+    // Menu item was disabled, and may be declared by an implementing module.
+    return;
+  }
+
+  $items[$path] = array(
+    'title' => 'Login',
+    'description' => 'Login with an OAuth response.',
+    'access callback' => 'user_is_anonymous',
+    'page callback' => 'restful_menu_process_callback',
+    'page arguments' => array('1', 'oauth'),
+  );
+
+  $items['api/oauth/request_token'] = array(
+    'title' => 'Request OAuth Token',
+    'description' => 'Get your unauthorized OAuth token.',
+    'access callback' => TRUE,
+    'page callback' => 'restful_oauth_request_router',
+    'page arguments' => array('\RestfulOAuthController', 'requestToken'),
+    'type' => MENU_CALLBACK,
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_entity_info().
+ */
+function restful_oauth_entity_info() {
+  $items['restful_oauth_consumer'] = array(
+    'label' => t('OAuth consumer'),
+    'entity class' => 'RestfulOAuthConsumer',
+    'controller class' => 'OAuthConsumerEntityController',
+    'base table' => 'restful_oauth_consumer',
+    'fieldable' => TRUE,
+    'entity keys' => array(
+      'id' => 'id',
+      'label' => 'name',
+      'bundle' => 'type',
+    ),
+    'bundles' => array(),
+    'bundle keys' => array(
+      'bundle' => 'type',
+    ),
+    'access callback' => 'restful_oauth_entity_consumer_access',
+    'module' => 'restful_oauth',
+    'entity cache' => module_exists('entitycache'),
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_permissions().
+ */
+function restful_oauth_permission() {
+  $permissions = array();
+  $ops = array('view', 'update', 'create', 'delete');
+  $entity_type = 'restful_oauth_consumer';
+  foreach ($ops as $op) {
+    $permission_string = format_string('@op any @entity_type entities', array(
+      '@op' => $op,
+      '@entity_type' => $entity_type,
+    ));
+    $permissions[$permission_string] = array(
+      'title' => $permission_string,
+    );
+    $permission_string = format_string('@op own @entity_type entities', array(
+      '@op' => $op,
+      '@entity_type' => $entity_type,
+    ));
+    $permissions[$permission_string] = array(
+      'title' => $permission_string,
+    );
+  }
+  return $permissions;
+}
+
+/**
+ * Access callback for the custom entity.
+ */
+function restful_oauth_entity_consumer_access($op, $entity, $account, $entity_type) {
+  $access = user_access(format_string('@op any @entity_type entities', array(
+    '@op' => $op,
+    '@entity_type' => $entity_type,
+  )), $account);
+  if ($access) {
+    return TRUE;
+  }
+  // Check access to own entities.
+  if ($entity->uid == $account->uid) {
+   return user_access(format_string('@op own @entity_type entities', array(
+     '@op' => $op,
+     '@entity_type' => $entity_type,
+   )), $account);
+  }
+
+}
+
+/**
+ * Page callback to the RestfulOAuthController.
+ */
+function restful_oauth_request_router($class_name, $method) {
+  $obj = new $class_name();
+  $output = call_user_func(array($obj, $method));
+  return drupal_json_output($output);
+}

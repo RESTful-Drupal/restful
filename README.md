@@ -164,7 +164,7 @@ Restful comes with ``cookie``, ``base_auth`` (user name and password in the HTTP
 
 ```bash
 # (Change username and password)
-curl -u "username:password" https://example.com/api/login
+curl -u "username:password" https://example.com/api/login/token
 
 # Response has access token.
 {"access_token":"YOUR_TOKEN"}

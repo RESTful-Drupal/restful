@@ -1,0 +1,12 @@
+name = RESTful OAuth Authentication
+description = Authenticate a REST call using oauth.
+core = 7.x
+dependencies[] = restful
+
+; Plugins
+files[] = includes/OAuthConsumerEntityController.php
+files[] = includes/RestfulOAuthConsumer.php
+files[] = includes/RestfulOAuthController.php
+
+; Tests
+;files[] = tests/
