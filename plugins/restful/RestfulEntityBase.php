@@ -1055,7 +1055,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
     }
 
     $cid = $this->generateCacheId($entity_id, $uid, $request);
-    return $this->cacheController->get($cid);
+    return $this->getCacheController()->get($cid);
   }
 
   /**
@@ -1082,7 +1082,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
     }
 
     $cid = $this->generateCacheId($entity_id, $uid, $request);
-    $this->cacheController->set($cid, $data, $this->getPluginInfo('cache_expiration'));
+    $this->getCacheController()->set($cid, $data, $this->getPluginInfo('cache_expiration'));
   }
 
   /**
@@ -1135,7 +1135,9 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *   The wildcard cache id to invalidate.
    */
   public function cacheInvalidate($cid) {
-    $this->cacheController->clear($cid, TRUE);
+    if ($this->getPluginInfo('cache_invalidation')) {
+      $this->getCacheController()->clear($cid, TRUE);
+    }
   }
 
   /**

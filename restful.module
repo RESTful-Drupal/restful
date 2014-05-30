@@ -63,6 +63,7 @@ function restful_plugin_process(&$plugin, $info) {
       'cache_class' => NULL,
       'cache_bin' => 'cache_restful',
       'cache_expiration' => CACHE_PERMANENT,
+      'cache_invalidation' => TRUE,
     );
 
     if ($plugin['hook_menu'] && empty($plugin['menu_item'])) {

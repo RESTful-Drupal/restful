@@ -12,6 +12,8 @@ $plugin = array(
     'cookie',
     'basic_auth',
   ),
+  // Disable the render cache for this resource.
+  'cache_render' => FALSE,
   // We will implement hook_menu() with a custom settings.
   'hook_menu' => FALSE,
 );
