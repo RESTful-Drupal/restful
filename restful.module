@@ -238,7 +238,7 @@ function restful_get_restful_handler_by_name($plugin_name) {
   // We can have multiple authentication plugins.
   foreach ($plugin['authentication_types'] as $auth_plugin_name) {
     $auth_handler = restful_get_authentication_handler($auth_plugin_name);
-    $handler->authenticationManager->addAuthenticationProvider($auth_handler);
+    $handler->getAuthenticationManager()->addAuthenticationProvider($auth_handler);
   }
   return $handler;
 }

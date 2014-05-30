@@ -117,17 +117,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *
    * @var \RestfulAuthenticationManager
    */
-  public $authenticationManager;
-
-  /**
-   * Get the defined controllers
-   *
-   * @return array
-   *   The defined controllers.
-   */
-  public function getControllers() {
-    return $this->controllers;
-  }
+  protected $authenticationManager;
 
   /**
    * Set the HTTP headers.
@@ -192,7 +182,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *   Gets the name of the resource.
    */
   public function getResourceName() {
-    return $this->plugin['resource'];
+    return $this->getPluginInfo('resource');
   }
 
   /**
@@ -207,26 +197,6 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
       'major' => $this->plugin['major_version'],
       'minor' => $this->plugin['minor_version'],
     );
-  }
-
-  /**
-   * Return the entity type of the resource.
-   *
-   * @return string
-   *   Machine name of the entity type.
-   */
-  public function getEntityType() {
-    return $this->entityType;
-  }
-
-  /**
-   * Return the bundle of the resource if exists.
-   *
-   * @return string|bool
-   *   Machine name of the bundle or FALSE if none.
-   */
-  public function getBundle() {
-    return !empty($this->bundle) ? $this->bundle : FALSE;
   }
 
   /**
@@ -955,17 +925,6 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
   }
 
   /**
-   * Get the request array if any.
-   *
-   * @return array
-   *
-   * @todo There is no $this->request populated anywhere.
-   */
-  public function getRequest() {
-    return isset($this->request) ? $this->request : NULL;
-  }
-
-  /**
    * {@inheritdoc}
    */
   public function access() {
@@ -995,7 +954,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *   The user object.
    */
   public function getAccount($request = NULL) {
-    return $this->authenticationManager->getAccount($request);
+    return $this->getAuthenticationManager()->getAccount($request);
   }
 
   /**
@@ -1005,7 +964,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *   The account to set.
    */
   public function setAccount(\stdClass $account) {
-    $this->authenticationManager->setAccount($account);
+    $this->getAuthenticationManager()->setAccount($account);
   }
 
   /**
@@ -1166,6 +1125,82 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    */
   public function cacheInvalidate($cid) {
     $this->cacheController->clear($cid, TRUE);
+  }
+
+  /**
+   * Setter function for a generic attribute.
+   *
+   * @param string $attribute_name
+   *   Name of the attribute to set.
+   * @param mixed $value
+   *   The value to set.
+   */
+  public function setProperty($attribute_name, $value) {
+    $this->{$attribute_name} = $value;
+  }
+
+  /**
+   * Getter for a generic attribute.
+   *
+   * @param string $attribute_name
+   *   The name of the attribute to get.
+   * @return mixed
+   *   The value of the attribute.
+   */
+  public function getProperty($attribute_name) {
+    return isset($this->{$attribute_name}) ? $this->{$attribute_name} : NULL;
+  }
+
+  /**
+   * Get a dash based attribute name based on a method name.
+   *
+   * @param string $method
+   *   The method name.
+   * @return string
+   *   The dash separated name.
+   */
+  private function getAttributeName($method) {
+    // We only support get and set and luckily enough they both have 3 chars.
+    $camel = substr($method, 3);
+    // Make the first letter lower case.
+    $camel[0] = strtolower($camel[0]);
+    return $camel;
+  }
+
+  /**
+   * Implement the magic __call method to catch calls to undefined methods.
+   */
+  public function __call($method, $args) {
+    // Use a static cache for the name of the property.
+    static $properties = array();
+    $id = $method . '::' . count($args);
+
+    if (!isset($properties[$id])) {
+      // Get the property name candidate.
+      $attribute_name = $this->getAttributeName($method);
+
+      // Check if the property is protected.
+      $rp = new ReflectionProperty($this, $attribute_name);
+      $properties[$id] = $attribute_name;
+      if (!$rp->isProtected()) {
+        // Invalid static cache to avoid checking this again.
+        $properties[$id] = FALSE;
+      }
+    }
+    if (!$properties[$id]) {
+      throw new Exception('Method not found: ' . get_class($this) . '::' . $method);
+    }
+    if (strpos($method, 'get') === 0 && count($args) == 0) {
+      return $this->getProperty($properties[$id]);
+    }
+    elseif (strpos($method, 'set') === 0 && count($args) == 1) {
+      $this->setProperty($properties[$id], $args[0]);
+      return;
+    }
+
+    $properties[$id] = FALSE;
+    // Raise an error because we don't know the method.
+    throw new Exception('Method not found: ' . get_class($this) . '::' . $method);
   }
 
 }
