@@ -207,7 +207,7 @@ class RestfulListTestCase extends DrupalWebTestCase {
       'page' => 3,
       'sort' => '-id',
     );
-    $this->assertEqual($result['_links']['previous'], $handler->getUrl($request), 'Query strings are retained in the _links.');
+    $this->assertTrue(strpos($result['_links']['previous'], 'sort=-id'), 'Query strings are retained in the _links.');
 
     // Check pagination with non-numeric value.
     try {
