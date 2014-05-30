@@ -210,4 +210,5 @@ Will result with an HTTP code 400, and the following JSON:
 
 ## Credits
 
-Developed by [Gizra](http://gizra.com)
+* [Gizra](http://gizra.com)
+* [Mateu Aguiló Bosch](https://github.com/mateu-aguilo-bosch)
