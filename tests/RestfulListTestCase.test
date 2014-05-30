@@ -22,7 +22,7 @@ class RestfulListTestCase extends DrupalWebTestCase {
   /**
    * Test the listing of entities.
    */
-  function __testList() {
+  function testList() {
     $settings = array('type' => 'article');
 
     $titles = array(
