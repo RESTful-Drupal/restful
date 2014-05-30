@@ -7,7 +7,7 @@ $plugin = array(
   'name' => 'main__1_5',
   'entity_type' => 'entity_test',
   'bundle' => 'main',
-  'authentication types' => array(
+  'authentication_types' => array(
     'basic_auth',
     'cookie',
   ),

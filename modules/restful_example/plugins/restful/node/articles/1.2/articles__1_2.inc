@@ -11,7 +11,7 @@ $plugin = array(
   // Set the minor version.
   'minor_version' => 2,
   // Set the authentication to "cookie".
-  'authentication types' => array(
+  'authentication_types' => array(
     'cookie',
   ),
 );
