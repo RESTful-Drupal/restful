@@ -1099,7 +1099,13 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *   The cache identifier.
    */
   protected function generateCacheId($entity_id, $uid, $request) {
-    // Get the cache ID from the selected params.
+    // Get the cache ID from the selected params. We will use a complex cache ID
+    // for smarter invalidation. The cache id will be like:
+    // v<major version>.<minor version>::et<entity type>::ei<entity id>::uu<user uid>::pa<params array>
+    // The code before every bit is a 2 letter representation of the label. For
+    // instance, the params array will be something like:
+    // fi:id,title::re:admin
+    // When the request has ?fields=id,title&restrict=admin
     $version = $this->getVersion();
     $cid = 'v' . $version['major'] . '.' . $version['minor'] . '::et' . $this->getEntityType() . '::ei' . $entity_id . '::uu' . $uid . '::pa';
     $cid_params = array();
@@ -1110,10 +1116,15 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
       if (in_array($param, array('page', 'sort', 'q', 'rest_call'))) {
         continue;
       }
+      // Make sure that ?fields=title,id and ?fields=id,title hit the same cache
+      // identifier.
+      $values = explode(',', $value);
+      sort($values);
+      $value = implode(',', $values);
+
       $cid_params[] = substr($param, 0, 2) . ':' . $value;
     }
     $cid .= implode('::', $cid_params);
-    // This will yield a cache id like 1394::59::fi:type,title
     return $cid;
   }
 
