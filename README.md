@@ -44,9 +44,9 @@ $handler = restful_get_restful_handler('articles');
 $result = $handler->post('', array('label' => 'example title'));
 $id = $result['id'];
 
-// PUT method, to update.
+// PATCH method to update only the title.
 $request['label'] = 'new title';
-$handler->put($id, $request);
+$handler->patch($id, $request);
 ```
 
 ### View an entity
