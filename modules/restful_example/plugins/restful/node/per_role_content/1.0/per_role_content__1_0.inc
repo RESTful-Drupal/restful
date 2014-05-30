@@ -10,7 +10,7 @@ $plugin = array(
   //  - 'basic_auth': Uses basic auth credentials.
   //  - 'token': Use any of the methods above to get a valid token. Once you
   //    have a valid token use it to authenticate.
-  'authentication types' => array(
+  'authentication_types' => array(
     'cookie',
   ),
   'entity_type' => 'node',

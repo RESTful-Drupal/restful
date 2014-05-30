@@ -13,7 +13,7 @@ $plugin = array(
   // Set the minor version.
   'minor_version' => 3,
   // Set the authentication to token.
-  'authentication types' => array(
+  'authentication_types' => array(
     'token',
   ),
 );
