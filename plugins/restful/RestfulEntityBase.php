@@ -1000,7 +1000,15 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
     unset($request['q'], $request['rest_call']);
 
     // By default set URL to be absolute.
-    $options += array('absolute' => TRUE);
+    $options += array(
+      'absolute' => TRUE,
+      'query' => array(),
+    );
+
+    // Add the request as query strings.
+    $options['query'] += $request;
+
+
 
     return url($this->getPluginInfo('menu_item'), $options);
   }

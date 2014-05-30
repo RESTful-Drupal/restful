@@ -22,7 +22,7 @@ class RestfulListTestCase extends DrupalWebTestCase {
   /**
    * Test the listing of entities.
    */
-  function testList() {
+  function __testList() {
     $settings = array('type' => 'article');
 
     $titles = array(
@@ -202,11 +202,6 @@ class RestfulListTestCase extends DrupalWebTestCase {
 
     // Check other query strings are retained in the _links.
     $result = $handler->get('', array('page' => 3, 'sort' => '-id'));
-
-    $request = array(
-      'page' => 3,
-      'sort' => '-id',
-    );
     $this->assertTrue(strpos($result['_links']['previous'], 'sort=-id'), 'Query strings are retained in the _links.');
 
     // Check pagination with non-numeric value.
