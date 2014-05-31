@@ -991,22 +991,28 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *   The request array.
    * @param $options
    *   Array with options passed to url().
+   * @param $keep_query
+   *   If TRUE the $request will be appended to the $options['query']. This is
+   *   the typical behavior for $_GET method, however it is not for $_POST.
+   *   Defaults to TRUE.
    *
    * @return string
    *   The URL address.
    */
-  public function getUrl($request = NULL, $options = array()) {
-    // Remove special params.
-    unset($request['q'], $request['rest_call']);
-
+  public function getUrl($request = NULL, $options = array(), $keep_query = TRUE) {
     // By default set URL to be absolute.
     $options += array(
       'absolute' => TRUE,
       'query' => array(),
     );
 
-    // Add the request as query strings.
-    $options['query'] += $request;
+    if ($keep_query) {
+      // Remove special params.
+      unset($request['q'], $request['rest_call']);
+
+      // Add the request as query strings.
+      $options['query'] += $request;
+    }
 
     return url($this->getPluginInfo('menu_item'), $options);
   }
