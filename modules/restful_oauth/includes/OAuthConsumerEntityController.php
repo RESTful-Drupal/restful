@@ -20,13 +20,13 @@ class OAuthConsumerEntityController extends EntityAPIController {
     // Find the consumer by consumer key.
     $query = new EntityFieldQuery();
     $result = $query
-      ->entityCondition('entity_type', 'restful_oauth_controller')
+      ->entityCondition('entity_type', 'restful_oauth_consumer')
       ->propertyCondition('consumer_key', $consumer_key)
       ->range(0, 1)
       ->execute();
-    if(!empty($result['restful_oauth_controller'])) {
-      $id = key($result['restful_oauth_controller']);
-      return entity_load_single('restful_oauth_controller', $id);
+    if(!empty($result['restful_oauth_consumer'])) {
+      $id = key($result['restful_oauth_consumer']);
+      return entity_load_single('restful_oauth_consumer', $id);
     }
     return NULL;
   }

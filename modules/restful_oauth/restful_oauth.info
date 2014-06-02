@@ -3,10 +3,16 @@ description = Authenticate a REST call using oauth.
 core = 7.x
 dependencies[] = restful
 
+; Classes
+files[] = includes/Cipher.php
+
 ; Plugins
 files[] = includes/OAuthConsumerEntityController.php
+files[] = includes/OAuthRequestTokenEntityController.php
 files[] = includes/RestfulOAuthConsumer.php
 files[] = includes/RestfulOAuthController.php
+files[] = includes/RestfulOAuthEndpoint.php
+files[] = includes/RestfulOAuthRequestToken.php
 
 ; Tests
 ;files[] = tests/

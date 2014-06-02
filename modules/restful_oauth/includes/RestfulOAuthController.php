@@ -12,20 +12,26 @@ class RestfulOAuthController {
    *
    * @var OAuthProvider
    */
-  protected $provider;
+  public $provider;
 
   /**
-   * Get the token.
+   * Get request token.
    */
-  public function requestToken() {
+  public function getRequestToken() {
+    $this->init();
+    $this->provider->isRequestTokenEndpoint(TRUE);
+    $this->provider->checkOAuthRequest(url(request_path(), array('absolute' => TRUE)), $_SERVER['REQUEST_METHOD']);
+  }
+
+  /**
+   * Init.
+   */
+  public function init() {
+    $this->cipher = new \Cipher();
     $this->provider = new OAuthProvider();
     $this->provider->consumerHandler(array($this,'lookupConsumer'));
     $this->provider->timestampNonceHandler(array($this,'timestampNonceChecker'));
-    $this->provider->tokenHandler(array($this,'tokenHandler'));
-    $this->provider->setParam('rest_call', NULL);  // Ignore the rest_call parameter
-//    $this->provider->setParam('q', NULL);  // Ignore the q parameter
-    $this->provider->setRequestTokenPath('/api/oauth/request_token');  // No token needed for this end point
-    $this->provider->checkOAuthRequest();
+    $this->provider->tokenHandler(array($this, 'tokenHandler'));
   }
 
   /**
@@ -37,15 +43,15 @@ class RestfulOAuthController {
    * @return int
    *   The OAuth code.
    */
-  protected function lookupConsumer(\OAuthProvider $provider) {
+  public function lookupConsumer(\OAuthProvider $provider) {
     $entity_controller = entity_get_controller('restful_oauth_consumer');
     $consumer = $entity_controller->loadByConsumerKey($provider->consumer_key);
     if (empty($consumer)) {
       return OAUTH_CONSUMER_KEY_UNKNOWN;
     }
-    if($provider->consumer_key != $consumer->consumer_key) {
-      return OAUTH_CONSUMER_KEY_UNKNOWN;
-    } else if($consumer->key_status != 0) {  // 0 is active, 1 is throttled, 2 is blacklisted
+    // 0 is active, 1 is throttled, 2 is blacklisted
+    // TODO: Add throttling & blacklisting logic.
+    if ($consumer->key_status != 0) {
       return OAUTH_CONSUMER_KEY_REFUSED;
     }
     $provider->consumer_secret = $consumer->consumer_secret;
@@ -65,11 +71,14 @@ class RestfulOAuthController {
    * @return int
    *   The OAuth code.
    */
-  protected function timestampNonceChecker(\OAuthProvider $provider) {
-
-    if ($provider->nonce === 'bad') {
+  public function timestampNonceChecker(\OAuthProvider $provider) {
+    // The timestamp is here to prevent replaying of request token requests if
+    // they are captured - it is normal to compare the given timestamp is within
+    // a few minutes of the local server time.
+    if (!$this->cipher->checkNonce($provider->nonce)) {
       return OAUTH_BAD_NONCE;
-    } elseif ($provider->timestamp == '0') {
+    }
+    if ($provider->timestamp == 0 || time() - $provider->timestamp > variable_get('restful_oauth_timestamp_validity', 7200)) {
       return OAUTH_BAD_TIMESTAMP;
     }
 
@@ -85,7 +94,7 @@ class RestfulOAuthController {
    * @return int
    *   The OAuth code.
    */
-  protected function tokenHandler(\OAuthProvider $provider) {
+  public function tokenHandler(\OAuthProvider $provider) {
     if ($provider->token === 'rejected') {
       return OAUTH_TOKEN_REJECTED;
     } elseif ($provider->token === 'revoked') {
@@ -94,6 +103,13 @@ class RestfulOAuthController {
 
     $provider->token_secret = "the_tokens_secret";
     return OAUTH_OK;
+  }
+
+  /**
+   * Menu callback to sign an OAuth request.
+   */
+  public function requestSign() {
+    return array('foo' => 'bar');
   }
 
 }

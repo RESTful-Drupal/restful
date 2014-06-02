@@ -35,8 +35,27 @@ function restful_oauth_menu() {
     'title' => 'Request OAuth Token',
     'description' => 'Get your unauthorized OAuth token.',
     'access callback' => TRUE,
+    'page callback' => 'restful_menu_process_callback',
+    'page arguments' => array('1', 'request_tokens'),
+  );
+
+//  $items['api/oauth/request_signing'] = array(
+//    'title' => 'OAuth Request Signing',
+//    'description' => 'Sign an OAuth request.',
+//    'access callback' => TRUE,
+//    'page callback' => 'restful_oauth_request_router',
+//    'page arguments' => array('\RestfulOAuthController', 'requestSign'),
+//    'delivery callback' => 'drupal_json_output',
+//    'type' => MENU_CALLBACK,
+//  );
+
+  $items['api/oauth/nonce'] = array(
+    'title' => 'OAuth Request Signing',
+    'description' => 'Sign an OAuth request.',
+    'access callback' => TRUE,
     'page callback' => 'restful_oauth_request_router',
-    'page arguments' => array('\RestfulOAuthController', 'requestToken'),
+    'page arguments' => array('\Cipher', 'getNonce'),
+    'delivery callback' => 'drupal_json_output',
     'type' => MENU_CALLBACK,
   );
 
@@ -66,6 +85,25 @@ function restful_oauth_entity_info() {
     'module' => 'restful_oauth',
     'entity cache' => module_exists('entitycache'),
   );
+  $items['restful_request_token'] = array(
+    'label' => t('OAuth request token'),
+    'entity class' => 'RestfulOAuthRequestToken',
+    'controller class' => 'OAuthRequestTokenEntityController',
+    'base table' => 'restful_request_token',
+    'fieldable' => TRUE,
+    'entity keys' => array(
+      'id' => 'id',
+      'label' => 'name',
+      'bundle' => 'type',
+    ),
+    'bundles' => array(),
+    'bundle keys' => array(
+      'bundle' => 'type',
+    ),
+    'access callback' => 'restful_oauth_entity_consumer_access',
+    'module' => 'restful_oauth',
+    'entity cache' => module_exists('entitycache'),
+  );
 
   return $items;
 }
@@ -76,22 +114,24 @@ function restful_oauth_entity_info() {
 function restful_oauth_permission() {
   $permissions = array();
   $ops = array('view', 'update', 'create', 'delete');
-  $entity_type = 'restful_oauth_consumer';
-  foreach ($ops as $op) {
-    $permission_string = format_string('@op any @entity_type entities', array(
-      '@op' => $op,
-      '@entity_type' => $entity_type,
-    ));
-    $permissions[$permission_string] = array(
-      'title' => $permission_string,
-    );
-    $permission_string = format_string('@op own @entity_type entities', array(
-      '@op' => $op,
-      '@entity_type' => $entity_type,
-    ));
-    $permissions[$permission_string] = array(
-      'title' => $permission_string,
-    );
+  $entity_types = array('restful_oauth_consumer', 'restful_request_token');
+  foreach ($entity_types as $entity_type) {
+    foreach ($ops as $op) {
+      $permission_string = format_string('@op any @entity_type entities', array(
+        '@op' => $op,
+        '@entity_type' => $entity_type,
+      ));
+      $permissions[$permission_string] = array(
+        'title' => $permission_string,
+      );
+      $permission_string = format_string('@op own @entity_type entities', array(
+        '@op' => $op,
+        '@entity_type' => $entity_type,
+      ));
+      $permissions[$permission_string] = array(
+        'title' => $permission_string,
+      );
+    }
   }
   return $permissions;
 }
@@ -108,7 +148,7 @@ function restful_oauth_entity_consumer_access($op, $entity, $account, $entity_ty
     return TRUE;
   }
   // Check access to own entities.
-  if ($entity->uid == $account->uid) {
+  if (!empty($entity->uid) && $entity->uid == $account->uid) {
    return user_access(format_string('@op own @entity_type entities', array(
      '@op' => $op,
      '@entity_type' => $entity_type,
@@ -122,6 +162,5 @@ function restful_oauth_entity_consumer_access($op, $entity, $account, $entity_ty
  */
 function restful_oauth_request_router($class_name, $method) {
   $obj = new $class_name();
-  $output = call_user_func(array($obj, $method));
-  return drupal_json_output($output);
+  return call_user_func(array($obj, $method));
 }
