@@ -38,8 +38,6 @@ class RestfulGetHandlersTestCase extends DrupalWebTestCase {
 
 
     $handler = restful_get_restful_handler('articles', 1, 1);
-    // Remove all caches for rendered nodes.
-    $handler->cacheInvalidate('v1.1::etnode::ei');
     $this->assertEqual(get_class($handler), 'RestfulExampleArticlesResource__1_1');
     $result = $handler->get($node1->nid);
     $this->assertFalse(!empty($result['self']), '"self" property does not appear in minor version 1.');

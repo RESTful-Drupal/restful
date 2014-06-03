@@ -59,11 +59,11 @@ function restful_plugin_process(&$plugin, $info) {
       'bundle' => FALSE,
       'authentication_types' => array(),
       'hook_menu' => TRUE,
-      'cache_render' => TRUE,
+      'cache_render' => FALSE,
       'cache_class' => NULL,
       'cache_bin' => 'cache_restful',
-      'cache_expiration' => CACHE_PERMANENT,
-      'cache_invalidation' => TRUE,
+      'cache_expire' => CACHE_PERMANENT,
+      'cache_simple_invalidate' => TRUE,
     );
 
     if ($plugin['hook_menu'] && empty($plugin['menu_item'])) {

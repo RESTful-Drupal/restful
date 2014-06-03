@@ -224,10 +224,10 @@ _restful_ plugin definition:
   - `cache_bin`: The name of the bin. It is the developer's responsibility to
   create this bin in the cache backend if it does not exist. Defaults to
   `'cache_restful'`.
-  - `cache_expiration`: TTL for the cache records. See
+  - `cache_expire`: TTL for the cache records. See
   `DrupalCacheInterface::set()` for the allowed values. Defaults to
   `CACHE_PERMANENT`.
-  - `cache_invalidation`: Set it to false to prevent the RESTful module to
+  - `cache_simple_invalidate`: Set it to false to prevent the RESTful module to
   invalidate any cache it may have been generated. The developer will be
   responsible to invalidate caches in this scenario. Defaults to `TRUE`.
 

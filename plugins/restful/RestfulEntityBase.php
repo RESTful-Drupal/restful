@@ -490,7 +490,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    * @throws Exception
    */
   public function viewEntity($entity_id, $request, stdClass $account) {
-    $cached_data = $this->getRenderedEntityCache($entity_id, $account->uid, $request);
+    $cached_data = $this->getRenderedEntityCache($entity_id, $request);
     if (!empty($cached_data->data)) {
       return $cached_data->data;
     }
@@ -590,7 +590,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
       $values[$public_property] = $value;
     }
 
-    $this->setRenderedEntityCache($values, $entity_id, $account->uid, $request);
+    $this->setRenderedEntityCache($values, $entity_id, $request);
     return $values;
   }
 
@@ -1038,23 +1038,22 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *
    * @param mixed $entity_id
    *   The entity ID.
-   * @param int $uid
-   *   The uid for the authenticated user.
    * @param array $request
    *   The request array to match the condition how cached entity was generated.
    *
+   * @internal param int $uid The uid for the authenticated user.*   The uid for the authenticated user.
    * @return \stdClass
    *   The cache with rendered entity as returned by
    *   \RestfulEntityInterface::viewEntity().
    *
    * @see \RestfulEntityInterface::viewEntity().
    */
-  protected function getRenderedEntityCache($entity_id, $uid, $request) {
+  protected function getRenderedEntityCache($entity_id, $request) {
     if (!$this->getPluginInfo('cache_render')) {
       return;
     }
 
-    $cid = $this->generateCacheId($entity_id, $uid, $request);
+    $cid = $this->generateCacheId($entity_id, $request);
     return $this->getCacheController()->get($cid);
   }
 
@@ -1066,23 +1065,22 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *   \RestfulEntityInterface::viewEntity().
    * @param mixed $entity_id
    *   The entity ID.
-   * @param int $uid
-   *   The uid for the authenticated user.
    * @param array $request
    *   The request array to match the condition how cached entity was generated.
    *
+   * @internal param int $uid The uid for the authenticated user.*   The uid for the authenticated user.
    * @return array
    *   The rendered entity as returned by \RestfulEntityInterface::viewEntity().
    *
    * @see \RestfulEntityInterface::viewEntity().
    */
-  protected function setRenderedEntityCache($data, $entity_id, $uid, $request) {
+  protected function setRenderedEntityCache($data, $entity_id, $request) {
     if (!$this->getPluginInfo('cache_render')) {
       return;
     }
 
-    $cid = $this->generateCacheId($entity_id, $uid, $request);
-    $this->getCacheController()->set($cid, $data, $this->getPluginInfo('cache_expiration'));
+    $cid = $this->generateCacheId($entity_id, $request);
+    $this->getCacheController()->set($cid, $data, $this->getPluginInfo('cache_expire'));
   }
 
   /**
@@ -1090,15 +1088,14 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *
    * @param mixed $entity_id
    *   The entity ID.
-   * @param int $uid
-   *   The uid for the authenticated user.
    * @param array $request
    *   The request array to match the condition how cached entity was generated.
    *
+   * @internal param int $uid The uid for the authenticated user.*   The uid for the authenticated user.
    * @return string
    *   The cache identifier.
    */
-  protected function generateCacheId($entity_id, $uid, $request) {
+  protected function generateCacheId($entity_id, $request) {
     // Get the cache ID from the selected params. We will use a complex cache ID
     // for smarter invalidation. The cache id will be like:
     // v<major version>.<minor version>::et<entity type>::ei<entity id>::uu<user uid>::pa<params array>
@@ -1107,7 +1104,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
     // fi:id,title::re:admin
     // When the request has ?fields=id,title&restrict=admin
     $version = $this->getVersion();
-    $cid = 'v' . $version['major'] . '.' . $version['minor'] . '::et' . $this->getEntityType() . '::ei' . $entity_id . '::uu' . $uid . '::pa';
+    $cid = 'v' . $version['major'] . '.' . $version['minor'] . '::et' . $this->getEntityType() . '::ei' . $entity_id . '::uu' . $this->getAccount()->uid . '::pa';
     $cid_params = array();
     $request = $request ? $request : array();
     foreach ($request as $param => $value) {
@@ -1135,7 +1132,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *   The wildcard cache id to invalidate.
    */
   public function cacheInvalidate($cid) {
-    if ($this->getPluginInfo('cache_invalidation')) {
+    if ($this->getPluginInfo('cache_simple_invalidate')) {
       $this->getCacheController()->clear($cid, TRUE);
     }
   }
