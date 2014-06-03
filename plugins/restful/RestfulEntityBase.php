@@ -158,6 +158,16 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
   }
 
   /**
+   * Get the HTTP headers.
+   *
+   * @return array
+   *   The httpHeaders.
+   */
+  public function getHttpHeaders() {
+    return $this->httpHeaders;
+  }
+
+  /**
    * Constructs a RestfulEntityBase object.
    *
    * @param array $plugin
@@ -1138,79 +1148,111 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
   }
 
   /**
-   * Setter function for a generic attribute.
+   * Setter for $authenticationManager.
    *
-   * @param string $attribute_name
-   *   Name of the attribute to set.
-   * @param mixed $value
-   *   The value to set.
+   * @param \RestfulAuthenticationManager $authenticationManager
    */
-  public function setProperty($attribute_name, $value) {
-    $this->{$attribute_name} = $value;
+  public function setAuthenticationManager($authenticationManager) {
+    $this->authenticationManager = $authenticationManager;
   }
 
   /**
-   * Getter for a generic attribute.
+   * Getter for $authenticationManager.
    *
-   * @param string $attribute_name
-   *   The name of the attribute to get.
-   * @return mixed
-   *   The value of the attribute.
+   * @return \RestfulAuthenticationManager
    */
-  public function getProperty($attribute_name) {
-    return isset($this->{$attribute_name}) ? $this->{$attribute_name} : NULL;
+  public function getAuthenticationManager() {
+    return $this->authenticationManager;
   }
 
   /**
-   * Get a dash based attribute name based on a method name.
+   * Setter for $bundle.
    *
-   * @param string $method
-   *   The method name.
+   * @param string $bundle
+   */
+  public function setBundle($bundle) {
+    $this->bundle = $bundle;
+  }
+
+  /**
+   * Getter for $bundle.
+   *
    * @return string
-   *   The dash separated name.
    */
-  private function getAttributeName($method) {
-    // We only support get and set and luckily enough they both have 3 chars.
-    $camel = substr($method, 3);
-    // Make the first letter lower case.
-    $camel[0] = strtolower($camel[0]);
-    return $camel;
+  public function getBundle() {
+    return $this->bundle;
   }
 
   /**
-   * Implement the magic __call method to catch calls to undefined methods.
+   * Setter for $cacheController.
+   *
+   * @param \DrupalCacheInterface $cacheController
    */
-  public function __call($method, $args) {
-    // Use a static cache for the name of the property.
-    static $properties = array();
-    $id = $method . '::' . count($args);
+  public function setCacheController($cacheController) {
+    $this->cacheController = $cacheController;
+  }
 
-    if (!isset($properties[$id])) {
-      // Get the property name candidate.
-      $attribute_name = $this->getAttributeName($method);
+  /**
+   * Getter for $cacheController.
+   *
+   * @return \DrupalCacheInterface
+   */
+  public function getCacheController() {
+    return $this->cacheController;
+  }
 
-      // Check if the property is protected.
-      $rp = new ReflectionProperty($this, $attribute_name);
-      $properties[$id] = $attribute_name;
-      if (!$rp->isProtected()) {
-        // Invalid static cache to avoid checking this again.
-        $properties[$id] = FALSE;
-      }
-    }
-    if (!$properties[$id]) {
-      throw new Exception('Method not found: ' . get_class($this) . '::' . $method);
-    }
-    if (strpos($method, 'get') === 0 && count($args) == 0) {
-      return $this->getProperty($properties[$id]);
-    }
-    elseif (strpos($method, 'set') === 0 && count($args) == 1) {
-      $this->setProperty($properties[$id], $args[0]);
-      return;
-    }
+  /**
+   * Setter for $controllers.
+   *
+   * @param array $controllers
+   */
+  public function setControllers($controllers) {
+    $this->controllers = $controllers;
+  }
 
-    $properties[$id] = FALSE;
-    // Raise an error because we don't know the method.
-    throw new Exception('Method not found: ' . get_class($this) . '::' . $method);
+  /**
+   * Getter for $controllers.
+   *
+   * @return array
+   */
+  public function getControllers() {
+    return $this->controllers;
+  }
+
+  /**
+   * Setter for $entityType.
+   *
+   * @param string $entityType
+   */
+  public function setEntityType($entityType) {
+    $this->entityType = $entityType;
+  }
+
+  /**
+   * Getter for $entityType.
+   *
+   * @return string
+   */
+  public function getEntityType() {
+    return $this->entityType;
+  }
+
+  /**
+   * Setter for $plugin.
+   *
+   * @param array $plugin
+   */
+  public function setPlugin($plugin) {
+    $this->plugin = $plugin;
+  }
+
+  /**
+   * Getter for $plugin.
+   *
+   * @return array
+   */
+  public function getPlugin() {
+    return $this->plugin;
   }
 
 }
