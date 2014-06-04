@@ -1199,6 +1199,14 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    */
   public function cacheInvalidate($cid) {
     if ($this->getPluginInfo('cache_simple_invalidate')) {
+      // If the $cid is not '*' then remove the asterisk since it can mess with
+      // dynamically built wildcards.
+      if ($cid != '*') {
+        $pos = strpos($cid, '*');
+        if ($pos !== FALSE) {
+          $cid = substr($cid, 0, $pos);
+        }
+      }
       $this->getCacheController()->clear($cid, TRUE);
     }
   }
