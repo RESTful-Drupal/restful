@@ -43,6 +43,16 @@ interface RestfulInterface {
   public function getPublicFields();
 
   /**
+   * Return array keyed by the header property, and the value.
+   *
+   * This can be used for example to change the "Status" code of the HTTP
+   * response, or to add a "Location" property.
+   *
+   * @return array
+   */
+  public function getHttpHeaders();
+
+  /**
    * Determine if user can access the handler.
    *
    * @return bool

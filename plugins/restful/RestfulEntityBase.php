@@ -158,10 +158,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
   }
 
   /**
-   * Get the HTTP headers.
-   *
-   * @return array
-   *   The httpHeaders.
+   * {@inheritdoc}
    */
   public function getHttpHeaders() {
     return $this->httpHeaders;
@@ -1166,30 +1163,12 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
   }
 
   /**
-   * Setter for $bundle.
-   *
-   * @param string $bundle
-   */
-  public function setBundle($bundle) {
-    $this->bundle = $bundle;
-  }
-
-  /**
    * Getter for $bundle.
    *
    * @return string
    */
   public function getBundle() {
     return $this->bundle;
-  }
-
-  /**
-   * Setter for $cacheController.
-   *
-   * @param \DrupalCacheInterface $cacheController
-   */
-  public function setCacheController($cacheController) {
-    $this->cacheController = $cacheController;
   }
 
   /**
@@ -1202,15 +1181,6 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
   }
 
   /**
-   * Setter for $controllers.
-   *
-   * @param array $controllers
-   */
-  public function setControllers($controllers) {
-    $this->controllers = $controllers;
-  }
-
-  /**
    * Getter for $controllers.
    *
    * @return array
@@ -1220,39 +1190,12 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
   }
 
   /**
-   * Setter for $entityType.
-   *
-   * @param string $entityType
-   */
-  public function setEntityType($entityType) {
-    $this->entityType = $entityType;
-  }
-
-  /**
    * Getter for $entityType.
    *
    * @return string
    */
   public function getEntityType() {
     return $this->entityType;
-  }
-
-  /**
-   * Setter for $plugin.
-   *
-   * @param array $plugin
-   */
-  public function setPlugin($plugin) {
-    $this->plugin = $plugin;
-  }
-
-  /**
-   * Getter for $plugin.
-   *
-   * @return array
-   */
-  public function getPlugin() {
-    return $this->plugin;
   }
 
 }

@@ -368,7 +368,7 @@ function restful_menu_process_callback($major_version, $resource_name) {
  * Implements hook_entity_update().
  */
 function restful_entity_update($entity, $type) {
-  list($entity_id,,) = entity_extract_ids($type, $entity);
+  list($entity_id) = entity_extract_ids($type, $entity);
   $cid = 'et' . $type . '::ei' . $entity_id . '::uu';
   _restful_invalidate_entity_cache($cid);
 }
@@ -377,7 +377,7 @@ function restful_entity_update($entity, $type) {
  * Implements hook_entity_delete().
  */
 function restful_entity_delete($entity, $type) {
-  list($entity_id,,) = entity_extract_ids($type, $entity);
+  list($entity_id) = entity_extract_ids($type, $entity);
   $cid = 'et' . $type . '::ei' . $entity_id . '::uu';
   _restful_invalidate_entity_cache($cid);
 }
