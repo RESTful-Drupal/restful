@@ -215,21 +215,7 @@ Developers have absolute control where the cache is stored and the expiration
 for every resource, meaning that very volatile resources can skip cache entirely
 while other resources can have its cache in MemCached or the database. To
 configure this developers just have to specify the following keys in their
-_restful_ plugin definition:
-
-  - `cache_render`: Set it to `FALSE` to disable the render cache completely
-  Defaults to `TRUE`.
-  - `cache_class`: The cache class for this resource. Defaults to `NULL`, which
-  will probably end up resolving to `'DrupalDatabaseCache'`.
-  - `cache_bin`: The name of the bin. It is the developer's responsibility to
-  create this bin in the cache backend if it does not exist. Defaults to
-  `'cache_restful'`.
-  - `cache_expire`: TTL for the cache records. See
-  `DrupalCacheInterface::set()` for the allowed values. Defaults to
-  `CACHE_PERMANENT`.
-  - `cache_simple_invalidate`: Set it to false to prevent the RESTful module to
-  invalidate any cache it may have been generated. The developer will be
-  responsible to invalidate caches in this scenario. Defaults to `TRUE`.
+_restful_ plugin definition.
 
 ## Module dependencies
 * [Entity API](https://drupal.org/project/entity), with the following patches:
