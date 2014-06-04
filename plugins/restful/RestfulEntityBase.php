@@ -106,11 +106,18 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
   protected $range = 50;
 
   /**
+   * Cache controller object.
+   *
+   * @var \DrupalCacheInterface
+   */
+  protected $cacheController;
+
+  /**
    * Authentication manager.
    *
    * @var \RestfulAuthenticationManager
    */
-  public $authenticationManager;
+  protected $authenticationManager;
 
   /**
    * Get the defined controllers
@@ -160,11 +167,67 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
     return $this->range;
   }
 
-  public function __construct($plugin, \RestfulAuthenticationManager $auth_manager = NULL) {
+  /**
+   * Setter for $authenticationManager.
+   *
+   * @param \RestfulAuthenticationManager $authenticationManager
+   */
+  public function setAuthenticationManager($authenticationManager) {
+    $this->authenticationManager = $authenticationManager;
+  }
+
+  /**
+   * Getter for $authenticationManager.
+   *
+   * @return \RestfulAuthenticationManager
+   */
+  public function getAuthenticationManager() {
+    return $this->authenticationManager;
+  }
+
+  /**
+   * Getter for $bundle.
+   *
+   * @return string
+   */
+  public function getBundle() {
+    return $this->bundle;
+  }
+
+  /**
+   * Getter for $cacheController.
+   *
+   * @return \DrupalCacheInterface
+   */
+  public function getCacheController() {
+    return $this->cacheController;
+  }
+
+  /**
+   * Getter for $entityType.
+   *
+   * @return string
+   */
+  public function getEntityType() {
+    return $this->entityType;
+  }
+
+  /**
+   * Constructs a RestfulEntityBase object.
+   *
+   * @param array $plugin
+   *   Plugin definition.
+   * @param RestfulAuthenticationManager $auth_manager
+   *   (optional) Injected authentication manager.
+   * @param DrupalCacheInterface $cache_controller
+   *   (optional) Injected cache backend.
+   */
+  public function __construct($plugin, \RestfulAuthenticationManager $auth_manager = NULL, \DrupalCacheInterface $cache_controller = NULL) {
     $this->plugin = $plugin;
     $this->entityType = $plugin['entity_type'];
     $this->bundle = $plugin['bundle'];
     $this->authenticationManager = $auth_manager ? $auth_manager : new \RestfulAuthenticationManager();
+    $this->cacheController = $cache_controller ? $cache_controller : $this->newCacheObject();
   }
 
   /**
@@ -174,7 +237,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *   Gets the name of the resource.
    */
   public function getResourceName() {
-    return $this->plugin['resource'];
+    return $this->getPluginInfo('resource');
   }
 
   /**
@@ -189,26 +252,6 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
       'major' => $this->plugin['major_version'],
       'minor' => $this->plugin['minor_version'],
     );
-  }
-
-  /**
-   * Return the entity type of the resource.
-   *
-   * @return string
-   *   Machine name of the entity type.
-   */
-  public function getEntityType() {
-    return $this->entityType;
-  }
-
-  /**
-   * Return the bundle of the resource if exists.
-   *
-   * @return string|bool
-   *   Machine name of the bundle or FALSE if none.
-   */
-  public function getBundle() {
-    return !empty($this->bundle) ? $this->bundle : FALSE;
   }
 
   /**
@@ -263,11 +306,11 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *   (optional) The path.
    * @param null $request
    *   (optional) The request.
-   * @param null $account
-   *   (optional) The user object.
+   * @return mixed
+   *   The return value can depend on the controller for the patch method.
    */
-  public function patch($path = '', $request = NULL, $account = NULL) {
-    return $this->process($path, $request, $account, 'patch');
+  public function patch($path = '', $request = NULL) {
+    return $this->process($path, $request, 'patch');
   }
 
   /**
@@ -369,8 +412,10 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
 
     $ids = array_keys($result[$entity_type]);
 
-    // Pre-load all entities.
-    entity_load($entity_type, $ids);
+    // Pre-load all entities if there is no render cache.
+    if (!$this->getPluginInfo('cache_render')) {
+      entity_load($entity_type, $ids);
+    }
 
     $return = array('list' => array());
 
@@ -500,6 +545,11 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    * @throws Exception
    */
   public function viewEntity($entity_id, $request, stdClass $account) {
+    $cached_data = $this->getRenderedEntityCache($entity_id, $request);
+    if (!empty($cached_data->data)) {
+      return $cached_data->data;
+    }
+
     $this->isValidEntity('view', $entity_id, $account);
 
     $wrapper = entity_metadata_wrapper($this->entityType, $entity_id);
@@ -595,6 +645,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
       $values[$public_property] = $value;
     }
 
+    $this->setRenderedEntityCache($values, $entity_id, $request);
     return $values;
   }
 
@@ -782,6 +833,8 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *   Determine if properties that are missing form the request array should
    *   be treated as NULL, or should be skipped. Defaults to FALSE, which will
    *   set the fields to NULL.
+   *
+   * @throws RestfulBadRequestException
    */
   protected function setPropertyValues(EntityMetadataWrapper $wrapper, $request, $account, $null_missing_fields = FALSE) {
     $save = FALSE;
@@ -969,7 +1022,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *   The user object.
    */
   public function getAccount($request = NULL) {
-    return $this->authenticationManager->getAccount($request);
+    return $this->getAuthenticationManager()->getAccount($request);
   }
 
   /**
@@ -979,7 +1032,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *   The account to set.
    */
   public function setAccount(\stdClass $account) {
-    $this->authenticationManager->setAccount($account);
+    $this->getAuthenticationManager()->setAccount($account);
   }
 
   /**
@@ -1016,4 +1069,148 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
 
     return url($this->getPluginInfo('menu_item'), $options);
   }
+
+  /**
+   * Get the default cache object based on the plugin configuration.
+   *
+   * By default, this returns an instance of the DrupalDatabaseCache class.
+   * Classes implementing DrupalCacheInterface can register themselves both as a
+   * default implementation and for specific bins.
+   *
+   * @return \DrupalCacheInterface
+   *   The cache object associated with the specified bin.
+   *
+   * @see \DrupalCacheInterface
+   * @see _cache_get_object().
+   */
+  protected function newCacheObject() {
+    // We do not use drupal_static() here because we do not want to change the
+    // storage of a cache bin mid-request.
+    static $cache_object;
+    if (!isset($cache_object)) {
+      $class = $this->getPluginInfo('cache_class');
+      $bin = $this->getPluginInfo('cache_bin');
+      if (empty($class)) {
+        $class = variable_get('cache_class_' . $bin);
+        if (empty($class)) {
+          $class = variable_get('cache_default_class', 'DrupalDatabaseCache');
+        }
+      }
+      $cache_object = new $class($bin);
+    }
+    return $cache_object;
+  }
+
+  /**
+   * Get a rendered entity from cache.
+   *
+   * @param mixed $entity_id
+   *   The entity ID.
+   * @param array $request
+   *   The request array to match the condition how cached entity was generated.
+   *
+   * @internal param int $uid The uid for the authenticated user.*   The uid for the authenticated user.
+   * @return \stdClass
+   *   The cache with rendered entity as returned by
+   *   \RestfulEntityInterface::viewEntity().
+   *
+   * @see \RestfulEntityInterface::viewEntity().
+   */
+  protected function getRenderedEntityCache($entity_id, $request) {
+    if (!$this->getPluginInfo('cache_render')) {
+      return;
+    }
+
+    $cid = $this->generateCacheId($entity_id, $request);
+    return $this->getCacheController()->get($cid);
+  }
+
+  /**
+   * Store a rendered entity into the cache.
+   *
+   * @param mixed $data
+   *   The data to be stored into the cache generated by
+   *   \RestfulEntityInterface::viewEntity().
+   * @param mixed $entity_id
+   *   The entity ID.
+   * @param array $request
+   *   The request array to match the condition how cached entity was generated.
+   *
+   * @internal param int $uid The uid for the authenticated user.*   The uid for the authenticated user.
+   * @return array
+   *   The rendered entity as returned by \RestfulEntityInterface::viewEntity().
+   *
+   * @see \RestfulEntityInterface::viewEntity().
+   */
+  protected function setRenderedEntityCache($data, $entity_id, $request) {
+    if (!$this->getPluginInfo('cache_render')) {
+      return;
+    }
+
+    $cid = $this->generateCacheId($entity_id, $request);
+    $this->getCacheController()->set($cid, $data, $this->getPluginInfo('cache_expire'));
+  }
+
+  /**
+   * Generate a cache identifier for the request and the current entity.
+   *
+   * @param mixed $entity_id
+   *   The entity ID.
+   * @param array $request
+   *   The request array to match the condition how cached entity was generated.
+   *
+   * @internal param int $uid The uid for the authenticated user.*   The uid for the authenticated user.
+   * @return string
+   *   The cache identifier.
+   */
+  protected function generateCacheId($entity_id, $request) {
+    // Get the cache ID from the selected params. We will use a complex cache ID
+    // for smarter invalidation. The cache id will be like:
+    // v<major version>.<minor version>::et<entity type>::ei<entity id>::uu<user uid>::pa<params array>
+    // The code before every bit is a 2 letter representation of the label. For
+    // instance, the params array will be something like:
+    // fi:id,title::re:admin
+    // When the request has ?fields=id,title&restrict=admin
+    $version = $this->getVersion();
+    $cid = 'v' . $version['major'] . '.' . $version['minor'] . '::et' . $this->getEntityType() . '::ei' . $entity_id . '::uu' . $this->getAccount()->uid . '::pa';
+    $cid_params = array();
+    $request = $request ? $request : array();
+    foreach ($request as $param => $value) {
+      // Some request parameters don't affect how the entity is rendered, this
+      // means that we should skip them for the cache ID generation.
+      if (in_array($param, array('page', 'sort', 'q', 'rest_call'))) {
+        continue;
+      }
+      // Make sure that ?fields=title,id and ?fields=id,title hit the same cache
+      // identifier.
+      $values = explode(',', $value);
+      sort($values);
+      $value = implode(',', $values);
+
+      $cid_params[] = substr($param, 0, 2) . ':' . $value;
+    }
+    $cid .= implode('::', $cid_params);
+    return $cid;
+  }
+
+  /**
+   * Invalidates cache for a certain entity.
+   *
+   * @param string $cid
+   *   The wildcard cache id to invalidate.
+   */
+  public function cacheInvalidate($cid) {
+    if ($this->getPluginInfo('cache_simple_invalidate')) {
+      // If the $cid is not '*' then remove the asterisk since it can mess with
+      // dynamically built wildcards.
+      if ($cid != '*') {
+        $pos = strpos($cid, '*');
+        if ($pos !== FALSE) {
+          $cid = substr($cid, 0, $pos);
+        }
+      }
+      $this->getCacheController()->clear($cid, TRUE);
+    }
+  }
+
 }

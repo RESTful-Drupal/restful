@@ -33,5 +33,6 @@ files[] = tests/RestfulGetHandlersTestCase.test
 files[] = tests/RestfulHookMenuTestCase.test
 files[] = tests/RestfulListEntityMultipleBundlesTestCase.test
 files[] = tests/RestfulListTestCase.test
-files[] = tests/RestfulUpdateEntityTestCase
+files[] = tests/RestfulUpdateEntityTestCase.test
+files[] = tests/RestfulRenderCacheTestCase.test
 files[] = tests/RestfulViewEntityTestCase.test

@@ -54,7 +54,7 @@ class RestfulAuthorizationTestCase extends DrupalWebTestCase {
     $handler = restful_get_restful_handler('main', 1, 5);
 
     // Case 1. Check that the handler has the expected authentication providers.
-    $providers = array_keys($handler->authenticationManager->getArrayCopy());
+    $providers = array_keys($handler->getAuthenticationManager()->getArrayCopy());
     foreach ($handler->getPluginInfo('authentication_types') as $provider_name) {
       $this->assertTrue(in_array($provider_name, $providers), format_string('The %name authorization type was found.', array(
         '%name' => $provider_name,
