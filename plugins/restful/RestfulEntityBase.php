@@ -306,11 +306,11 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *   (optional) The path.
    * @param null $request
    *   (optional) The request.
-   * @param null $account
-   *   (optional) The user object.
+   * @return mixed
+   *   The return value can depend on the controller for the patch method.
    */
-  public function patch($path = '', $request = NULL, $account = NULL) {
-    return $this->process($path, $request, $account, 'patch');
+  public function patch($path = '', $request = NULL) {
+    return $this->process($path, $request, 'patch');
   }
 
   /**
@@ -833,6 +833,8 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *   Determine if properties that are missing form the request array should
    *   be treated as NULL, or should be skipped. Defaults to FALSE, which will
    *   set the fields to NULL.
+   *
+   * @throws RestfulBadRequestException
    */
   protected function setPropertyValues(EntityMetadataWrapper $wrapper, $request, $account, $null_missing_fields = FALSE) {
     $save = FALSE;
