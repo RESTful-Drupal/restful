@@ -120,6 +120,16 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
   protected $authenticationManager;
 
   /**
+   * Get the defined controllers
+   *
+   * @return array
+   *   The defined controllers.
+   */
+  public function getControllers() {
+    return $this->controllers;
+  }
+
+  /**
    * Set the HTTP headers.
    *
    * @param string $key
@@ -158,10 +168,48 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
   }
 
   /**
-   * {@inheritdoc}
+   * Setter for $authenticationManager.
+   *
+   * @param \RestfulAuthenticationManager $authenticationManager
    */
-  public function getHttpHeaders() {
-    return $this->httpHeaders;
+  public function setAuthenticationManager($authenticationManager) {
+    $this->authenticationManager = $authenticationManager;
+  }
+
+  /**
+   * Getter for $authenticationManager.
+   *
+   * @return \RestfulAuthenticationManager
+   */
+  public function getAuthenticationManager() {
+    return $this->authenticationManager;
+  }
+
+  /**
+   * Getter for $bundle.
+   *
+   * @return string
+   */
+  public function getBundle() {
+    return $this->bundle;
+  }
+
+  /**
+   * Getter for $cacheController.
+   *
+   * @return \DrupalCacheInterface
+   */
+  public function getCacheController() {
+    return $this->cacheController;
+  }
+
+  /**
+   * Getter for $entityType.
+   *
+   * @return string
+   */
+  public function getEntityType() {
+    return $this->entityType;
   }
 
   /**
@@ -932,6 +980,17 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
   }
 
   /**
+   * Get the request array if any.
+   *
+   * @return array
+   *
+   * @todo There is no $this->request populated anywhere.
+   */
+  public function getRequest() {
+    return isset($this->request) ? $this->request : NULL;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function access() {
@@ -1142,60 +1201,6 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
     if ($this->getPluginInfo('cache_simple_invalidate')) {
       $this->getCacheController()->clear($cid, TRUE);
     }
-  }
-
-  /**
-   * Setter for $authenticationManager.
-   *
-   * @param \RestfulAuthenticationManager $authenticationManager
-   */
-  public function setAuthenticationManager($authenticationManager) {
-    $this->authenticationManager = $authenticationManager;
-  }
-
-  /**
-   * Getter for $authenticationManager.
-   *
-   * @return \RestfulAuthenticationManager
-   */
-  public function getAuthenticationManager() {
-    return $this->authenticationManager;
-  }
-
-  /**
-   * Getter for $bundle.
-   *
-   * @return string
-   */
-  public function getBundle() {
-    return $this->bundle;
-  }
-
-  /**
-   * Getter for $cacheController.
-   *
-   * @return \DrupalCacheInterface
-   */
-  public function getCacheController() {
-    return $this->cacheController;
-  }
-
-  /**
-   * Getter for $controllers.
-   *
-   * @return array
-   */
-  public function getControllers() {
-    return $this->controllers;
-  }
-
-  /**
-   * Getter for $entityType.
-   *
-   * @return string
-   */
-  public function getEntityType() {
-    return $this->entityType;
   }
 
 }
