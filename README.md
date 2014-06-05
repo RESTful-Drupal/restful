@@ -203,7 +203,7 @@ Will result with an HTTP code 400, and the following JSON:
 }
 ```
 
-## Cache layer.
+## Cache layer
 The RESTful module is compatible and leverages the popular
 [Entity Cache](https://drupal.org/project/entitycache) module and adds a new
 cache layer on its own for the rendered entity. Two requests made by the same
