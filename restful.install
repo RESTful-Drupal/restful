@@ -6,9 +6,18 @@
  */
 
 /**
+ * Implements hook_schema().
+ */
+function restful_schema() {
+  $schema = array();
+
+  $schema['cache_restful'] = drupal_get_schema_unprocessed('system', 'cache');
+  return $schema;
+}
+
+/**
  * Implements hook_uninstall().
  */
 function restful_uninstall() {
   variable_del('restful_hook_menu_base_path');
 }
-

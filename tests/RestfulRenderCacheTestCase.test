@@ -1,0 +1,98 @@
+<?php
+
+/**
+ * @file
+ * Contains RestfulRenderCacheTestCase
+ */
+
+class RestfulRenderCacheTestCase extends DrupalWebTestCase {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Render Cache',
+      'description' => 'Test the render cache capabilities.',
+      'group' => 'Restful',
+    );
+  }
+
+  function setUp() {
+    parent::setUp('restful_test');
+  }
+
+  /**
+   * Test creating an entity (POST method).
+   */
+  function testCreateEntity() {
+    $settings = array('type' => 'article');
+    $account = $this->drupalCreateUser();
+
+
+    $num_articles = 3;
+    for ($index = 0; $index < $num_articles; $index++) {
+      $settings['title'] = $this->randomName();
+      $node = $this->drupalCreateNode($settings);
+      $nodes[$node->nid] = $node;
+    }
+
+    $handler = restful_get_restful_handler('test_articles', 1, 1);
+    $handler->setAccount($account);
+    $cache = $handler->getCacheController();
+    // Make sure the cache is activated.
+    $this->assertTrue($handler->getPluginInfo('cache_render'), 'Cache render is activated');
+
+    // Empty the cache.
+    $cache->clear('*', TRUE);
+    $this->assertTrue($cache->isEmpty(), 'Cache render is empty.');
+
+    // Test that cache is being generated correctly.
+    // Get the articles.
+    $pre_cache_results = $handler->get();
+    // Make sure some cache entries are generated.
+    $this->assertFalse($cache->isEmpty(), 'Cache render is being populated.');
+    // Get the cached results.
+    $post_cache_results = $handler->get();
+    // Make sure the cached results are the same as the non-cached results.
+    $this->assertEqual($pre_cache_results, $post_cache_results, 'Cached data is consistent.');
+    // Get a cached result directly from the cache backend.
+    $node = reset($nodes);
+    $cid = 'v1.1::etnode::ei' . $node->nid . '::uu' . $account->uid . '::pa';
+    $record = $cache->get($cid);
+    $this->assertEqual($pre_cache_results['list'][0], $record->data, 'Data in cache bins is correct.');
+
+    // Test that invalidation is clearing cache records.
+    // 1. Update node and watch cache vanish.
+    // Make sure the cache is activated.
+    $this->assertTrue($handler->getPluginInfo('cache_simple_invalidate'), 'Cache render simple invalidation is activated');
+    $node->title .= ' updated';
+    node_save($node);
+    $record = $cache->get($cid);
+    $this->assertFalse($record, 'Cache record cleared correctly.');
+    $this->assertFalse($cache->isEmpty(), 'Remaining cache items are intact after updating entity.');
+    // Regenerate cache for $node.
+    $handler->get($node->nid);
+    $record = $cache->get($cid);
+    $this->assertNotNull($record->data, 'Cache is being generated for non-list requests.');
+    // 2. Update the user account. All cache records should be invalidated.
+    $account->name .= ' updated';
+    user_save($account);
+    $record = $cache->get($cid);
+    $this->assertFalse($record, 'Cache bin is emptied after updating a user.');
+
+    // Test cache segmentation with request params.
+    // Rebuild caches.
+    $cache->clear('*', TRUE);
+    $results_wo_request = $handler->get();
+    $results_w_request = $handler->get('', array('fields' => 'id,label'));
+    // Check that the cached results for the entity without request array are
+    // different than with the request array.
+    $cid_wo_request = $cid;
+    $cid_w_request = $cid_wo_request . 'fi:id,label';
+    $record = $cache->get($cid_w_request);
+    // Check that the stored data for both cache ids exists and is different.
+    $this->assertNotEqual($record->data, $cache->get($cid_wo_request)->data, 'Cache with request params is different.');
+    // Make sure that we are not storing the same data than before.
+    $this->assertNotEqual($results_wo_request['list'][0], $record->data, 'Cache with request is not overwritten.');
+    // Assure that the stored cache corresponds to the returned rendered entity.
+    $this->assertEqual($results_w_request['list'][0], $record->data, 'Cache with request is correctly stored.');
+  }
+}

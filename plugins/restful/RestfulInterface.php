@@ -13,8 +13,12 @@ interface RestfulInterface {
    *
    * @param $plugin
    *   The restful plugin object.
+   * @param RestfulAuthenticationManager $auth_manager
+   *   Injected authentication manager.
+   * @param DrupalCacheInterface $cache_controller
+   *   Injected cache controller.
    */
-  public function __construct($plugin, \RestfulAuthenticationManager $auth_manager = NULL);
+  public function __construct($plugin, \RestfulAuthenticationManager $auth_manager = NULL, \DrupalCacheInterface $cache_controller = NULL);
 
   /**
    * Entry point to process a request.
@@ -23,8 +27,6 @@ interface RestfulInterface {
    *   The requested path.
    * @param array $request
    *   The request array
-   * @param stdClass $account
-   *   The user object.
    * @param string $method
    *   The HTTP method.
    *

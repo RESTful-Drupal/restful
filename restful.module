@@ -34,13 +34,26 @@ function restful_ctools_plugin_directory($module, $plugin) {
  * - bundle: The name of a single bundle the resource is connected to. Defaults
  *   to FALSE.
  * - authentication_types: Array with name of authentication providers that
- *   should "protect" the resource, and ensure only authenticated users can use it. If
+ *   should "protect" the resource, and ensure only authenticated users can use
+ *   it. If
  *   user was not authenticated with any of the authentication providers, an
  *   \RestfulUnauthorizedException exception would be thrown. Defaults to empty
  *   array, which means no authentication is done by default.
  * - hook_menu: Determines if RESTful module should declare the resource in its
  *   pwn hook_menu(). If FALSE, it is up to the implementing module to declare
  *   it. Defaults to TRUE.
+ * - cache_render: Set it to FALSE to disable the render cache completely
+ *   Defaults to FALSE.
+ * - cache_class: The cache class for this resource. Defaults to NULL, which
+ *   will probably end up resolving to 'DrupalDatabaseCache'.
+ * - cache_bin: The name of the bin. It is the developer's responsibility to
+ *   create this bin in the cache backend if it does not exist. Defaults to
+ *   'cache_restful'.
+ * - cache_expire: TTL for the cache records. See DrupalCacheInterface::set()
+ *   for the allowed values. Defaults to CACHE_PERMANENT.
+ * - cache_simple_invalidate: Set it to false to prevent the RESTful module to
+ *   invalidate any cache it may have been generated. The developer will be
+ *   responsible to invalidate caches in this scenario. Defaults to TRUE.
  *
  * Properties for the "authentication" plugin type:
  * - description: The description of the authentication provider. Defaults to
@@ -59,6 +72,11 @@ function restful_plugin_process(&$plugin, $info) {
       'bundle' => FALSE,
       'authentication_types' => array(),
       'hook_menu' => TRUE,
+      'cache_render' => FALSE,
+      'cache_class' => NULL,
+      'cache_bin' => 'cache_restful',
+      'cache_expire' => CACHE_PERMANENT,
+      'cache_simple_invalidate' => TRUE,
     );
 
     if ($plugin['hook_menu'] && empty($plugin['menu_item'])) {
@@ -234,7 +252,7 @@ function restful_get_restful_handler_by_name($plugin_name) {
   // We can have multiple authentication plugins.
   foreach ($plugin['authentication_types'] as $auth_plugin_name) {
     $auth_handler = restful_get_authentication_handler($auth_plugin_name);
-    $handler->authenticationManager->addAuthenticationProvider($auth_handler);
+    $handler->getAuthenticationManager()->addAuthenticationProvider($auth_handler);
   }
   return $handler;
 }
@@ -357,4 +375,60 @@ function restful_menu_process_callback($major_version, $resource_name) {
   drupal_add_http_header('Status', $result['status']);
   drupal_add_http_header('Content-Type', 'application/problem+json; charset=utf-8');
   return $result;
+}
+
+/**
+ * Implements hook_entity_update().
+ */
+function restful_entity_update($entity, $type) {
+  list($entity_id) = entity_extract_ids($type, $entity);
+  $cid = 'et' . $type . '::ei' . $entity_id . '::uu';
+  _restful_invalidate_entity_cache($cid);
+}
+
+/**
+ * Implements hook_entity_delete().
+ */
+function restful_entity_delete($entity, $type) {
+  list($entity_id) = entity_extract_ids($type, $entity);
+  $cid = 'et' . $type . '::ei' . $entity_id . '::uu';
+  _restful_invalidate_entity_cache($cid);
+}
+
+/**
+ * Implements hook_user_update().
+ */
+function restful_user_update(&$edit, $account, $category) {
+  // Due to the limitations for cid matching on clearing caches, we need to
+  // clear all the bin. We cannot do $cid = '%::uu' . $account->uid . '::pa';
+  _restful_invalidate_entity_cache('*');
+}
+
+/**
+ * Implements hook_user_delete().
+ */
+function restful_user_delete($account) {
+  // Due to the limitations for cid matching on clearing caches, we need to
+  // clear all the bin. We cannot do $cid = '%::uu' . $account->uid . '::pa';
+  _restful_invalidate_entity_cache('*');
+}
+
+/**
+ * Delete cached entities from all the cache bins associated to restful
+ * resources.
+ *
+ * @param string $cid
+ *   The wildcard cache id to invalidate.
+ */
+function _restful_invalidate_entity_cache($cid) {
+  $plugins = restful_get_restful_plugins();
+  foreach ($plugins as $plugin) {
+    $handler = restful_get_restful_handler($plugin['resource'], $plugin['major_version'], $plugin['minor_version']);
+    $reflector = new \ReflectionClass($handler);
+    if ($reflector->hasMethod('cacheInvalidate')) {
+      $version = $handler->getVersion();
+      $version_cid = 'v' . $version['major'] . '.' . $version['minor'];
+      $handler->cacheInvalidate($version_cid . '::' . $cid);
+    }
+  }
 }
