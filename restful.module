@@ -389,7 +389,9 @@ function restful_menu_process_callback($major_version, $resource_name) {
  * @see restful_menu_process_callback()
  */
 function restful_json_output($var = NULL) {
-  echo drupal_json_encode($var);
+  if (isset($var)) {
+    echo drupal_json_encode($var);
+  }
 }
 
 
