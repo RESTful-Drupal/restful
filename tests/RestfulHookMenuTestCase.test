@@ -34,20 +34,34 @@ class RestfulHookMenuTestCase extends DrupalWebTestCase {
     $node1 = $this->drupalCreateNode($settings);
 
     // Test version 1.0
-    $result = $this->httpRequest('api/v1/articles/' . $node1->nid, 'GET');
+    $result = $this->httpRequest('api/v1/articles/' . $node1->nid);
     $expected_result = array(
       'id' => $node1->nid,
       'label' => $node1->title,
       'self' => url('node/' . $node1->nid, array('absolute' => TRUE)),
     );
 
-    $this->assertEqual($result, json_encode($expected_result));
+    $this->assertEqual($result['body'], json_encode($expected_result));
 
     // Test version 1.1
     $headers = array('Restful-Minor-Version: 1');
-    $result = $this->httpRequest('api/v1/articles/' . $node1->nid, 'GET', NULL, NULL, $headers);
+    $result = $this->httpRequest('api/v1/articles/' . $node1->nid, 'GET', NULL, $headers);
     unset($expected_result['self']);
-    $this->assertEqual($result, json_encode($expected_result));
+    $this->assertEqual($result['body'], json_encode($expected_result));
+  }
+
+  /**
+   * Test HTTP headers change according to the response.
+   */
+  function testHttpHeaders() {
+    // Valid request (eventough it's empty).
+    $result = $this->httpRequest('api/v1/articles/', 'GET');
+    $this->assertTrue(strpos($result['headers'], 'application/hal+json;'), '"application/hal+json" found in valid request.');
+
+    // Invalid request.
+    $result = $this->httpRequest('api/v1/articles/', 'GET', array('sort' => 'invalid_key'));
+    $this->assertTrue(strpos($result['headers'], 'application/problem+json;'), '"application/problem+json" found in valid request.');
+
   }
 
   /**
@@ -55,20 +69,26 @@ class RestfulHookMenuTestCase extends DrupalWebTestCase {
    *
    * Copied and slightly adjusted from the RestWS module.
    *
+   * @param string $url
+   *   The URL of the request.
+   * @param string $method
+   *   The HTTP method of the request. Defaults to "GET".
    * @param array $body
    *   Either the body for POST and PUT or additional URL parameters for GET.
+   * @param array $headers
+   *   Additional HTTP header parameters.
+   *
+   * @return array
+   *   Array keyed with the "code", "headers", and "body" of the response.
    */
-  protected function httpRequest($url, $method, $account = NULL, $body = NULL, $headers = array()) {
+  protected function httpRequest($url, $method = 'GET', $body = NULL, $headers = array(), $account = NULL) {
     $format = 'json';
 
     if (isset($account)) {
       unset($this->curlHandle);
       $this->drupalLogin($account);
     }
-    if (in_array($method, array('POST', 'PUT', 'DELETE'))) {
-      // GET the CSRF token first for writing requests.
-      $token = $this->drupalGet('restws/session/token');
-    }
+
     switch ($method) {
       case 'GET':
         // Set query if there are addition GET parameters.
@@ -87,10 +107,7 @@ class RestfulHookMenuTestCase extends DrupalWebTestCase {
           CURLOPT_POSTFIELDS => $body,
           CURLOPT_URL => url($url, array('absolute' => TRUE)),
           CURLOPT_NOBODY => FALSE,
-          CURLOPT_HTTPHEADER => array(
-            'Content-Type: application/' . $format,
-            'X-CSRF-Token: ' . $token,
-          ),
+          CURLOPT_HTTPHEADER => array('Content-Type: application/' . $format),
         );
         break;
 
@@ -101,10 +118,7 @@ class RestfulHookMenuTestCase extends DrupalWebTestCase {
           CURLOPT_POSTFIELDS => $body,
           CURLOPT_URL => url($url, array('absolute' => TRUE)),
           CURLOPT_NOBODY => FALSE,
-          CURLOPT_HTTPHEADER => array(
-            'Content-Type: application/' . $format,
-            'X-CSRF-Token: ' . $token,
-          ),
+          CURLOPT_HTTPHEADER => array('Content-Type: application/' . $format),
         );
         break;
 
@@ -114,7 +128,7 @@ class RestfulHookMenuTestCase extends DrupalWebTestCase {
           CURLOPT_CUSTOMREQUEST => 'DELETE',
           CURLOPT_URL => url($url, array('absolute' => TRUE)),
           CURLOPT_NOBODY => FALSE,
-          CURLOPT_HTTPHEADER => array('X-CSRF-Token: ' . $token),
+          CURLOPT_HTTPHEADER => array(),
         );
         break;
     }
@@ -127,12 +141,18 @@ class RestfulHookMenuTestCase extends DrupalWebTestCase {
     $headers = $this->drupalGetHeaders();
     $headers = implode("\n", $headers);
 
+    $code = curl_getinfo($this->curlHandle, CURLINFO_HTTP_CODE);
+
     $this->verbose($method . ' request to: ' . $url .
-      '<hr />Code: ' . curl_getinfo($this->curlHandle, CURLINFO_HTTP_CODE) .
+      '<hr />Code: ' . $code .
       '<hr />Response headers: ' . $headers .
       '<hr />Response body: ' . $response);
 
-    return $response;
+    return array(
+      'code' => $code,
+      'headers' => $headers,
+      'body' => $response,
+    );
   }
 
 }
