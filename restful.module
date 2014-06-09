@@ -339,6 +339,21 @@ function restful_menu_process_callback($major_version, $resource_name) {
 
     case 'post':
       $request = $_POST;
+      break;
+
+    default:
+      global $base_url;
+      // We get the encoded query string and we let drupal helpers deal with
+      // encodings and stuff.
+      if (!$query_string = file_get_contents('php://input')) {
+        break;
+      }
+      // We don't care about the path, we only care about the query params.
+      $parsed_url = drupal_parse_url($base_url . '?' . $query_string);
+      if (!empty($parsed_url['query'])) {
+        $request = $parsed_url['query'];
+      }
+      break;
   }
   // This flag is used to identify if the request is done "via Drupal" or "via
   // CURL";
