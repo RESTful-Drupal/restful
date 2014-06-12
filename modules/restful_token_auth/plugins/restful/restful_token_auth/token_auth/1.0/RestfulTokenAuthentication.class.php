@@ -8,8 +8,8 @@
 class RestfulTokenAuthentication extends \RestfulEntityBase {
 
   /**
-   * A secret token prefix for better security and uniqueness
-   * .
+   * A secret token prefix for better security and uniqueness.
+   * 
    * @var string
    */
   protected $secretTokenPrefix = 'A secret token prefix for better encryption Ax%@GFbZS3a@';
