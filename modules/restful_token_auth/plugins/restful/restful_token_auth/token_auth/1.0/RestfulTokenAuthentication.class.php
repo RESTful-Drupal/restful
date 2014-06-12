@@ -12,7 +12,7 @@ class RestfulTokenAuthentication extends \RestfulEntityBase {
    * .
    * @var string
    */
-  protected $secret_token_prefix = 'A secret token prefix for better encryption Ax%@GFbZS3a@';
+  protected $secretTokenPrefix = 'A secret token prefix for better encryption Ax%@GFbZS3a@';
 
   /**
    * Overrides RestfulEntityBase::getQueryForList().
@@ -98,7 +98,7 @@ class RestfulTokenAuthentication extends \RestfulEntityBase {
   protected function createToken(stdClass $account = NULL) {
     $unique = uniqid(NULL, TRUE);
 
-    $token = sha1($this->secret_token_prefix) . md5(sha1($account->uid) . time()) . sha1($unique);
+    $token = sha1($this->secretTokenPrefix) . md5(sha1($account->uid) . time()) . sha1($unique);
     $token = sha1(md5($token));
 
     return $token;
