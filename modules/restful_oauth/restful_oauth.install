@@ -1,0 +1,203 @@
+<?php
+
+/**
+ * @file
+ * Install implementation file.
+ */
+
+/**
+ * Implements hook_requirements().
+ */
+function restful_oauth_requirements($phase) {
+  $requirements = array();
+  // Ensure translations don't break during installation.
+  $t = get_t();
+
+  $installed = class_exists('OAuthProvider');
+  // Report Drupal version
+  $requirements['restful_oauth'] = array(
+    'title' => $t('OAuth PECL extension'),
+    'value' => $installed ? $t('Installed.') : $t('Not installed.'),
+    'severity' => $installed ? REQUIREMENT_OK : REQUIREMENT_ERROR,
+  );
+  if (!$installed) {
+    $requirements['restful_oauth']['description'] = $t('Please install the OAuth PECL extension.');
+    if (module_exists('advanced_help')) {
+      $requirements['restful_oauth']['description'] .= ' ' . $t('See the !link for instructions on how to install it.', array(
+          '!link' => l($t('advanced help'), 'help/restful_oauth/installing'),
+        ));
+    }
+  }
+  return $requirements;
+}
+
+/**
+ * Implements hook_schema().
+ */
+function restful_oauth_schema() {
+  $schema = array();
+  $schema['restful_oauth_consumer'] = array(
+    'description' => 'The OAuth consumer table.',
+    'fields' => array(
+      'id' => array(
+        'description' => 'The consumer unique ID.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'type' => array(
+        'description' => 'The OAuth consumer type.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'callback' => array(
+        'description' => 'The return callback for the consumer.',
+        'type' => 'varchar',
+        'length' => 400,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'uid' => array(
+        'description' => 'The user the consumer belongs to.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'name' => array(
+        'description' => 'The consumer name.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+        'default' => '',
+      ),
+      'consumer_key' => array(
+        'description' => 'The consumer key.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'consumer_secret' => array(
+        'description' => 'The consumer secret.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'key_status' => array(
+        'description' => 'The key status: 0 active, 1 throttled, 2 blacklisted.',
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'created' => array(
+        'description' => 'The Unix timestamp when the authentication token was created.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'foreign keys' => array(
+      'uid' => array(
+        'table' => 'users',
+        'columns' => array('uid' => 'uid'),
+      ),
+    ),
+    'primary key' => array('id'),
+  );
+  $schema['restful_request_token'] = array(
+    'description' => 'The OAuth request token table.',
+    'fields' => array(
+      'id' => array(
+        'description' => 'The request token unique ID.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'type' => array(
+        'description' => 'The OAuth request token type.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'uid' => array(
+        'description' => 'The user the consumer belongs to.',
+        'type' => 'int',
+      ),
+      'name' => array(
+        'description' => 'The consumer name.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+        'default' => '',
+      ),
+      'verification' => array(
+        'description' => 'The verification string.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+        'default' => '',
+      ),
+      'consumer_id' => array(
+        'description' => 'The consumer external id.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'request_token' => array(
+        'description' => 'The request token.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'request_token_secret' => array(
+        'description' => 'The request token secret.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'created' => array(
+        'description' => 'The Unix timestamp when the authentication token was created.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'foreign keys' => array(
+      'uid' => array(
+        'table' => 'users',
+        'columns' => array('uid' => 'uid'),
+      ),
+      'consumer_id' => array(
+        'table' => 'restful_oauth_consumer',
+        'columns' => array('consumer_id' => 'id'),
+      ),
+    ),
+    'primary key' => array('id'),
+  );
+
+  // Cache bins for Entity-cache module.
+  $cache_schema = drupal_get_schema_unprocessed('system', 'cache');
+  $types = array('restful_oauth_consumer', 'restful_request_token');
+
+  foreach ($types as $type) {
+    $schema["cache_entity_$type"] = $cache_schema;
+    $schema["cache_entity_$type"]['description'] = "Cache table used to store $type entity records.";
+  }
+
+  return $schema;
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function restful_oauth_uninstall() {
+  variable_del('restful_oauth_plugin_menu_item');
+  variable_del('restful_oauth_timestamp_validity');
+}

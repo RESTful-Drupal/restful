@@ -10,7 +10,7 @@
  * Implements hook_menu().
  */
 function restful_token_auth_menu() {
-  if (!$path = variable_get('restful_token_auth_plugin_menu_item', 'api/login')) {
+  if (!$path = variable_get('restful_token_auth_plugin_menu_item', 'api/login/token')) {
     // Menu item was disabled, and may be declared by an implementing module.
     return;
   }

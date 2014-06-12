@@ -821,6 +821,35 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
   }
 
   /**
+   * Deletes an entity.
+   *
+   * @param $entity_id
+   *   The entity ID.
+   * @param $request
+   *   The request array.
+   * @param $account
+   *   The user object.
+   *
+   * @return array
+   *   JSON output or NULL for no content.
+   *
+   * @throws RestfulUnprocessableEntityException
+   * @throws RestfulForbiddenException
+   */
+  public function deleteEntity($entity_id, $request, $account) {
+    if (!$entity = entity_load_single($this->getEntityType(), $entity_id)) {
+      throw new RestfulUnprocessableEntityException('The entity does not exist.');
+    }
+    if (!entity_access('delete', $this->getEntityType(), $entity, $account)) {
+      // User does not have access to delete entity.
+      $params = array('@resource' => $this->getPluginInfo('label'));
+      throw new RestfulForbiddenException(format_string('You do not have access to delete this @resource resource.', $params));
+    }
+    entity_delete($this->getEntityType(), $entity_id);
+    return;
+  }
+
+    /**
    * Set properties of the entity based on the request, and save the entity.
    *
    * @param EntityMetadataWrapper $wrapper

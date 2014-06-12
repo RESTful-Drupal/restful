@@ -25,6 +25,16 @@ class RestfulException extends Exception {
   }
 
   /**
+   * Gets the description of the exception.
+   *
+   * @param string $message
+   *   The description message.
+   */
+  final public function setDescription($message) {
+    $this->description = $message;
+  }
+
+  /**
    * Return a string to the common problem type.
    *
    * @return string
@@ -78,6 +88,15 @@ class RestfulException extends Exception {
     return empty($sections[$this->getCode()]) ? $url : $url . $sections[$this->getCode()];
   }
 
+  /**
+   * Set the instance URL.
+   *
+   * @param string $url
+   *   The instance URL.
+   */
+  public function setInstance($url) {
+    $this->instance = $url;
+  }
   /**
    * Get the URL to the error for the particular case.
    *
