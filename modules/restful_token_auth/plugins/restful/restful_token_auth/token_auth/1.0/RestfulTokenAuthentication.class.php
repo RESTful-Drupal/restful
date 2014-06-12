@@ -8,6 +8,13 @@
 class RestfulTokenAuthentication extends \RestfulEntityBase {
 
   /**
+   * A secret token prefix for better security and uniqueness
+   * .
+   * @var string
+   */
+  protected $secret_token_prefix = 'A secret token prefix for better encryption Ax%@GFbZS3a@';
+
+  /**
    * Overrides RestfulEntityBase::getQueryForList().
    *
    * Keep only the "token" property.
@@ -69,7 +76,7 @@ class RestfulTokenAuthentication extends \RestfulEntityBase {
         'type' => 'restful_token_auth',
         'created' => REQUEST_TIME,
         'name' => 'self',
-        'token' => md5(time()),
+        'token' => $this->createToken($account),
       );
       $auth_token = entity_create('restful_token_auth', $values);
       entity_save('restful_token_auth', $auth_token);
@@ -77,5 +84,23 @@ class RestfulTokenAuthentication extends \RestfulEntityBase {
     }
 
     return $this->viewEntity($id, $request, $account);
+  }
+
+  /**
+   * Creates a unique token based on user account details.
+   *
+   * @param stdClass $account
+   *  The user account object.
+   *
+   * @return string
+   *  Return a unique token.
+   */
+  protected function createToken(stdClass $account = NULL) {
+    $unique = uniqid(NULL, TRUE);
+
+    $token = sha1($this->secret_token_prefix) . md5(sha1($account->uid) . time()) . sha1($unique);
+    $token = sha1(md5($token));
+
+    return $token;
   }
 }
