@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains RestfulEntityUser.
+ * Contains RestfulEntityBaseUser.
  */
 
-class RestfulEntityUser extends \RestfulEntityBase {
+class RestfulEntityBaseUser extends \RestfulEntityBase {
 
   /**
    * Overrides RestfulEntityBase::getPublicFields().

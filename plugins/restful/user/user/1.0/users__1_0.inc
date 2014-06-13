@@ -4,7 +4,7 @@ $plugin = array(
   'label' => t('User'),
   'description' => t('Export the "User" entity.'),
   'resource' => 'users',
-  'class' => 'RestfulEntityUser',
+  'class' => 'RestfulEntityBaseUser',
   'entity_type' => 'user',
   'bundle' => 'user',
 );
