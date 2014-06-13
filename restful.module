@@ -170,7 +170,7 @@ function restful_menu() {
   if (variable_get('restful_user_login_menu_item', TRUE)) {
     $items['api/login'] = array(
       'title' => 'Login',
-      'description' => 'Login using Base auth.',
+      'description' => 'Login using base auth and recieve a JSON response along with an authentication cookie.',
       'access callback' => 'user_is_anonymous',
       'page callback' => 'restful_menu_process_callback',
       'page arguments' => array('1', 'login_cookie'),
