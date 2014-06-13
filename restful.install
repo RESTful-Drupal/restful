@@ -20,4 +20,5 @@ function restful_schema() {
  */
 function restful_uninstall() {
   variable_del('restful_hook_menu_base_path');
+  variable_del('restful_user_login_menu_item');
 }
