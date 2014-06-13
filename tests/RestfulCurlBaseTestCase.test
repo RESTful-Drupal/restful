@@ -1,0 +1,102 @@
+<?php
+
+/**
+ * Contains RestfulCurlBaseTestCase
+ */
+
+class RestfulCurlBaseTestCase extends DrupalWebTestCase {
+
+  /**
+   * Helper function to issue a HTTP request with simpletest's cURL.
+   *
+   * Copied and slightly adjusted from the RestWS module.
+   *
+   * @param string $url
+   *   The URL of the request.
+   * @param string $method
+   *   The HTTP method of the request. Defaults to "GET".
+   * @param array $body
+   *   Either the body for POST and PUT or additional URL parameters for GET.
+   * @param array $headers
+   *   Additional HTTP header parameters.
+   * @param stdClass $account
+   *   Optional user account.
+   *
+   * @return array
+   *   Array keyed with the "code", "headers", and "body" of the response.
+   */
+  protected function httpRequest($url, $method = 'GET', $body = NULL, $headers = array(), $account = NULL) {
+    $format = 'json';
+
+    if (isset($account)) {
+      unset($this->curlHandle);
+      $this->drupalLogin($account);
+    }
+
+    switch ($method) {
+      case 'GET':
+        // Set query if there are addition GET parameters.
+        $options = isset($body) ? array('absolute' => TRUE, 'query' => $body) : array('absolute' => TRUE);
+        $curl_options = array(
+          CURLOPT_HTTPGET => TRUE,
+          CURLOPT_URL => url($url, $options),
+          CURLOPT_NOBODY => FALSE,
+        );
+        break;
+
+      case 'POST':
+        $curl_options = array(
+          CURLOPT_HTTPGET => FALSE,
+          CURLOPT_POST => TRUE,
+          CURLOPT_POSTFIELDS => $body,
+          CURLOPT_URL => url($url, array('absolute' => TRUE)),
+          CURLOPT_NOBODY => FALSE,
+          CURLOPT_HTTPHEADER => array('Content-Type: application/' . $format),
+        );
+        break;
+
+      case 'PUT':
+      case 'PATCH':
+        $curl_options = array(
+          CURLOPT_HTTPGET => FALSE,
+          CURLOPT_CUSTOMREQUEST => $method,
+          CURLOPT_POSTFIELDS => http_build_query($body),
+          CURLOPT_URL => url($url, array('absolute' => TRUE)),
+          CURLOPT_NOBODY => FALSE,
+          CURLOPT_HTTPHEADER => array('Content-Type: application/' . $format),
+        );
+        break;
+
+      case 'DELETE':
+        $curl_options = array(
+          CURLOPT_HTTPGET => FALSE,
+          CURLOPT_CUSTOMREQUEST => 'DELETE',
+          CURLOPT_URL => url($url, array('absolute' => TRUE)),
+          CURLOPT_NOBODY => FALSE,
+          CURLOPT_HTTPHEADER => array(),
+        );
+        break;
+    }
+
+    if ($headers) {
+      $curl_options[CURLOPT_HTTPHEADER] = $headers;
+    }
+
+    $response = $this->curlExec($curl_options);
+    $headers = $this->drupalGetHeaders();
+    $headers = implode("\n", $headers);
+
+    $code = curl_getinfo($this->curlHandle, CURLINFO_HTTP_CODE);
+
+    $this->verbose($method . ' request to: ' . $url .
+      '<hr />Code: ' . $code .
+      '<hr />Response headers: ' . $headers .
+      '<hr />Response body: ' . $response);
+
+    return array(
+      'code' => $code,
+      'headers' => $headers,
+      'body' => $response,
+    );
+  }
+}
