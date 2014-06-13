@@ -773,6 +773,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
 
     $wrapper = entity_metadata_wrapper($this->entityType, $entity_id);
 
+    static::cleanRequest($request);
     $this->setPropertyValues($wrapper, $request, $account, $null_missing_fields);
 
     // Set the HTTP headers.
@@ -781,7 +782,6 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
     if (!empty($wrapper->url) && $url = $wrapper->url->value()); {
       $this->setHttpHeaders('Location', $url);
     }
-
 
     return $this->viewEntity($wrapper->getIdentifier(), NULL, $account);
   }
@@ -1061,13 +1061,24 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
 
     if ($keep_query) {
       // Remove special params.
-      unset($request['q'], $request['rest_call']);
+      unset($request['q']);
+      static::cleanRequest($request);
 
       // Add the request as query strings.
       $options['query'] += $request;
     }
 
     return url($this->getPluginInfo('menu_item'), $options);
+  }
+
+  /**
+   * Helper function to remove the application generated request data.
+   *
+   * @param &array $request
+   *   The request array to be modified.
+   */
+  public static function cleanRequest(&$request) {
+    unset($request['application']);
   }
 
   /**
@@ -1178,7 +1189,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
     foreach ($request as $param => $value) {
       // Some request parameters don't affect how the entity is rendered, this
       // means that we should skip them for the cache ID generation.
-      if (in_array($param, array('page', 'sort', 'q', 'rest_call'))) {
+      if (in_array($param, array('page', 'sort', 'q', 'application'))) {
         continue;
       }
       // Make sure that ?fields=title,id and ?fields=id,title hit the same cache

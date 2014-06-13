@@ -46,6 +46,7 @@ class RestfulAuthorizationTestCase extends DrupalWebTestCase {
     $_SERVER = $this->originalServer;
     parent::tearDown();
   }
+
   /**
    * Test authenticating a user.
    */

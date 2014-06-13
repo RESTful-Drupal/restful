@@ -5,6 +5,7 @@ $plugin = array(
   'resource' => 'test_articles',
   'name' => 'test_articles__1_0',
   'authentication_types' => array(
+    'basic_auth',
     'cookie',
   ),
   'entity_type' => 'node',

@@ -27,6 +27,7 @@ files[] = exceptions/RestfulUnprocessableEntityException.php
 ; Tests
 files[] = tests/RestfulAuthenticationTestCase.test
 files[] = tests/RestfulCreateEntityTestCase.test
+files[] = tests/RestfulCurlBaseTestCase.test
 files[] = tests/RestfulEntityAndPropertyAccessTestCase.test
 files[] = tests/RestfulExceptionHandleTestCase.test
 files[] = tests/RestfulGetHandlersTestCase.test
@@ -34,5 +35,6 @@ files[] = tests/RestfulHookMenuTestCase.test
 files[] = tests/RestfulListEntityMultipleBundlesTestCase.test
 files[] = tests/RestfulListTestCase.test
 files[] = tests/RestfulUpdateEntityTestCase.test
+files[] = tests/RestfulUpdateEntityCurlTestCase.test
 files[] = tests/RestfulRenderCacheTestCase.test
 files[] = tests/RestfulViewEntityTestCase.test
