@@ -12,6 +12,6 @@ $plugin = array(
     'cookie',
     'basic_auth',
   ),
-  // We will implement hook_menu() with a custom settings.
+  // We will implement hook_menu() with custom settings.
   'hook_menu' => FALSE,
 );
