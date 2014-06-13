@@ -300,7 +300,7 @@ function restful_menu_access_callback($major_version, $resource_name) {
     return;
   }
 
-  if (!in_array($_SERVER['REQUEST_METHOD'], array('GET', 'POST', 'PUT', 'DELETE'))) {
+  if (!in_array($_SERVER['REQUEST_METHOD'], array('GET', 'POST', 'PUT', 'PATCH', 'DELETE'))) {
     return;
   }
 
@@ -339,10 +339,17 @@ function restful_menu_process_callback($major_version, $resource_name) {
 
     case 'post':
       $request = $_POST;
+      break;
+
+    default:
+      if ($query_string = file_get_contents('php://input')) {
+        parse_str($query_string, $request);
+      }
+      break;
   }
   // This flag is used to identify if the request is done "via Drupal" or "via
   // CURL";
-  $request['rest_call'] = TRUE;
+  $request['application'] = array('rest_call' => TRUE);
 
   try {
     $result = $handler->{$method}($path, $request);
