@@ -61,7 +61,26 @@ class RestfulHookMenuTestCase extends RestfulCurlBaseTestCase {
     // Invalid request.
     $result = $this->httpRequest('api/v1/articles/', 'GET', array('sort' => 'invalid_key'));
     $this->assertTrue(strpos($result['headers'], 'application/problem+json;'), '"application/problem+json" found in valid request.');
+  }
 
+  /**
+   * Test response when menu status is MENU_ACCESS_DENIED or MENU_SITE_OFFLINE.
+   */
+  function testMenuStatus() {
+    // Try to access login, for an authenticated user.
+    $user1 = $this->drupalCreateUser();
+    $this->drupalLogin($user1);
+
+    $this->httpauth_credentials = $user1->name . ':' . $user1->pass_raw;
+    $result = $this->httpRequest('api/login');
+
+    $this->assertEqual($result['code'], '403', '403 status code sent for access denied menu item.');
+
+    // Switch site to offline mode.
+    variable_set('maintenance_mode', TRUE);
+    $this->httpauth_credentials = NULL;
+    $result = $this->httpRequest('api/login');
+    $this->assertEqual($result['code'], '503', '503 status code sent for site in offline mode.');
   }
 
 }
