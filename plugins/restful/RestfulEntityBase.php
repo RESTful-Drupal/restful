@@ -713,7 +713,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
   /**
    * Update an entity using PUT.
    *
-   * Non existing properties are assumed to be euqal to NULL.
+   * Non existing properties are assumed to be equal to NULL.
    *
    * @param $entity_id
    *   The entity ID.
