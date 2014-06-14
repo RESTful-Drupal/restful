@@ -1,0 +1,50 @@
+<?php
+
+/**
+ * @file
+ * Contains RestfulEntityUserAccessTestCase
+ */
+
+class RestfulEntityUserAccessTestCase extends DrupalWebTestCase {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'User resource access',
+      'description' => 'Test access to the base "users" resource.',
+      'group' => 'Restful',
+    );
+  }
+
+  function setUp() {
+    parent::setUp('restful');
+  }
+
+  /**
+   * Test access control for creating an entity.
+   */
+  function testViewAccess() {
+    $handler = restful_get_restful_handler('test_users');
+
+    // Non-privileged user.
+    $user1 = $this->drupalCreateUser();
+    $handler->setAccount($user1);
+
+    try {
+      $handler->get('1');
+      $this->fail('Non-privileged user can view another user.');
+    }
+    catch (Exception $e) {
+      $this->pass('Non-privileged user cannot view another user.');
+    }
+
+    // View own user account.
+    $handler->get($user1->uid);
+
+
+    // Privileged user.
+    $user2 = $this->drupalCreateUser(array('access user profiles'));
+    $handler->setAccount($user2);
+    $result = $handler->get('1');
+    $this->assertTrue($result, 'Privileged user can view another user.');
+  }
+}
