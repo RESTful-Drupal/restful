@@ -410,9 +410,47 @@ function restful_menu_process_callback($major_version, $resource_name) {
  * @see restful_menu_process_callback()
  */
 function restful_json_output($var = NULL) {
-  if (isset($var)) {
-    echo drupal_json_encode($var);
+  if (!isset($var)) {
+    return;
   }
+
+  if (is_int($var)) {
+    _restful_get_json_from_menu_status($var);
+
+    // Adhere to the API Problem draft proposal.
+    drupal_add_http_header('Status', $var['status']);
+    drupal_add_http_header('Content-Type', 'application/problem+json; charset=utf-8');
+  }
+
+  echo drupal_json_encode($var);
+}
+
+/**
+ * Convert a menu status response to a valid JSON.
+ *
+ * @param int $var
+ *   The integer value of the menu status, passed by reference.
+ */
+function _restful_get_json_from_menu_status(&$var) {
+  switch ($var) {
+    case MENU_ACCESS_DENIED:
+      $class_name = 'RestfulForbiddenException';
+      break;
+
+    case MENU_SITE_OFFLINE:
+      $class_name = 'RestfulServiceUnavailable';
+      break;
+  }
+
+  $e = new $class_name;
+
+  $var = array(
+    'type' => $e->getType(),
+    'title' => $e->getMessage(),
+    'status' => $e->getCode(),
+    'detail' => $e->getDescription(),
+    'instance' => $e->getInstance(),
+  );
 }
 
 
