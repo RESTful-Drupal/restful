@@ -8,7 +8,7 @@
 class RestfulTokenAuthentication extends \RestfulEntityBase {
 
   /**
-   * Overrides RestfulEntityBase::getQueryForList().
+   * Overrides RestfulEntityBase::getPublicFields().
    *
    * Keep only the "token" property.
    */

@@ -164,6 +164,20 @@ function restful_menu() {
       'delivery callback' => 'restful_json_output',
     );
   }
+
+  // A special login endpoint, that returns a JSON output along with the Drupal
+  // authentication cookie.
+  if (variable_get('restful_user_login_menu_item', TRUE)) {
+    $items['api/login'] = array(
+      'title' => 'Login',
+      'description' => 'Login using base auth and recieve a JSON response along with an authentication cookie.',
+      'access callback' => 'user_is_anonymous',
+      'page callback' => 'restful_menu_process_callback',
+      'page arguments' => array('1', 'login_cookie'),
+      'delivery callback' => 'restful_json_output',
+    );
+  }
+
   return $items;
 }
 
