@@ -23,7 +23,7 @@ class RestfulEntityUserAccessTestCase extends DrupalWebTestCase {
    * Test access control for creating an entity.
    */
   function testViewAccess() {
-    $handler = restful_get_restful_handler('test_users');
+    $handler = restful_get_restful_handler('users');
 
     // Non-privileged user.
     $user1 = $this->drupalCreateUser();
