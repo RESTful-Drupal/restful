@@ -50,7 +50,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *    (e.g. $wrapper->field_reference->label()). Defaults to FALSE.
    *  - "callback": A callable callback to get a computed value. Defaults To
    *    FALSE.
-   *    The callback function receive as first argument the node
+   *    The callback function receive as first argument the entity
    *    EntityMetadataWrapper object.
    *  - "process_callback": A callable callback to perform on the returned
    *    value, or an array with the object and method. Defaults To FALSE.
