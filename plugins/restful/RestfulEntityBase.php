@@ -877,7 +877,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
       throw new RestfulBadRequestException('No values were sent with the request');
     }
 
-    // Removing application property from the request.
+    // Remove the application property from the request.
     static::cleanRequest($original_request);
 
     if ($original_request) {
