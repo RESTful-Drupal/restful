@@ -14,6 +14,37 @@ class RestfulAuthenticationManager extends \ArrayObject {
    */
   protected $account;
 
+
+  /**
+   * Determines if authentication is optional.
+   *
+   * If FALSE, then \RestfulUnauthorizedException is thrown if no authentication
+   * was found. Defaults to FALSE.
+   *
+   * @var bool
+   */
+  protected $isOptional = FALSE;
+
+  /**
+   * Set the authentications' "optional" flag.
+   *
+   * @param boolean $is_optional
+   *   Determines if the authentication is optional.
+   */
+  public function setIsOptional($is_optional) {
+    $this->isOptional = $is_optional;
+  }
+
+  /**
+   * Set the authentications' "optional" flag.
+   *
+   * @return boolean
+   *   TRUE if the authentication is optional.
+   */
+  public function getIsOptional() {
+    return $this->isOptional;
+  }
+
   /**
    * Adds the auth provider to the list.
    *
@@ -50,7 +81,7 @@ class RestfulAuthenticationManager extends \ArrayObject {
 
     if (!$account) {
 
-      if ($this->count()) {
+      if ($this->count() && !$this->getIsOptional()) {
         // User didn't authenticate against any provider, so we throw an error.
         throw new \RestfulUnauthorizedException('Bad credentials');
       }
