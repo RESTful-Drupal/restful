@@ -583,7 +583,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
           throw new Exception(format_string('Process callback function: @callback does not exists.', array('@callback' => $callback_name)));
         }
 
-        $value = call_user_func($info['callback']);
+        $value = call_user_func($info['callback'], $wrapper);
       }
       else {
         // Exposing an entity field.
