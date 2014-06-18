@@ -839,10 +839,10 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
   protected function setPropertyValues(EntityMetadataWrapper $wrapper, $request, $account, $null_missing_fields = FALSE) {
     $save = FALSE;
     $original_request = $request;
+
     foreach ($this->getPublicFields() as $public_property => $info) {
       // @todo: Pass value to validators, even if it doesn't exist, so we can
       // validate required properties.
-
       $property_name = $info['property'];
       if (!isset($request[$public_property])) {
         // No property to set in the request.
@@ -856,7 +856,18 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
       if (!$this->checkPropertyAccess($wrapper->{$property_name})) {
         throw new RestfulBadRequestException(format_string('Property @name cannot be set.', array('@name' => $public_property)));
       }
-      $wrapper->{$property_name}->set($request[$public_property]);
+
+      // Get the field info.
+      $field_info = field_info_field($property_name);
+      $field_value = $request[$public_property];
+
+      // If the field is entity reference type and his cardinality larger than 1
+      // so it need to be an array.
+      if ($field_info['type'] == 'entityreference' && $field_info['cardinality'] != 1 && !is_array($request[$public_property])) {
+        $field_value = explode(',', $request[$public_property]);
+      }
+
+      $wrapper->{$property_name}->set($field_value);
       unset($original_request[$public_property]);
       $save = TRUE;
     }
