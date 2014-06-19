@@ -69,7 +69,7 @@ class RestfulTokenAuthentication extends \RestfulEntityBase {
         'type' => 'restful_token_auth',
         'created' => REQUEST_TIME,
         'name' => 'self',
-        'token' => md5(time()),
+        'token' => drupal_random_key(),
       );
       $auth_token = entity_create('restful_token_auth', $values);
       entity_save('restful_token_auth', $auth_token);
