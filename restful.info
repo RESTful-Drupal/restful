@@ -38,5 +38,6 @@ files[] = tests/RestfulListEntityMultipleBundlesTestCase.test
 files[] = tests/RestfulListTestCase.test
 files[] = tests/RestfulUpdateEntityTestCase.test
 files[] = tests/RestfulUpdateEntityCurlTestCase.test
+files[] = tests/RestfulUserLoginCookieTestCase.test
 files[] = tests/RestfulRenderCacheTestCase.test
 files[] = tests/RestfulViewEntityTestCase.test
