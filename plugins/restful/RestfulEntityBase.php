@@ -444,11 +444,12 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    * @throws RestfulBadRequestException
    */
   public function getQueryForList($request, stdClass $account = NULL) {
+    $entity_info = entity_get_info($this->getEntityType());
     $query = new EntityFieldQuery();
-    $query->entityCondition('entity_type', $this->entityType);
+    $query->entityCondition('entity_type', $this->getEntityType());
 
-    if ($this->bundle) {
-      $query->entityCondition('bundle', $this->bundle);
+    if ($this->bundle && $entity_info['entity keys']['bundle']) {
+      $query->entityCondition('bundle', $this->getBundle());
     }
 
     $public_fields = $this->getPublicFields();
