@@ -50,6 +50,8 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *    (e.g. $wrapper->field_reference->label()). Defaults to FALSE.
    *  - "callback": A callable callback to get a computed value. Defaults To
    *    FALSE.
+   *    The callback function receive as first argument the entity
+   *    EntityMetadataWrapper object.
    *  - "process_callback": A callable callback to perform on the returned
    *    value, or an array with the object and method. Defaults To FALSE.
    *  - "resource": This property can be assigned only to an entity reference
@@ -583,7 +585,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
           throw new Exception(format_string('Process callback function: @callback does not exists.', array('@callback' => $callback_name)));
         }
 
-        $value = call_user_func($info['callback']);
+        $value = call_user_func($info['callback'], $wrapper);
       }
       else {
         // Exposing an entity field.
@@ -713,7 +715,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
   /**
    * Update an entity using PUT.
    *
-   * Non existing properties are assumed to be exqual to NULL.
+   * Non existing properties are assumed to be equal to NULL.
    *
    * @param $entity_id
    *   The entity ID.
