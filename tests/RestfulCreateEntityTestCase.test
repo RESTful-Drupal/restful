@@ -16,22 +16,71 @@ class RestfulCreateEntityTestCase extends DrupalWebTestCase {
   }
 
   function setUp() {
-    parent::setUp('restful_example');
+    parent::setUp('restful_test');
+
+    // Text - single.
+    $field = array(
+      'field_name' => 'text_single',
+      'type' => 'text_long',
+      'entity_types' => array('entity_test'),
+      'cardinality' => 1,
+    );
+    field_create_field($field);
+
+    $instance = array(
+      'field_name' => 'text_single',
+      'bundle' => 'main',
+      'entity_type' => 'entity_test',
+      'label' => t('Text single'),
+      'settings' => array(
+        'text_processing' => 1,
+      ),
+    );
+    field_create_instance($instance);
+
+    // Entity reference - multiple.
+    $field = array(
+      'entity_types' => array('entity_test'),
+      'settings' => array(
+        'handler' => 'base',
+        'target_type' => 'entity_test',
+        'handler_settings' => array(
+        ),
+      ),
+      'field_name' => 'entity_reference_multiple',
+      'type' => 'entityreference',
+      'cardinality' => FIELD_CARDINALITY_UNLIMITED,
+    );
+    field_create_field($field);
+
+    $instance = array(
+      'entity_type' => 'entity_test',
+      'field_name' => 'entity_reference_multiple',
+      'bundle' => 'main',
+      'label' => t('Entity reference multiple'),
+    );
+
+    field_create_instance($instance);
   }
 
   /**
    * Test creating an entity (POST method).
    */
   function testCreateEntity() {
-    $handler = restful_get_restful_handler('articles');
-    $request = array('label' => $this->randomName());
+    $handler = restful_get_restful_handler('main');
+
+    $text = $this->randomName();
+    $request = array('text_single' => $text);
     $result = $handler->post('', $request);
 
-    $node = node_load($result['id']);
+    $ids = array();
+
+    $entity = entity_load_single('entity_test', $result['id']);
+    $ids[] = $entity->pid;
     $expected_result = array(
-      'id' => $node->nid,
-      'label' => $node->title,
-      'self' => url('node/' . $node->nid, array('absolute' => TRUE)),
+      'id' => $entity->pid,
+      'text_single' => $text,
+      'entity_reference_multiple' => NULL,
     );
 
     $this->assertEqual($result, $expected_result, 'Entity was created.');
@@ -41,8 +90,11 @@ class RestfulCreateEntityTestCase extends DrupalWebTestCase {
       $handler->post();
       $this->fail('User can create an entity with empty request.');
     }
-    catch (Exception $e) {
+    catch (\RestfulBadRequestException $e) {
       $this->pass('User cannot create an entity with empty request.');
+    }
+    catch (\Exception $e) {
+      $this->fail('Wrong exception thrown when creating an entity with empty request.');
     }
 
     // Create an entity with invalid property name.
@@ -51,8 +103,28 @@ class RestfulCreateEntityTestCase extends DrupalWebTestCase {
       $handler->post('', $request);
       $this->fail('User can create an entity with invalid property name.');
     }
-    catch (Exception $e) {
+    catch (\RestfulBadRequestException $e) {
       $this->pass('User cannot create an entity with invalid property name.');
     }
+    catch (\Exception $e) {
+      $this->fail('Wrong exception thrown when creating an entity with invalid property name.');
+    }
+
+    // Create another test entity to be referenced.
+    $entity = entity_create('entity_test', array('type' => 'main'));
+    $entity->save();
+    $ids[] = $entity->pid;
+
+    // Create entity with multiple reference.
+    $request = array('entity_reference_multiple' => $ids);
+    $result = $handler->post('', $request);
+
+    $this->assertEqual($result['entity_reference_multiple'], $ids);
+
+
+    // Create entity with comma separated multiple reference.
+    $request = array('entity_reference_multiple' => implode(',', $ids));
+    $result = $handler->post('', $request);
+    $this->assertEqual($result['entity_reference_multiple'], $ids);
   }
 }
