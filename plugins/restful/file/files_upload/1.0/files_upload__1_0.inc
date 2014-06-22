@@ -1,6 +1,6 @@
 <?php
 
-if (variable_get('restful_file_upload', TRUE)) {
+if (variable_get('restful_file_upload', FALSE)) {
   $plugin = array(
     'label' => t('File upload'),
     'description' => t('A file upload wrapped with RESTful.'),

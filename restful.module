@@ -186,7 +186,7 @@ function restful_menu() {
 
   // A special file upload endpoint, that returns a JSON with the newly saved
   // files.
-  if (variable_get('restful_file_upload', TRUE)) {
+  if (variable_get('restful_file_upload', FALSE)) {
     $items['api/file-upload'] = array(
       'title' => 'File upload',
       'access arguments' => 'restful_file_upload_access',
