@@ -36,7 +36,7 @@ class RestfulAuthenticationManager extends \ArrayObject {
   }
 
   /**
-   * Set the authentications' "optional" flag.
+   * Get the authentications' "optional" flag.
    *
    * @return boolean
    *   TRUE if the authentication is optional.
