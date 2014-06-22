@@ -36,8 +36,15 @@ class RestfulFilesUpload extends \RestfulEntityBase {
     );
 
     $ids = array();
-    foreach ($_FILES['files']['name'] as $field_name => $file_name) {
-      if (!$file = file_save_upload($field_name, $validators, file_default_scheme() . "://")) {
+
+    foreach ($_FILES as $file_info) {
+      // Populate the $_FILES the way file_save_upload() expects.
+      $name = $file_info['name'];
+      foreach ($file_info as $key => $value) {
+        $_FILES['files'][$key][$name] = $value;
+      }
+
+      if (!$file = file_save_upload($name, $validators, file_default_scheme() . "://")) {
         throw new \Exception('An unknown error occurred while trying to save a file.');
       }
 
