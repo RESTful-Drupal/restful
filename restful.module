@@ -189,7 +189,7 @@ function restful_menu() {
   if (variable_get('restful_file_upload', FALSE)) {
     $items['api/file-upload'] = array(
       'title' => 'File upload',
-      'access arguments' => 'restful_file_upload_access',
+      'access arguments' => array('restful_file_upload_access'),
       'page callback' => 'restful_menu_process_callback',
       'page arguments' => array('1', 'files'),
       'delivery callback' => 'restful_json_output',
