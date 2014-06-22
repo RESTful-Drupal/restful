@@ -6,4 +6,7 @@ $plugin = array(
   'resource' => 'files',
   'class' => 'RestfulFileUpload',
   'entity_type' => 'file',
+  'authentication_types' => TRUE,
+  // We will implement hook_menu() with custom settings.
+  'hook_menu' => FALSE,
 );
