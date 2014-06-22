@@ -33,7 +33,7 @@ class RestfulFilesUpload extends \RestfulEntityBase {
     $ids = array();
     foreach ($_FILES['files']['name'] as $field_name => $file_name) {
       if (!$file = file_save_upload($field_name, $validators, file_default_scheme() . "://")) {
-        throw new \Exception('An unknown error occured while trying to save a file.');
+        throw new \Exception('An unknown error occurred while trying to save a file.');
       }
 
       // Change the file status from temporary to permanent.
