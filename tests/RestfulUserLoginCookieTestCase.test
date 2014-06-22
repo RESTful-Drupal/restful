@@ -1,0 +1,68 @@
+<?php
+
+/**
+ * @file
+ * Contains RestfulUserLoginCookieTestCase.
+ */
+
+class RestfulUserLoginCookieTestCase extends RestfulCurlBaseTestCase {
+
+  /**
+   * Holds the generated account.
+   *
+   * @var stdClass
+   */
+  protected $account;
+
+  /**
+   * Holds the current value of the $_SERVER super global.
+   *
+   * @var array
+   */
+  protected $originalServer;
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Login endpoint',
+      'description' => 'Test the "/api/login "endpoint.',
+      'group' => 'Restful',
+    );
+  }
+
+  function setUp() {
+    parent::setUp('restful');
+
+    $this->originalServer = $_SERVER;
+  }
+
+  function tearDown() {
+    global $user;
+    // Put back the user object.
+    $user = $this->originalUser;
+
+    // Put back the $_SERVER array.
+    $_SERVER = $this->originalServer;
+    parent::tearDown();
+  }
+
+  /**
+   * Test login using curl via /api/login.
+   */
+  function testLogin() {
+    global $user;
+    // We need to hijack the global user object in order to force it to be an
+    // anonymous user.
+    $user = drupal_anonymous_user();
+
+    $user1 = $this->drupalCreateUser();
+    $this->httpauth_credentials = $user1->name . ':' . $user1->pass_raw;
+
+    $result = $this->httpRequest('api/login');
+    $this->assertEqual($result['code'], '200', '200 status code sent for an anonymous user logging in.');
+
+    // Since we are already logged in, we should get a 403.
+    $result = $this->httpRequest('api/login');
+    $this->assertEqual($result['code'], '403', '403 status code sent for an already logged in user.');
+
+  }
+}
