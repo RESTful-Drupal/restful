@@ -17,7 +17,12 @@ class RestfulFilesUpload extends \RestfulEntityBase {
   );
 
   /**
-   * Overrides \RestfulEntityBase::createEntity().
+   * Create and save files.
+   *
+   * @param $request
+   *   The request array.
+   * @param $account
+   *   The user object.
    *
    * @return array
    *   Array with a list of file IDs that were created and saved.
