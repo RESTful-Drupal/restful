@@ -9,7 +9,7 @@ $plugin = array(
   'bundle' => 'user',
   // Try to authenticate users with all available authentication types.
   'authentication_types' => TRUE,
-  // Allow anonymous user to access the resource, given they have the right
+  // Allow anonymous users to access the resource, given they have the right
   // permissions.
   'authentication_optional' => TRUE,
 );
