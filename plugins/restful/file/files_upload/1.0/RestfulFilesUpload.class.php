@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains RestfulFileUpload.
+ * Contains RestfulFilesUpload.
  */
 
-class RestfulFileUpload extends \RestfulEntityBase {
+class RestfulFilesUpload extends \RestfulEntityBase {
 
   /**
    * Overrides \RestfulEntityBase::controllers.
@@ -18,6 +18,11 @@ class RestfulFileUpload extends \RestfulEntityBase {
 
   /**
    * Overrides \RestfulEntityBase::createEntity().
+   *
+   * @return array
+   *   Array with a list of file IDs that were created and saved.
+   *
+   * @throws \Exception
    */
   public function createEntity($request = NULL, stdClass $account = NULL) {
     $validators = array(

@@ -184,9 +184,20 @@ function restful_menu() {
     );
   }
 
+  // A special file upload endpoint, that returns a JSON with the newly saved
+  // files.
+  if (variable_get('restful_file_upload', TRUE)) {
+    $items['api/file-upload'] = array(
+      'title' => 'File upload',
+      'access arguments' => 'restful_file_upload_access',
+      'page callback' => 'restful_menu_process_callback',
+      'page arguments' => array('1', 'files'),
+      'delivery callback' => 'restful_json_output',
+    );
+  }
+
   return $items;
 }
-
 
 /**
  * Return the handler based on major and minor version, and resource name.
@@ -526,4 +537,21 @@ function _restful_invalidate_entity_cache($cid) {
       $handler->cacheInvalidate($version_cid . '::' . $cid);
     }
   }
+}
+
+
+/**
+ * Access callback; Determine if user can access file uploading.
+ *
+ * If "File entity" module exists, determine access by its provided permissions
+ * otherwise, default to TRUE.
+ *
+ * @todo: Should we provide our own permission, or default ot auth users?
+ */
+function restful_file_upload_access() {
+  if (module_exists('file_entity')) {
+    return user_access('bypass file access') || user_access('create files');
+  }
+
+  return TRUE;
 }
