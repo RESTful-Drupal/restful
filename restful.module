@@ -283,19 +283,14 @@ function restful_get_restful_handler_by_name($plugin_name) {
   // Handler set explicitly to allow all authentication types.
   $auth_plugins = $plugin['authentication_types'] === TRUE ? array_keys(restful_get_authentication_plugins()) : $plugin['authentication_types'];
 
-  $has_auth = FALSE;
-
   // We can have multiple authentication plugins.
   foreach ($auth_plugins as $auth_plugin_name) {
     $auth_handler = restful_get_authentication_handler($auth_plugin_name);
     $handler->getAuthenticationManager()->addAuthenticationProvider($auth_handler);
-    $has_auth = TRUE;
   }
 
-  if ($has_auth) {
-    // Set the "optional" flag of the authentication manager.
-    $handler->getAuthenticationManager()->setIsOptional($plugin['authentication_optional']);
-  }
+  // Set the "optional" flag of the authentication manager.
+  $handler->getAuthenticationManager()->setIsOptional($plugin['authentication_optional']);
 
   return $handler;
 }
