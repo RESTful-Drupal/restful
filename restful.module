@@ -33,12 +33,17 @@ function restful_ctools_plugin_directory($module, $plugin) {
  *   indicates the resource isn't connected to any entity type.
  * - bundle: The name of a single bundle the resource is connected to. Defaults
  *   to FALSE.
- * - authentication_types: Array with name of authentication providers that
- *   should "protect" the resource, and ensure only authenticated users can use
- *   it. If
- *   user was not authenticated with any of the authentication providers, an
- *   \RestfulUnauthorizedException exception would be thrown. Defaults to empty
- *   array, which means no authentication is done by default.
+ * - authentication_types: TRUE or Array with name of authentication providers
+ *   that should "protect" the resource, and ensure only authenticated users can
+ *   use it. If set to TRUE, then all the existing authentication providers
+ *   would be used until the user is authenticated. If user was not
+ *   authenticated with any of the authentication providers, an
+ *   \RestfulUnauthorizedException exception would be thrown.
+ *   Defaults to empty array, which means no authentication is done by default.
+ * - authentication_optional: If "authentication_types" and TRUE this determines
+ *   if the resource may be accessed by an anonymous user when no provider was
+ *   able to authenticate the user. Otherwise a \RestfulUnauthorizedException
+ *   exception would be thrown.
  * - hook_menu: Determines if RESTful module should declare the resource in its
  *   pwn hook_menu(). If FALSE, it is up to the implementing module to declare
  *   it. Defaults to TRUE.
@@ -71,6 +76,7 @@ function restful_plugin_process(&$plugin, $info) {
       'entity_type' => FALSE,
       'bundle' => FALSE,
       'authentication_types' => array(),
+      'authentication_optional' => FALSE,
       'hook_menu' => TRUE,
       'cache_render' => FALSE,
       'cache_class' => NULL,
@@ -263,11 +269,18 @@ function restful_get_restful_handler_by_name($plugin_name) {
   // If the restful plugin needs authentication load the corresponding
   // authentication plugin.
 
+  // Handler set explicitly to allow all authentication types.
+  $auth_plugins = $plugin['authentication_types'] === TRUE ? array_keys(restful_get_authentication_plugins()) : $plugin['authentication_types'];
+
   // We can have multiple authentication plugins.
-  foreach ($plugin['authentication_types'] as $auth_plugin_name) {
+  foreach ($auth_plugins as $auth_plugin_name) {
     $auth_handler = restful_get_authentication_handler($auth_plugin_name);
     $handler->getAuthenticationManager()->addAuthenticationProvider($auth_handler);
   }
+
+  // Set the "optional" flag of the authentication manager.
+  $handler->getAuthenticationManager()->setIsOptional($plugin['authentication_optional']);
+
   return $handler;
 }
 /**
