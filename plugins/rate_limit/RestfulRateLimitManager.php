@@ -63,6 +63,8 @@ class RestfulRateLimitManager {
    * current request.
    */
   public function checkRateLimit($request) {
+    $now = new \DateTime();
+    $now->setTimestamp(REQUEST_TIME);
     // Check all rate limits configured for this handler.
     foreach ($this->pluginInfo as $event_name => $info) {
       // If the limit is infinite then skip everything.
@@ -83,8 +85,6 @@ class RestfulRateLimitManager {
       }
       if (!$rate_limit_entity = $this->loadRateLimitEntity($event_name)) {
         // If there is no entity, then create one.
-        $now = new \DateTime();
-        $now->setTimestamp(REQUEST_TIME);
         $rate_limit_entity = entity_create('rate_limit', array(
           'timestamp' => REQUEST_TIME,
           'expiration' => $now->add($info['period'])->format('U'),
@@ -97,8 +97,6 @@ class RestfulRateLimitManager {
       if ($rate_limit_entity->isExpired()) {
         // If the rate limit has expired renew the timestamps and assume 0
         // hits.
-        $now = new \DateTime();
-        $now->setTimestamp(REQUEST_TIME);
         $rate_limit_entity->timestamp = REQUEST_TIME;
         $rate_limit_entity->expiration = $now->add($info['period'])->format('U');
         $rate_limit_entity->hits = 0;
@@ -113,6 +111,14 @@ class RestfulRateLimitManager {
       }
       // Save a new hit after generating the exception to mitigate DoS attacks.
       $rate_limit_entity->hit();
+
+      // Add the limit headers to the response.
+      $remaining = $limit == static::INFINITE_RATE_LIMIT ? 'unlimited' : $limit - ($rate_limit_entity->hits + 1);
+      drupal_add_http_header('X-Rate-Limit-Limit', $limit, TRUE);
+      drupal_add_http_header('X-Rate-Limit-Remaining', $remaining, TRUE);
+      $time_remaining = $rate_limit_entity->expiration - REQUEST_TIME;
+      drupal_add_http_header('X-Rate-Limit-Reset', $time_remaining, TRUE);
+
     }
   }
 
