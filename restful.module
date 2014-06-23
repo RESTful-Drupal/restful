@@ -75,7 +75,7 @@ function restful_ctools_plugin_directory($module, $plugin) {
  *         'limits' => array(
  *           'authenticated user' => 100,
  *           'anonymous user' => 10,
- *           'administrator' => \RestfulRateLimitManager::UNLIMITED_RATE_LIMIT,
+ *           'administrator' => \RestfulRateLimitManager::INFINITE_RATE_LIMIT,
  *         ),
  *       ),
  *     ),
