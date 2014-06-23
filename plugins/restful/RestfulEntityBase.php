@@ -122,6 +122,13 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
   protected $authenticationManager;
 
   /**
+   * Rate limit manager.
+   *
+   * @var \RestfulRateLimitManager
+   */
+  protected $limitManager;
+
+  /**
    * Get the defined controllers
    *
    * @return array
@@ -230,6 +237,9 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
     $this->bundle = $plugin['bundle'];
     $this->authenticationManager = $auth_manager ? $auth_manager : new \RestfulAuthenticationManager();
     $this->cacheController = $cache_controller ? $cache_controller : $this->newCacheObject();
+    if (!empty($plugin['rate_limit'])) {
+      $this->limitManager = new \RestfulRateLimitManager($plugin['resource'], $plugin['rate_limit']);
+    }
   }
 
   /**
@@ -340,6 +350,10 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
       throw new RestfulBadRequestException('Path does not exist');
     }
 
+    if (!empty($this->limitManager)) {
+      // This will throw the appropriate exception if needed.
+      $this->limitManager->checkRateLimit($request);
+    }
     if (!$path) {
       // If $path is empty we don't need to pass it along.
       return $this->{$method_name}($request, $account);
@@ -1025,7 +1039,13 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *   The user object.
    */
   public function getAccount($request = NULL) {
-    return $this->getAuthenticationManager()->getAccount($request);
+    $account = $this->getAuthenticationManager()->getAccount($request);
+
+    // If the limit rate is enabled for the current plugin then set the account.
+    if (!empty($this->limitManager)) {
+      $this->limitManager->setAccount($account);
+    }
+    return $account;
   }
 
   /**

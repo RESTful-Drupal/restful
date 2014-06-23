@@ -8,11 +8,15 @@ dependencies[] = entity
 files[] = plugins/authentication/RestfulAuthenticationBase.php
 files[] = plugins/authentication/RestfulAuthenticationInterface.php
 files[] = plugins/authentication/RestfulAuthenticationManager.php
+files[] = plugins/rate_limit/RestfulRateLimitInterface.php
 files[] = plugins/restful/RestfulEntityBase.php
 files[] = plugins/restful/RestfulEntityBaseNode.php
 files[] = plugins/restful/RestfulEntityBaseMultipleBundles.php
 files[] = plugins/restful/RestfulEntityInterface.php
 files[] = plugins/restful/RestfulInterface.php
+
+; Includes
+files[] = includes/RestfulRateLimit.php
 
 ; Exceptions
 files[] = exceptions/RestfulBadRequestException.php
