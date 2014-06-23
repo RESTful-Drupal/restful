@@ -10,11 +10,6 @@ $plugin = array(
   'class' => 'RestfulExampleArticlesResource',
   // Set the minor version.
   'minor_version' => 4,
-  // Set the authentication to token.
-  'authentication_types' => array(
-    'cookie',
-    'basic_auth',
-  ),
   'rate_limit' => array(
     // The 'request' event is the basic event. You can declare your own events.
     'request' => array(
@@ -22,7 +17,7 @@ $plugin = array(
       // Rate limit is cleared every day.
       'period' => new \DateInterval('P1D'),
       'limits' => array(
-        'authenticated user' => 5,
+        'authenticated user' => 3,
         'anonymous user' => 2,
         'administrator' => \RestfulRateLimitManager::INFINITE_RATE_LIMIT,
       ),
