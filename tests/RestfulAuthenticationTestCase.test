@@ -5,7 +5,7 @@
  * Contains RestfulAuthorizationEntityTestCase.
  */
 
-class RestfulAuthorizationTestCase extends DrupalWebTestCase {
+class RestfulAuthorizationTestCase extends RestfulCurlBaseTestCase {
 
   /**
    * Holds the generated account.
@@ -110,5 +110,18 @@ class RestfulAuthorizationTestCase extends DrupalWebTestCase {
     $_SERVER['PHP_AUTH_PW'] = NULL;
     $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] = 'Basic: ' . base64_encode($this->randomName() . ':' . $this->randomName());
     $this->assertNull($basic_auth_provider->authenticate(), 'The basic auth provider could not resolve a user with invalid encoded username & password. Using REDIRECT_HTTP_AUTHORIZATION.');
+
+    // Case 11. Accessing a resource with optional authentication.
+
+    // We are getting a 403 instead of 401, as the access is now based on the
+    // permissions.
+    $result = $this->httpRequest('api/v1/users');
+    $this->assertEqual($result['code'], 403, 'Anonymous user got 403 when trying to access the "users" resource.');
+
+    // To assert permissions control access to the resource, we change the
+    // permission for anonymous to access other user's profile.
+    user_role_change_permissions(DRUPAL_ANONYMOUS_RID, array('access user profiles' => TRUE));
+    $result = $this->httpRequest('api/v1/users');
+    $this->assertEqual($result['code'], 200, 'Anonymous user got 200 when trying to access the "users" resource after permissions changed.');
   }
 }

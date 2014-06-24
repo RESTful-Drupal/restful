@@ -1,0 +1,93 @@
+<?php
+
+/**
+ * @file
+ * Contains RestfulRateLimitTestCase.
+ */
+
+class RestfulRateLimitTestCase extends DrupalWebTestCase {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Rate limits',
+      'description' => 'Test the rate limit feature.',
+      'group' => 'Restful',
+    );
+  }
+
+  public function setUp() {
+    parent::setUp('restful_example');
+    $settings = array('type' => 'article');
+
+    $titles = array(
+      'abc',
+      'xyz',
+      'efg',
+    );
+    foreach ($titles as $title) {
+      $settings['title'] = $title;
+      $node = $this->drupalCreateNode($settings);
+      $nodes[$title] = $node->nid;
+    }
+  }
+
+  /**
+   * Tests the rate limits and its expiration feature.
+   */
+  public function testLimits() {
+    // This handler has a limit of 2 requests for the anonymous user.
+    $account = drupal_anonymous_user();
+    $this->roleExecute($account, 2);
+
+    // This handler has a limit of 3 requests for the authenticated user.
+    $account = $this->drupalCreateUser();
+    $this->roleExecute($account, 3);
+
+    // Now that the limit has been reached for $account. Fake expiration and see
+    // that the limit has been renewed.
+    $query = new \EntityFieldQuery();
+    $results = $query
+      ->entityCondition('entity_type', 'rate_limit')
+      ->entityCondition('bundle', 'request')
+      ->propertyCondition('identifier', 'articles::' . $account->uid)
+      ->execute();
+    $rl = entity_load_single('rate_limit', key($results['rate_limit']));
+    $rl->timestamp = REQUEST_TIME - 2;
+    $rl->expiration = REQUEST_TIME - 1;
+    $rl->save();
+    $this->roleExecute($account, 3);
+  }
+
+  /**
+   * Tests the total amount of allowed calls and the following fail.
+   *
+   * @param $account
+   *   The user account object.
+   * @param $limit
+   *   The number of calls allowed for a user with the same roles as $account.
+   */
+  protected function roleExecute($account, $limit) {
+    $handler = restful_get_restful_handler('articles', 1, 4);
+    $handler->setAccount($account);
+
+    // Test rate limits.
+    for ($count = 0; $count < $limit; $count++) {
+      try {
+        $handler->get('');
+        $this->pass('The rate limit authorized the request.');
+      }
+      catch (\RestfulFloodException $e) {
+        $this->fail('The rate limit did not authorize the request.');
+      }
+    }
+
+    try {
+      $handler->get('');
+      $this->fail('The rate limit authorized the request.');
+    }
+    catch (\RestfulFloodException $e) {
+      $this->pass('The rate limit did not authorize the request.');
+    }
+  }
+
+}

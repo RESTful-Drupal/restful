@@ -33,12 +33,17 @@ function restful_ctools_plugin_directory($module, $plugin) {
  *   indicates the resource isn't connected to any entity type.
  * - bundle: The name of a single bundle the resource is connected to. Defaults
  *   to FALSE.
- * - authentication_types: Array with name of authentication providers that
- *   should "protect" the resource, and ensure only authenticated users can use
- *   it. If
- *   user was not authenticated with any of the authentication providers, an
- *   \RestfulUnauthorizedException exception would be thrown. Defaults to empty
- *   array, which means no authentication is done by default.
+ * - authentication_types: TRUE or Array with name of authentication providers
+ *   that should "protect" the resource, and ensure only authenticated users can
+ *   use it. If set to TRUE, then all the existing authentication providers
+ *   would be used until the user is authenticated. If user was not
+ *   authenticated with any of the authentication providers, an
+ *   \RestfulUnauthorizedException exception would be thrown.
+ *   Defaults to empty array, which means no authentication is done by default.
+ * - authentication_optional: If "authentication_types" and TRUE this determines
+ *   if the resource may be accessed by an anonymous user when no provider was
+ *   able to authenticate the user. Otherwise a \RestfulUnauthorizedException
+ *   exception would be thrown.
  * - hook_menu: Determines if RESTful module should declare the resource in its
  *   pwn hook_menu(). If FALSE, it is up to the implementing module to declare
  *   it. Defaults to TRUE.
@@ -54,12 +59,34 @@ function restful_ctools_plugin_directory($module, $plugin) {
  * - cache_simple_invalidate: Set it to false to prevent the RESTful module to
  *   invalidate any cache it may have been generated. The developer will be
  *   responsible to invalidate caches in this scenario. Defaults to TRUE.
+ * - rate_limit: Associative array keyed by event name. Every item contains the
+ *   rate limiting options.
  *
  * Properties for the "authentication" plugin type:
  * - description: The description of the authentication provider. Defaults to
  *   empty string.
  * - settings: Array with the settings needed for the plugin. Defaults to empty
  *   array.
+ *
+ * Properties for every item of the rate_limit:
+ *   - period: A \DateInterval object representing the period on which the rate
+ *     limitations apply.
+ *   - event: The name of the event to limit as declared in the rate_limit
+ *     plugin.
+ *   - limits: An associative array with the number of allowed requests in the
+ *     selected period for every role.
+ *     array(
+ *       'request' => array(
+ *         'event' => 'request',
+ *         'period' => new \DateInterval('P1D'),
+ *         'limits' => array(
+ *           'authenticated user' => 100,
+ *           'anonymous user' => 10,
+ *           'administrator' => \RestfulRateLimitManager::UNLIMITED_RATE_LIMIT,
+ *         ),
+ *       ),
+ *     ),
+ *
  */
 function restful_plugin_process(&$plugin, $info) {
   if ($info['type'] == 'restful') {
@@ -71,13 +98,21 @@ function restful_plugin_process(&$plugin, $info) {
       'entity_type' => FALSE,
       'bundle' => FALSE,
       'authentication_types' => array(),
+      'authentication_optional' => FALSE,
       'hook_menu' => TRUE,
       'cache_render' => FALSE,
       'cache_class' => NULL,
       'cache_bin' => 'cache_restful',
       'cache_expire' => CACHE_PERMANENT,
       'cache_simple_invalidate' => TRUE,
+      'rate_limit' => FALSE,
     );
+
+    if (!empty($plugin['rate_limit'])) {
+      foreach ($plugin['rate_limit'] as $event_name => $rate_limit_info) {
+        $plugin['rate_limit'][$event_name]['limits'] += array('anonymous user' => 0);
+      }
+    }
 
     if ($plugin['hook_menu'] && empty($plugin['menu_item'])) {
       // Set a default menu item.
@@ -92,13 +127,18 @@ function restful_plugin_process(&$plugin, $info) {
       'settings' => array(),
     );
   }
+  elseif ($info['type'] == 'rate_limit') {
+    $plugin += array(
+      'description' => '',
+    );
+  }
 }
 
 /**
  * Implements hook_ctools_plugin_type().
  */
 function restful_ctools_plugin_type() {
-  $plugins['authentication'] = $plugins['restful'] = array(
+  $plugins['authentication'] = $plugins['restful'] = $plugins['rate_limit'] = array(
     'classes' => array('class'),
     'process' => 'restful_plugin_process',
   );
@@ -130,6 +170,17 @@ function restful_get_authentication_plugins() {
 }
 
 /**
+ * Include CTools plugins and get all rate_limit plugins.
+ *
+ * @return array
+ *   All plugins for restful authentication.
+ */
+function restful_get_rate_limit_plugins() {
+  ctools_include('plugins');
+  return ctools_get_plugins('restful', 'rate_limit');
+}
+
+/**
  * Include CTools plugins and get the specified authentication plugin.
  *
  * @param string $plugin_name
@@ -141,6 +192,20 @@ function restful_get_authentication_plugins() {
 function restful_get_authentication_plugin($plugin_name) {
   ctools_include('plugins');
   return ctools_get_plugins('restful', 'authentication', $plugin_name);
+}
+
+/**
+ * Include CTools plugins and get the specified rate_limit plugin.
+ *
+ * @param string $plugin_name
+ *   If provided this function only returns the selected plugin.
+ *
+ * @return array
+ *   The selected plugin for restful authentication.
+ */
+function restful_get_rate_limit_plugin($plugin_name) {
+  ctools_include('plugins');
+  return ctools_get_plugins('restful', 'rate_limit', $plugin_name);
 }
 
 /**
@@ -263,13 +328,21 @@ function restful_get_restful_handler_by_name($plugin_name) {
   // If the restful plugin needs authentication load the corresponding
   // authentication plugin.
 
+  // Handler set explicitly to allow all authentication types.
+  $auth_plugins = $plugin['authentication_types'] === TRUE ? array_keys(restful_get_authentication_plugins()) : $plugin['authentication_types'];
+
   // We can have multiple authentication plugins.
-  foreach ($plugin['authentication_types'] as $auth_plugin_name) {
+  foreach ($auth_plugins as $auth_plugin_name) {
     $auth_handler = restful_get_authentication_handler($auth_plugin_name);
     $handler->getAuthenticationManager()->addAuthenticationProvider($auth_handler);
   }
+
+  // Set the "optional" flag of the authentication manager.
+  $handler->getAuthenticationManager()->setIsOptional($plugin['authentication_optional']);
+
   return $handler;
 }
+
 /**
  * Return the authentication handler based on the authentication plugin name.
  *
@@ -343,27 +416,8 @@ function restful_menu_process_callback($major_version, $resource_name) {
   unset($path[0], $path[1]);
   $path = implode('/', $path);
 
-  $request = NULL;
   $method = strtolower($_SERVER['REQUEST_METHOD']);
-
-  switch ($method) {
-    case 'get':
-      $request = $_GET;
-      break;
-
-    case 'post':
-      $request = $_POST;
-      break;
-
-    default:
-      if ($query_string = file_get_contents('php://input')) {
-        parse_str($query_string, $request);
-      }
-      break;
-  }
-  // This flag is used to identify if the request is done "via Drupal" or "via
-  // CURL";
-  $request['application'] = array('rest_call' => TRUE);
+  $request = restful_parse_request();
 
   try {
     $result = $handler->{$method}($path, $request);
@@ -396,6 +450,37 @@ function restful_menu_process_callback($major_version, $resource_name) {
   drupal_add_http_header('Status', $result['status']);
   drupal_add_http_header('Content-Type', 'application/problem+json; charset=utf-8');
   return $result;
+}
+
+/**
+ * Build the request array from PHP globals and input stream.
+ *
+ * @return array
+ *   The request array.
+ */
+function restful_parse_request() {
+  $request = NULL;
+  $method = strtolower($_SERVER['REQUEST_METHOD']);
+
+  switch ($method) {
+    case 'get':
+      $request = $_GET;
+      break;
+
+    case 'post':
+      $request = $_POST;
+      break;
+
+    default:
+      if ($query_string = file_get_contents('php://input')) {
+        parse_str($query_string, $request);
+      }
+      break;
+  }
+  // This flag is used to identify if the request is done "via Drupal" or "via
+  // CURL";
+  $request['application'] = array('rest_call' => TRUE);
+  return $request;
 }
 
 /**
@@ -453,6 +538,47 @@ function _restful_get_json_from_menu_status(&$var) {
   );
 }
 
+/**
+ * Implements hook_entity_info().
+ */
+function restful_entity_info() {
+  $items['rate_limit'] = array(
+    'label' => t('Rate limit'),
+    'entity class' => 'RestfulRateLimit',
+    'controller class' => 'EntityAPIController',
+    'base table' => 'restful_rate_limit',
+    'fieldable' => TRUE,
+    'entity keys' => array(
+      'id' => 'rlid',
+      'label' => 'identifier',
+      'bundle' => 'event',
+    ),
+    'bundles' => array(),
+    'bundle keys' => array(
+      'bundle' => 'type',
+    ),
+    'module' => 'restful',
+    'entity cache' => module_exists('entitycache'),
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_cron().
+ */
+function restful_cron() {
+  // Clear the expired restful_rate_limit entries.
+  $query = new \EntityFieldQuery();
+  $results = $query
+    ->entityCondition('entity_type', 'rate_limit')
+    ->propertyCondition('expiration', REQUEST_TIME, '>')
+    ->execute();
+  if (!empty($results['rate_limit'])) {
+    $rlids = array_keys($results['rate_limit']);
+    entity_delete_multiple('rate_limit', $rlids);
+  }
+}
 
 /**
  * Implements hook_entity_update().
