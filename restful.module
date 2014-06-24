@@ -47,28 +47,20 @@ function restful_ctools_plugin_directory($module, $plugin) {
  * - hook_menu: Determines if RESTful module should declare the resource in its
  *   pwn hook_menu(). If FALSE, it is up to the implementing module to declare
  *   it. Defaults to TRUE.
- * - cache_render: Set it to FALSE to disable the render cache completely
- *   Defaults to FALSE.
- * - cache_class: The cache class for this resource. Defaults to NULL, which
- *   will probably end up resolving to 'DrupalDatabaseCache'.
- * - cache_bin: The name of the bin. It is the developer's responsibility to
- *   create this bin in the cache backend if it does not exist. Defaults to
- *   'cache_restful'.
- * - cache_expire: TTL for the cache records. See DrupalCacheInterface::set()
- *   for the allowed values. Defaults to CACHE_PERMANENT.
- * - cache_simple_invalidate: Set it to false to prevent the RESTful module to
- *   invalidate any cache it may have been generated. The developer will be
- *   responsible to invalidate caches in this scenario. Defaults to TRUE.
- * - rate_limit: Associative array keyed by event name. Every item contains the
- *   rate limiting options.
- *
- * Properties for the "authentication" plugin type:
- * - description: The description of the authentication provider. Defaults to
- *   empty string.
- * - settings: Array with the settings needed for the plugin. Defaults to empty
- *   array.
- *
- * Properties for every item of the rate_limit:
+ * - cache: Stores the cache settings. An associative array with:
+ *   - render: Set it to FALSE to disable the render cache completely
+ *     Defaults to FALSE.
+ *   - class: The cache class for this resource. Defaults to NULL, which
+ *     will probably end up resolving to 'DrupalDatabaseCache'.
+ *   - bin: The name of the bin. It is the developer's responsibility to
+ *     create this bin in the cache backend if it does not exist. Defaults to
+ *     'cache_restful'.
+ *   - expire: TTL for the cache records. See DrupalCacheInterface::set()
+ *     for the allowed values. Defaults to CACHE_PERMANENT.
+ *   - simple_invalidate: Set it to false to prevent the RESTful module to
+ *     invalidate any cache it may have been generated. The developer will be
+ *     responsible to invalidate caches in this scenario. Defaults to TRUE.
+ * - rate_limit: The configuration array for the rate limits.
  *   - period: A \DateInterval object representing the period on which the rate
  *     limitations apply.
  *   - event: The name of the event to limit as declared in the rate_limit
@@ -87,6 +79,17 @@ function restful_ctools_plugin_directory($module, $plugin) {
  *       ),
  *     ),
  *
+ * Properties for the "authentication" plugin type:
+ * - description: The description of the authentication provider. Defaults to
+ *   empty string.
+ * - settings: Array with the settings needed for the plugin. Defaults to empty
+ *   array.
+ *
+ * Properties for the "rate_limit" plugin type:
+ * - description: The description of the event. Defaults to an empty string.
+ * - name: The name of the event.
+ * - class: Name of the class implementing RestfulRateLimitInterface.
+ *
  */
 function restful_plugin_process(&$plugin, $info) {
   if ($info['type'] == 'restful') {
@@ -100,12 +103,15 @@ function restful_plugin_process(&$plugin, $info) {
       'authentication_types' => array(),
       'authentication_optional' => FALSE,
       'hook_menu' => TRUE,
-      'cache_render' => FALSE,
-      'cache_class' => NULL,
-      'cache_bin' => 'cache_restful',
-      'cache_expire' => CACHE_PERMANENT,
-      'cache_simple_invalidate' => TRUE,
-      'rate_limit' => FALSE,
+      'cache' => array(),
+    );
+
+    $plugin['cache'] += array(
+      'render' => FALSE,
+      'class' => NULL,
+      'bin' => 'cache_restful',
+      'expire' => CACHE_PERMANENT,
+      'simple_invalidate' => TRUE,
     );
 
     if (!empty($plugin['rate_limit'])) {

@@ -447,7 +447,8 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
     $ids = array_keys($result[$entity_type]);
 
     // Pre-load all entities if there is no render cache.
-    if (!$this->getPluginInfo('cache_render')) {
+    $cache_info = $this->getPluginInfo('cache');
+    if (!$cache_info['render']) {
       entity_load($entity_type, $ids);
     }
 
@@ -1160,15 +1161,15 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
       return $cache_object;
     }
 
-    $class = $this->getPluginInfo('cache_class');
-    $bin = $this->getPluginInfo('cache_bin');
+    $cache_info = $this->getPluginInfo('cache');
+    $class = $cache_info['class'];
     if (empty($class)) {
-      $class = variable_get('cache_class_' . $bin);
+      $class = variable_get('cache_class_' . $cache_info['bin']);
       if (empty($class)) {
         $class = variable_get('cache_default_class', 'DrupalDatabaseCache');
       }
     }
-    $cache_object = new $class($bin);
+    $cache_object = new $class($cache_info['bin']);
     return $cache_object;
   }
 
@@ -1187,7 +1188,8 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    * @see \RestfulEntityInterface::viewEntity().
    */
   protected function getRenderedEntityCache($entity_id, $request) {
-    if (!$this->getPluginInfo('cache_render')) {
+    $cache_info = $this->getPluginInfo('cache');
+    if (!$cache_info['render']) {
       return;
     }
 
@@ -1212,12 +1214,13 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    * @see \RestfulEntityInterface::viewEntity().
    */
   protected function setRenderedEntityCache($data, $entity_id, $request) {
-    if (!$this->getPluginInfo('cache_render')) {
+    $cache_info = $this->getPluginInfo('cache');
+    if (!$cache_info['render']) {
       return;
     }
 
     $cid = $this->generateCacheId($entity_id, $request);
-    $this->getCacheController()->set($cid, $data, $this->getPluginInfo('cache_expire'));
+    $this->getCacheController()->set($cid, $data, $cache_info['expire']);
   }
 
   /**
@@ -1268,7 +1271,8 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *   The wildcard cache id to invalidate.
    */
   public function cacheInvalidate($cid) {
-    if (!$this->getPluginInfo('cache_simple_invalidate')) {
+    $cache_info = $this->getPluginInfo('cache');
+    if (!$cache_info['simple_invalidate']) {
       // Simple invalidation is disabled. This means it is up to the
       // implementing module to take care of the invalidation.
       return;
