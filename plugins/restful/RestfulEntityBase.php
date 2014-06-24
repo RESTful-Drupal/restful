@@ -948,23 +948,31 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
     elseif (in_array($field_info['type'], array('text', 'text_long', 'text_with_summary'))) {
       // Text field. Check if field has an input format.
       $instance = field_info_instance($this->getEntityType(), $property_name, $this->getBundle());
-      // @todo: How to get the correct format value?
-      $format = $instance['settings']['text_processing'] ? 'filtered_html' : NULL;
 
       if ($field_info['cardinality'] == 1) {
         // Single value.
-        return array(
+        if (!$instance['settings']['text_processing']) {
+          return $value;
+        }
+
+        return array (
           'value' => $value,
-          'format' => $format,
+          // @todo: How to get the correct format value?
+          'format' => 'filtered_html',
         );
       }
 
       // Multiple values.
       foreach ($value as $delta => $single_value) {
-        $return[$delta] = array(
-          'value' => $single_value,
-          'format' => $format,
-        );
+        if (!$instance['settings']['text_processing']) {
+          $return[$delta] = $single_value;
+        }
+        else {
+          $return[$delta] = array(
+            'value' => $single_value,
+            'format' => 'filtered_html',
+          );
+        }
       }
       return $return;
     }
