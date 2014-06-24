@@ -22,6 +22,11 @@ with the ``field_`` prefix
 * Only JSON format is supported
 * Audience is developers and not site builders
 
+## Module dependencies
+* [Entity API](https://drupal.org/project/entity), with the following patches:
+  * [$wrapper->access() might be wrong for single entity reference field](https://www.drupal.org/node/2264079#comment-8911637)
+  * [Prevent notice in entity_metadata_no_hook_node_access() when node is not saved](https://drupal.org/node/2086225#comment-8768373)
+
 
 ## API via Drupal
 
@@ -221,11 +226,6 @@ for every resource, meaning that very volatile resources can skip cache entirely
 while other resources can have its cache in MemCached or the database. To
 configure this developers just have to specify the following keys in their
 _restful_ plugin definition.
-
-## Module dependencies
-* [Entity API](https://drupal.org/project/entity), with the following patches:
-  * [$wrapper->access() might be wrong for single entity reference field](https://www.drupal.org/node/2264079#comment-8911637)
-  * [Prevent notice in entity_metadata_no_hook_node_access() when node is not saved](https://drupal.org/node/2086225#comment-8768373)
 
 ## Credits
 
