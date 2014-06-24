@@ -843,7 +843,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
 
     $entity = entity_create($this->entityType, $values);
 
-    if (!entity_access('create', $this->entityType, $entity, $account)) {
+    if (entity_access('create', $this->entityType, $entity, $account) === FALSE) {
       // User does not have access to create entity.
       $params = array('@resource' => $this->plugin['label']);
       throw new RestfulForbiddenException(format_string('You do not have access to create a new @resource resource.', $params));
@@ -876,8 +876,6 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
     $original_request = $request;
 
     foreach ($this->getPublicFields() as $public_property => $info) {
-      // @todo: Pass value to validators, even if it doesn't exist, so we can
-      // validate required properties.
       $property_name = $info['property'];
       if (!isset($request[$public_property])) {
         // No property to set in the request.
