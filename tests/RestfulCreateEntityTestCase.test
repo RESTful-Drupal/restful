@@ -114,15 +114,19 @@ class RestfulCreateEntityTestCase extends DrupalWebTestCase {
   function testCreateEntity() {
     $handler = restful_get_restful_handler('main', 1, 1);
 
-    $text = $this->randomName();
-    $request = array('text_single' => $text);
+    $text1 = $this->randomName();
+    $text2 = $this->randomName();
+    $request = array(
+      'text_single' => $text1,
+      'text_multiple' => array($text1, $text2),
+    );
     $result = $handler->post('', $request);
 
     $ids = array();
 
     $entity = entity_load_single('entity_test', $result['id']);
     $ids[] = $entity->pid;
-    $this->assertEqual($result['text_single'], $text, 'Entity was created with correct text value.');
+    $this->assertEqual(strip_tags($result['text_single']), $text1, 'Entity was created with correct text value.');
 
     // Create an entity with empty request.
     try {
@@ -158,12 +162,12 @@ class RestfulCreateEntityTestCase extends DrupalWebTestCase {
     $request = array('entity_reference_multiple' => $ids);
     $result = $handler->post('', $request);
 
-    $this->assertEqual($result['entity_reference_multiple'], $ids);
+    $this->assertEqual($result['entity_reference_multiple'], $ids, 'Create entity with multiple reference.');
 
 
     // Create entity with comma separated multiple reference.
     $request = array('entity_reference_multiple' => implode(',', $ids));
     $result = $handler->post('', $request);
-    $this->assertEqual($result['entity_reference_multiple'], $ids);
+    $this->assertEqual($result['entity_reference_multiple'], $ids, 'Created entity with comma separated multiple reference.');
   }
 }
