@@ -438,7 +438,10 @@ function restful_menu_process_callback($major_version, $resource_name) {
 }
 
 /**
+ * Build the request array from PHP globals and input stream.
+ *
  * @return array
+ *   The request array.
  */
 function restful_parse_request() {
   $request = NULL;
