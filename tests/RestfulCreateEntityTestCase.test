@@ -122,13 +122,7 @@ class RestfulCreateEntityTestCase extends DrupalWebTestCase {
 
     $entity = entity_load_single('entity_test', $result['id']);
     $ids[] = $entity->pid;
-    $expected_result = array(
-      'id' => $entity->pid,
-      'text_single' => $text,
-      'entity_reference_multiple' => NULL,
-    );
-
-    $this->assertEqual($result, $expected_result, 'Entity was created.');
+    $this->assertEqual($result['text_single'], $text, 'Entity was created with correct text value.');
 
     // Create an entity with empty request.
     try {
