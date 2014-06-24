@@ -159,7 +159,12 @@ curl https://example.com/api/v1/articles/1 \
 
 ## Authentication providers
 
-Restful comes with ``cookie``, ``base_auth`` (user name and password in the HTTP header) authentications providers, as well as a "RESTful token auth" module that has a ``token`` authentication provider.
+Restful comes with ``cookie``, ``base_auth`` (user name and password in the HTTP header)
+authentications providers, as well as a "RESTful token auth" module that has a
+``token`` authentication provider.
+
+See [this](https://github.com/Gizra/angular-restful-auth) AngularJs example that shows a login from a fully decoupled web app
+to a Drupal backend.
 
 
 ```bash
