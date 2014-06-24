@@ -881,6 +881,13 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
     $original_request = $request;
 
     foreach ($this->getPublicFields() as $public_property => $info) {
+      if (empty($info['property'])) {
+        // We may have for example an entity with no label property, but with a
+        // label callback. In that case the $info['property'] won't exist, so
+        // we skip this field.
+        continue;
+      }
+
       $property_name = $info['property'];
       if (!isset($request[$public_property])) {
         // No property to set in the request.
