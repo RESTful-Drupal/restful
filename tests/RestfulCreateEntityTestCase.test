@@ -16,7 +16,7 @@ class RestfulCreateEntityTestCase extends DrupalWebTestCase {
   }
 
   function setUp() {
-    parent::setUp('restful_test');
+    parent::setUp('restful_test', 'entityreference');
 
     // Text - single.
     $field = array(
@@ -36,6 +36,51 @@ class RestfulCreateEntityTestCase extends DrupalWebTestCase {
         'text_processing' => 1,
       ),
     );
+    field_create_instance($instance);
+
+
+    // Text - multiple.
+    $field = array(
+      'field_name' => 'text_multiple',
+      'type' => 'text_long',
+      'entity_types' => array('entity_test'),
+      'cardinality' => FIELD_CARDINALITY_UNLIMITED,
+    );
+    field_create_field($field);
+
+    $instance = array(
+      'field_name' => 'text_multiple',
+      'bundle' => 'main',
+      'entity_type' => 'entity_test',
+      'label' => t('Text multiple'),
+      'settings' => array(
+        'text_processing' => 1,
+      ),
+    );
+    field_create_instance($instance);
+
+    // Entity reference - single.
+    $field = array(
+      'entity_types' => array('entity_test'),
+      'settings' => array(
+        'handler' => 'base',
+        'target_type' => 'entity_test',
+        'handler_settings' => array(
+        ),
+      ),
+      'field_name' => 'entity_reference_single',
+      'type' => 'entityreference',
+      'cardinality' => 1,
+    );
+    field_create_field($field);
+
+    $instance = array(
+      'entity_type' => 'entity_test',
+      'field_name' => 'entity_reference_single',
+      'bundle' => 'main',
+      'label' => t('Entity reference single'),
+    );
+
     field_create_instance($instance);
 
     // Entity reference - multiple.
