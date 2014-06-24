@@ -67,7 +67,7 @@ class RestfulCreateEntityTestCase extends DrupalWebTestCase {
    * Test creating an entity (POST method).
    */
   function testCreateEntity() {
-    $handler = restful_get_restful_handler('main');
+    $handler = restful_get_restful_handler('main', 1, 1);
 
     $text = $this->randomName();
     $request = array('text_single' => $text);
