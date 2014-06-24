@@ -8,11 +8,16 @@ dependencies[] = entity
 files[] = plugins/authentication/RestfulAuthenticationBase.php
 files[] = plugins/authentication/RestfulAuthenticationInterface.php
 files[] = plugins/authentication/RestfulAuthenticationManager.php
+files[] = plugins/rate_limit/RestfulRateLimitInterface.php
+files[] = plugins/rate_limit/RestfulRateLimitManager.php
 files[] = plugins/restful/RestfulEntityBase.php
 files[] = plugins/restful/RestfulEntityBaseNode.php
 files[] = plugins/restful/RestfulEntityBaseMultipleBundles.php
 files[] = plugins/restful/RestfulEntityInterface.php
 files[] = plugins/restful/RestfulInterface.php
+
+; Includes
+files[] = includes/RestfulRateLimit.php
 
 ; Exceptions
 files[] = exceptions/RestfulBadRequestException.php
@@ -36,8 +41,9 @@ files[] = tests/RestfulGetHandlersTestCase.test
 files[] = tests/RestfulHookMenuTestCase.test
 files[] = tests/RestfulListEntityMultipleBundlesTestCase.test
 files[] = tests/RestfulListTestCase.test
+files[] = tests/RestfulRateLimitTestCase.test
+files[] = tests/RestfulRenderCacheTestCase.test
 files[] = tests/RestfulUpdateEntityTestCase.test
 files[] = tests/RestfulUpdateEntityCurlTestCase.test
 files[] = tests/RestfulUserLoginCookieTestCase.test
-files[] = tests/RestfulRenderCacheTestCase.test
 files[] = tests/RestfulViewEntityTestCase.test
