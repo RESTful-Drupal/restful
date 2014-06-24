@@ -5,7 +5,7 @@
  */
 
 class RestfulRateLimitManager {
-  const INFINITE_RATE_LIMIT = -1;
+  const UNLIMITED_RATE_LIMIT = -1;
 
   /**
    * The identified user account for the request.
@@ -35,6 +35,26 @@ class RestfulRateLimitManager {
   }
 
   /**
+   * Set the plugin info.
+   *
+   * @param array $pluginInfo
+   */
+  public function setPluginInfo($pluginInfo) {
+    $this->pluginInfo = $pluginInfo;
+  }
+
+  /**
+   * Get the plugin info array.
+   *
+   * @return array
+   */
+  public function getPluginInfo() {
+    return $this->pluginInfo;
+  }
+
+  /**
+   * Constructor for RestfulRateLimitManager.
+   *
    * @param string $resource
    *   Resource name being checked.
    * @param array $plugin_info
@@ -44,7 +64,7 @@ class RestfulRateLimitManager {
    */
   public function __construct($resource, $plugin_info, $account = NULL) {
     $this->resource = $resource;
-    $this->pluginInfo = $plugin_info;
+    $this->setPluginInfo($plugin_info);
     $this->account = $account ? $account : drupal_anonymous_user();
   }
 
@@ -66,25 +86,27 @@ class RestfulRateLimitManager {
     $now = new \DateTime();
     $now->setTimestamp(REQUEST_TIME);
     // Check all rate limits configured for this handler.
-    foreach ($this->pluginInfo as $event_name => $info) {
-      // If the limit is infinite then skip everything.
+    foreach ($this->getPluginInfo() as $event_name => $info) {
+      // If the limit is unlimited then skip everything.
       $limit = $this->rateLimit($info);
-      if ($limit == static::INFINITE_RATE_LIMIT) {
+      if ($limit == static::UNLIMITED_RATE_LIMIT) {
+        // User has unlimited access to the resources.
         continue;
       }
       // Check if there is a rate_limit plugin for the event.
       // There are no error checks on purpose, let the exceptions bubble up.
       $rate_limit_plugin = restful_get_rate_limit_plugin($info['event']);
       $rate_limit_class = ctools_plugin_get_class($rate_limit_plugin, 'class');
-      /** @var \RestfulRateLimitInterface $rl */
-      $rl = new $rate_limit_class();
+
+      $handler = new $rate_limit_class();
       // If the current request matches the configured event then check if the
       // limit has been reached.
-      if (!$rl->isRequestedEvent($request)) {
+      if (!$handler->isRequestedEvent($request)) {
         return;
       }
       if (!$rate_limit_entity = $this->loadRateLimitEntity($event_name)) {
         // If there is no entity, then create one.
+        // We don't need to save it since it will be saved upon hit.
         $rate_limit_entity = entity_create('rate_limit', array(
           'timestamp' => REQUEST_TIME,
           'expiration' => $now->add($info['period'])->format('U'),
@@ -92,7 +114,6 @@ class RestfulRateLimitManager {
           'event' => $event_name,
           'identifier' => $this->generateIdentifier(),
         ));
-        // We don't need to save it since it will be saved upon hit.
       }
       if ($rate_limit_entity->isExpired()) {
         // If the rate limit has expired renew the timestamps and assume 0
@@ -113,7 +134,7 @@ class RestfulRateLimitManager {
       $rate_limit_entity->hit();
 
       // Add the limit headers to the response.
-      $remaining = $limit == static::INFINITE_RATE_LIMIT ? 'unlimited' : $limit - ($rate_limit_entity->hits + 1);
+      $remaining = $limit == static::UNLIMITED_RATE_LIMIT ? 'unlimited' : $limit - ($rate_limit_entity->hits + 1);
       drupal_add_http_header('X-Rate-Limit-Limit', $limit, TRUE);
       drupal_add_http_header('X-Rate-Limit-Remaining', $remaining, TRUE);
       $time_remaining = $rate_limit_entity->expiration - REQUEST_TIME;
@@ -169,21 +190,23 @@ class RestfulRateLimitManager {
   protected function rateLimit($event_plugin_info) {
     // If the user is anonymous.
     if (empty($this->account->roles)) {
-      return empty($event_plugin_info['limits']['anonymous user']) ? 0 : $event_plugin_info['limits']['anonymous user'];
+      return $event_plugin_info['limits']['anonymous user'];
     }
     // If the user is logged then return the best limit for all the roles the
     // user has.
     $max_limit = 0;
     foreach ($this->account->roles as $rid => $role) {
-      if (
-        isset($event_plugin_info['limits'][$role]) &&
-        (
-          $event_plugin_info['limits'][$role] > $max_limit ||
-          $event_plugin_info['limits'][$role] == static::INFINITE_RATE_LIMIT
-        )
-      ) {
-        $max_limit = $event_plugin_info['limits'][$role];
+      if (!isset($event_plugin_info['limits'][$role])) {
+        // No limit configured for this role.
+        continue;
       }
+      if ($event_plugin_info['limits'][$role] < $max_limit &&
+        $event_plugin_info['limits'][$role] != static::UNLIMITED_RATE_LIMIT) {
+        // The limit is smaller than one previously found.
+        continue;
+      }
+      // This is the highest limit for the current user given all their roles.
+      $max_limit = $event_plugin_info['limits'][$role];
     }
     return $max_limit;
   }

@@ -66,6 +66,8 @@ function restful_ctools_plugin_directory($module, $plugin) {
  * Properties for every item of the rate_limit:
  *   - period: A \DateInterval object representing the period on which the rate
  *     limitations apply.
+ *   - event: The name of the event to limit as declared in the rate_limit
+ *     plugin.
  *   - limits: An associative array with the number of allowed requests in the
  *     selected period for every role.
  *     array(
@@ -75,7 +77,7 @@ function restful_ctools_plugin_directory($module, $plugin) {
  *         'limits' => array(
  *           'authenticated user' => 100,
  *           'anonymous user' => 10,
- *           'administrator' => \RestfulRateLimitManager::INFINITE_RATE_LIMIT,
+ *           'administrator' => \RestfulRateLimitManager::UNLIMITED_RATE_LIMIT,
  *         ),
  *       ),
  *     ),
@@ -99,6 +101,10 @@ function restful_plugin_process(&$plugin, $info) {
       'cache_simple_invalidate' => TRUE,
       'rate_limit' => FALSE,
     );
+
+    if (!empty($plugin['rate_limit'])) {
+      $plugin['rate_limit'] += array('anonymous user' => 0);
+    }
 
     if ($plugin['hook_menu'] && empty($plugin['menu_item'])) {
       // Set a default menu item.
@@ -523,7 +529,7 @@ function restful_entity_info() {
     'entity class' => 'RestfulRateLimit',
     'controller class' => 'EntityAPIController',
     'base table' => 'restful_rate_limit',
-    'fieldable' => FALSE,
+    'fieldable' => TRUE,
     'entity keys' => array(
       'id' => 'rlid',
       'label' => 'identifier',

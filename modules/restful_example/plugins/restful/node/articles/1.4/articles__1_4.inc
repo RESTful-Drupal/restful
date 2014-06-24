@@ -19,7 +19,7 @@ $plugin = array(
       'limits' => array(
         'authenticated user' => 3,
         'anonymous user' => 2,
-        'administrator' => \RestfulRateLimitManager::INFINITE_RATE_LIMIT,
+        'administrator' => \RestfulRateLimitManager::UNLIMITED_RATE_LIMIT,
       ),
     ),
   ),

@@ -126,7 +126,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *
    * @var \RestfulRateLimitManager
    */
-  protected $limitManager;
+  protected $rateLimitManager = NULL;
 
   /**
    * Get the defined controllers
@@ -222,6 +222,24 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
   }
 
   /**
+   * Setter for rateLimitManager.
+   *
+   * @param \RestfulRateLimitManager $rateLimitManager
+   */
+  public function setRateLimitManager($rateLimitManager) {
+    $this->rateLimitManager = $rateLimitManager;
+  }
+
+  /**
+   * Getter for rateLimitManager.
+
+   * @return \RestfulRateLimitManager
+   */
+  public function getRateLimitManager() {
+    return $this->rateLimitManager;
+  }
+
+  /**
    * Constructs a RestfulEntityBase object.
    *
    * @param array $plugin
@@ -238,7 +256,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
     $this->authenticationManager = $auth_manager ? $auth_manager : new \RestfulAuthenticationManager();
     $this->cacheController = $cache_controller ? $cache_controller : $this->newCacheObject();
     if (!empty($plugin['rate_limit'])) {
-      $this->limitManager = new \RestfulRateLimitManager($plugin['resource'], $plugin['rate_limit']);
+      $this->setRateLimitManager(new \RestfulRateLimitManager($plugin['resource'], $plugin['rate_limit']));
     }
   }
 
@@ -350,9 +368,9 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
       throw new RestfulBadRequestException('Path does not exist');
     }
 
-    if (!empty($this->limitManager)) {
+    if ($this->getRateLimitManager()) {
       // This will throw the appropriate exception if needed.
-      $this->limitManager->checkRateLimit($request);
+      $this->getRateLimitManager()->checkRateLimit($request);
     }
     if (!$path) {
       // If $path is empty we don't need to pass it along.
@@ -1042,8 +1060,8 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
     $account = $this->getAuthenticationManager()->getAccount($request);
 
     // If the limit rate is enabled for the current plugin then set the account.
-    if (!empty($this->limitManager)) {
-      $this->limitManager->setAccount($account);
+    if ($this->getRateLimitManager()) {
+      $this->getRateLimitManager()->setAccount($account);
     }
     return $account;
   }
@@ -1055,6 +1073,10 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *   The account to set.
    */
   public function setAccount(\stdClass $account) {
+    // If the limit rate is enabled for the current plugin then set the account.
+    if ($this->getRateLimitManager()) {
+      $this->getRateLimitManager()->setAccount($account);
+    }
     $this->getAuthenticationManager()->setAccount($account);
   }
 
