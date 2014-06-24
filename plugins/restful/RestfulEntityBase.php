@@ -372,6 +372,10 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
       // This will throw the appropriate exception if needed.
       $this->getRateLimitManager()->checkRateLimit($request);
     }
+
+    // Remove the application property from the request.
+    static::cleanRequest($original_request);
+
     if (!$path) {
       // If $path is empty we don't need to pass it along.
       return $this->{$method_name}($request, $account);
@@ -891,15 +895,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
         throw new RestfulBadRequestException(format_string('Property @name cannot be set.', array('@name' => $public_property)));
       }
 
-      // Get the field info.
-      $field_info = field_info_field($property_name);
-      $field_value = $request[$public_property];
-
-      // If the field is entity reference type and his cardinality larger than 1
-      // so it need to be an array.
-      if ($field_info['type'] == 'entityreference' && $field_info['cardinality'] != 1 && !is_array($request[$public_property])) {
-        $field_value = explode(',', $request[$public_property]);
-      }
+      $field_value = $this->propertyValuesPreprocess($property_name, $request[$public_property]);
 
       $wrapper->{$property_name}->set($field_value);
       unset($original_request[$public_property]);
@@ -911,9 +907,6 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
       throw new RestfulBadRequestException('No values were sent with the request');
     }
 
-    // Remove the application property from the request.
-    static::cleanRequest($original_request);
-
     if ($original_request) {
       // Request had illegal values.
       $error_message = format_plural(count($original_request), 'Property @names is invalid.', 'Property @names are invalid.', array('@names' => implode(', ', array_keys($original_request))));
@@ -921,6 +914,40 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
     }
 
     $wrapper->save();
+  }
+
+  /**
+   * Massage the value to set according to the format expected by the wrapper.
+   *
+   * @param $property_name
+   *   The property name to set.
+   * @param $value
+   *   The value passed in the request.
+   *
+   * @return mix
+   *   The value to set for the wrapped property.
+   */
+  public function propertyValuesPreprocess($property_name, $value) {
+    // Get the field info.
+    $field_info = field_info_field($property_name);
+
+    if ($field_info['type'] == 'entityreference') {
+      if ($field_info['cardinality'] != 1 && !is_array($value)) {
+        // If the field is entity reference type and its cardinality larger than
+        // 1 set value to an array.
+        return explode(',', $value);
+      }
+    }
+    elseif (in_array($field_info['type'], array('text', 'text_long', 'text_with_summary'))) {
+      // Text field. Check if field has an input format.
+      $instance = field_info_instance($this->getEntityType(), $property_name, $this->getBundle());
+      // @todo: Is this correct?
+      $format = $instance['settings']['text_processing'] ? 'filtered_html' : 'plain_text';
+      return array('format' => $format, 'value' => $value);
+    }
+
+    // Return the value as is.
+    return $value;
   }
 
   /**
@@ -950,7 +977,6 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
       // Property does not allow setting.
       return;
     }
-
 
     $access = $property->access($op);
     return $access === FALSE ? FALSE : TRUE;

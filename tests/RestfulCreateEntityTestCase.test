@@ -111,7 +111,7 @@ class RestfulCreateEntityTestCase extends DrupalWebTestCase {
     }
 
     // Create another test entity to be referenced.
-    $entity = entity_create('entity_test', array('type' => 'main'));
+    $entity = entity_create('entity_test', array('name' => 'main'));
     $entity->save();
     $ids[] = $entity->pid;
 
