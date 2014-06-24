@@ -103,7 +103,9 @@ function restful_plugin_process(&$plugin, $info) {
     );
 
     if (!empty($plugin['rate_limit'])) {
-      $plugin['rate_limit'] += array('anonymous user' => 0);
+      foreach ($plugin['rate_limit'] as $event_name => $rate_limit_info) {
+        $plugin['rate_limit'][$event_name]['limits'] += array('anonymous user' => 0);
+      }
     }
 
     if ($plugin['hook_menu'] && empty($plugin['menu_item'])) {
