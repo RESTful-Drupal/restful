@@ -38,7 +38,8 @@ class RestfulRenderCacheTestCase extends DrupalWebTestCase {
     $handler->setAccount($account);
     $cache = $handler->getCacheController();
     // Make sure the cache is activated.
-    $this->assertTrue($handler->getPluginInfo('cache_render'), 'Cache render is activated');
+    $cache_info = $handler->getPluginInfo('cache');
+    $this->assertTrue($cache_info['render'], 'Cache render is activated');
 
     // Empty the cache.
     $cache->clear('*', TRUE);
@@ -62,7 +63,7 @@ class RestfulRenderCacheTestCase extends DrupalWebTestCase {
     // Test that invalidation is clearing cache records.
     // 1. Update node and watch cache vanish.
     // Make sure the cache is activated.
-    $this->assertTrue($handler->getPluginInfo('cache_simple_invalidate'), 'Cache render simple invalidation is activated');
+    $this->assertTrue($cache_info['simple_invalidate'], 'Cache render simple invalidation is activated');
     $node->title .= ' updated';
     node_save($node);
     $record = $cache->get($cid);
