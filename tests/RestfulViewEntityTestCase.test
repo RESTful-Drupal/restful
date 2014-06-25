@@ -18,94 +18,7 @@ class RestfulViewEntityTestCase extends DrupalWebTestCase {
   function setUp() {
     parent::setUp('restful_example', 'restful_test', 'entityreference');
 
-    // Text - single.
-    $field = array(
-      'field_name' => 'text_single',
-      'type' => 'text_long',
-      'entity_types' => array('entity_test'),
-      'cardinality' => 1,
-    );
-    field_create_field($field);
-
-    $instance = array(
-      'field_name' => 'text_single',
-      'bundle' => 'main',
-      'entity_type' => 'entity_test',
-      'label' => t('Text single'),
-      'settings' => array(
-        'text_processing' => 1,
-      ),
-    );
-    field_create_instance($instance);
-
-
-    // Text - multiple.
-    $field = array(
-      'field_name' => 'text_multiple',
-      'type' => 'text_long',
-      'entity_types' => array('entity_test'),
-      'cardinality' => FIELD_CARDINALITY_UNLIMITED,
-    );
-    field_create_field($field);
-
-    $instance = array(
-      'field_name' => 'text_multiple',
-      'bundle' => 'main',
-      'entity_type' => 'entity_test',
-      'label' => t('Text multiple'),
-      'settings' => array(
-        'text_processing' => 1,
-      ),
-    );
-    field_create_instance($instance);
-
-    // Entity reference - single.
-    $field = array(
-      'entity_types' => array('entity_test'),
-      'settings' => array(
-        'handler' => 'base',
-        'target_type' => 'entity_test',
-        'handler_settings' => array(
-        ),
-      ),
-      'field_name' => 'entity_reference_single',
-      'type' => 'entityreference',
-      'cardinality' => 1,
-    );
-    field_create_field($field);
-
-    $instance = array(
-      'entity_type' => 'entity_test',
-      'field_name' => 'entity_reference_single',
-      'bundle' => 'main',
-      'label' => t('Entity reference single'),
-    );
-
-    field_create_instance($instance);
-
-    // Entity reference - multiple.
-    $field = array(
-      'entity_types' => array('entity_test'),
-      'settings' => array(
-        'handler' => 'base',
-        'target_type' => 'entity_test',
-        'handler_settings' => array(
-        ),
-      ),
-      'field_name' => 'entity_reference_multiple',
-      'type' => 'entityreference',
-      'cardinality' => FIELD_CARDINALITY_UNLIMITED,
-    );
-    field_create_field($field);
-
-    $instance = array(
-      'entity_type' => 'entity_test',
-      'field_name' => 'entity_reference_multiple',
-      'bundle' => 'main',
-      'label' => t('Entity reference multiple'),
-    );
-
-    field_create_instance($instance);
+    restful_test_add_fields();
   }
 
   /**
@@ -132,9 +45,8 @@ class RestfulViewEntityTestCase extends DrupalWebTestCase {
     $text2 = $this->randomName();
 
 
-    $wrapper->text_single->set(array('value' => $text1));
-    $wrapper->text_multiple[] = array('value' => $text1);
-    $wrapper->text_multiple[] = array('value' => $text2);
+    $wrapper->text_single->set($text1);
+    $wrapper->text_multiple->set(array($text1, $text2));
 
     $wrapper->entity_reference_single->set($entity1);
     $wrapper->entity_reference_multiple[] = $entity1;
@@ -153,18 +65,31 @@ class RestfulViewEntityTestCase extends DrupalWebTestCase {
     // v1.0 - Simple entity view (id, label, self).
     $handler = restful_get_restful_handler('main', 1, 0);
     $expected_result = $base_expected_result;
+
     $result = $handler->get($id);
-    $this->assertEqual($result, $expected_result);
+    $this->assertEqual($result, $expected_result, 'Entity view has expected result for "main" resource v1');
 
     // v1.1 - Text and entity reference field.
     $handler = restful_get_restful_handler('main', 1, 1);
     $result = $handler->get($id);
-    $expected_result = $base_expected_result;
-    $expected_result['text_single'] = "<p>$text1</p>\n";
-    $expected_result['text_multiple'] = array(
-      "<p>$text1</p>\n",
-      "<p>$text2</p>\n",
+
+    $base_expected_result_v1 = $base_expected_result;
+
+    // NULL fields.
+    $base_expected_result_v1 += array(
+      'text_single_processing' => NULL,
+      'text_multiple_processing' => NULL,
+      'term_single' => NULL,
+      'term_multiple' => NULL,
+      'file_single' => NULL,
+      'file_multiple' => NULL,
+      'image_single' => NULL,
+      'image_multiple' => NULL,
     );
+
+    $expected_result = $base_expected_result_v1;
+    $expected_result['text_single'] = $text1;
+    $expected_result['text_multiple'] = array($text1, $text2);
     $expected_result['entity_reference_single'] = $entity1->pid;
     $expected_result['entity_reference_multiple'] = array(
       $entity1->pid,
@@ -177,7 +102,14 @@ class RestfulViewEntityTestCase extends DrupalWebTestCase {
       $handler->get($entity2->pid),
     );
 
-    $this->assertEqual($result, $expected_result);
+    $stripped_result = $result;
+    $stripped_result['text_single'] = trim(strip_tags($result['text_single']));
+    $stripped_result['text_multiple'][0] = trim(strip_tags($result['text_multiple'][0]));
+    $stripped_result['text_multiple'][1] = trim(strip_tags($result['text_multiple'][1]));
+
+    ksort($stripped_result);
+    ksort($expected_result);
+    $this->assertEqual($stripped_result, $expected_result, 'Entity view has correct result for "main" resource v1.1');
 
     // Empty the text and entity reference fields.
     $wrapper->text_single->set(NULL);
@@ -187,14 +119,19 @@ class RestfulViewEntityTestCase extends DrupalWebTestCase {
     $wrapper->save();
 
     $result = $handler->get($id);
-    $expected_result = $base_expected_result;
+    $expected_result = $base_expected_result_v1;
+    $expected_result['text_single'] = NULL;
+    $expected_result['text_multiple'] = NULL;
     $expected_result['text_single'] = NULL;
     $expected_result['text_multiple'] = NULL;
     $expected_result['entity_reference_single'] = NULL;
     $expected_result['entity_reference_multiple'] = NULL;
     $expected_result['entity_reference_single_resource'] = NULL;
     $expected_result['entity_reference_multiple_resource'] = NULL;
-    $this->assertEqual($result, $expected_result);
+
+    ksort($result);
+    ksort($expected_result);
+    $this->assertEqual($result, $expected_result, 'Entity view has correct result for "main" resource v1.1 with empty entity reference.');
 
     // v1.2 - "callback" and "process callback".
     $handler = restful_get_restful_handler('main', 1, 2);
@@ -203,7 +140,7 @@ class RestfulViewEntityTestCase extends DrupalWebTestCase {
     $expected_result['callback'] = 'callback';
     $expected_result['process_callback_from_callback'] = 'callback processed from callback';
     $expected_result['process_callback_from_value'] = $id . ' processed from value';
-    $this->assertEqual($result, $expected_result);
+    $this->assertEqual($result, $expected_result, 'Entity view has correct result for "main" resource v1.2');
 
     // v1.3 - Non-existing "callback" property.
     $handler = restful_get_restful_handler('main', 1, 3);
