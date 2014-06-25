@@ -374,7 +374,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
     }
 
     // Remove the application property from the request.
-    static::cleanRequest($original_request);
+    static::cleanRequest($request);
 
     if (!$path) {
       // If $path is empty we don't need to pass it along.
