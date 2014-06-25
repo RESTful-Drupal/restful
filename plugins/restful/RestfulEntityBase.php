@@ -975,6 +975,36 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
       }
       return $return;
     }
+    elseif ($field_info['type'] == 'file') {
+      // File field.
+      if ($field_info['cardinality'] != 1) {
+        // Multiple values of file ids.
+        $file_ids = $value;
+
+        if (!is_array($file_ids)) {
+          $file_ids = explode(',', $value);
+        }
+
+        $files = array();
+        foreach($file_ids as $file_id) {
+          $file = file_load($file_id);
+          $file->display = 1;
+          $file = (array)$file;
+
+          $files[] = $file;
+        }
+
+        return $files;
+      }
+      else {
+        // Single value of file id.
+        $file = file_load($value);
+        $file->display = 1;
+        $file = (array)$file;
+      }
+
+      return $file;
+    }
 
     // Return the value as is.
     return $value;
