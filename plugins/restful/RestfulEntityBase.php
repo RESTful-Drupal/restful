@@ -372,6 +372,10 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
       // This will throw the appropriate exception if needed.
       $this->getRateLimitManager()->checkRateLimit($request);
     }
+
+    // Remove the application property from the request.
+    static::cleanRequest($original_request);
+
     if (!$path) {
       // If $path is empty we don't need to pass it along.
       return $this->{$method_name}($request, $account);
@@ -844,7 +848,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
 
     $entity = entity_create($this->entityType, $values);
 
-    if (!entity_access('create', $this->entityType, $entity, $account)) {
+    if (entity_access('create', $this->entityType, $entity, $account) === FALSE) {
       // User does not have access to create entity.
       $params = array('@resource' => $this->plugin['label']);
       throw new RestfulForbiddenException(format_string('You do not have access to create a new @resource resource.', $params));
@@ -875,9 +879,14 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
   protected function setPropertyValues(EntityMetadataWrapper $wrapper, $request, $account, $null_missing_fields = FALSE) {
     $save = FALSE;
     $original_request = $request;
+
     foreach ($this->getPublicFields() as $public_property => $info) {
-      // @todo: Pass value to validators, even if it doesn't exist, so we can
-      // validate required properties.
+      if (empty($info['property'])) {
+        // We may have for example an entity with no label property, but with a
+        // label callback. In that case the $info['property'] won't exist, so
+        // we skip this field.
+        continue;
+      }
 
       $property_name = $info['property'];
       if (!isset($request[$public_property])) {
@@ -892,7 +901,10 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
       if (!$this->checkPropertyAccess($wrapper->{$property_name})) {
         throw new RestfulBadRequestException(format_string('Property @name cannot be set.', array('@name' => $public_property)));
       }
-      $wrapper->{$property_name}->set($request[$public_property]);
+
+      $field_value = $this->propertyValuesPreprocess($property_name, $request[$public_property]);
+
+      $wrapper->{$property_name}->set($field_value);
       unset($original_request[$public_property]);
       $save = TRUE;
     }
@@ -909,6 +921,63 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
     }
 
     $wrapper->save();
+  }
+
+  /**
+   * Massage the value to set according to the format expected by the wrapper.
+   *
+   * @param $property_name
+   *   The property name to set.
+   * @param $value
+   *   The value passed in the request.
+   *
+   * @return mix
+   *   The value to set for the wrapped property.
+   */
+  public function propertyValuesPreprocess($property_name, $value) {
+    // Get the field info.
+    $field_info = field_info_field($property_name);
+
+    if ($field_info['type'] == 'entityreference') {
+      if ($field_info['cardinality'] != 1 && !is_array($value)) {
+        // If the field is entity reference type and its cardinality larger than
+        // 1 set value to an array.
+        return explode(',', $value);
+      }
+    }
+    elseif (in_array($field_info['type'], array('text', 'text_long', 'text_with_summary'))) {
+      // Text field. Check if field has an input format.
+      $instance = field_info_instance($this->getEntityType(), $property_name, $this->getBundle());
+
+      if ($field_info['cardinality'] == 1) {
+        // Single value.
+        if (!$instance['settings']['text_processing']) {
+          return $value;
+        }
+
+        return array (
+          'value' => $value,
+          'format' => 'filtered_html',
+        );
+      }
+
+      // Multiple values.
+      foreach ($value as $delta => $single_value) {
+        if (!$instance['settings']['text_processing']) {
+          $return[$delta] = $single_value;
+        }
+        else {
+          $return[$delta] = array(
+            'value' => $single_value,
+            'format' => 'filtered_html',
+          );
+        }
+      }
+      return $return;
+    }
+
+    // Return the value as is.
+    return $value;
   }
 
   /**
@@ -938,7 +1007,6 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
       // Property does not allow setting.
       return;
     }
-
 
     $access = $property->access($op);
     return $access === FALSE ? FALSE : TRUE;
