@@ -957,7 +957,6 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
 
         return array (
           'value' => $value,
-          // @todo: How to get the correct format value?
           'format' => 'filtered_html',
         );
       }
