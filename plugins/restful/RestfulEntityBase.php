@@ -412,7 +412,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
       }
 
       if (!isset($controllers[$http_method])) {
-        $params = array('@method' => strtolower($http_method));
+        $params = array('@method' => strtoupper($http_method));
         throw new RestfulBadRequestException(format_string('The http method @method is not allowed for this path.', $params));
       }
 
