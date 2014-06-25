@@ -1,0 +1,43 @@
+<?php
+
+/**
+ * @file
+ * Contains RestfulCreateNodeTestCase
+ */
+
+class RestfulCreateNodeTestCase extends DrupalWebTestCase {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Create node',
+      'description' => 'Test the creation of a node entity type.',
+      'group' => 'Restful',
+    );
+  }
+
+  function setUp() {
+    parent::setUp('restful_example');
+  }
+
+  /**
+   * Test creating a node (POST method).
+   */
+  function testCreateNode() {
+    $user1 = $this->drupalCreateUser();
+    $this->drupalLogin($user1);
+
+    $handler = restful_get_restful_handler('articles');
+
+    // Set a different user from the logged in user, to assert the node's author
+    // is set correctly.
+    $user2 = $this->drupalCreateUser(array('create article content'));
+    $handler->setAccount($user2);
+
+    $text1 = $this->randomName();
+    $request = array('label' => $text1);
+    $result = $handler->post('', $request);
+
+    $node = node_load($result['id']);
+    $this->assertEqual($node->uid, $user2->uid, 'Correct user was set to be the author of the node.');
+  }
+}

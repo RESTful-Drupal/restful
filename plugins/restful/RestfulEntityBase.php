@@ -876,7 +876,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *
    * @throws RestfulBadRequestException
    */
-  protected function setPropertyValues(EntityMetadataWrapper $wrapper, $request, $account, $null_missing_fields = FALSE) {
+  protected function setPropertyValues(EntityMetadataWrapper $wrapper, $request, stdClass $account, $null_missing_fields = FALSE) {
     $save = FALSE;
     $original_request = $request;
 
@@ -919,6 +919,10 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
       $error_message = format_plural(count($original_request), 'Property @names is invalid.', 'Property @names are invalid.', array('@names' => implode(', ', array_keys($original_request))));
       throw new RestfulBadRequestException($error_message);
     }
+
+    // Allow changing the entity just before it's saved. For example, setting
+    // the author of the node entity.
+    $this->createEntityPreInsert($wrapper->value(), $request, $account);
 
     $wrapper->save();
   }
@@ -979,6 +983,18 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
     // Return the value as is.
     return $value;
   }
+
+  /**
+   * Allow manipulating the entity before it is saved for the first time.
+   *
+   * @param $entity
+   *   The unsaved entity object, passed by reference.
+   * @param array $request
+   *   The request array.
+   * @param stdClass $account
+   *   The user object.
+   */
+  public function createEntityPreInsert($entity, $request, stdClass $account) {}
 
   /**
    * Helper method to check access on a property.
