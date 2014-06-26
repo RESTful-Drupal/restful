@@ -22,4 +22,14 @@ class RestfulEntityBaseNode extends RestfulEntityBase {
     return $query;
   }
 
+  /**
+   * Overrides RestfulEntityBase::createEntityPreInsert().
+   *
+   * Set the node author and other defaults.
+   */
+  public function createEntityPreInsert($entity, $request, stdClass $account) {
+    node_object_prepare($entity);
+    $entity->uid = $account->uid;
+  }
+
 }
