@@ -924,6 +924,13 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
     // the author of the node entity.
     $this->createEntityPreInsert($wrapper->value(), $request, $account);
 
+    // Validating the entity object before writing it to the DB.
+    if (module_exists('entity_validator')) {
+      if ($errors = entity_validator_validate_entity($wrapper->type(), $wrapper->value(), 'errors')) {
+        // todo: build the errors.
+      }
+    }
+
     $wrapper->save();
   }
 
