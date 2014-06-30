@@ -1100,24 +1100,35 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
 
     $map = array();
     foreach ($this->getPublicFields() as $field_name => $value) {
-      if ($value['property']) {
+      if (!$value['property']) {
         continue;
       }
 
       $map[$value['property']] = $field_name;
     }
 
-
-
     $errors = $handler->getErrors(FALSE);
     $params = array();
     format_plural(count($errors), 'Invalid value in field @fields', 'Invalid values in fields', $params);
     $e = new \RestfulBadRequestException('Invalid values in f');
-    foreach ($errors as $field => $messages) {
+    foreach ($errors as $property_name => $messages) {
+      if (empty($map[$property_name])) {
+        // Entity is not valid, but on a field not public.
+        continue;
+      }
+
+      $field_name = $map[$property_name];
+
       foreach ($messages as $message) {
-        $e->addFieldError($map[$field_name], $message);
+
+        $message['params']['@field'] = $field_name;
+        $output = format_string($message['message'], $message['params']);
+
+        $e->addFieldError($field_name, $output);
       }
     }
+
+    throw $e;
   }
 
   /**
