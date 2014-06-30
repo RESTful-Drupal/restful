@@ -924,7 +924,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
     // the author of the node entity.
     $this->entityPreSave($wrapper->value(), $request, $account);
 
-    $this->entityValidate($wrapper->value());
+    $this->entityValidate($wrapper);
 
     $wrapper->save();
   }
@@ -1079,7 +1079,8 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
   /**
    * Allow validating the entity before it is saved.
    *
-   * @param $entity
+   * @param \EntityMetadataWrapper $wrapper
+   *   The wrapped entity.
    */
   public function entityValidate(\EntityMetadataWrapper $wrapper) {
     if (!module_exists('entity_validator')) {
@@ -1087,7 +1088,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
       return;
     }
 
-    if ($handler = entity_validator_get_validator_handler($wrapper->type(), $wrapper->value())) {
+    if (!$handler = entity_validator_get_validator_handler($wrapper->type(), $wrapper->getBundle())) {
       // Entity validator handler doesn't exist for the entity.
       return;
     }
@@ -1105,6 +1106,8 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
 
       $map[$value['property']] = $field_name;
     }
+
+
 
     $errors = $handler->getErrors(FALSE);
     $params = array();
