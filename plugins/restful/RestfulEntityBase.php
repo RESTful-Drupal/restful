@@ -924,6 +924,8 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
     // the author of the node entity.
     $this->entityPreSave($wrapper->value(), $request, $account);
 
+    $this->entityValidate($wrapper->value());
+
     $wrapper->save();
   }
 
@@ -955,9 +957,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
       case 'file':
       case 'image':
         return $this->propertyValuesPreprocessFile($property_name, $value, $field_info);
-
     }
-
 
     // Return the value as is.
     return $value;
@@ -1074,6 +1074,33 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *   The user object.
    */
   public function entityPreSave($entity, $request, stdClass $account) {}
+
+
+  /**
+   * Allow validating the entity before it is saved.
+   *
+   * @param $entity
+   */
+  public function entityValidate(\EntityMetadataWrapper $wrapper) {
+    if (!module_exists('entity_validator')) {
+      // Entity validator doesn't exist.
+      return;
+    }
+
+    if ($handler = entity_validator_get_validator_handler($wrapper->type(), $wrapper->value())) {
+      // Entity validator handler doesn't exist for the entity.
+      return;
+    }
+
+    if ($handler->validate($wrapper->value(), TRUE)) {
+      // Entity is valid.
+      return;
+    }
+
+    foreach ($handler->getErrors(FALSE) as $field => $messages) {
+
+    }
+  }
 
   /**
    * Helper method to check access on a property.
