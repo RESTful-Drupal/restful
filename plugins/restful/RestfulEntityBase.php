@@ -922,7 +922,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
 
     // Allow changing the entity just before it's saved. For example, setting
     // the author of the node entity.
-    $this->createEntityPreInsert($wrapper->value(), $request, $account);
+    $this->entityPreSave($wrapper->value(), $request, $account);
 
     $wrapper->save();
   }
@@ -930,62 +930,141 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
   /**
    * Massage the value to set according to the format expected by the wrapper.
    *
-   * @param $property_name
+   * @param string $property_name
    *   The property name to set.
    * @param $value
    *   The value passed in the request.
    *
    * @return mix
-   *   The value to set for the wrapped property.
+   *   The value to set using the wrapped property.
    */
   public function propertyValuesPreprocess($property_name, $value) {
     // Get the field info.
     $field_info = field_info_field($property_name);
 
-    if ($field_info['type'] == 'entityreference') {
-      if ($field_info['cardinality'] != 1 && !is_array($value)) {
-        // If the field is entity reference type and its cardinality larger than
-        // 1 set value to an array.
-        return explode(',', $value);
-      }
+    switch ($field_info['type']) {
+      case 'entityreference':
+      case 'taxonomy_term_reference':
+        return $this->propertyValuesPreprocessReference($property_name, $value, $field_info);
+
+      case 'text':
+      case 'text_long':
+      case 'text_with_summary':
+        return $this->propertyValuesPreprocessText($property_name, $value, $field_info);
+
+      case 'file':
+      case 'image':
+        return $this->propertyValuesPreprocessFile($property_name, $value, $field_info);
+
     }
-    elseif (in_array($field_info['type'], array('text', 'text_long', 'text_with_summary'))) {
-      // Text field. Check if field has an input format.
-      $instance = field_info_instance($this->getEntityType(), $property_name, $this->getBundle());
 
-      if ($field_info['cardinality'] == 1) {
-        // Single value.
-        if (!$instance['settings']['text_processing']) {
-          return $value;
-        }
-
-        return array (
-          'value' => $value,
-          'format' => 'filtered_html',
-        );
-      }
-
-      // Multiple values.
-      foreach ($value as $delta => $single_value) {
-        if (!$instance['settings']['text_processing']) {
-          $return[$delta] = $single_value;
-        }
-        else {
-          $return[$delta] = array(
-            'value' => $single_value,
-            'format' => 'filtered_html',
-          );
-        }
-      }
-      return $return;
-    }
 
     // Return the value as is.
     return $value;
   }
 
   /**
-   * Allow manipulating the entity before it is saved for the first time.
+   * Preprocess value for "Entity reference" field types.
+   *
+   * @param string $property_name
+   *   The property name to set.
+   * @param $value
+   *   The value passed in the request.
+   * @param array $field_info
+   *   The field info array.
+   *
+   * @return mix
+   *   The value to set using the wrapped property.
+   */
+  protected function propertyValuesPreprocessReference($property_name, $value, $field_info) {
+    if ($field_info['cardinality'] != 1 && !is_array($value)) {
+      // If the field is entity reference type and its cardinality larger than
+      // 1 set value to an array.
+      return explode(',', $value);
+    }
+
+    return $value;
+  }
+
+  /**
+   * Preprocess value for "Text" related field types.
+   *
+   * @param string $property_name
+   *   The property name to set.
+   * @param $value
+   *   The value passed in the request.
+   * @param array $field_info
+   *   The field info array.
+   *
+   * @return mix
+   *   The value to set using the wrapped property.
+   */
+  protected function propertyValuesPreprocessText($property_name, $value, $field_info) {
+    // Text field. Check if field has an input format.
+    $instance = field_info_instance($this->getEntityType(), $property_name, $this->getBundle());
+
+    if ($field_info['cardinality'] == 1) {
+      // Single value.
+      if (!$instance['settings']['text_processing']) {
+        return $value;
+      }
+
+      return array (
+        'value' => $value,
+        'format' => 'filtered_html',
+      );
+    }
+
+    // Multiple values.
+    foreach ($value as $delta => $single_value) {
+      if (!$instance['settings']['text_processing']) {
+        $return[$delta] = $single_value;
+      }
+      else {
+        $return[$delta] = array(
+          'value' => $single_value,
+          'format' => 'filtered_html',
+        );
+      }
+    }
+    return $return;
+  }
+
+  /**
+   * Preprocess value for "File" related field types.
+   *
+   * @param string $property_name
+   *   The property name to set.
+   * @param $value
+   *   The value passed in the request.
+   * @param array $field_info
+   *   The field info array.
+   *
+   * @return mix
+   *   The value to set using the wrapped property.
+   */
+  protected function propertyValuesPreprocessFile($property_name, $value, $field_info) {
+    if ($field_info['cardinality'] == 1) {
+      // Single value.
+      return array(
+        'fid' => $value,
+        'display' => TRUE,
+      );
+    }
+
+    $value = is_array($value) ? $value : explode(',', $value);
+    $return = array();
+    foreach ($value as $delta => $single_value) {
+      $return[$delta] = array(
+        'fid' => $single_value,
+        'display' => TRUE,
+      );
+    }
+    return $return;
+  }
+
+  /**
+   * Allow manipulating the entity before it is saved.
    *
    * @param $entity
    *   The unsaved entity object, passed by reference.
@@ -994,7 +1073,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    * @param stdClass $account
    *   The user object.
    */
-  public function createEntityPreInsert($entity, $request, stdClass $account) {}
+  public function entityPreSave($entity, $request, stdClass $account) {}
 
   /**
    * Helper method to check access on a property.

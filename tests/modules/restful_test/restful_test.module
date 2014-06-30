@@ -43,3 +43,290 @@ function restful_test_field_access($op, $field, $entity_type, $entity, $account)
     return FALSE;
   }
 }
+
+/**
+ * Helper function to add common fields to the entity test's "main" bundle.
+ */
+function restful_test_add_fields() {
+  // Text - single.
+  $field = array(
+    'field_name' => 'text_single',
+    'type' => 'text_long',
+    'entity_types' => array('entity_test'),
+    'cardinality' => 1,
+  );
+  field_create_field($field);
+
+  $instance = array(
+    'field_name' => 'text_single',
+    'bundle' => 'main',
+    'entity_type' => 'entity_test',
+    'label' => t('Text single'),
+    'settings' => array(
+      // No text processing
+      'text_processing' => 0,
+    ),
+  );
+  field_create_instance($instance);
+
+  // Text - single, with text processing.
+  $field = array(
+    'field_name' => 'text_single_processing',
+    'type' => 'text_long',
+    'entity_types' => array('entity_test'),
+    'cardinality' => 1,
+  );
+  field_create_field($field);
+
+  $instance = array(
+    'field_name' => 'text_single_processing',
+    'bundle' => 'main',
+    'entity_type' => 'entity_test',
+    'label' => t('Text single with text processing'),
+    'settings' => array(
+      'text_processing' => 1,
+    ),
+  );
+  field_create_instance($instance);
+
+  // Text - multiple.
+  $field = array(
+    'field_name' => 'text_multiple',
+    'type' => 'text_long',
+    'entity_types' => array('entity_test'),
+    'cardinality' => FIELD_CARDINALITY_UNLIMITED,
+  );
+  field_create_field($field);
+
+  $instance = array(
+    'field_name' => 'text_multiple',
+    'bundle' => 'main',
+    'entity_type' => 'entity_test',
+    'label' => t('Text multiple'),
+    'settings' => array(
+      'text_processing' => 0,
+    ),
+  );
+  field_create_instance($instance);
+
+  // Text - multiple, with text processing.
+  $field = array(
+    'field_name' => 'text_multiple_processing',
+    'type' => 'text_long',
+    'entity_types' => array('entity_test'),
+    'cardinality' => FIELD_CARDINALITY_UNLIMITED,
+  );
+  field_create_field($field);
+
+  $instance = array(
+    'field_name' => 'text_multiple_processing',
+    'bundle' => 'main',
+    'entity_type' => 'entity_test',
+    'label' => t('Text multiple with text processing'),
+    'settings' => array(
+      'text_processing' => 1,
+    ),
+  );
+  field_create_instance($instance);
+
+  // Entity reference - single.
+  $field = array(
+    'entity_types' => array('entity_test'),
+    'settings' => array(
+      'handler' => 'base',
+      'target_type' => 'entity_test',
+      'handler_settings' => array(
+      ),
+    ),
+    'field_name' => 'entity_reference_single',
+    'type' => 'entityreference',
+    'cardinality' => 1,
+  );
+  field_create_field($field);
+
+  $instance = array(
+    'entity_type' => 'entity_test',
+    'field_name' => 'entity_reference_single',
+    'bundle' => 'main',
+    'label' => t('Entity reference single'),
+  );
+
+  field_create_instance($instance);
+
+  // Entity reference - multiple.
+  $field = array(
+    'entity_types' => array('entity_test'),
+    'settings' => array(
+      'handler' => 'base',
+      'target_type' => 'entity_test',
+      'handler_settings' => array(
+      ),
+    ),
+    'field_name' => 'entity_reference_multiple',
+    'type' => 'entityreference',
+    'cardinality' => FIELD_CARDINALITY_UNLIMITED,
+  );
+  field_create_field($field);
+
+  $instance = array(
+    'entity_type' => 'entity_test',
+    'field_name' => 'entity_reference_multiple',
+    'bundle' => 'main',
+    'label' => t('Entity reference multiple'),
+  );
+
+  field_create_instance($instance);
+
+  $vocabulary_id = restful_test_create_vocabulary_and_terms();
+
+  // Taxonomy term - single.
+  $field = array(
+    'field_name' => 'term_single',
+    'type' => 'taxonomy_term_reference',
+    'entity_types' => array('entity_test'),
+    'cardinality' => 1,
+  );
+  field_create_field($field);
+
+  $instance = array(
+    'field_name' => 'term_single',
+    'bundle' => 'main',
+    'entity_type' => 'entity_test',
+    'label' => t('Term reference single'),
+    'settings' => array(
+      'settings' => array(
+        'allowed_values' => array(
+          array(
+            'vocabulary' => $vocabulary_id,
+          ),
+        ),
+      ),
+    ),
+  );
+  field_create_instance($instance);
+
+  // Taxonomy term - multiple.
+  $field = array(
+    'field_name' => 'term_multiple',
+    'type' => 'taxonomy_term_reference',
+    'entity_types' => array('entity_test'),
+    'cardinality' => FIELD_CARDINALITY_UNLIMITED,
+  );
+  field_create_field($field);
+
+  $instance = array(
+    'field_name' => 'term_multiple',
+    'bundle' => 'main',
+    'entity_type' => 'entity_test',
+    'label' => t('Term reference multiple'),
+    'settings' => array(
+      'settings' => array(
+        'allowed_values' => array(
+          array(
+            'vocabulary' => $vocabulary_id,
+          ),
+        ),
+      ),
+    ),
+  );
+  field_create_instance($instance);
+
+  // File field - single.
+  $field = array(
+    'field_name' => 'file_single',
+    'type' => 'file',
+    'settings' => array(),
+    'cardinality' => 1,
+  );
+  field_create_field($field);
+
+  $instance = array(
+    'field_name' => 'file_single',
+    'entity_type' => 'entity_test',
+    'label' => 'File single',
+    'bundle' => 'main',
+  );
+  field_create_instance($instance);
+
+  // File field - multiple.
+  $field = array(
+    'field_name' => 'file_multiple',
+    'type' => 'file',
+    'settings' => array(),
+    'cardinality' => FIELD_CARDINALITY_UNLIMITED,
+  );
+  field_create_field($field);
+
+  $instance = array(
+    'field_name' => 'file_multiple',
+    'entity_type' => 'entity_test',
+    'label' => 'File multiple',
+    'bundle' => 'main',
+  );
+  field_create_instance($instance);
+
+  // Image field - single.
+  $field = array(
+    'field_name' => 'image_single',
+    'type' => 'image',
+    'settings' => array(),
+    'cardinality' => 1,
+  );
+  field_create_field($field);
+
+  $instance = array(
+    'field_name' => 'image_single',
+    'entity_type' => 'entity_test',
+    'label' => 'Image single',
+    'bundle' => 'main',
+  );
+  field_create_instance($instance);
+
+  // Image field - multiple.
+  $field = array(
+    'field_name' => 'image_multiple',
+    'type' => 'image',
+    'settings' => array(),
+    'cardinality' => FIELD_CARDINALITY_UNLIMITED,
+  );
+  field_create_field($field);
+
+  $instance = array(
+    'field_name' => 'image_multiple',
+    'entity_type' => 'entity_test',
+    'label' => 'Image multiple',
+    'bundle' => 'main',
+  );
+  field_create_instance($instance);
+}
+
+
+/**
+ * Helper function; Create a vocabulary and terms.
+ *
+ * @return int
+ *   The newly created vocabulary ID.
+ */
+function restful_test_create_vocabulary_and_terms() {
+  $vocabulary = (object) array(
+    'name' => 'Tags test',
+    'description' => '',
+    'machine_name' => 'test_vocab',
+  );
+  taxonomy_vocabulary_save($vocabulary);
+
+  $vid = $vocabulary->vid;
+
+  // Create three terms.
+  foreach (array(1, 2, 3) as $id) {
+    $values = array(
+      'name' => 'term' . $id,
+      'vid' => $vid,
+
+    );
+    $term = entity_create('taxonomy_term', $values);
+    taxonomy_term_save($term);
+  }
+
+  return $vid;
+}
