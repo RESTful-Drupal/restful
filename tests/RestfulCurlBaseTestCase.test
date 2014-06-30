@@ -48,7 +48,7 @@ class RestfulCurlBaseTestCase extends DrupalWebTestCase {
         $curl_options = array(
           CURLOPT_HTTPGET => FALSE,
           CURLOPT_POST => TRUE,
-          CURLOPT_POSTFIELDS => $body,
+          CURLOPT_POSTFIELDS => http_build_query($body),
           CURLOPT_URL => url($url, array('absolute' => TRUE)),
           CURLOPT_NOBODY => FALSE,
           CURLOPT_HTTPHEADER => array('Content-Type: application/' . $format),

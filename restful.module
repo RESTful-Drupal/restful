@@ -453,6 +453,7 @@ function restful_menu_process_callback($major_version, $resource_name) {
       'status' => $e->getCode(),
       'detail' => $e->getDescription(),
       'instance' => $e->getInstance(),
+      'fields' => $e->getFieldErrors(),
     );
   }
   catch (Exception $e) {
@@ -479,21 +480,20 @@ function restful_parse_request() {
   $request = NULL;
   $method = strtolower($_SERVER['REQUEST_METHOD']);
 
-  switch ($method) {
-    case 'get':
-      $request = $_GET;
-      break;
-
-    case 'post':
-      $request = $_POST;
-      break;
-
-    default:
-      if ($query_string = file_get_contents('php://input')) {
-        parse_str($query_string, $request);
-      }
-      break;
+  if ($method == 'get') {
+    $request = $_GET;
   }
+  elseif ($method == 'post') {
+    $request = $_POST;
+  }
+
+  if (!$request && $query_string = file_get_contents('php://input')) {
+    // @todo: When trying to POST using curl on simpleTest it doesn't reach
+    // $_POST, so we try to re-grab it here.
+    parse_str($query_string, $request);
+  }
+
+
   // This flag is used to identify if the request is done "via Drupal" or "via
   // CURL";
   $request['application'] = array('rest_call' => TRUE);
