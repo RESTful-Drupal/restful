@@ -1,0 +1,34 @@
+'use strict';
+
+angular.module('restfulApp')
+  .service('DrupalSettings', function($window) {
+    var self = this;
+
+    /**
+     * Wraps inside AngularJs Drupal settings global object.
+     *
+     * @type {Drupal.settings}
+     */
+    this.settings = $window.Drupal.settings;
+
+
+    /**
+     * Get the base path of the Drupal installation.
+     */
+    this.getBasePath = function() {
+      return (angular.isDefined(self.settings.restfulExample.basePath)) ? self.settings.restfulExample.basePath : undefined;
+    };
+
+    /**
+     * Return the form schema.
+     *
+     * @param int id
+     *   The form ID.
+     *
+     * @returns {*}
+     *   The form schema if exists, or an empty object.
+     */
+    this.getAutoFieldsData = function(id) {
+      return (angular.isDefined(self.settings.restfulExample.autoFieldsData[id])) ? self.settings.restfulExample.autoFieldsData[id] : {};
+    }
+  });

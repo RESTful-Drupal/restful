@@ -1,0 +1,6 @@
+name = RESTful AnguarlJs example
+description = Example module for the RESTful AngularJs module.
+core = 7.x
+dependencies[] = restful
+dependencies[] = entity_validator
+dependencies[] = libraries
