@@ -1077,10 +1077,12 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
 
 
   /**
-   * Allow validating the entity before it is saved.
+   * Validate an entity before it is saved.
    *
    * @param \EntityMetadataWrapper $wrapper
    *   The wrapped entity.
+   *
+   * @throws \RestfulBadRequestException
    */
   public function entityValidate(\EntityMetadataWrapper $wrapper) {
     if (!module_exists('entity_validator')) {
@@ -1116,7 +1118,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
     }
 
     $params['@fields'] = implode(',', $params['@fields']);
-    $e = new \RestfulBadRequestException(format_plural(count($map), 'Invalid value in field @fields', 'Invalid values in fields @fields', $params));
+    $e = new \RestfulBadRequestException(format_plural(count($map), 'Invalid value in field @fields.', 'Invalid values in fields @fields.', $params));
     foreach ($errors as $property_name => $messages) {
       if (empty($map[$property_name])) {
         // Entity is not valid, but on a field not public.
@@ -1134,6 +1136,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
       }
     }
 
+    // Throw the exception.
     throw $e;
   }
 

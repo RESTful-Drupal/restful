@@ -37,6 +37,7 @@ files[] = tests/RestfulCreateNodeTestCase.test
 files[] = tests/RestfulCurlBaseTestCase.test
 files[] = tests/RestfulEntityAndPropertyAccessTestCase.test
 files[] = tests/RestfulEntityUserAccessTestCase.test
+files[] = tests/RestfulEntityValidatorTestCase.test
 files[] = tests/RestfulExceptionHandleTestCase.test
 files[] = tests/RestfulGetHandlersTestCase.test
 files[] = tests/RestfulHookMenuTestCase.test
