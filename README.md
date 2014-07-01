@@ -226,6 +226,10 @@ while other resources can have its cache in MemCached or the database. To
 configure this developers just have to specify the following keys in their
 _restful_ plugin definition.
 
+## Modules integration
+* [Entity validator](https://www.drupal.org/project/entity_validator): Integrate
+with a robust entity validation
+
 ## Credits
 
 * [Gizra](http://gizra.com)
