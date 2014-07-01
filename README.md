@@ -209,7 +209,6 @@ Will result with an HTTP code 400, and the following JSON:
   'title' => 'The sort wrong_key is not allowed for this path.',
   'status' => 400,
   'detail' => 'Bad Request.',
-  'instance' => NULL,
 }
 ```
 

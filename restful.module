@@ -452,9 +452,15 @@ function restful_menu_process_callback($major_version, $resource_name) {
       'title' => $e->getMessage(),
       'status' => $e->getCode(),
       'detail' => $e->getDescription(),
-      'instance' => $e->getInstance(),
-      'fields' => $e->getFieldErrors(),
     );
+
+    if ($instance = $e->getInstance()) {
+      $result['instance'] = $instance;
+    }
+
+    if ($errors = $e->getFieldErrors()) {
+      $result['errors'] = $errors;
+    }
   }
   catch (Exception $e) {
     $result = array(
