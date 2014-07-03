@@ -15,6 +15,13 @@ class RestfulException extends Exception {
   protected $instance = NULL;
 
   /**
+   * Array keyed by the field name, and array of error messages as value.
+   *
+   * @var array
+   */
+  protected $fieldErrors = array();
+
+  /**
    * Gets the description of the exception.
    *
    * @return string
@@ -94,4 +101,22 @@ class RestfulException extends Exception {
     ));
   }
 
+  /**
+   * Return an array with all the errors.
+   */
+  public function getFieldErrors() {
+    return $this->fieldErrors;
+  }
+
+  /**
+   * Add an error per field.
+   *
+   * @param string $field_name
+   *   The field name.
+   * @param string $error_message
+   *   The error message.
+   */
+  public function addFieldError($field_name, $error_message) {
+    $this->fieldErrors[$field_name][] = $error_message;
+  }
 }

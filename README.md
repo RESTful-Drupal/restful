@@ -209,7 +209,6 @@ Will result with an HTTP code 400, and the following JSON:
   'title' => 'The sort wrong_key is not allowed for this path.',
   'status' => 400,
   'detail' => 'Bad Request.',
-  'instance' => NULL,
 }
 ```
 
@@ -226,6 +225,10 @@ for every resource, meaning that very volatile resources can skip cache entirely
 while other resources can have its cache in MemCached or the database. To
 configure this developers just have to specify the following keys in their
 _restful_ plugin definition.
+
+## Modules integration
+* [Entity validator](https://www.drupal.org/project/entity_validator): Integrate
+with a robust entity validation
 
 ## Credits
 
