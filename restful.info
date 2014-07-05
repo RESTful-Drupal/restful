@@ -10,6 +10,7 @@ files[] = plugins/authentication/RestfulAuthenticationInterface.php
 files[] = plugins/authentication/RestfulAuthenticationManager.php
 files[] = plugins/rate_limit/RestfulRateLimitInterface.php
 files[] = plugins/rate_limit/RestfulRateLimitManager.php
+files[] = plugins/restful/RestfulBase.php
 files[] = plugins/restful/RestfulEntityBase.php
 files[] = plugins/restful/RestfulEntityBaseNode.php
 files[] = plugins/restful/RestfulEntityBaseMultipleBundles.php

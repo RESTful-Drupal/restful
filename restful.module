@@ -486,10 +486,10 @@ function restful_parse_request() {
   $request = NULL;
   $method = strtolower($_SERVER['REQUEST_METHOD']);
 
-  if ($method == 'get') {
+  if ($method == \RestfulInterface::GET) {
     $request = $_GET;
   }
-  elseif ($method == 'post') {
+  elseif ($method == \RestfulInterface::POST) {
     $request = $_POST;
   }
 

@@ -9,7 +9,7 @@
 /**
  * An abstract implementation of RestfulEntityInterface.
  */
-abstract class RestfulEntityBase implements RestfulEntityInterface {
+abstract class RestfulEntityBase extends RestfulBase {
 
   /**
    * The entity type.
@@ -78,15 +78,15 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
   protected $controllers = array(
     '' => array(
       // GET returns a list of entities.
-      'get' => 'getList',
+      \RestfulInterface::GET => 'getList',
       // POST
-      'post' => 'createEntity',
+      \RestfulInterface::POST => 'createEntity',
     ),
     '\d+' => array(
-      'get' => 'viewEntity',
-      'put' => 'putEntity',
-      'patch' => 'patchEntity',
-      'delete' => 'deleteEntity',
+      \RestfulInterface::GET => 'viewEntity',
+      \RestfulInterface::PUT => 'putEntity',
+      \RestfulInterface::PATCH => 'patchEntity',
+      \RestfulInterface::DELETE => 'deleteEntity',
     ),
   );
 
@@ -296,7 +296,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *   The return value can depend on the controller for the get method.
    */
   public function get($path = '', $request = NULL) {
-    return $this->process($path, $request, 'get');
+    return $this->process($path, $request, \RestfulInterface::GET);
   }
 
   /**
@@ -311,7 +311,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *   The return value can depend on the controller for the post method.
    */
   public function post($path = '', $request = NULL) {
-    return $this->process($path, $request, 'post');
+    return $this->process($path, $request, \RestfulInterface::POST);
   }
 
   /**
@@ -326,7 +326,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *   The return value can depend on the controller for the put method.
    */
   public function put($path = '', $request = NULL) {
-    return $this->process($path, $request, 'put');
+    return $this->process($path, $request, \RestfulInterface::PUT);
   }
 
   /**
@@ -340,7 +340,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *   The return value can depend on the controller for the patch method.
    */
   public function patch($path = '', $request = NULL) {
-    return $this->process($path, $request, 'patch');
+    return $this->process($path, $request, \RestfulInterface::PATCH);
   }
 
   /**
@@ -355,13 +355,13 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *   The return value can depend on the controller for the delete method.
    */
   public function delete($path = '', $request = NULL) {
-    return $this->process($path, $request, 'delete');
+    return $this->process($path, $request, \RestfulInterface::DELETE);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function process($path = '', $request = NULL, $method = 'get') {
+  public function process($path = '', $request = NULL, $method = \RestfulInterface::GET) {
     $account = $this->getAccount($request);
 
     if (!$method_name = $this->getControllerFromPath($path, $method)) {
