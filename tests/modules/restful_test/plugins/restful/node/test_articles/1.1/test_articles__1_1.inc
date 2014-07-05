@@ -11,6 +11,8 @@ $plugin = array(
   'bundle' => 'article',
   'description' => t('Export the article content type.'),
   'class' => 'RestfulTestArticlesResource__1_1',
-  'cache_render' => TRUE,
+  'cache' => array(
+    'render' => TRUE,
+  ),
   'minor_version' => 1,
 );

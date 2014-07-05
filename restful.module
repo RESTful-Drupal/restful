@@ -47,28 +47,20 @@ function restful_ctools_plugin_directory($module, $plugin) {
  * - hook_menu: Determines if RESTful module should declare the resource in its
  *   pwn hook_menu(). If FALSE, it is up to the implementing module to declare
  *   it. Defaults to TRUE.
- * - cache_render: Set it to FALSE to disable the render cache completely
- *   Defaults to FALSE.
- * - cache_class: The cache class for this resource. Defaults to NULL, which
- *   will probably end up resolving to 'DrupalDatabaseCache'.
- * - cache_bin: The name of the bin. It is the developer's responsibility to
- *   create this bin in the cache backend if it does not exist. Defaults to
- *   'cache_restful'.
- * - cache_expire: TTL for the cache records. See DrupalCacheInterface::set()
- *   for the allowed values. Defaults to CACHE_PERMANENT.
- * - cache_simple_invalidate: Set it to false to prevent the RESTful module to
- *   invalidate any cache it may have been generated. The developer will be
- *   responsible to invalidate caches in this scenario. Defaults to TRUE.
- * - rate_limit: Associative array keyed by event name. Every item contains the
- *   rate limiting options.
- *
- * Properties for the "authentication" plugin type:
- * - description: The description of the authentication provider. Defaults to
- *   empty string.
- * - settings: Array with the settings needed for the plugin. Defaults to empty
- *   array.
- *
- * Properties for every item of the rate_limit:
+ * - cache: Stores the cache settings. An associative array with:
+ *   - render: Set it to FALSE to disable the render cache completely
+ *     Defaults to FALSE.
+ *   - class: The cache class for this resource. Defaults to NULL, which
+ *     will probably end up resolving to 'DrupalDatabaseCache'.
+ *   - bin: The name of the bin. It is the developer's responsibility to
+ *     create this bin in the cache backend if it does not exist. Defaults to
+ *     'cache_restful'.
+ *   - expire: TTL for the cache records. See DrupalCacheInterface::set()
+ *     for the allowed values. Defaults to CACHE_PERMANENT.
+ *   - simple_invalidate: Set it to false to prevent the RESTful module to
+ *     invalidate any cache it may have been generated. The developer will be
+ *     responsible to invalidate caches in this scenario. Defaults to TRUE.
+ * - rate_limit: The configuration array for the rate limits.
  *   - period: A \DateInterval object representing the period on which the rate
  *     limitations apply.
  *   - event: The name of the event to limit as declared in the rate_limit
@@ -87,6 +79,17 @@ function restful_ctools_plugin_directory($module, $plugin) {
  *       ),
  *     ),
  *
+ * Properties for the "authentication" plugin type:
+ * - description: The description of the authentication provider. Defaults to
+ *   empty string.
+ * - settings: Array with the settings needed for the plugin. Defaults to empty
+ *   array.
+ *
+ * Properties for the "rate_limit" plugin type:
+ * - description: The description of the event. Defaults to an empty string.
+ * - name: The name of the event.
+ * - class: Name of the class implementing RestfulRateLimitInterface.
+ *
  */
 function restful_plugin_process(&$plugin, $info) {
   if ($info['type'] == 'restful') {
@@ -100,12 +103,15 @@ function restful_plugin_process(&$plugin, $info) {
       'authentication_types' => array(),
       'authentication_optional' => FALSE,
       'hook_menu' => TRUE,
-      'cache_render' => FALSE,
-      'cache_class' => NULL,
-      'cache_bin' => 'cache_restful',
-      'cache_expire' => CACHE_PERMANENT,
-      'cache_simple_invalidate' => TRUE,
-      'rate_limit' => FALSE,
+      'cache' => array(),
+    );
+
+    $plugin['cache'] += array(
+      'render' => FALSE,
+      'class' => NULL,
+      'bin' => 'cache_restful',
+      'expire' => CACHE_PERMANENT,
+      'simple_invalidate' => TRUE,
     );
 
     if (!empty($plugin['rate_limit'])) {
@@ -243,9 +249,20 @@ function restful_menu() {
     );
   }
 
+  // A special file upload endpoint, that returns a JSON with the newly saved
+  // files.
+  if (variable_get('restful_file_upload', FALSE)) {
+    $items['api/file-upload'] = array(
+      'title' => 'File upload',
+      'access arguments' => array('restful_file_upload_access'),
+      'page callback' => 'restful_menu_process_callback',
+      'page arguments' => array('1', 'files'),
+      'delivery callback' => 'restful_json_output',
+    );
+  }
+
   return $items;
 }
-
 
 /**
  * Return the handler based on major and minor version, and resource name.
@@ -435,8 +452,15 @@ function restful_menu_process_callback($major_version, $resource_name) {
       'title' => $e->getMessage(),
       'status' => $e->getCode(),
       'detail' => $e->getDescription(),
-      'instance' => $e->getInstance(),
     );
+
+    if ($instance = $e->getInstance()) {
+      $result['instance'] = $instance;
+    }
+
+    if ($errors = $e->getFieldErrors()) {
+      $result['errors'] = $errors;
+    }
   }
   catch (Exception $e) {
     $result = array(
@@ -462,21 +486,20 @@ function restful_parse_request() {
   $request = NULL;
   $method = strtolower($_SERVER['REQUEST_METHOD']);
 
-  switch ($method) {
-    case 'get':
-      $request = $_GET;
-      break;
-
-    case 'post':
-      $request = $_POST;
-      break;
-
-    default:
-      if ($query_string = file_get_contents('php://input')) {
-        parse_str($query_string, $request);
-      }
-      break;
+  if ($method == 'get') {
+    $request = $_GET;
   }
+  elseif ($method == 'post') {
+    $request = $_POST;
+  }
+
+  if (!$request && $query_string = file_get_contents('php://input')) {
+    // When trying to POST using curl on simpleTest it doesn't reach
+    // $_POST, so we try to re-grab it here.
+    parse_str($query_string, $request);
+  }
+
+
   // This flag is used to identify if the request is done "via Drupal" or "via
   // CURL";
   $request['application'] = array('rest_call' => TRUE);
@@ -634,4 +657,23 @@ function _restful_invalidate_entity_cache($cid) {
       $handler->cacheInvalidate($version_cid . '::' . $cid);
     }
   }
+}
+
+
+/**
+ * Access callback; Determine if user can access file uploading.
+ *
+ * If "File entity" module exists, determine access by its provided permissions
+ * otherwise, check if variable is set to allow anonymous users to upload.
+ * Defaults to authenticated user.
+ *
+ * @return bool
+ */
+function restful_file_upload_access() {
+  global $user;
+  if (module_exists('file_entity')) {
+    return user_access('bypass file access') || user_access('create files');
+  }
+
+  return variable_get('restful_file_upload_allow_anonymous_user', FALSE) || $user->uid;
 }

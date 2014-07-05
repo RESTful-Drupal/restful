@@ -22,4 +22,18 @@ class RestfulEntityBaseNode extends RestfulEntityBase {
     return $query;
   }
 
+  /**
+   * Overrides RestfulEntityBase::entityPreSave().
+   *
+   * Set the node author and other defaults.
+   */
+  public function entityPreSave($entity, $request, stdClass $account) {
+    if (!empty($entity->nid)) {
+      // Node is already saved.
+      return;
+    }
+    node_object_prepare($entity);
+    $entity->uid = $account->uid;
+  }
+
 }

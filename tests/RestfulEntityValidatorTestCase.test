@@ -1,0 +1,47 @@
+<?php
+
+/**
+ * @file
+ * Contains RestfulEntityValidatorTestCase.
+ */
+
+class RestfulEntityValidatorTestCase extends RestfulCurlBaseTestCase {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Entity validator',
+      'description' => 'Test integration with entity validator module.',
+      'group' => 'Restful',
+      'dependencies' => array('entity_validator'),
+    );
+  }
+
+  function setUp() {
+    parent::setUp('restful_example', 'entity_validator_example');
+  }
+
+  /**
+   * Test entity validator.
+   */
+  function testEntityValidator() {
+    // Allow anonymous user to create article content.
+    user_role_change_permissions(DRUPAL_ANONYMOUS_RID, array('create article content' => TRUE));
+
+    $request = array('label' => 'no');
+    $result = $this->httpRequest('api/v1/articles', 'POST', $request);
+
+    $expected_result = array(
+      'label' => array(
+        'The label should be at least 3 characters long.',
+      ),
+    );
+
+    $body = drupal_json_decode($result['body']);
+    $this->assertEqual($result['code'], 400, 'Too short title caused a "Bad request" error.');
+    $this->assertEqual($body['fields'], $expected_result, 'Correct error message passed in the JSON');
+
+    $request = array('label' => 'yes');
+    $result = $this->httpRequest('api/v1/articles', 'POST', $request);
+    $this->assertEqual($result['code'], 200, 'Entity with proper title length passed validation.');
+  }
+}

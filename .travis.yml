@@ -30,12 +30,15 @@ before_script:
   - cd restful/drupal
   - drush --yes pm-enable restful restful_test
 
+  # Download entity validator.
+  - drush dl entity_validator --dev --yes
+
   # Patch Entity API.
   - curl -O https://www.drupal.org/files/issues/2086225-entity-access-check-node-create-3.patch
   - patch -p1 /home/travis/build/restful/drupal/sites/all/modules/entity/modules/callbacks.inc  < 2086225-entity-access-check-node-create-3.patch
 
-  - curl -O https://www.drupal.org/files/issues/2264079-entity-wrapper-access-single-entity-reference-1.patch
-  - patch -p1 /home/travis/build/restful/drupal/sites/all/modules/entity/includes/entity.wrapper.inc < 2264079-entity-wrapper-access-single-entity-reference-1.patch
+  - curl -O https://www.drupal.org/files/issues/2264079-entity-wrapper-access-single-entity-reference-2.patch
+  - patch -p1 /home/travis/build/restful/drupal/sites/all/modules/entity/includes/entity.wrapper.inc < 2264079-entity-wrapper-access-single-entity-reference-2.patch
 
   # start a web server on port 8080, run in the background; wait for initialization
   - drush runserver 127.0.0.1:8080 &

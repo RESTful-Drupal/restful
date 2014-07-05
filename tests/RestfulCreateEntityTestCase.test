@@ -16,33 +16,104 @@ class RestfulCreateEntityTestCase extends DrupalWebTestCase {
   }
 
   function setUp() {
-    parent::setUp('restful_example');
+    parent::setUp('restful_test', 'entityreference');
+
+    // Add common fields, vocabulary and terms.
+    restful_test_add_fields();
   }
 
   /**
    * Test creating an entity (POST method).
    */
   function testCreateEntity() {
-    $handler = restful_get_restful_handler('articles');
-    $request = array('label' => $this->randomName());
-    $result = $handler->post('', $request);
+    // Create test entities to be referenced.
+    $ids = array();
+    foreach (array(1, 2) as $id) {
+      $entity = entity_create('entity_test', array('name' => 'main'));
+      $entity->save();
+      $ids[] = $entity->pid;
+    }
 
-    $node = node_load($result['id']);
-    $expected_result = array(
-      'id' => $node->nid,
-      'label' => $node->title,
-      'self' => url('node/' . $node->nid, array('absolute' => TRUE)),
+
+    $images =  array();
+    foreach ($this->drupalGetTestFiles('image') as $file) {
+      $file = file_save($file);
+      $images[] = $file->fid;
+    }
+
+    $handler = restful_get_restful_handler('main', 1, 1);
+
+    $query = new EntityFieldQuery();
+    $result = $query
+      ->entityCondition('entity_type', 'taxonomy_term')
+      ->entityCondition('bundle', 'test_vocab')
+      ->execute();
+
+    $tids = array_keys($result['taxonomy_term']);
+
+    $text1 = $this->randomName();
+    $text2 = $this->randomName();
+    $request = array(
+      'text_single' => $text1,
+      'text_multiple' => array($text1, $text2),
+
+      'text_single_processing' => $text1,
+      'text_multiple_processing' => array($text1, $text2),
+
+      'entity_reference_single' => $ids[0],
+      'entity_reference_multiple' => $ids,
+
+      'term_single' => $tids[0],
+      'term_multiple' => array($tids[0], $tids[1]),
+
+      'file_single' => $images[0],
+      'file_multiple' => array($images[0], $images[1]),
+
+      'image_single' => $images[0],
+      'image_multiple' => array($images[0], $images[1]),
     );
 
-    $this->assertEqual($result, $expected_result, 'Entity was created.');
+    $result = $handler->post('', $request);
+
+    $text_single = trim(strip_tags($result['text_single']));
+    $text_multiple = array(
+      trim(strip_tags($result['text_multiple'][0])),
+      trim(strip_tags($result['text_multiple'][1])),
+    );
+
+    $expected_result = $request;
+
+    // Strip some elements, and the text, for easier assertion.
+    $striped_result = $result;
+    unset($striped_result['id']);
+    unset($striped_result['label']);
+    unset($striped_result['self']);
+    unset($striped_result['entity_reference_single_resource']);
+    unset($striped_result['entity_reference_multiple_resource']);
+
+    $striped_result['text_single'] = $text_single;
+    $striped_result['text_multiple'] = $text_multiple;
+
+    $striped_result['text_single_processing'] = $text_single;
+    $striped_result['text_multiple_processing'] = $text_multiple;
+
+    ksort($striped_result);
+    ksort($expected_result);
+    $this->assertEqual($expected_result, $striped_result, 'Entity was created with correct values.');
+
+    $this->assertEqual($result['entity_reference_single_resource']['id'], $ids[0],' Entity reference single resource was created correctly');
+    $this->assertEqual($result['entity_reference_multiple_resource'][0]['id'], $ids[0],' Entity reference multiple resource was created correctly');
 
     // Create an entity with empty request.
     try {
       $handler->post();
       $this->fail('User can create an entity with empty request.');
     }
-    catch (Exception $e) {
+    catch (\RestfulBadRequestException $e) {
       $this->pass('User cannot create an entity with empty request.');
+    }
+    catch (\Exception $e) {
+      $this->fail('Wrong exception thrown when creating an entity with empty request.');
     }
 
     // Create an entity with invalid property name.
@@ -51,8 +122,35 @@ class RestfulCreateEntityTestCase extends DrupalWebTestCase {
       $handler->post('', $request);
       $this->fail('User can create an entity with invalid property name.');
     }
-    catch (Exception $e) {
+    catch (\RestfulBadRequestException $e) {
       $this->pass('User cannot create an entity with invalid property name.');
     }
+    catch (\Exception $e) {
+      $this->fail('Wrong exception thrown when creating an entity with invalid property name.');
+    }
+
+    // Create entity with comma separated multiple entity reference.
+    $request = array('entity_reference_multiple' => implode(',', $ids));
+    $result = $handler->post('', $request);
+    $this->assertEqual($result['entity_reference_multiple'], $ids, 'Created entity with comma separated multiple entity reference.');
+
+    // Create entity with comma separated multiple taxonomy term reference.
+    $ids = array($tids[0], $tids[1]);
+    $request = array('term_multiple' => implode(',', $ids));
+    $result = $handler->post('', $request);
+    $this->assertEqual($result['term_multiple'], $ids, 'Created entity with comma separated multiple taxonomy term reference.');
+
+    // Create entity with comma separated multiple file reference.
+    $ids = array($images[0], $images[1]);
+    $request = array('file_multiple' => implode(',', $ids));
+    $result = $handler->post('', $request);
+    $this->assertEqual($result['file_multiple'], $ids, 'Created entity with comma separated multiple file reference.');
+
+    // Create entity with comma separated multiple image reference.
+    $ids = array($images[0], $images[1]);
+    $request = array('image_multiple' => implode(',', $ids));
+    $result = $handler->post('', $request);
+    $this->assertEqual($result['image_multiple'], $ids, 'Created entity with comma separated multiple image reference.');
+
   }
 }
