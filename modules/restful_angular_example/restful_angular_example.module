@@ -98,7 +98,7 @@ function restful_angular_example_form() {
             'attr' => array(
               'ngMinlength' => 3,
               'required' => TRUE,
-              'size' => 150,
+              'cols' => 60,
             ),
             'msgs' => array(
               'minlength' =>  t('Needs to have at least 3 characters'),
