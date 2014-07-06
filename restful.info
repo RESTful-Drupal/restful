@@ -34,6 +34,7 @@ files[] = exceptions/RestfulUnprocessableEntityException.php
 files[] = tests/RestfulAuthenticationTestCase.test
 files[] = tests/RestfulCreateEntityTestCase.test
 files[] = tests/RestfulCreateNodeTestCase.test
+files[] = tests/RestfulCsrfTokenTestCase.test
 files[] = tests/RestfulCurlBaseTestCase.test
 files[] = tests/RestfulEntityAndPropertyAccessTestCase.test
 files[] = tests/RestfulEntityUserAccessTestCase.test

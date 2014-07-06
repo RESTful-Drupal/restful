@@ -8,4 +8,6 @@ $plugin = array(
   'bundle' => 'article',
   'description' => t('Export the article content type with "cookie" authentication.'),
   'class' => 'RestfulExampleArticlesResource',
+  'authentication_types' => TRUE,
+  'authentication_optional' => TRUE,
 );
