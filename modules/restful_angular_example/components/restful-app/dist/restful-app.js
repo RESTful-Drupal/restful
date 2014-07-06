@@ -1,6 +1,6 @@
 /**
  * restful-app
- * @version v0.0.1 - 2014-07-03
+ * @version v0.0.1 - 2014-07-06
  * @link 
  * @author  <>
  * @license MIT License, http://www.opensource.org/licenses/MIT
@@ -99,7 +99,11 @@ angular.module('restfulApp').service('ArticlesResource', [
      *   JSON of the newley created article.
      */
     this.createArticle = function (data) {
-      var config = { withCredentials: true };
+      var config = {
+          withCredentials: true,
+          headers: { 'X-CSRF-Token': DrupalSettings.getCsrfToken() }
+        };
+      console.log(DrupalSettings.getCsrfToken());
       return $http.post(DrupalSettings.getBasePath() + 'api/v1/articles', data, config);
     };
   }
@@ -120,6 +124,12 @@ angular.module('restfulApp').service('DrupalSettings', [
      */
     this.getBasePath = function () {
       return angular.isDefined(self.settings.restfulExample.basePath) ? self.settings.restfulExample.basePath : undefined;
+    };
+    /**
+     * Get the base path of the Drupal installation.
+     */
+    this.getCsrfToken = function () {
+      return angular.isDefined(self.settings.restfulExample.csrfToken) ? self.settings.restfulExample.csrfToken : undefined;
     };
     /**
      * Return the form schema.

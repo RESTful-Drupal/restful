@@ -20,6 +20,13 @@ angular.module('restfulApp')
     };
 
     /**
+     * Get the base path of the Drupal installation.
+     */
+    this.getCsrfToken = function() {
+      return (angular.isDefined(self.settings.restfulExample.csrfToken)) ? self.settings.restfulExample.csrfToken : undefined;
+    };
+
+    /**
      * Return the form schema.
      *
      * @param int id

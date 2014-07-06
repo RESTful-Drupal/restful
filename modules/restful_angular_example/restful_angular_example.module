@@ -67,6 +67,7 @@ function restful_angular_example_form() {
   // Pass info via Drupal.settings.
   $settings['restfulExample'] = array(
     'basePath' => url('', array('absolute' => TRUE)),
+    'csrfToken' => drupal_get_token('rest'),
     'autoFieldsData' => array(
       // Form ID.
       'article' => array(

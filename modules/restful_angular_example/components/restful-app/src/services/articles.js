@@ -13,7 +13,14 @@ angular.module('restfulApp')
      *   JSON of the newley created article.
      */
     this.createArticle = function(data) {
-      var config = {withCredentials: true};
+      var config = {
+        withCredentials: true,
+        headers: {
+          "X-CSRF-Token": DrupalSettings.getCsrfToken()
+        }
+      };
+
+      console.log(DrupalSettings.getCsrfToken());
 
       return $http.post(DrupalSettings.getBasePath() + 'api/v1/articles', data, config);
     }
