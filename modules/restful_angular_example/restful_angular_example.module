@@ -73,7 +73,7 @@ function restful_angular_example_form() {
       'article' => array(
         // @todo: Build the schema based on the field and instance settings.
         'schema' => array(
-          array(
+          'label' => array(
             'property' =>  'label',
             'label' => 'Title',
             'placeholder' => t('See how many characters are needed to validate...'),
@@ -84,6 +84,21 @@ function restful_angular_example_form() {
               // 'ngMinlength' => 3,
               'required' => TRUE,
               'size' => 60,
+            ),
+            'msgs' => array(
+              'minlength' =>  t('Needs to have at least 3 characters'),
+            ),
+          ),
+
+          'body' => array(
+            'property' =>  'body',
+            'label' => 'Description',
+            'placeholder' => t('Type some description. See which word is required...'),
+            'type' => 'textarea',
+            'attr' => array(
+              'ngMinlength' => 3,
+              'required' => TRUE,
+              'size' => 150,
             ),
             'msgs' => array(
               'minlength' =>  t('Needs to have at least 3 characters'),
