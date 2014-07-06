@@ -13,7 +13,8 @@
     </div>
 
     <input ng-show="!dropSupported" type="file" ng-file-select="onFileSelect($files)" >
-    <div ng-file-drop="onFileSelect($files)" ng-show="dropSupported">drop files here</div>
+
+    <div ng-show="dropSupported" class="drop-box" ng-file-drop="onFileSelect($files);" ng-file-drop-available="dropSupported=true">or drop files here</div>
 
     <div class="actions">
       <button type="submit" class="btn btn-default btn-lg btn-block" ng-class="{'btn-primary':<?php print $data; ?>.$valid}" tabindex="100">Submit</button>
