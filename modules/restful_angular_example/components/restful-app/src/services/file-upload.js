@@ -13,12 +13,14 @@ angular.module('restfulApp')
      *   The uplaoded file JSON.
      */
     this.upload = function(file) {
-      $log.log(file);
       return $upload.upload({
-        url: DrupalSettings.getBasePath() + '/api/file-upload',
+        url: DrupalSettings.getBasePath() + 'api/file-upload',
         method: 'POST',
         file: file,
-        withCredentials:  true
+        withCredentials:  true,
+        headers: {
+          "X-CSRF-Token": DrupalSettings.getCsrfToken()
+        }
       });
     };
 

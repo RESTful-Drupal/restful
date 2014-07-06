@@ -80,13 +80,12 @@ angular.module('restfulApp').controller('MainCtrl', [
       $log.log();
     };
     $scope.onFileSelect = function ($files) {
-      $log.log($files);
-      return;
       //$files: an array of files selected, each file has name, size, and type.
       for (var i = 0; i < $files.length; i++) {
         var file = $files[i];
         FileUpload.upload(file).then(function (data) {
-          $log.log(data);
+          $scope.file = data.data.list[0].id;
+          $scope.serverSide.file = data.data.list[0];
         });
       }
     };
@@ -169,12 +168,12 @@ angular.module('restfulApp').service('FileUpload', [
      *   The uplaoded file JSON.
      */
     this.upload = function (file) {
-      $log.log(file);
       return $upload.upload({
-        url: DrupalSettings.getBasePath() + '/api/file-upload',
+        url: DrupalSettings.getBasePath() + 'api/file-upload',
         method: 'POST',
         file: file,
-        withCredentials: true
+        withCredentials: true,
+        headers: { 'X-CSRF-Token': DrupalSettings.getCsrfToken() }
       });
     };
   }

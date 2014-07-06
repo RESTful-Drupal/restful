@@ -39,13 +39,12 @@ angular.module('restfulApp')
     };
 
     $scope.onFileSelect = function($files) {
-      $log.log($files);
-      return;
       //$files: an array of files selected, each file has name, size, and type.
       for (var i = 0; i < $files.length; i++) {
         var file = $files[i];
         FileUpload.upload(file).then(function(data) {
-          $log.log(data);
+          $scope.file = data.data.list[0].id;
+          $scope.serverSide.file = data.data.list[0];
         });
       }
     };

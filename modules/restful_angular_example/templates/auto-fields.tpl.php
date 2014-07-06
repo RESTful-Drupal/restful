@@ -22,7 +22,7 @@
 
   <h2>Console (Server side)</h2>
 
-  <div ng-show="serverSide.status">
+  <div ng-show="serverSide">
     <div>
       Status: {{ serverSide.status }}
     </div>
@@ -30,8 +30,12 @@
       Data: {{ serverSide.data }}
     </div>
 
+    <div>
+      File: {{ serverSide.file.id }} <a ng-href="{{ serverSide.file.self }}" target="_blank">{{ serverSide.file.label }}</a>
+    </div>
+
     <div ng-show="serverSide.status == 200">
-      New article: <a ng-href="{{ serverSide.data.self }}">{{ serverSide.data.label }}</a>
+      New article: <a ng-href="{{ serverSide.data.self }}" target="_blank">{{ serverSide.data.label }}</a>
     </div>
   </div>
 </div>
