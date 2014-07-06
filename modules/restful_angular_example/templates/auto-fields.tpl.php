@@ -7,13 +7,9 @@
     <button type="submit" class="btn btn-default btn-lg btn-block" ng-class="{'btn-primary':<?php print $data; ?>.$valid}" tabindex="100">Submit</button>
   </form>
 
-  <h2>Console</h2>
-  <div>
-    <h3>Client side</h3>
-  </div>
+  <h2>Console (Server side)</h2>
 
   <div ng-show="serverSide.status">
-    <h3>Server side</h3>
     <div>
       Status: {{ serverSide.status }}
     </div>

@@ -92,7 +92,7 @@ function restful_angular_example_form() {
         ),
         // Setting the default values of the form.
         'data' => array(
-          'label' => 'as',
+          'label' => 'no',
         ),
         // Allow passing values to Angular auto fields.
         'options' => array(),
