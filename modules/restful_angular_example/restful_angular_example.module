@@ -104,6 +104,13 @@ function restful_angular_example_form() {
               'minlength' =>  t('Needs to have at least 3 characters'),
             ),
           ),
+
+          'file' => array(
+            'property' =>  'file',
+            'label' => 'File',
+            'type' => 'file',
+            'attr' => array(),
+          )
         ),
         // Setting the default values of the form.
         'data' => array(

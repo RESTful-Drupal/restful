@@ -50,6 +50,17 @@ angular.module('restfulApp', [
       return result;
     }];
 });
+angular.module('restfulApp').config([
+  '$autofieldsProvider',
+  function ($autofieldsProvider) {
+    // Add file upload field handler.
+    $autofieldsProvider.registerHandler('file', function (directive, field, index) {
+      var inputAttrs = { ngFileSelect: 'onFileSelect($file)' };
+      var fieldElements = $autofieldsProvider.field(directive, field, '<input/>', inputAttrs);
+      return fieldElements.fieldContainer;
+    });
+  }
+]);
 'use strict';
 angular.module('restfulApp').controller('MainCtrl', [
   '$scope',
