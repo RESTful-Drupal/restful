@@ -9,7 +9,7 @@ class RestfulAuthenticationToken extends \RestfulAuthenticationBase {
   /**
    * {@inheritdoc}
    */
-  public function applies($request = NULL) {
+  public function applies($request = NULL, $method = 'get') {
     $key_name = !empty($this->plugin['options']['param_name']) ? $this->plugin['options']['param_name'] : 'access_token';
     return !empty($request[$key_name]);
   }
@@ -17,7 +17,7 @@ class RestfulAuthenticationToken extends \RestfulAuthenticationBase {
   /**
    * {@inheritdoc}
    */
-  public function authenticate($request = array()) {
+  public function authenticate($request = NULL, $method = 'get') {
     $key_name = !empty($this->plugin['options']['param_name']) ? $this->plugin['options']['param_name'] : 'access_token';
 
     // Check if there is a token that did not expire yet.
