@@ -20,8 +20,6 @@ angular.module('restfulApp')
         }
       };
 
-      console.log(DrupalSettings.getCsrfToken());
-
       return $http.post(DrupalSettings.getBasePath() + 'api/v1/articles', data, config);
     }
   });

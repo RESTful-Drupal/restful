@@ -1,9 +1,7 @@
 'use strict';
 
 angular.module('restfulApp', [
-    'angularFileUpload',
-    'autofields',
-    'ngResource'
+    'angularFileUpload'
   ], function($httpProvider) {
 
     // Use x-www-form-urlencoded Content-Type
@@ -52,19 +50,3 @@ angular.module('restfulApp', [
       return result;
     }];
 });
-
-angular.module('restfulApp')
-  .config(['$autofieldsProvider', function($autofieldsProvider) {
-
-    // Add file upload field handler.
-    $autofieldsProvider.registerHandler('file', function(directive, field, index){
-
-      var inputAttrs = {
-        ngFileSelect: 'onFileSelect($file)'
-      };
-
-      var fieldElements = $autofieldsProvider.field(directive, field, '<input/>', inputAttrs);
-
-      return fieldElements.fieldContainer;
-    });
-  }]);

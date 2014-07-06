@@ -52,14 +52,10 @@ function restful_angular_example_form() {
   $bower_path = drupal_get_path('module', 'restful_angular_example') . '/components/restful-app/bower_components';
 
   // Load the libraries.
-  drupal_add_js($bower_path . '/angular/angular.js');
-  drupal_add_js($bower_path . '/angular-resource/angular-resource.js');
-
-  drupal_add_js($bower_path . '/danialfarid-angular-file-upload/dist/angular-file-upload.min.js');
-  drupal_add_js($bower_path . '/danialfarid-angular-file-upload/dist/angular-file-upload-html5-shim.min.js');
   drupal_add_js($bower_path . '/danialfarid-angular-file-upload/dist/angular-file-upload-shim.min.js');
+  drupal_add_js($bower_path . '/angular/angular.js');
+  drupal_add_js($bower_path . '/danialfarid-angular-file-upload/dist/angular-file-upload.min.js');
 
-  drupal_add_js($bower_path . '/angular-autoFields-bootstrap/autofields.js');
 
   // Load our custom app.
   drupal_add_js(drupal_get_path('module', 'restful_angular_example') . '/components/restful-app/dist/restful-app.js');
@@ -68,56 +64,9 @@ function restful_angular_example_form() {
   $settings['restfulExample'] = array(
     'basePath' => url('', array('absolute' => TRUE)),
     'csrfToken' => drupal_get_token('rest'),
-    'autoFieldsData' => array(
-      // Form ID.
+    'data' => array(
       'article' => array(
-        // @todo: Build the schema based on the field and instance settings.
-        'schema' => array(
-          'label' => array(
-            'property' =>  'label',
-            'label' => 'Title',
-            'placeholder' => t('See how many characters are needed to validate...'),
-            'type' => 'text',
-            'attr' => array(
-              // We don't pass ngMinlength to the client side, so the server
-              // side could validate an invalid title.
-              // 'ngMinlength' => 3,
-              'required' => TRUE,
-              'size' => 60,
-            ),
-            'msgs' => array(
-              'minlength' =>  t('Needs to have at least 3 characters'),
-            ),
-          ),
-
-          'body' => array(
-            'property' =>  'body',
-            'label' => 'Description',
-            'placeholder' => t('Type some description. See which word is required...'),
-            'type' => 'textarea',
-            'attr' => array(
-              'ngMinlength' => 3,
-              'required' => TRUE,
-              'cols' => 60,
-            ),
-            'msgs' => array(
-              'minlength' =>  t('Needs to have at least 3 characters'),
-            ),
-          ),
-
-          'file' => array(
-            'property' =>  'file',
-            'label' => 'File',
-            'type' => 'file',
-            'attr' => array(),
-          )
-        ),
-        // Setting the default values of the form.
-        'data' => array(
-          'label' => 'no',
-        ),
-        // Allow passing values to Angular auto fields.
-        'options' => array(),
+        'label' => 'no',
       ),
     ),
   );

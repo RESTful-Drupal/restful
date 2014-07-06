@@ -6,11 +6,7 @@
  * @license MIT License, http://www.opensource.org/licenses/MIT
  */
 'use strict';
-angular.module('restfulApp', [
-  'angularFileUpload',
-  'autofields',
-  'ngResource'
-], function ($httpProvider) {
+angular.module('restfulApp', ['angularFileUpload'], function ($httpProvider) {
   // Use x-www-form-urlencoded Content-Type
   $httpProvider.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded;charset=utf-8';
   /**
@@ -50,29 +46,20 @@ angular.module('restfulApp', [
       return result;
     }];
 });
-angular.module('restfulApp').config([
-  '$autofieldsProvider',
-  function ($autofieldsProvider) {
-    // Add file upload field handler.
-    $autofieldsProvider.registerHandler('file', function (directive, field, index) {
-      var inputAttrs = { ngFileSelect: 'onFileSelect($file)' };
-      var fieldElements = $autofieldsProvider.field(directive, field, '<input/>', inputAttrs);
-      return fieldElements.fieldContainer;
-    });
-  }
-]);
 'use strict';
 angular.module('restfulApp').controller('MainCtrl', [
   '$scope',
   'DrupalSettings',
   'ArticlesResource',
+  'FileUpload',
   '$log',
-  function ($scope, DrupalSettings, ArticlesResource, $log) {
-    var autoFieldsData = DrupalSettings.getAutoFieldsData('article');
+  function ($scope, DrupalSettings, ArticlesResource, FileUpload, $log) {
+    var autoFieldsData = DrupalSettings.getData('article');
     $scope.serverSide = {};
-    $scope.schema = autoFieldsData.schema;
     $scope.data = autoFieldsData.data;
-    $scope.options = autoFieldsData.options;
+    /**
+     * Submit form (even if not valildated via client).
+     */
     $scope.submitForm = function () {
       if (!$scope.article.$valid) {
         $log.info('not valid, but checking server side');
@@ -91,6 +78,17 @@ angular.module('restfulApp').controller('MainCtrl', [
       });
       ;
       $log.log();
+    };
+    $scope.onFileSelect = function ($files) {
+      $log.log($files);
+      return;
+      //$files: an array of files selected, each file has name, size, and type.
+      for (var i = 0; i < $files.length; i++) {
+        var file = $files[i];
+        FileUpload.upload(file).then(function (data) {
+          $log.log(data);
+        });
+      }
     };
   }
 ]);
@@ -114,7 +112,6 @@ angular.module('restfulApp').service('ArticlesResource', [
           withCredentials: true,
           headers: { 'X-CSRF-Token': DrupalSettings.getCsrfToken() }
         };
-      console.log(DrupalSettings.getCsrfToken());
       return $http.post(DrupalSettings.getBasePath() + 'api/v1/articles', data, config);
     };
   }
@@ -151,8 +148,34 @@ angular.module('restfulApp').service('DrupalSettings', [
      * @returns {*}
      *   The form schema if exists, or an empty object.
      */
-    this.getAutoFieldsData = function (id) {
-      return angular.isDefined(self.settings.restfulExample.autoFieldsData[id]) ? self.settings.restfulExample.autoFieldsData[id] : {};
+    this.getData = function (id) {
+      return angular.isDefined(self.settings.restfulExample.data[id]) ? self.settings.restfulExample.data[id] : {};
+    };
+  }
+]);
+'use strict';
+angular.module('restfulApp').service('FileUpload', [
+  'DrupalSettings',
+  '$upload',
+  '$log',
+  function (DrupalSettings, $upload, $log) {
+    /**
+     * Upload file.
+     *
+     * @param file
+     *   The file to upload.
+     *
+     * @returns {*}
+     *   The uplaoded file JSON.
+     */
+    this.upload = function (file) {
+      $log.log(file);
+      return $upload.upload({
+        url: DrupalSettings.getBasePath() + '/api/file-upload',
+        method: 'POST',
+        file: file,
+        withCredentials: true
+      });
     };
   }
 ]);

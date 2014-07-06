@@ -19,9 +19,7 @@
   ],
   "dependencies": {
     "angular": "~1.2.18",
-    "danialfarid-angular-file-upload": "~1.4.0",
-    "angular-autoFields-bootstrap": "~2.1.2",
-    "angular-resource": "~1.2.19"
+    "danialfarid-angular-file-upload": "~1.4.0"
   },
   "devDependencies": {
     "angular-mocks": "~1.2.18"

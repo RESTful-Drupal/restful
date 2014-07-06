@@ -1,16 +1,17 @@
 'use strict';
 
 angular.module('restfulApp')
-  .controller('MainCtrl', function($scope, DrupalSettings, ArticlesResource, $log) {
-    var autoFieldsData = DrupalSettings.getAutoFieldsData('article');
+  .controller('MainCtrl', function($scope, DrupalSettings, ArticlesResource, FileUpload, $log) {
+    var autoFieldsData = DrupalSettings.getData('article');
 
     $scope.serverSide = {};
 
-    $scope.schema = autoFieldsData.schema;
     $scope.data = autoFieldsData.data;
-    $scope.options = autoFieldsData.options;
 
 
+    /**
+     * Submit form (even if not valildated via client).
+     */
     $scope.submitForm = function(){
       if(!$scope.article.$valid) {
         $log.info('not valid, but checking server side');
@@ -35,5 +36,18 @@ angular.module('restfulApp')
       ;
 
       $log.log();
-    }
+    };
+
+    $scope.onFileSelect = function($files) {
+      $log.log($files);
+      return;
+      //$files: an array of files selected, each file has name, size, and type.
+      for (var i = 0; i < $files.length; i++) {
+        var file = $files[i];
+        FileUpload.upload(file).then(function(data) {
+          $log.log(data);
+        });
+      }
+    };
+
   });

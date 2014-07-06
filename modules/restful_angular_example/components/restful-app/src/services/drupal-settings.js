@@ -35,7 +35,7 @@ angular.module('restfulApp')
      * @returns {*}
      *   The form schema if exists, or an empty object.
      */
-    this.getAutoFieldsData = function(id) {
-      return (angular.isDefined(self.settings.restfulExample.autoFieldsData[id])) ? self.settings.restfulExample.autoFieldsData[id] : {};
+    this.getData = function(id) {
+      return (angular.isDefined(self.settings.restfulExample.data[id])) ? self.settings.restfulExample.data[id] : {};
     }
   });
