@@ -31,7 +31,7 @@
     </div>
 
     <div>
-      File: {{ serverSide.file.id }} <a ng-href="{{ serverSide.file.self }}" target="_blank">{{ serverSide.file.label }}</a>
+      File ID: {{ serverSide.image.id }} <a ng-href="{{ serverSide.image.self }}" target="_blank">{{ serverSide.image.label }}</a>
     </div>
 
     <div ng-show="serverSide.status == 200">

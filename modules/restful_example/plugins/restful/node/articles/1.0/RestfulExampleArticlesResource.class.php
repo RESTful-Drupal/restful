@@ -18,6 +18,10 @@ class RestfulExampleArticlesResource extends RestfulEntityBaseNode {
       'sub_property' => 'value',
     );
 
+    $public_fields['image'] = array(
+      'property' => 'field_image',
+    );
+
     return $public_fields;
   }
 }

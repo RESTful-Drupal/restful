@@ -2,11 +2,8 @@
 
 angular.module('restfulApp')
   .controller('MainCtrl', function($scope, DrupalSettings, ArticlesResource, FileUpload, $log) {
-    var autoFieldsData = DrupalSettings.getData('article');
-
+    $scope.data = DrupalSettings.getData('article');
     $scope.serverSide = {};
-
-    $scope.data = autoFieldsData.data;
 
 
     /**
@@ -43,8 +40,8 @@ angular.module('restfulApp')
       for (var i = 0; i < $files.length; i++) {
         var file = $files[i];
         FileUpload.upload(file).then(function(data) {
-          $scope.file = data.data.list[0].id;
-          $scope.serverSide.file = data.data.list[0];
+          $scope.data.image = data.data.list[0].id;
+          $scope.serverSide.image = data.data.list[0];
         });
       }
     };
