@@ -56,7 +56,6 @@ function restful_angular_example_form() {
   drupal_add_js($bower_path . '/angular/angular.js');
   drupal_add_js($bower_path . '/danialfarid-angular-file-upload/dist/angular-file-upload.min.js');
 
-
   // Load our custom app.
   drupal_add_js(drupal_get_path('module', 'restful_angular_example') . '/components/restful-app/dist/restful-app.js');
 

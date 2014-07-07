@@ -1,6 +1,6 @@
 /**
  * restful-app
- * @version v0.0.1 - 2014-07-06
+ * @version v0.0.1 - 2014-07-07
  * @link 
  * @author  <>
  * @license MIT License, http://www.opensource.org/licenses/MIT
@@ -42,7 +42,6 @@ angular.module('restfulApp', ['angularFileUpload'], function ($httpProvider) {
   // Override $http service's default transformRequest
   $httpProvider.defaults.transformRequest = [function (data) {
       var result = angular.isObject(data) && String(data) !== '[object File]' ? param(data) : data;
-      console.log(data);
       return result;
     }];
 });
