@@ -12,8 +12,7 @@
       <textarea id="body" name="body" type="textarea" ng-model="data.body" placeholder="Type some description. See which word is required..." rows="3" ng-minlength="3" ng-required="required" cols="60"></textarea>
     </div>
 
-    <input ng-show="!dropSupported" type="file" ng-file-select="onFileSelect($files)" >
-
+    <input type="file" ng-file-select="onFileSelect($files)" >
     <div ng-show="dropSupported" class="drop-box" ng-file-drop="onFileSelect($files);" ng-file-drop-available="dropSupported=true">or drop files here</div>
 
     <div class="actions">
