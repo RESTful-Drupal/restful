@@ -32,7 +32,7 @@ abstract class RestfulAuthenticationBase implements RestfulAuthenticationInterfa
   /**
    * {@inheritdoc}
    */
-  public function applies($request = NULL) {
+  public function applies($request = NULL, $method = 'get') {
     // By default assume that the request can be checked for authentication.
     return TRUE;
   }

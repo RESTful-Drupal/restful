@@ -362,7 +362,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    * {@inheritdoc}
    */
   public function process($path = '', $request = NULL, $method = 'get') {
-    $account = $this->getAccount($request);
+    $account = $this->getAccount($request, $method);
 
     if (!$method_name = $this->getControllerFromPath($path, $method)) {
       throw new RestfulBadRequestException('Path does not exist');
@@ -372,9 +372,6 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
       // This will throw the appropriate exception if needed.
       $this->getRateLimitManager()->checkRateLimit($request);
     }
-
-    // Remove the application property from the request.
-    static::cleanRequest($request);
 
     if (!$path) {
       // If $path is empty we don't need to pass it along.
@@ -771,7 +768,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
   }
 
   /**
-   * Update an entity using Patch.
+   * Update an entity using PATCH.
    *
    * Non existing properties are skipped.
    *
@@ -788,6 +785,28 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    */
   public function patchEntity($entity_id, $request, $account) {
     return $this->updateEntity($entity_id, $request, $account, FALSE);
+  }
+
+  /**
+   * Delete an entity using DELETE.
+   *
+   * No result is returned, just the HTTP header is set to 204.
+   *
+   * @param $entity_id
+   *   The entity ID.
+   * @param $request
+   *   The request array.
+   * @param $account
+   *   The user object.
+   */
+  public function deleteEntity($entity_id, $request, $account) {
+    $this->isValidEntity('update', $entity_id, $account);
+
+    $wrapper = entity_metadata_wrapper($this->entityType, $entity_id);
+    $wrapper->delete();
+
+    // Set the HTTP headers.
+    $this->setHttpHeaders('Status', 204);
   }
 
   /**
@@ -813,7 +832,6 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
 
     $wrapper = entity_metadata_wrapper($this->entityType, $entity_id);
 
-    static::cleanRequest($request);
     $this->setPropertyValues($wrapper, $request, $account, $null_missing_fields);
 
     // Set the HTTP headers.
@@ -877,6 +895,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    * @throws RestfulBadRequestException
    */
   protected function setPropertyValues(EntityMetadataWrapper $wrapper, $request, stdClass $account, $null_missing_fields = FALSE) {
+    static::cleanRequest($request);
     $save = FALSE;
     $original_request = $request;
 
@@ -1281,12 +1300,14 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *
    * @param $request
    *   The request.
+   * @param string $method
+   *   The HTTP method. Defaults to "get".
    *
    * @return \stdClass
    *   The user object.
    */
-  public function getAccount($request = NULL) {
-    $account = $this->getAuthenticationManager()->getAccount($request);
+  public function getAccount($request = NULL, $method = 'get') {
+    $account = $this->getAuthenticationManager()->getAccount($request, $method);
 
     // If the limit rate is enabled for the current plugin then set the account.
     if ($this->getRateLimitManager()) {
@@ -1352,7 +1373,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
    *   The request array to be modified.
    */
   public static function cleanRequest(&$request) {
-    unset($request['application']);
+    unset($request['__application']);
   }
 
   /**
@@ -1465,7 +1486,7 @@ abstract class RestfulEntityBase implements RestfulEntityInterface {
     foreach ($request as $param => $value) {
       // Some request parameters don't affect how the entity is rendered, this
       // means that we should skip them for the cache ID generation.
-      if (in_array($param, array('page', 'sort', 'q', 'application'))) {
+      if (in_array($param, array('page', 'sort', 'q', '__application'))) {
         continue;
       }
       // Make sure that ?fields=title,id and ?fields=id,title hit the same cache
