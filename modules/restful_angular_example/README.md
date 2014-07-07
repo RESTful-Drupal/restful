@@ -14,4 +14,5 @@ cd components/restful-app
 npm install
 bower install
 ```
+
 3. As logged in user navigate to ``restful-example/form``
