@@ -19,19 +19,15 @@ class RestfulCurlBaseTestCase extends DrupalWebTestCase {
    *   Either the body for POST and PUT or additional URL parameters for GET.
    * @param array $headers
    *   Additional HTTP header parameters.
-   * @param stdClass $account
-   *   Optional user account.
+   * @param bool $use_token
+   *   Determines if a CSRF token should be retrieved by default for write
+   *   operations for logged in users. Defaults to TRUE.
    *
    * @return array
    *   Array keyed with the "code", "headers", and "body" of the response.
    */
-  protected function httpRequest($url, $method = 'GET', $body = NULL, $headers = array(), $account = NULL) {
+  protected function httpRequest($url, $method = 'GET', $body = NULL, $headers = array(), $use_token = TRUE) {
     $format = 'json';
-
-    if (isset($account)) {
-      unset($this->curlHandle);
-      $this->drupalLogin($account);
-    }
 
     switch ($method) {
       case 'GET':
@@ -78,8 +74,17 @@ class RestfulCurlBaseTestCase extends DrupalWebTestCase {
         break;
     }
 
+    $curl_options += array(CURLOPT_HTTPHEADER => array());
+
+    if ($this->loggedInUser && !in_array($method, array('GET', 'OPTIONS', 'HEAD', 'TRACE')) && $use_token) {
+      // Add CSRF token for write operations.
+      $result = $this->drupalGet('api/session/token');
+      $result = drupal_json_decode($result);
+      $curl_options[CURLOPT_HTTPHEADER][] = 'X-CSRF-Token: ' . $result['X-CSRF-Token'];
+    }
+
     if ($headers) {
-      $curl_options[CURLOPT_HTTPHEADER] = $headers;
+      $curl_options[CURLOPT_HTTPHEADER] = array_merge($curl_options[CURLOPT_HTTPHEADER], $headers);
     }
 
     $response = $this->curlExec($curl_options);

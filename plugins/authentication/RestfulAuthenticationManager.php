@@ -60,11 +60,13 @@ class RestfulAuthenticationManager extends \ArrayObject {
    *
    * @param $request
    *   The request.
+   * @param string $method
+   *   The HTTP method.
    *
    * @return \stdClass
    *   The user object.
    */
-  public function getAccount($request = NULL) {
+  public function getAccount($request = NULL, $method = 'get') {
     global $user;
     // Return the previously resolved user, if any.
     if (!empty($this->account)) {
@@ -73,7 +75,7 @@ class RestfulAuthenticationManager extends \ArrayObject {
     // Resolve the user based on the providers in the manager.
     $account = NULL;
     foreach ($this as $provider) {
-      if ($provider->applies($request) && $account = $provider->authenticate($request)) {
+      if ($provider->applies($request, $method) && $account = $provider->authenticate($request, $method)) {
         // The account has been loaded, we can stop looking.
         break;
       }
@@ -90,7 +92,7 @@ class RestfulAuthenticationManager extends \ArrayObject {
       // Most of the cases the cookie provider will do this for us.
       $account = drupal_anonymous_user();
 
-      if (empty($request['application']['rest_call'])) {
+      if (empty($request['__application']['rest_call'])) {
         // If we are using the API from within Drupal and we have not tried to
         // authenticate using the 'cookie' provider, then we expect to be logged
         // in using the cookie authentication as a last resort.

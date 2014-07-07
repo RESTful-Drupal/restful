@@ -24,7 +24,7 @@ function restful_ctools_plugin_directory($module, $plugin) {
  *   "articles" resource will result with "api/v2/articles" as the URL. Defaults
  *   to 1.
  * - minor_version: The minor version of the resource. Setting the minor version
- *   via CURL is done by setting HTTP_RESTFUL_MINOR_VERSION in the HTTP headers.
+ *   via CURL is done by setting HTTP_X_RESTFUL_MINOR_VERSION in the HTTP headers.
  *   Defaults to 0.
  * - options: Array of options needed for the plugin. See
  *   "per_role_content__1_0.inc" in RESTful example module. Defaults to empty
@@ -261,6 +261,13 @@ function restful_menu() {
     );
   }
 
+  $items['api/session/token'] = array(
+    'page callback' => 'restful_csrf_session_token',
+    'access callback' => 'user_is_logged_in',
+    'delivery callback' => 'restful_json_output',
+    'type' => MENU_CALLBACK,
+  );
+
   return $items;
 }
 
@@ -399,7 +406,7 @@ function restful_menu_access_callback($major_version, $resource_name) {
     return;
   }
 
-  $minor_version = !empty($_SERVER['HTTP_RESTFUL_MINOR_VERSION']) && is_int($_SERVER['HTTP_RESTFUL_MINOR_VERSION']) ? $_SERVER['HTTP_RESTFUL_MINOR_VERSION'] : 0;
+  $minor_version = !empty($_SERVER['HTTP_X_RESTFUL_MINOR_VERSION']) && is_int($_SERVER['HTTP_X_RESTFUL_MINOR_VERSION']) ? $_SERVER['HTTP_X_RESTFUL_MINOR_VERSION'] : 0;
   if (!$handler = restful_get_restful_handler($resource_name, $major_version, $minor_version)) {
     return;
   }
@@ -426,7 +433,7 @@ function restful_menu_access_callback($major_version, $resource_name) {
  */
 function restful_menu_process_callback($major_version, $resource_name) {
   $major_version = intval(str_replace('v', '', $major_version));
-  $minor_version = !empty($_SERVER['HTTP_RESTFUL_MINOR_VERSION']) && is_numeric($_SERVER['HTTP_RESTFUL_MINOR_VERSION']) ? $_SERVER['HTTP_RESTFUL_MINOR_VERSION'] : 0;
+  $minor_version = !empty($_SERVER['HTTP_X_RESTFUL_MINOR_VERSION']) && is_numeric($_SERVER['HTTP_X_RESTFUL_MINOR_VERSION']) ? $_SERVER['HTTP_X_RESTFUL_MINOR_VERSION'] : 0;
   $handler = restful_get_restful_handler($resource_name, $major_version, $minor_version);
 
   $path = func_get_args();
@@ -502,7 +509,10 @@ function restful_parse_request() {
 
   // This flag is used to identify if the request is done "via Drupal" or "via
   // CURL";
-  $request['application'] = array('rest_call' => TRUE);
+  $request['__application'] = array(
+    'rest_call' => TRUE,
+    'csrf_token' => !empty($_SERVER['HTTP_X_CSRF_TOKEN']) ? $_SERVER['HTTP_X_CSRF_TOKEN'] : NULL,
+  );
   return $request;
 }
 
@@ -676,4 +686,12 @@ function restful_file_upload_access() {
   }
 
   return variable_get('restful_file_upload_allow_anonymous_user', FALSE) || $user->uid;
+}
+
+/**
+ * Page callback: returns a session token for the currently active user.
+ */
+function restful_csrf_session_token() {
+  drupal_add_http_header('Content-Type', 'text/plain');
+  return array('X-CSRF-Token' => drupal_get_token('rest'));
 }
