@@ -61,9 +61,7 @@ function restful_angular_example_form() {
   // Load our custom app.
   $app_path = drupal_get_path('module', 'restful_angular_example') . '/components/restful-app/dist';
   drupal_add_js($app_path . '/restful-app.js');
-
-  // @todo: Move CSS to App, once Gruntfile.js is set for it.
-  ctools_add_css('restful_angular_example', 'restful_angular_example');
+  drupal_add_css($app_path . '/css/restful-app.css');
 
   // Pass info via Drupal.settings.
   $settings['restfulExample'] = array(
