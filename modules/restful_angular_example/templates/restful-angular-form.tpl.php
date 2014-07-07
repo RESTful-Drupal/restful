@@ -39,12 +39,12 @@
 
   <h2>Console (Server side)</h2>
 
-  <div ng-show="serverSide">
+  <div ng-show="serverSide.status">
     <div>
       Status: {{ serverSide.status }}
     </div>
     <div>
-      Data: {{ serverSide.data }}
+      Data: <pre>{{ serverSide.data }}</pre>
     </div>
 
     <div>
