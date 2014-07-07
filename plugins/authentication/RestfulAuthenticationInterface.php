@@ -12,11 +12,13 @@ interface RestfulAuthenticationInterface {
    *
    * @param array $request
    *   The request.
+   * @param string $method
+   *   The HTTP method. Defaults to "get".
    *
    * @return \stdClass|null
    *   The user object.
    */
-  public function authenticate($request = NULL);
+  public function authenticate($request = NULL, $method = 'get');
 
   /**
    * Determines if the request can be checked for authentication. For example,
@@ -25,11 +27,13 @@ interface RestfulAuthenticationInterface {
    *
    * @param $request
    *   The request.
+   * @param string $method
+   *   The HTTP method. Defaults to "get".
    *
    * @return bool
    *   TRUE if the request can be checked for authentication, FALSE otherwise.
    */
-  public function applies($request = NULL);
+  public function applies($request = NULL, $method = 'get');
 
   /**
    * Get the name of the authentication plugin.

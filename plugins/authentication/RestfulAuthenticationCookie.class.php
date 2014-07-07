@@ -9,12 +9,30 @@ class RestfulAuthenticationCookie extends RestfulAuthenticationBase implements R
   /**
    * Implements RestfulAuthenticationInterface::authenticate().
    */
-  public function authenticate($request = NULL) {
+  public function authenticate($request = NULL, $method = 'get') {
     if (!drupal_session_started() && !$this->isCli()) {
       return;
     }
+
     global $user;
-    return user_load($user->uid);
+    $account = user_load($user->uid);
+
+    if (in_array($method, array('get', 'head', 'options', 'trace')) || empty($request['__application']['rest_call'])) {
+      // Request is done via API not CURL, or not a write operation, so we don't
+      // need to check for a CSRF token.
+      return $account;
+    }
+
+    if (empty($request['__application']['csrf_token'])) {
+      throw new \RestfulBadRequestException('No CSRF token passed in the HTTP header.');
+    }
+
+    if (!drupal_valid_token($request['__application']['csrf_token'], 'rest')) {
+      throw new \RestfulForbiddenException('CSRF token validation failed.');
+    }
+
+    // CSRF validation passed.
+    return $account;
   }
 
   /**

@@ -159,7 +159,7 @@ curl https://example.com/api/v1/articles/1
 
 # Handler v1.1
 curl https://example.com/api/v1/articles/1 \
-  -H "Restful-Minor-Version: 1"
+  -H "X-Restful-Minor-Version: 1"
 ```
 
 ## Authentication providers
@@ -167,6 +167,11 @@ curl https://example.com/api/v1/articles/1 \
 Restful comes with ``cookie``, ``base_auth`` (user name and password in the HTTP header)
 authentications providers, as well as a "RESTful token auth" module that has a
 ``token`` authentication provider.
+
+Note: if you use cookie-based authentication then you also need to set the
+HTTP ``X-CSRF-Token`` header on all writing requests (POST, PUT and DELETE).
+You can retrieve the token from ``/api/session/token`` with a standard HTTP
+GET request.
 
 See [this](https://github.com/Gizra/angular-restful-auth) AngularJs example that shows a login from a fully decoupled web app
 to a Drupal backend.

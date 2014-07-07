@@ -38,10 +38,6 @@ class RestfulAuthorizationTestCase extends RestfulCurlBaseTestCase {
   }
 
   function tearDown() {
-    global $user;
-    // Put back the user object.
-    $user = $this->originalUser;
-
     // Put back the $_SERVER array.
     $_SERVER = $this->originalServer;
     parent::tearDown();
