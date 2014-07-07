@@ -73,9 +73,10 @@ function restful_angular_example_form() {
       ),
     ),
   );
-
   drupal_add_js($settings, 'setting');
 
+  // Theme function simply declares the angular app, and ng-includes the app's
+  // view.
   $url = url($app_path . '/views/main.html', array('absolute' => TRUE));
   return theme('restful_angular_example_angular_form', array('url' => $url));
 }
