@@ -1,4 +1,4 @@
-# AngularJS, RESTful and Entity Validator example
+# AngularJS, RESTful and Entity Validator form example
 
 1. Get a clean Drupal installation with a "standard" profile (i.e. the ``Article``
 content type is present).
