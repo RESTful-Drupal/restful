@@ -107,7 +107,10 @@ angular.module('restfulApp').service('ArticlesResource', [
     this.createArticle = function (data) {
       var config = {
           withCredentials: true,
-          headers: { 'X-CSRF-Token': DrupalSettings.getCsrfToken() }
+          headers: {
+            'X-CSRF-Token': DrupalSettings.getCsrfToken(),
+            'X-Restful-Minor-Version': 5
+          }
         };
       return $http.post(DrupalSettings.getBasePath() + 'api/v1/articles', data, config);
     };

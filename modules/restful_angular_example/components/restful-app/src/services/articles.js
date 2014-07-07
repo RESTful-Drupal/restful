@@ -16,7 +16,10 @@ angular.module('restfulApp')
       var config = {
         withCredentials: true,
         headers: {
-          "X-CSRF-Token": DrupalSettings.getCsrfToken()
+          "X-CSRF-Token": DrupalSettings.getCsrfToken(),
+          // Call the correct resource version (v1.5) that has the "body" and
+          // "image" fields exposed.
+          "X-Restful-Minor-Version": 5
         }
       };
 
