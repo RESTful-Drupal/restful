@@ -7,8 +7,7 @@
       <input id="label" name="label" type="text" ng-model="data.label" placeholder="See how many characters are needed to validate..." ng-required="required" size="60">
 
       <div class="errors">
-        {{serverSide.data.errors.label}}
-        <ul ng-show="{{ serverSide.data.errors.label }}">
+        <ul ng-show="serverSide.data.errors.label">
           <li ng-repeat="error in serverSide.data.errors.label">{{error}}</li>
         </ul>
       </div>
@@ -19,8 +18,7 @@
       <label>Description</label>
       <textarea id="body" name="body" type="textarea" ng-model="data.body" placeholder="Type some description. See which word is required..." rows="3" ng-minlength="3" ng-required="required" cols="60"></textarea>
       <div class="errors">
-        {{serverSide.data.errors.body}}
-        <ul ng-show="{{ serverSide.data.errors.body }}">
+        <ul ng-show="serverSide.data.errors.body">
           <li ng-repeat="error in serverSide.data.errors.body">{{error}}</li>
         </ul>
       </div>
