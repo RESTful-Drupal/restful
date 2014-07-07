@@ -1,4 +1,4 @@
-name = RESTful AnguarlJs example
+name = RESTful AngularJs example
 description = Example module for the RESTful AngularJs module.
 core = 7.x
 dependencies[] = restful
