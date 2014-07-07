@@ -693,5 +693,5 @@ function restful_file_upload_access() {
  */
 function restful_csrf_session_token() {
   drupal_add_http_header('Content-Type', 'text/plain');
-  return array('X-CSRF-Token' => drupal_get_token('rest'));
+  return array('X-CSRF-Token' => drupal_get_token(\RestfulInterface::TOKEN_VALUE));
 }

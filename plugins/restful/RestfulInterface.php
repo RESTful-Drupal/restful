@@ -22,6 +22,11 @@ interface RestfulInterface {
   const CONNECT = 'connect';
 
   /**
+   * Token value for token generation functions.
+   */
+  const TOKEN_VALUE = 'rest';
+
+  /**
    * Constructor for the RESTful handler.
    *
    * @param $plugin

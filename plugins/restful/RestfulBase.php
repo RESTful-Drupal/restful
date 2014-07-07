@@ -5,7 +5,7 @@
  * Contains RestfulBase.
  */
 
-abstract class RestfulBase implements RestfulEntityInterface {
+abstract class RestfulBase implements RestfulInterface {
 
   /**
    * Determines if the HTTP method represents a write operation.

@@ -9,7 +9,7 @@
 /**
  * An abstract implementation of RestfulEntityInterface.
  */
-abstract class RestfulEntityBase extends RestfulBase {
+abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInterface {
 
   /**
    * The entity type.
