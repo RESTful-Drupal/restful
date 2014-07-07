@@ -24,14 +24,10 @@ function restful_angular_example_menu() {
  * Implements hook_theme().
  */
 function restful_angular_example_theme() {
-  $theme['restful_angular_example_auto_fields'] = array(
-    'template' => 'auto-fields',
+  $theme['restful_angular_example_angular_form'] = array(
+    'template' => 'restful-angular-form',
     'path' => drupal_get_path('module', 'restful_angular_example') . '/templates',
-    'variables' => array(
-      'schema' => 'schema',
-      'data' => 'data',
-      'options' => 'options',
-    ),
+    'variables' => array(),
   );
 
   return $theme;
@@ -72,5 +68,5 @@ function restful_angular_example_form() {
 
   drupal_add_js($settings, 'setting');
 
-  return theme('restful_angular_example_auto_fields');
+  return theme('restful_angular_example_angular_form');
 }

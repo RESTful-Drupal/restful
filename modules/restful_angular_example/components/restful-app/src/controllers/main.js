@@ -5,7 +5,6 @@ angular.module('restfulApp')
     $scope.data = DrupalSettings.getData('article');
     $scope.serverSide = {};
 
-
     /**
      * Submit form (even if not valildated via client).
      */

@@ -5,18 +5,32 @@
     <div class="text">
       <label>Title</label>
       <input id="label" name="label" type="text" ng-model="data.label" placeholder="See how many characters are needed to validate..." ng-required="required" size="60">
+
+      <div class="errors">
+        {{serverSide.data.errors.label}}
+        <ul ng-show="{{ serverSide.data.errors.label }}">
+          <li ng-repeat="error in serverSide.data.errors.label">{{error}}</li>
+        </ul>
+      </div>
+
     </div>
 
     <div class="textarea">
       <label>Description</label>
       <textarea id="body" name="body" type="textarea" ng-model="data.body" placeholder="Type some description. See which word is required..." rows="3" ng-minlength="3" ng-required="required" cols="60"></textarea>
+      <div class="errors">
+        {{serverSide.data.errors.body}}
+        <ul ng-show="{{ serverSide.data.errors.body }}">
+          <li ng-repeat="error in serverSide.data.errors.body">{{error}}</li>
+        </ul>
+      </div>
     </div>
 
     <input type="file" ng-file-select="onFileSelect($files)" >
     <div ng-show="dropSupported" class="drop-box" ng-file-drop="onFileSelect($files);" ng-file-drop-available="dropSupported=true">or drop files here</div>
 
     <div class="actions">
-      <button type="submit" class="btn btn-default btn-lg btn-block" ng-class="{'btn-primary':<?php print $data; ?>.$valid}" tabindex="100">Submit</button>
+      <button type="submit" tabindex="100">Submit</button>
     </div>
   </form>
 
