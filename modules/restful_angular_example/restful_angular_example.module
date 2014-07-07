@@ -14,7 +14,8 @@
 function restful_angular_example_menu() {
   $items['restful-example/form'] = array(
     'title' => 'AngularJs Form',
-    'access callback' => 'restful_angular_example_form_access',
+    'access callback' => 'node_access',
+    'access arguments' => array('create', 'article'),
     'page callback' => 'restful_angular_example_form',
   );
   return $items;
@@ -34,13 +35,6 @@ function restful_angular_example_theme() {
 
   return $theme;
 
-}
-
-/**
- * Access callback; Determine if user can access the form.
- */
-function restful_angular_example_form_access() {
-  return node_access('create', 'article');
 }
 
 /**
