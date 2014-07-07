@@ -55,6 +55,8 @@ function restful_angular_example_form() {
   // Load our custom app.
   drupal_add_js(drupal_get_path('module', 'restful_angular_example') . '/components/restful-app/dist/restful-app.js');
 
+  ctools_add_css('restful_angular_example', 'restful_angular_example');
+
   // Pass info via Drupal.settings.
   $settings['restfulExample'] = array(
     'basePath' => url('', array('absolute' => TRUE)),
