@@ -1,6 +1,7 @@
 <div class="explanation">
   This form delibertly allows sending invalid data from the client side, to
-  show the response from the RESTful server.
+  show the response from the RESTful server. <br/>
+  Note that this form is not form API. It's Angular!
 </div>
 
 <form name="article" ng-submit="submitForm()">
@@ -56,4 +57,6 @@
   <div ng-show="serverSide.image">
     File: <a ng-href="{{ serverSide.image.self }}" target="_blank">{{ serverSide.image.label }}</a> (file ID {{ serverSide.image.id }})
   </div>
+
+  <small>Brought to you by <a href="http://gizra.com" target="_blank">Gizra</a></small>
 </div>
