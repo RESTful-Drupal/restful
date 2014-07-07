@@ -1,3 +1,7 @@
+.explanation {
+  margin: 20px 0;
+}
+
 .errors {
   color: red;
 }

@@ -1,5 +1,10 @@
 
 <div ng-app="restfulApp" ng-controller="MainCtrl">
+  <div class="explanation">
+    This form delibertly allows sending invalid data from the client side, to
+    show the response from the RESTful server side.
+  </div>
+
   <form name="article" ng-submit="submitForm()">
 
     <div class="text">
@@ -25,7 +30,7 @@
     </div>
 
     <input type="file" ng-file-select="onFileSelect($files)" >
-    <div ng-show="dropSupported" class="drop-box" ng-file-drop="onFileSelect($files);" ng-file-drop-available="dropSupported=true">or drop files here</div>
+    <div ng-show="dropSupported" class="drop-box" ng-file-drop="onFileSelect($files);" ng-file-drop-available="dropSupported=true">OR drop files here</div>
 
     <div class="actions">
       <button type="submit" tabindex="100">Submit</button>
