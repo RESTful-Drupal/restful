@@ -4,14 +4,14 @@
 module.exports = function(grunt) {
 
   // Configurable paths
-  var yoConfig = {
+  var yeomanConfig = {
     livereload: 35729,
     src: 'src',
     dist: 'dist'
   };
 
   // Livereload setup
-  var lrSnippet = require('connect-livereload')({port: yoConfig.livereload});
+  var lrSnippet = require('connect-livereload')({port: yeomanConfig.livereload});
   var mountFolder = function (connect, dir) {
     return connect.static(require('path').resolve(dir));
   };
@@ -22,7 +22,7 @@ module.exports = function(grunt) {
   // Project configuration
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
-    yo: yoConfig,
+    yeoman: yeomanConfig,
     meta: {
       banner: '/**\n' +
       ' * <%= pkg.name %>\n' +
@@ -43,8 +43,8 @@ module.exports = function(grunt) {
           dot: true,
           src: [
             '.tmp',
-            '<%= yo.dist %>/*',
-            '!<%= yo.dist %>/.git*'
+            '<%= yeoman.dist %>/*',
+            '!<%= yeoman.dist %>/.git*'
           ]
         }]
       },
@@ -56,17 +56,17 @@ module.exports = function(grunt) {
         tasks: ['jshint:gruntfile']
       },
       less: {
-        files: ['<%= yo.src %>/{,*/}*.less'],
+        files: ['<%= yeoman.src %>/{,*/}*.less'],
         tasks: ['less:dist']
       },
       app: {
         files: [
-          '<%= yo.src %>/{,*/}*.html',
-          '{.tmp,<%= yo.src %>}/{,*/}*.css',
-          '{.tmp,<%= yo.src %>}/{,*/}*.js'
+          '<%= yeoman.src %>/{,*/}*.html',
+          '{.tmp,<%= yeoman.src %>}/{,*/}*.css',
+          '{.tmp,<%= yeoman.src %>}/{,*/}*.js'
         ],
         options: {
-          livereload: yoConfig.livereload
+          livereload: yeomanConfig.livereload
         }
       },
       test: {
@@ -85,7 +85,7 @@ module.exports = function(grunt) {
             return [
               lrSnippet,
               mountFolder(connect, '.tmp'),
-              mountFolder(connect, yoConfig.src)
+              mountFolder(connect, yeomanConfig.src)
             ];
           }
         }
@@ -94,11 +94,11 @@ module.exports = function(grunt) {
     less: {
       options: {
         // dumpLineNumbers: 'all',
-        paths: ['<%= yo.src %>']
+        paths: ['<%= yeoman.src %>']
       },
       dist: {
         files: {
-          '<%= yo.src %>/<%= yo.name %>.css': '<%= yo.src %>/<%= yo.name %>.less'
+          '<%= yeoman.src %>/<%= yeoman.name %>.css': '<%= yeoman.src %>/<%= yeoman.name %>.less'
         }
       }
     },
@@ -113,7 +113,7 @@ module.exports = function(grunt) {
         options: {
           jshintrc: '.jshintrc'
         },
-        src: ['<%= yo.src %>/{,*/}*.js']
+        src: ['<%= yeoman.src %>/{,*/}*.js']
       },
       test: {
         options: {
@@ -139,8 +139,8 @@ module.exports = function(grunt) {
         banner: '<%= meta.banner %>'
       },
       dist: {
-        src: ['<%= yo.dist %>/<%= pkg.name %>.js'],
-        dest: '<%= yo.dist %>/<%= pkg.name %>.js'
+        src: ['<%= yeoman.dist %>/<%= pkg.name %>.js'],
+        dest: '<%= yeoman.dist %>/<%= pkg.name %>.js'
       }
       // dist: {
       //   files: {
@@ -154,8 +154,8 @@ module.exports = function(grunt) {
         stripBanners: true
       },
       dist: {
-        src: ['<%= yo.src %>/restful-app.js', '<%= yo.src %>/**/*.js'],
-        dest: '<%= yo.dist %>/<%= pkg.name %>.js'
+        src: ['<%= yeoman.src %>/restful-app.js', '<%= yeoman.src %>/**/*.js'],
+        dest: '<%= yeoman.dist %>/<%= pkg.name %>.js'
       }
     },
     uglify: {
@@ -164,7 +164,7 @@ module.exports = function(grunt) {
       },
       dist: {
         src: '<%= concat.dist.dest %>',
-        dest: '<%= yo.dist %>/<%= pkg.name %>.min.js'
+        dest: '<%= yeoman.dist %>/<%= pkg.name %>.min.js'
       }
     },
     copy: {
@@ -172,9 +172,9 @@ module.exports = function(grunt) {
         files: [
           {
             expand: true,
-            cwd: '<%= yo.dist %>',
-            src: ['{,**/}*.js'],
-            dest: ''
+            cwd: '<%= yeoman.src %>',
+            src: ['views/**/*.html'],
+            dest: '<%= yeoman.dist %>'
           }
         ]
       }
@@ -188,6 +188,7 @@ module.exports = function(grunt) {
 
   grunt.registerTask('build', [
     'clean:dist',
+    'copy:dist',
     'concat:dist',
     'ngmin:dist',
     'uglify:dist'
