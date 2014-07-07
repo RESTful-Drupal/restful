@@ -2,7 +2,7 @@
 <div ng-app="restfulApp" ng-controller="MainCtrl">
   <div class="explanation">
     This form delibertly allows sending invalid data from the client side, to
-    show the response from the RESTful server side.
+    show the response from the RESTful server.
   </div>
 
   <form name="article" ng-submit="submitForm()">
