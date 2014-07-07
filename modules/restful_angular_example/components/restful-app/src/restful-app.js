@@ -1,7 +1,8 @@
 'use strict';
 
 angular.module('restfulApp', [
-    'angularFileUpload'
+    'angularFileUpload',
+    'ngPrettyJson'
   ], function($httpProvider) {
 
     // Use x-www-form-urlencoded Content-Type

@@ -6,7 +6,10 @@
  * @license MIT License, http://www.opensource.org/licenses/MIT
  */
 'use strict';
-angular.module('restfulApp', ['angularFileUpload'], function ($httpProvider) {
+angular.module('restfulApp', [
+  'angularFileUpload',
+  'ngPrettyJson'
+], function ($httpProvider) {
   // Use x-www-form-urlencoded Content-Type
   $httpProvider.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded;charset=utf-8';
   /**

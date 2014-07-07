@@ -6,6 +6,12 @@
   color: red;
 }
 
+.create-success {
+  padding: 20px;
+  background: yellow;
+  text-align: center;
+}
+
 .drop-box {
   height: 80px;
   width: 200px;
@@ -14,4 +20,9 @@
   text-align: center;
   padding-top: 50px;
   margin: 20px 0;
+}
+
+.file-upload-drag {
+  background: grey;
+  border-color: lightBlue;
 }

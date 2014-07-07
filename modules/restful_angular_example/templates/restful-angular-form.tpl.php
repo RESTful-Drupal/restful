@@ -30,7 +30,7 @@
     </div>
 
     <input type="file" ng-file-select="onFileSelect($files)" >
-    <div ng-show="dropSupported" class="drop-box" ng-file-drop="onFileSelect($files);" ng-file-drop-available="dropSupported=true">OR drop files here</div>
+    <div ng-show="dropSupported" class="drop-box" ng-file-drop="onFileSelect($files);" ng-file-drop-available="dropSupported=true" ng-file-drag-over-class="file-upload-drag">OR drop files here</div>
 
     <div class="actions">
       <button type="submit" tabindex="100">Submit</button>
@@ -39,20 +39,24 @@
 
   <h2>Console (Server side)</h2>
 
-  <div ng-show="serverSide.status">
-    <div>
-      Status: {{ serverSide.status }}
-    </div>
-    <div>
-      Data: <pre>{{ serverSide.data }}</pre>
-    </div>
-
-    <div>
-      File ID: {{ serverSide.image.id }} <a ng-href="{{ serverSide.image.self }}" target="_blank">{{ serverSide.image.label }}</a>
+  <div>
+    <div ng-show="serverSide.status == 200" class="create-success">
+      <strong>
+        New article created: <a ng-href="{{ serverSide.data.self }}" target="_blank">{{ serverSide.data.label }}</a> (node ID {{ serverSide.data.id }})
+      </strong>
     </div>
 
-    <div ng-show="serverSide.status == 200">
-      New article: <a ng-href="{{ serverSide.data.self }}" target="_blank">{{ serverSide.data.label }}</a>
+    <div ng-show="serverSide.status">
+      <div>
+        Status: {{ serverSide.status }}
+      </div>
+      <div>
+        Data: <pre pretty-json="serverSide.data" />
+      </div>
+    </div>
+
+    <div ng-show="serverSide.image">
+      File: <a ng-href="{{ serverSide.image.self }}" target="_blank">{{ serverSide.image.label }}</a> (file ID {{ serverSide.image.id }})
     </div>
   </div>
 </div>
