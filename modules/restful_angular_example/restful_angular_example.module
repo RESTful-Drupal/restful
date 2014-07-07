@@ -16,7 +16,7 @@ function restful_angular_example_menu() {
     'title' => 'AngularJs Form',
     'access callback' => 'node_access',
     'access arguments' => array('create', 'article'),
-    'page callback' => 'restful_angular_example_form',
+    'page callback' => 'restful_angular_example_form_page',
   );
   return $items;
 }
@@ -40,7 +40,7 @@ function restful_angular_example_theme() {
 /**
  * Page callback; Load the AngularJs form.
  */
-function restful_angular_example_form() {
+function restful_angular_example_form_page() {
   $bower_path = drupal_get_path('module', 'restful_angular_example') . '/components/restful-app/bower_components';
 
   // Load the libraries.
