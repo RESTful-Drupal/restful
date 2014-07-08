@@ -1,0 +1,28 @@
+.explanation {
+  margin: 20px 0;
+}
+
+.errors {
+  color: red;
+}
+
+.create-success {
+  padding: 20px;
+  background: yellow;
+  text-align: center;
+}
+
+.drop-box {
+  height: 80px;
+  width: 200px;
+  background: lightBlue;
+  border: 1px solid grey;
+  text-align: center;
+  padding-top: 50px;
+  margin: 20px 0;
+}
+
+.file-upload-drag {
+  background: grey;
+  border-color: lightBlue;
+}
