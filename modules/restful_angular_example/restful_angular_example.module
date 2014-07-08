@@ -1,0 +1,76 @@
+<?php
+
+/**
+ * @file
+ * Example module for the RESTful AngularJs module.
+ *
+ * Demonstrate the use of AngularJs forms instead of Form API, along with
+ * RESTful endpoint and the entity validator module.
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function restful_angular_example_menu() {
+  $items['restful-example/form'] = array(
+    'title' => 'AngularJs Form',
+    'access callback' => 'node_access',
+    'access arguments' => array('create', 'article'),
+    'page callback' => 'restful_angular_example_form_page',
+  );
+  return $items;
+}
+
+/**
+ * Implements hook_theme().
+ */
+function restful_angular_example_theme() {
+  $theme['restful_angular_example_angular_form'] = array(
+    'template' => 'restful-angular-form',
+    'path' => drupal_get_path('module', 'restful_angular_example') . '/templates',
+    'variables' => array(
+      'url' => NULL
+    ),
+  );
+
+  return $theme;
+
+}
+
+/**
+ * Page callback; Load the AngularJs form.
+ */
+function restful_angular_example_form_page() {
+  $bower_path = drupal_get_path('module', 'restful_angular_example') . '/components/restful-app/bower_components';
+
+  // Load the libraries.
+  drupal_add_js($bower_path . '/danialfarid-angular-file-upload/dist/angular-file-upload-shim.min.js');
+  drupal_add_js($bower_path . '/angular/angular.js');
+  drupal_add_js($bower_path . '/danialfarid-angular-file-upload/dist/angular-file-upload.min.js');
+
+  // JSON pretty print library.
+  drupal_add_js($bower_path . '/ng-prettyjson/dist/ng-prettyjson.min.js');
+  drupal_add_css($bower_path . '/ng-prettyjson/dist/ng-prettyjson.min.css');
+
+  // Load our custom app.
+  $app_path = drupal_get_path('module', 'restful_angular_example') . '/components/restful-app/dist';
+  drupal_add_js($app_path . '/restful-app.js');
+  drupal_add_css($app_path . '/css/restful-app.css');
+
+  // Pass info via Drupal.settings.
+  $settings['restfulExample'] = array(
+    'basePath' => url('', array('absolute' => TRUE)),
+    'csrfToken' => drupal_get_token('rest'),
+    'data' => array(
+      'article' => array(
+        'label' => 'no',
+      ),
+    ),
+  );
+  drupal_add_js($settings, 'setting');
+
+  // Theme function simply declares the angular app, and ng-includes the app's
+  // view.
+  $url = url($app_path . '/views/main.html', array('absolute' => TRUE));
+  return theme('restful_angular_example_angular_form', array('url' => $url));
+}
