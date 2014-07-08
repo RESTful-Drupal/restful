@@ -17,4 +17,4 @@ bower install
 
 Now as logged in user navigate to ``restful-example/form``.
 
-The RESTful resource is [here](https://github.com/Gizra/restful/blob/7.x-1.x/modules/restful_example/plugins/restful/node/articles/1.5/articles__1_5.inc), and the Entity-Validator handler is [here](https://github.com/Gizra/entity_validator/blob/7.x-1.x/modules/entity_validator_example/plugins/validator/node/article/EntityValidatorExampleArticleValidator.class.php).
+The RESTful resource is [here](https://github.com/Gizra/restful/blob/7.x-1.x/modules/restful_example/plugins/restful/node/articles/1.5/RestfulExampleArticlesResource__1_5.class.php), and the Entity-Validator handler is [here](https://github.com/Gizra/entity_validator/blob/7.x-1.x/modules/entity_validator_example/plugins/validator/node/article/EntityValidatorExampleArticleValidator.class.php).
