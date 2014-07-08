@@ -14,7 +14,7 @@ class RestfulUserLoginCookie extends \RestfulEntityBase {
    */
   protected $controllers = array(
     '' => array(
-      'get' => 'loginAndRespondWithCookie',
+      \RestfulInterface::GET => 'loginAndRespondWithCookie',
     ),
   );
 

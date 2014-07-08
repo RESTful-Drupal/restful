@@ -9,6 +9,24 @@
 interface RestfulInterface {
 
   /**
+   * HTTP methods.
+   */
+  const GET = 'get';
+  const PUT = 'put';
+  const POST = 'post';
+  const PATCH = 'patch';
+  const OPTIONS = 'options';
+  const HEAD = 'head';
+  const TRACE = 'trace';
+  const DELETE = 'delete';
+  const CONNECT = 'connect';
+
+  /**
+   * Token value for token generation functions.
+   */
+  const TOKEN_VALUE = 'rest';
+
+  /**
    * Constructor for the RESTful handler.
    *
    * @param $plugin
@@ -33,7 +51,7 @@ interface RestfulInterface {
    * @return mixed
    *   The return value can depend on the controller for the current $method.
    */
-  public function process($path = '', $request = NULL, $method = 'get');
+  public function process($path = '', $request = NULL, $method = \RestfulInterface::GET);
 
   /**
    * Return the properties that should be public.
