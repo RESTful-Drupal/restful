@@ -21,6 +21,7 @@ with the ``field_`` prefix
  is indeed a pure REST, we believe it's a best practice one
 * Only JSON format is supported
 * Audience is developers and not site builders
+* Provide a key tool for a headless Drupal. See the [AngularJs form](https://github.com/Gizra/restful/blob/7.x-1.x/modules/restful_angular_example/README.md) example module.
 
 ## Module dependencies
 * [Entity API](https://drupal.org/project/entity), with the following patches:
