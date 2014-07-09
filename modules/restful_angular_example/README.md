@@ -2,7 +2,7 @@
 
 ## Test on Simplytest.me (recommended)
 1.[Launch sandbox](http://simplytest.me/project/2300389/7.x-1.x-sandbox) on simplytest.me
-1. Login (admin/ admin) and navigate to ``/restful-example/form``
+1. Login (admin/ admin), [clear cache](admin/config/development/performance) and navigate to ``/restful-example/form``
 
 ## Test Locally
 1. Get a clean Drupal installation with a "standard" profile (i.e. the ``Article``
