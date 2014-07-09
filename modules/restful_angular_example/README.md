@@ -19,7 +19,7 @@ content type is present)
 drush vset restful_file_upload 1
 drush cc menu
 
-# CD into the example module
+# cd into the example module and install node/ bower packages
 cd `drush drupal-directory restful_angular_example`
 cd components/restful-app
 npm install
@@ -27,3 +27,5 @@ bower install
 ```
 
 The RESTful resource is [here](https://github.com/Gizra/restful/blob/7.x-1.x/modules/restful_example/plugins/restful/node/articles/1.5/RestfulExampleArticlesResource__1_5.class.php), and the Entity-Validator handler is [here](https://github.com/Gizra/entity_validator/blob/7.x-1.x/modules/entity_validator_example/plugins/validator/node/article/EntityValidatorExampleArticleValidator.class.php).
+
+Note that if you change the Angular script under ``/components/restful-app/src`` you will need to ``grunt build``.
