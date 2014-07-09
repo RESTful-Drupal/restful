@@ -1,14 +1,16 @@
 # AngularJS, RESTful and Entity Validator form example
 
 ## Test on Simplytest.me (recommended)
-1.[Launch sandbox](http://simplytest.me/project/2300389/7.x-1.x-sandbox) on simplytest.me
+Due to an issue in simplyTest.me entity API isn't patched properly, thus you may see a few entity API related notices. This is of course temporary, and should be fixed once those patches are committed.
+
+1. [Launch sandbox](http://simplytest.me/project/2300389/7.x-1.x-sandbox) on simplytest.me
 2. Login (admin/ admin)
 3. clear cache via ``/admin/config/development/performance`` (as file upload is disabled by default)
 4. Navigate to ``/restful-example/form``
 
 ## Test Locally
 1. Get a clean Drupal installation with a "standard" profile (i.e. the ``Article``
-content type is present).
+content type is present)
 2. (temporary) Get RESTful and Entity API [patches](https://github.com/Gizra/restful#module-dependencies)
 3. Enable module and download Angular related libraries and navigate to ``restful-example/form``
 
