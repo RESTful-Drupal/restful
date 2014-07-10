@@ -1,7 +1,6 @@
 # AngularJS, RESTful and Entity Validator form example
 
 ## Test on Simplytest.me (recommended)
-Due to an issue in simplyTest.me entity API isn't patched properly, thus you may see a few entity API related notices. This is of course temporary, and should be fixed once those patches are committed.
 
 1. [Launch sandbox](http://simplytest.me/project/2300389/7.x-1.x-sandbox) on simplytest.me
 2. Login (admin/ admin)
