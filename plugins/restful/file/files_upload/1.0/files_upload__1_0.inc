@@ -10,5 +10,7 @@ if (variable_get('restful_file_upload', FALSE)) {
     'authentication_types' => TRUE,
     // We will implement hook_menu() with custom settings.
     'hook_menu' => FALSE,
+    // Set the default validators and scheme.
+    'options' => array(),
   );
 }
