@@ -18,7 +18,7 @@ class RestfulEntityBaseMultipleBundles extends RestfulEntityBase {
   protected $controllers = array(
     '' => array(
       // GET returns a list of entities.
-      'get' => 'getList',
+      \RestfulInterface::GET => 'getList',
     ),
   );
 

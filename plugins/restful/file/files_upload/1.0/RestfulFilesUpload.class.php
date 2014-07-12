@@ -12,7 +12,7 @@ class RestfulFilesUpload extends \RestfulEntityBase {
    */
   protected $controllers = array(
     '' => array(
-      'post' => 'createEntity',
+      \RestfulInterface::POST => 'createEntity',
     ),
   );
 

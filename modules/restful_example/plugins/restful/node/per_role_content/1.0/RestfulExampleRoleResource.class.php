@@ -11,7 +11,7 @@ class RestfulExampleRoleResource extends \RestfulEntityBase implements \RestfulE
    */
   protected $controllers = array(
     '' => array(
-      'get' => 'getList',
+      \RestfulInterface::GET => 'getList',
     ),
   );
 

@@ -27,7 +27,7 @@ class RestfulAuthenticationCookie extends RestfulAuthenticationBase implements R
       throw new \RestfulBadRequestException('No CSRF token passed in the HTTP header.');
     }
 
-    if (!drupal_valid_token($request['__application']['csrf_token'], 'rest')) {
+    if (!drupal_valid_token($request['__application']['csrf_token'], \RestfulBase::TOKEN_VALUE)) {
       throw new \RestfulForbiddenException('CSRF token validation failed.');
     }
 

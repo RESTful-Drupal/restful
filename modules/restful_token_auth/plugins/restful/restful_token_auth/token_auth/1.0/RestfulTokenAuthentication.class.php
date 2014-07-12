@@ -27,7 +27,7 @@ class RestfulTokenAuthentication extends \RestfulEntityBase {
   protected $controllers = array(
     '' => array(
       // Get or create a new token.
-      'get' => 'getOrCreateToken',
+      \RestfulInterface::GET => 'getOrCreateToken',
     ),
   );
 
