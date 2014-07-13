@@ -45,7 +45,7 @@ class RestfulHookMenuTestCase extends RestfulCurlBaseTestCase {
 
     // Test version 1.1
     $headers = array('X-Restful-Minor-Version: 1');
-    $result = $this->httpRequest('api/v1/articles/' . $node1->nid, 'GET', NULL, $headers);
+    $result = $this->httpRequest('api/v1/articles/' . $node1->nid, \RestfulInterface::GET, NULL, $headers);
     unset($expected_result['self']);
     $this->assertEqual($result['body'], json_encode($expected_result));
   }
@@ -55,11 +55,11 @@ class RestfulHookMenuTestCase extends RestfulCurlBaseTestCase {
    */
   function testHttpHeadersAndStatus() {
     // Valid request (eventough it's empty).
-    $result = $this->httpRequest('api/v1/articles/', 'GET');
+    $result = $this->httpRequest('api/v1/articles/', \RestfulInterface::GET);
     $this->assertTrue(strpos($result['headers'], 'application/hal+json;'), '"application/hal+json" found in valid request.');
 
     // Invalid request.
-    $result = $this->httpRequest('api/v1/articles/', 'GET', array('sort' => 'invalid_key'));
+    $result = $this->httpRequest('api/v1/articles/', \RestfulInterface::GET, array('sort' => 'invalid_key'));
     $this->assertTrue(strpos($result['headers'], 'application/problem+json;'), '"application/problem+json" found in valid request.');
 
     // Switch site to offline mode.

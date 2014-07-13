@@ -26,11 +26,11 @@ class RestfulCurlBaseTestCase extends DrupalWebTestCase {
    * @return array
    *   Array keyed with the "code", "headers", and "body" of the response.
    */
-  protected function httpRequest($url, $method = 'GET', $body = NULL, $headers = array(), $use_token = TRUE) {
+  protected function httpRequest($url, $method = \RestfulInterface::GET, $body = NULL, $headers = array(), $use_token = TRUE) {
     $format = 'json';
 
     switch ($method) {
-      case 'GET':
+      case \RestfulInterface::GET:
         // Set query if there are addition GET parameters.
         $options = isset($body) ? array('absolute' => TRUE, 'query' => $body) : array('absolute' => TRUE);
         $curl_options = array(
@@ -40,7 +40,7 @@ class RestfulCurlBaseTestCase extends DrupalWebTestCase {
         );
         break;
 
-      case 'POST':
+      case \RestfulInterface::POST:
         $curl_options = array(
           CURLOPT_HTTPGET => FALSE,
           CURLOPT_POST => TRUE,
@@ -51,8 +51,8 @@ class RestfulCurlBaseTestCase extends DrupalWebTestCase {
         );
         break;
 
-      case 'PUT':
-      case 'PATCH':
+      case \RestfulInterface::PUT:
+      case \RestfulInterface::PATCH:
         $curl_options = array(
           CURLOPT_HTTPGET => FALSE,
           CURLOPT_CUSTOMREQUEST => $method,
@@ -63,10 +63,10 @@ class RestfulCurlBaseTestCase extends DrupalWebTestCase {
         );
         break;
 
-      case 'DELETE':
+      case \RestfulInterface::DELETE:
         $curl_options = array(
           CURLOPT_HTTPGET => FALSE,
-          CURLOPT_CUSTOMREQUEST => 'DELETE',
+          CURLOPT_CUSTOMREQUEST => \RestfulInterface::DELETE,
           CURLOPT_URL => url($url, array('absolute' => TRUE)),
           CURLOPT_NOBODY => FALSE,
           CURLOPT_HTTPHEADER => array(),
@@ -76,7 +76,7 @@ class RestfulCurlBaseTestCase extends DrupalWebTestCase {
 
     $curl_options += array(CURLOPT_HTTPHEADER => array());
 
-    if ($this->loggedInUser && !in_array($method, array('GET', 'OPTIONS', 'HEAD', 'TRACE')) && $use_token) {
+    if ($this->loggedInUser && \RestfulBase::isWriteMethod($method, FALSE) && $use_token) {
       // Add CSRF token for write operations.
       $result = $this->drupalGet('api/session/token');
       $result = drupal_json_decode($result);

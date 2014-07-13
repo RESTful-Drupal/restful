@@ -254,7 +254,8 @@ function restful_menu() {
   if (variable_get('restful_file_upload', FALSE)) {
     $items['api/file-upload'] = array(
       'title' => 'File upload',
-      'access arguments' => array('restful_file_upload_access'),
+      'access callback' => 'restful_menu_access_callback',
+      'access arguments' => array('1', 'files'),
       'page callback' => 'restful_menu_process_callback',
       'page arguments' => array('1', 'files'),
       'delivery callback' => 'restful_json_output',
@@ -411,7 +412,7 @@ function restful_menu_access_callback($major_version, $resource_name) {
     return;
   }
 
-  if (!in_array($_SERVER['REQUEST_METHOD'], array('GET', 'POST', 'PUT', 'PATCH', 'DELETE'))) {
+  if (!\RestfulBase::isKnownMethod($_SERVER['REQUEST_METHOD'], FALSE)) {
     return;
   }
 
@@ -491,7 +492,7 @@ function restful_menu_process_callback($major_version, $resource_name) {
  */
 function restful_parse_request() {
   $request = NULL;
-  $method = strtolower($_SERVER['REQUEST_METHOD']);
+  $method = strtoupper($_SERVER['REQUEST_METHOD']);
 
   if ($method == \RestfulInterface::GET) {
     $request = $_GET;

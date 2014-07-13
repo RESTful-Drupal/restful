@@ -1306,7 +1306,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    * @return \stdClass
    *   The user object.
    */
-  public function getAccount($request = NULL, $method = 'get') {
+  public function getAccount($request = NULL, $method = \RestfulInterface::GET) {
     $account = $this->getAuthenticationManager()->getAccount($request, $method);
 
     // If the limit rate is enabled for the current plugin then set the account.

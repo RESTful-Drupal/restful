@@ -68,4 +68,16 @@ class RestfulFilesUpload extends \RestfulEntityBase {
 
     return $return;
   }
+
+  /**
+   * Overrides RestfulEntityBase::access().
+   */
+  public function access() {
+    global $user;
+    if (module_exists('file_entity')) {
+      return user_access('bypass file access') || user_access('create files');
+    }
+
+    return variable_get('restful_file_upload_allow_anonymous_user', FALSE) || $user->uid;
+  }
 }
