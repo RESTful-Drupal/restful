@@ -513,6 +513,10 @@ function restful_parse_request() {
     'rest_call' => TRUE,
     'csrf_token' => !empty($_SERVER['HTTP_X_CSRF_TOKEN']) ? $_SERVER['HTTP_X_CSRF_TOKEN'] : NULL,
   );
+
+  // Allow implemeting modules to alter the request.
+  drupal_alter('restful_parse_request', $request);
+
   return $request;
 }
 

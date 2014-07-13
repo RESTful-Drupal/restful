@@ -629,7 +629,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
         $sub_wrapper = $info['wrapper_method_on_entity'] ? $wrapper : $wrapper->{$property};
 
         // Check user has access to the property.
-        if ($property && !$this->checkPropertyAccess($sub_wrapper, 'view')) {
+        if ($property && !$this->checkPropertyAccess($sub_wrapper, 'view', $account)) {
           continue;
         }
 
@@ -910,14 +910,14 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
       $property_name = $info['property'];
       if (!isset($request[$public_property])) {
         // No property to set in the request.
-        if ($null_missing_fields && $this->checkPropertyAccess($wrapper->{$property_name})) {
+        if ($null_missing_fields && $this->checkPropertyAccess($wrapper->{$property_name}, 'edit', $account)) {
           // We need to set the value to NULL.
           $wrapper->{$property_name}->set(NULL);
         }
         continue;
       }
 
-      if (!$this->checkPropertyAccess($wrapper->{$property_name})) {
+      if (!$this->checkPropertyAccess($wrapper->{$property_name}, 'edit', $account)) {
         throw new RestfulBadRequestException(format_string('Property @name cannot be set.', array('@name' => $public_property)));
       }
 
@@ -1171,12 +1171,12 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    * @return bool
    *   TRUE if the current user has access to set the property, FALSE otherwise.
    */
-  protected function checkPropertyAccess(EntityMetadataWrapper $property, $op = 'edit') {
+  protected function checkPropertyAccess(EntityMetadataWrapper $property, $op = 'edit', $account) {
     // @todo Hack to check format access for text fields. Should be removed once
     // this is handled properly on the Entity API level.
     if ($property->type() == 'text_formatted' && $property->value() && $property->format->value()) {
       $format = (object) array('format' => $property->format->value());
-      if (!filter_access($format)) {
+      if (!filter_access($format, $account)) {
         return FALSE;
       }
     }
@@ -1187,7 +1187,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
       return;
     }
 
-    $access = $property->access($op);
+    $access = $property->access($op, $account);
     return $access === FALSE ? FALSE : TRUE;
   }
 
