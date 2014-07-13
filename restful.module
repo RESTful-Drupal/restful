@@ -411,7 +411,7 @@ function restful_menu_access_callback($major_version, $resource_name) {
     return;
   }
 
-  if (!in_array($_SERVER['REQUEST_METHOD'], array('GET', 'POST', 'PUT', 'PATCH', 'DELETE'))) {
+  if (!in_array($_SERVER['REQUEST_METHOD'], array('GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'))) {
     return;
   }
 
@@ -441,6 +441,15 @@ function restful_menu_process_callback($major_version, $resource_name) {
   $path = implode('/', $path);
 
   $method = strtolower($_SERVER['REQUEST_METHOD']);
+
+  if ($method == 'options') {
+    // OPTIONS method is a special case that might be sent by the browser
+    // before the actual method.
+    drupal_add_http_header('Status', 204);
+    drupal_add_http_header('Content-Type', 'application/hal+json; charset=utf-8');
+    return;
+  }
+
   $request = restful_parse_request();
 
   try {
