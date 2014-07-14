@@ -54,15 +54,15 @@ class RestfulEntityUserAccessTestCase extends DrupalWebTestCase {
     }
 
     // View own user account.
-    $handler->get($user1->uid);
+    $result = $handler->get($user1->uid);
+    $this->assertEqual($result['mail'], $user1->mail, 'User can see own mail.');
 
-    // Privileged user.
+    // Privileged user, watching another user's profile.
     $handler->setAccount($user2);
     $result = $handler->get($user1->uid);
     $expected_result = array(
       'id' => $user1->uid,
       'label' => $user1->name,
-      'mail' => $user1->mail,
       'self' => url('user/' . $user1->uid, array('absolute' => TRUE)),
     );
 
