@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/Gizra/restful.png?branch=7.x-1.x)](https://travis-ci.org/Gizra/restful)
+[![Build Status](https://travis-ci.org/Gizra/restful.svg?branch=7.x-1.x)](https://travis-ci.org/Gizra/restful)
 
 # RESTful best practices for Drupal
 
