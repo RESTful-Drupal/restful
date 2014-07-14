@@ -13,7 +13,7 @@ class RestfulAuthenticationToken extends \RestfulAuthenticationBase {
     $key_name = !empty($this->plugin['options']['param_name']) ? $this->plugin['options']['param_name'] : 'access_token';
 
     // Access token may be on the request, or in the headers.
-    return $request['__application'][$key_name] || !empty($request[$key_name]);
+    return !empty($request['__application'][$key_name]) || !empty($request[$key_name]);
   }
 
   /**
