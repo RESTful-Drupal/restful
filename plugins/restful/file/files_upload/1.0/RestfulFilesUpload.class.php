@@ -17,6 +17,31 @@ class RestfulFilesUpload extends \RestfulEntityBase {
   );
 
   /**
+   * Overrides \RestfulEntityBase::__construct()
+   *
+   * Set the "options" key from the plugin info, specific for file upload, with
+   * the following keys:
+   * - "validators": By default no validation is done on the file extensions or
+   *   file size.
+   * - "scheme": By default the default scheme (e.g. public, private) is used.
+   */
+  public function __construct($plugin, \RestfulAuthenticationManager $auth_manager = NULL, \DrupalCacheInterface $cache_controller = NULL) {
+    parent::__construct($plugin, $auth_manager, $cache_controller);
+
+    $options = $this->getPluginInfo('options');
+
+    $default_values = array(
+      'validators' => array(
+        'file_validate_extensions' => array(),
+        'file_validate_size' => array(),
+      ),
+      'scheme' => file_default_scheme(),
+    );
+
+    $this->plugin['options'] = drupal_array_merge_deep($default_values, $options);
+  }
+
+  /**
    * Create and save files.
    *
    * @param $request
@@ -34,10 +59,7 @@ class RestfulFilesUpload extends \RestfulEntityBase {
       throw new \RestfulBadRequestException('No files sent with the request.');
     }
 
-    $validators = array(
-      'file_validate_extensions' => array(),
-      'file_validate_size' => array(),
-    );
+    $options = $this->getPluginInfo('options');
 
     $ids = array();
 
@@ -48,7 +70,7 @@ class RestfulFilesUpload extends \RestfulEntityBase {
         $_FILES['files'][$key][$name] = $value;
       }
 
-      if (!$file = file_save_upload($name, $validators, file_default_scheme() . "://")) {
+      if (!$file = file_save_upload($name, $options['validators'], $options['scheme'] . "://")) {
         throw new \Exception('An unknown error occurred while trying to save a file.');
       }
 
