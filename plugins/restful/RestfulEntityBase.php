@@ -859,7 +859,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    *
    * @throws RestfulForbiddenException
    */
-  public function createEntity($request, $account) {
+  public function createEntity($request = NULL, stdClass $account = NULL) {
     $entity_info = entity_get_info($this->entityType);
     $bundle_key = $entity_info['entity keys']['bundle'];
     $values = array($bundle_key => $this->bundle);

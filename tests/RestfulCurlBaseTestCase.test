@@ -44,11 +44,14 @@ class RestfulCurlBaseTestCase extends DrupalWebTestCase {
         $curl_options = array(
           CURLOPT_HTTPGET => FALSE,
           CURLOPT_POST => TRUE,
-          CURLOPT_POSTFIELDS => http_build_query($body),
+          CURLOPT_POSTFIELDS => $body,
           CURLOPT_URL => url($url, array('absolute' => TRUE)),
           CURLOPT_NOBODY => FALSE,
-          CURLOPT_HTTPHEADER => array('Content-Type: application/' . $format),
         );
+        if (empty($headers['Content-Type'])) {
+          $headers['Content-Type'] = 'application/' . $format;
+          $curl_options[CURLOPT_POSTFIELDS] = http_build_query($body);
+        }
         break;
 
       case \RestfulInterface::PUT:
@@ -56,11 +59,14 @@ class RestfulCurlBaseTestCase extends DrupalWebTestCase {
         $curl_options = array(
           CURLOPT_HTTPGET => FALSE,
           CURLOPT_CUSTOMREQUEST => $method,
-          CURLOPT_POSTFIELDS => http_build_query($body),
+          CURLOPT_POSTFIELDS => $body,
           CURLOPT_URL => url($url, array('absolute' => TRUE)),
           CURLOPT_NOBODY => FALSE,
-          CURLOPT_HTTPHEADER => array('Content-Type: application/' . $format),
         );
+        if (empty($headers['Content-Type'])) {
+          $headers['Content-Type'] = 'application/' . $format;
+          $curl_options[CURLOPT_POSTFIELDS] = http_build_query($body);
+        }
         break;
 
       case \RestfulInterface::DELETE:
@@ -69,7 +75,6 @@ class RestfulCurlBaseTestCase extends DrupalWebTestCase {
           CURLOPT_CUSTOMREQUEST => \RestfulInterface::DELETE,
           CURLOPT_URL => url($url, array('absolute' => TRUE)),
           CURLOPT_NOBODY => FALSE,
-          CURLOPT_HTTPHEADER => array(),
         );
         break;
     }
@@ -80,27 +85,27 @@ class RestfulCurlBaseTestCase extends DrupalWebTestCase {
       // Add CSRF token for write operations.
       $result = $this->drupalGet('api/session/token');
       $result = drupal_json_decode($result);
-      $curl_options[CURLOPT_HTTPHEADER][] = 'X-CSRF-Token: ' . $result['X-CSRF-Token'];
+      $headers['X-CSRF-Token'] = $result['X-CSRF-Token'];
     }
 
-    if ($headers) {
-      $curl_options[CURLOPT_HTTPHEADER] = array_merge($curl_options[CURLOPT_HTTPHEADER], $headers);
+    foreach ($headers as $key => $value) {
+      $curl_options[CURLOPT_HTTPHEADER][] = $key . ': ' . $value;
     }
 
     $response = $this->curlExec($curl_options);
-    $headers = $this->drupalGetHeaders();
-    $headers = implode("\n", $headers);
+    $response_headers = $this->drupalGetHeaders();
+    $response_headers = implode("\n", $response_headers);
 
     $code = curl_getinfo($this->curlHandle, CURLINFO_HTTP_CODE);
 
     $this->verbose($method . ' request to: ' . $url .
       '<hr />Code: ' . $code .
-      '<hr />Response headers: ' . $headers .
+      '<hr />Response headers: ' . $response_headers .
       '<hr />Response body: ' . $response);
 
     return array(
       'code' => $code,
-      'headers' => $headers,
+      'headers' => $response_headers,
       'body' => $response,
     );
   }

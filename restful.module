@@ -255,7 +255,7 @@ function restful_menu() {
     $items['api/file-upload'] = array(
       'title' => 'File upload',
       'access callback' => 'restful_menu_access_callback',
-      'access arguments' => array('1', 'files'),
+      'access arguments' => array('v1', 'files'),
       'page callback' => 'restful_menu_process_callback',
       'page arguments' => array('1', 'files'),
       'delivery callback' => 'restful_json_output',

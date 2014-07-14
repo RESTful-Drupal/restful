@@ -5,7 +5,7 @@
  * Contains RestfulCreateEntityTestCase
  */
 
-class RestfulCreateEntityTestCase extends DrupalWebTestCase {
+class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
 
   public static function getInfo() {
     return array(
@@ -15,11 +15,22 @@ class RestfulCreateEntityTestCase extends DrupalWebTestCase {
     );
   }
 
+  /**
+   * @var string
+   *
+   * Holds the path to a random generated image for upload purposes.
+   */
+  private $imagePath;
+
   function setUp() {
     parent::setUp('restful_test', 'entityreference');
 
     // Add common fields, vocabulary and terms.
     restful_test_add_fields();
+
+    $images = $this->drupalGetTestFiles('image');
+    $image = reset($images);
+    $this->imagePath = drupal_realpath($image->uri);
   }
 
   /**
@@ -153,4 +164,56 @@ class RestfulCreateEntityTestCase extends DrupalWebTestCase {
     $this->assertEqual($result['image_multiple'], $ids, 'Created entity with comma separated multiple image reference.');
 
   }
+
+  /**
+   * Test access for file upload.
+   */
+  public function testFileUploadAccess() {
+    variable_set('restful_file_upload', TRUE);
+    variable_set('restful_file_upload_allow_anonymous_user', TRUE);
+    // Test access for anonymous user (allowed).
+    $return = $this->uploadFile();
+    $this->assertEqual($return['code'], 200, 'File upload is allowed to anonymous users.');
+    variable_set('restful_file_upload_allow_anonymous_user', FALSE);
+    // Now that we have a successfully uploaded file, make sure it's the same
+    // file that was uploaded.
+    $original = hash_file('md5', $this->imagePath);
+    $return_array = drupal_json_decode($return['body']);
+    $uploaded = hash_file('md5', $return_array['list'][0]['self']);
+    $this->assertEqual($original, $uploaded, 'Original and uploaded file are identical.');
+    // Test access for anonymous user (denied).
+    $return = $this->uploadFile();
+    $this->assertEqual($return['code'], 403, 'File upload is denied to anonymous users.');
+
+    $account = $this->drupalCreateUser();
+    $this->drupalLogin($account);
+    // Test access for authenticated users (allowed).
+    $return = $this->uploadFile();
+    $this->assertEqual($return['code'], 200, 'File upload is allowed to authenticated users.');
+    // Test access for authenticated users (denied).
+    variable_set('restful_file_upload', FALSE);
+    $return = $this->uploadFile();
+    $this->assertEqual($return['code'], 403, 'File upload is denied to authenticated users.');
+
+  }
+
+  /**
+   * Uploads a file issuing a POST HTTP request.
+   */
+  protected function uploadFile() {
+    $value = '@' . $this->imagePath;
+
+    // PHP 5.5 introduced a CurlFile object that deprecates the old @filename
+    // syntax. See: https://wiki.php.net/rfc/curl-file-upload
+    if (function_exists('curl_file_create')) {
+      $value = curl_file_create($this->imagePath);
+    }
+
+    return $this->httpRequest('api/file-upload', \RestfulInterface::POST, array(
+      'filename' => $value,
+    ), array(
+      'Content-Type' => 'multipart/form-data',
+    ), TRUE);
+  }
+
 }
