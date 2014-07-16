@@ -16,8 +16,8 @@ class RestfulEntityBaseNode extends RestfulEntityBase {
    *
    * Expose only published nodes.
    */
-  public function getQueryForList($request, stdClass $account = NULL) {
-    $query = parent::getQueryForList($request, $account);
+  public function getQueryForList() {
+    $query = parent::getQueryForList();
     $query->propertyCondition('status', NODE_PUBLISHED);
     return $query;
   }
@@ -27,13 +27,14 @@ class RestfulEntityBaseNode extends RestfulEntityBase {
    *
    * Set the node author and other defaults.
    */
-  public function entityPreSave($entity, $request, stdClass $account) {
-    if (!empty($entity->nid)) {
+  public function entityPreSave(\EntityMetadataWrapper $wrapper) {
+    $node = $wrapper->value();
+    if (!empty($node->nid)) {
       // Node is already saved.
       return;
     }
-    node_object_prepare($entity);
-    $entity->uid = $account->uid;
+    node_object_prepare($node);
+    $node->uid = $account->uid;
   }
 
 }
