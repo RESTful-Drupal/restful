@@ -21,16 +21,12 @@ class RestfulUserLoginCookie extends \RestfulEntityBase {
   /**
    * Login a user and return a JSON along with the authentication cookie.
    *
-   * @param array $request
-   *   (optional) The request.
-   * @param stdClass $account
-   *   (optional) The user object.
-   *
    * @return array
    *   Array with the public fields populated.
    */
-  public function loginAndRespondWithCookie($request = NULL, stdClass $account = NULL) {
+  public function loginAndRespondWithCookie() {
     // Login the user.
+    $account = $this->getAccount();
     $this->loginUser($account);
 
     $version = $this->getVersion();

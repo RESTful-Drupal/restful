@@ -44,7 +44,7 @@ interface RestfulInterface {
    * @param string $path
    *   The requested path.
    * @param array $request
-   *   The request array
+   *   The request array.
    * @param string $method
    *   The HTTP method.
    * @param bool $check_rate_limit
@@ -55,7 +55,7 @@ interface RestfulInterface {
    * @return mixed
    *   The return value can depend on the controller for the current $method.
    */
-  public function process($path = '', $request = NULL, $method = \RestfulInterface::GET, $check_rate_limit = TRUE);
+  public function process($path = '', array $request = array(), $method = \RestfulInterface::GET, $check_rate_limit = TRUE);
 
   /**
    * Return the properties that should be public.

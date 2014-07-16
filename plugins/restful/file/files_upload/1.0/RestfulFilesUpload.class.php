@@ -54,7 +54,7 @@ class RestfulFilesUpload extends \RestfulEntityBase {
    *
    * @throws \Exception
    */
-  public function createEntity($request = NULL, stdClass $account = NULL) {
+  public function createEntity() {
     if (!$_FILES) {
       throw new \RestfulBadRequestException('No files sent with the request.');
     }

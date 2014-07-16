@@ -385,13 +385,13 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    *
    * @param string $path
    *   (optional) The path.
-   * @param null $request
+   * @param array $request
    *   (optional) The request.
    *
    * @return mixed
    *   The return value can depend on the controller for the get method.
    */
-  public function get($path = '', $request = NULL) {
+  public function get($path = '', array $request = array()) {
     return $this->process($path, $request, \RestfulInterface::GET);
   }
 
@@ -400,13 +400,13 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    *
    * @param string $path
    *   (optional) The path.
-   * @param null $request
+   * @param array $request
    *   (optional) The request.
    *
    * @return mixed
    *   The return value can depend on the controller for the post method.
    */
-  public function post($path = '', $request = NULL) {
+  public function post($path = '', array $request = array()) {
     return $this->process($path, $request, \RestfulInterface::POST);
   }
 
@@ -415,13 +415,13 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    *
    * @param string $path
    *   (optional) The path.
-   * @param null $request
+   * @param array $request
    *   (optional) The request.
    *
    * @return mixed
    *   The return value can depend on the controller for the put method.
    */
-  public function put($path = '', $request = NULL) {
+  public function put($path = '', array $request = array()) {
     return $this->process($path, $request, \RestfulInterface::PUT);
   }
 
@@ -430,12 +430,12 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    *
    * @param string $path
    *   (optional) The path.
-   * @param null $request
+   * @param array $request
    *   (optional) The request.
    * @return mixed
    *   The return value can depend on the controller for the patch method.
    */
-  public function patch($path = '', $request = NULL) {
+  public function patch($path = '', array $request = array()) {
     return $this->process($path, $request, \RestfulInterface::PATCH);
   }
 
@@ -444,20 +444,20 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    *
    * @param string $path
    *   (optional) The path.
-   * @param null $request
+   * @param array $request
    *   (optional) The request.
    *
    * @return mixed
    *   The return value can depend on the controller for the delete method.
    */
-  public function delete($path = '', $request = NULL) {
+  public function delete($path = '', array $request = array()) {
     return $this->process($path, $request, \RestfulInterface::DELETE);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function process($path = '', $request = NULL, $method = \RestfulInterface::GET, $check_rate_limit = TRUE) {
+  public function process($path = '', array $request = array(), $method = \RestfulInterface::GET, $check_rate_limit = TRUE) {
     $this->setMethod($method);
     $this->setPath($path);
     $this->setRequest($request);

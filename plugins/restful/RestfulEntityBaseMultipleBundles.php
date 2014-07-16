@@ -45,7 +45,7 @@ class RestfulEntityBaseMultipleBundles extends RestfulEntityBase {
   /**
    * Overrides RestfulEntityBase::getList().
    */
-  public function getList($request = NULL, stdClass $account = NULL) {
+  public function getList() {
     $entity_type = $this->entityType;
     $result = $this
       ->getQueryForList()

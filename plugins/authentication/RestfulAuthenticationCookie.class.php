@@ -9,7 +9,7 @@ class RestfulAuthenticationCookie extends RestfulAuthenticationBase implements R
   /**
    * Implements RestfulAuthenticationInterface::authenticate().
    */
-  public function authenticate($request = NULL, $method = 'get') {
+  public function authenticate(array $request = array(), $method = \RestfulBase::GET) {
     if (!drupal_session_started() && !$this->isCli()) {
       return;
     }
