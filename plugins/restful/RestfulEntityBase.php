@@ -960,7 +960,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
     $save = FALSE;
     $original_request = $request;
 
-    foreach ($this->getPublicFields() as $public_property => $info) {
+    foreach ($this->getPublicFields() as $public_field_name => $info) {
       if (empty($info['property'])) {
         // We may have for example an entity with no label property, but with a
         // label callback. In that case the $info['property'] won't exist, so
@@ -969,7 +969,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
       }
 
       $property_name = $info['property'];
-      if (!isset($request[$public_property])) {
+      if (!isset($request[$public_field_name])) {
         // No property to set in the request.
         if ($null_missing_fields && $this->checkPropertyAccess($wrapper->{$property_name})) {
           // We need to set the value to NULL.
@@ -979,13 +979,13 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
       }
 
       if (!$this->checkPropertyAccess($wrapper->{$property_name})) {
-        throw new RestfulBadRequestException(format_string('Property @name cannot be set.', array('@name' => $public_property)));
+        throw new RestfulBadRequestException(format_string('Property @name cannot be set.', array('@name' => $public_field_name)));
       }
 
-      $field_value = $this->propertyValuesPreprocess($property_name, $request[$public_property]);
+      $field_value = $this->propertyValuesPreprocess($property_name, $request[$public_field_name], $public_field_name);
 
       $wrapper->{$property_name}->set($field_value);
-      unset($original_request[$public_property]);
+      unset($original_request[$public_field_name]);
       $save = TRUE;
     }
 
@@ -1016,18 +1016,20 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    *   The property name to set.
    * @param $value
    *   The value passed in the request.
+   * @param string $public_field_name
+   *   The name of the public field to set.
    *
    * @return mix
    *   The value to set using the wrapped property.
    */
-  public function propertyValuesPreprocess($property_name, $value) {
+  public function propertyValuesPreprocess($property_name, $value, $public_field_name) {
     // Get the field info.
     $field_info = field_info_field($property_name);
 
     switch ($field_info['type']) {
       case 'entityreference':
       case 'taxonomy_term_reference':
-        return $this->propertyValuesPreprocessReference($property_name, $value, $field_info);
+        return $this->propertyValuesPreprocessReference($property_name, $value, $field_info, $public_field_name);
 
       case 'text':
       case 'text_long':
@@ -1052,18 +1054,20 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    *   The value passed in the request.
    * @param array $field_info
    *   The field info array.
+   * @param string $public_field_name
+   *   The name of the public field to set.
    *
    * @return mix
    *   The value to set using the wrapped property.
    */
-  protected function propertyValuesPreprocessReference($property_name, $value, $field_info) {
+  protected function propertyValuesPreprocessReference($property_name, $value, $field_info, $public_field_name) {
     if ($field_info['cardinality'] != 1 && !is_array($value)) {
       // If the field is entity reference type and its cardinality larger than
       // 1 set value to an array.
       $value = explode(',', $value);
     }
 
-    $value = $this->createEntityFromReference($property_name, $value, $field_info);
+    $value = $this->createEntityFromReference($property_name, $value, $field_info, $public_field_name);
 
     return $value;
   }
@@ -1077,37 +1081,47 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    *   The value passed in the request.
    * @param array $field_info
    *   The field info array.
+   * @param string $public_field_name
+   *   The name of the public field to set.
    *
    * @return mix
    *   The value to set using the wrapped property.
    */
-  protected function createEntityFromReference($property_name, $value, $field_info) {
+  protected function createEntityFromReference($property_name, $value, $field_info, $public_field_name) {
     $public_fields = $this->getPublicFields();
 
-    if (empty($public_fields[$property_name]['resource'])) {
+    if (empty($public_fields[$public_field_name]['resource'])) {
       // Field is not defined as "resource", which means it only accepts an
       // integer as a valid value.
-      return;
+      return $value;
     }
 
     if ($field_info['cardinality'] == 1 && !is_array($value)) {
-      return;
+      return $value;
     }
-    elseif ($field_info['cardinality'] == 1 && !is_array($value[0])) {
-      return;
+    elseif ($field_info['cardinality'] != 1 && !is_array($value[0])) {
+      return $value;
     }
 
-    // Keep the original request.
-    $original_request = $this->getRequest();
+    // In case we have multiple bundles, we opt for the first one.
+    $resource_name = reset($public_fields[$public_field_name]['resource']);
 
-    // The value is a non-saved entity, so we need to recurse and create that
-    // entity.
-    $value = $this->process($this->getPath(), $value, $this->getMethod());
+    $version = $this->getVersion();
+    $handler = restful_get_restful_handler($resource_name, $version['major'], $version['minor']);
 
-    // Switch back to the previous request.
-    $this->setRequest($original_request);
+    $result = $handler->process($this->getPath(), $value, $this->getMethod(), FALSE);
 
-    return $value;
+    // Return the entity ID that was created.
+    if ($field_info['cardinality'] == 1) {
+      return $result['id'];
+    }
+
+    $return = array();
+    foreach ($result as $row) {
+      $return[] = $row['id'];
+    }
+
+    return $return;
   }
 
   /**
