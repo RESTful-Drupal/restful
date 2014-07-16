@@ -1113,9 +1113,11 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
 
     // Return the entity ID that was created.
     if ($field_info['cardinality'] == 1) {
+      // Single value.
       return $result['id'];
     }
 
+    // Multiple values.
     $return = array();
     foreach ($result as $row) {
       $return[] = $row['id'];
