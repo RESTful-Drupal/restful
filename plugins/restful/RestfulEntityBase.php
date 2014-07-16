@@ -471,7 +471,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
       $this->getRateLimitManager()->checkRateLimit($request);
     }
 
-    return $this->{$method_name}();
+    return $this->{$method_name}($path);
   }
 
   /**
