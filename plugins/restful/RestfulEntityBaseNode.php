@@ -34,7 +34,7 @@ class RestfulEntityBaseNode extends RestfulEntityBase {
       return;
     }
     node_object_prepare($node);
-    $node->uid = $account->uid;
+    $node->uid = $this->getAccount()->uid;
   }
 
 }

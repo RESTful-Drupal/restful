@@ -458,6 +458,10 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    * {@inheritdoc}
    */
   public function process($path = '', $request = NULL, $method = \RestfulInterface::GET, $check_rate_limit = TRUE) {
+    $this->setMethod($method);
+    $this->setPath($path);
+    $this->setRequest($request);
+
     if (!$method_name = $this->getControllerFromPath()) {
       throw new RestfulBadRequestException('Path does not exist');
     }
@@ -466,10 +470,6 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
       // This will throw the appropriate exception if needed.
       $this->getRateLimitManager()->checkRateLimit($request);
     }
-
-    $this->setMethod($method);
-    $this->setPath($path);
-    $this->setRequest($request);
 
     return $this->{$method_name}();
   }
@@ -1063,19 +1063,49 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
       $value = explode(',', $value);
     }
 
+    $value = $this->createEntityFromReference($property_name, $value, $field_info);
+
+    return $value;
+  }
+
+  /**
+   * Helper function; Create an entity from a a sub-resource.
+   *
+   * @param string $property_name
+   *   The property name to set.
+   * @param $value
+   *   The value passed in the request.
+   * @param array $field_info
+   *   The field info array.
+   *
+   * @return mix
+   *   The value to set using the wrapped property.
+   */
+  protected function createEntityFromReference($property_name, $value, $field_info) {
     $public_fields = $this->getPublicFields();
-    if (is_array($value[0]) && !empty($public_fields[$property_name]['resource'])) {
 
-      // Keep the original request.
-      $original_request = $this->getRequest();
-
-      // The value is a non-saved entity, so we need to recurse and create that
-      // entity.
-      $this->process($this->getPath(), $value, $this->getMethod());
-
-      // Switch back to the previous request.
-      $this->setRequest($original_request);
+    if (empty($public_fields[$property_name]['resource'])) {
+      // Field is not defined as "resource", which means it only accepts an
+      // integer as a valid value.
+      return;
     }
+
+    if ($field_info['cardinality'] == 1 && !is_array($value)) {
+      return;
+    }
+    elseif ($field_info['cardinality'] == 1 && !is_array($value[0])) {
+      return;
+    }
+
+    // Keep the original request.
+    $original_request = $this->getRequest();
+
+    // The value is a non-saved entity, so we need to recurse and create that
+    // entity.
+    $value = $this->process($this->getPath(), $value, $this->getMethod());
+
+    // Switch back to the previous request.
+    $this->setRequest($original_request);
 
     return $value;
   }
