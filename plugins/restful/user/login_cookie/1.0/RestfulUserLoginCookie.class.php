@@ -36,7 +36,7 @@ class RestfulUserLoginCookie extends \RestfulEntityBase {
     $version = $this->getVersion();
     $handler = restful_get_restful_handler('users', $version['major'], $version['minor']);
 
-    return $handler->viewEntity($account->uid, $request, $account);
+    return $handler->viewEntity($account->uid);
   }
 
   /**

@@ -526,7 +526,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
 
     $entity_type = $this->entityType;
     $result = $this
-      ->getQueryForList($request, $account)
+      ->getQueryForList()
       ->execute();
 
 

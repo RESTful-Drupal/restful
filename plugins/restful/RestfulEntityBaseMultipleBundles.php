@@ -48,7 +48,7 @@ class RestfulEntityBaseMultipleBundles extends RestfulEntityBase {
   public function getList($request = NULL, stdClass $account = NULL) {
     $entity_type = $this->entityType;
     $result = $this
-      ->getQueryForList($request, $account)
+      ->getQueryForList()
       ->execute();
 
 
@@ -84,8 +84,8 @@ class RestfulEntityBaseMultipleBundles extends RestfulEntityBase {
   /**
    * Overrides RestfulEntityBase::getQueryForList().
    */
-  public function getQueryForList($request, stdClass $account = NULL) {
-    $query = parent::getQueryForList($request, $account);
+  public function getQueryForList() {
+    $query = parent::getQueryForList();
     $query->entityCondition('bundle', array_keys($this->getBundles()), 'IN');
     return $query;
   }
