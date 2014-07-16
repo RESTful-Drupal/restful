@@ -129,6 +129,77 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
   protected $rateLimitManager = NULL;
 
   /**
+   * The path of the request.
+   *
+   * @var string
+   */
+  protected $path = '';
+
+  /**
+   * The request array.
+   *
+   * @var array | null
+   */
+  protected $request = array();
+
+  /**
+   * Return the path of the request.
+   *
+   * @return string
+   *   String with the path.
+   */
+  public function getPath() {
+    return $this->path;
+  }
+
+  /**
+   * Set the path of the request.
+   *
+   * @param string $path
+   */
+  public function setPath($path = '') {
+    $this->path = $path;
+  }
+
+  /**
+   * Get the request array.
+   *
+   * @return array
+   */
+  public function getRequest() {
+    return $this->request;
+  }
+
+  /**
+   * Set the request array.
+   *
+   * @param array $request
+   *   Array with the request.
+   */
+  public function setRequest(array $request = array()) {
+    $this->request = $request;
+  }
+
+  /**
+   * Clear the request and path.
+   */
+  public function clearRequestAndPath() {
+    $this->setRequest();
+    $this->setPath();
+  }
+
+  /**
+   * Helper function to remove the application generated request data.
+   *
+   * @param &array $request
+   *   The request array to be modified.
+   */
+  public static function cleanRequest(&$request) {
+    unset($request['__application']);
+  }
+
+
+  /**
    * Get the defined controllers
    *
    * @return array
@@ -361,14 +432,14 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
   /**
    * {@inheritdoc}
    */
-  public function process($path = '', $request = NULL, $method = \RestfulInterface::GET) {
+  public function process($path = '', $request = NULL, $method = \RestfulInterface::GET, $check_rate_limit = TRUE) {
     $account = $this->getAccount($request, $method);
 
     if (!$method_name = $this->getControllerFromPath($path, $method)) {
       throw new RestfulBadRequestException('Path does not exist');
     }
 
-    if ($this->getRateLimitManager()) {
+    if ($check_rate_limit && $this->getRateLimitManager()) {
       // This will throw the appropriate exception if needed.
       $this->getRateLimitManager()->checkRateLimit($request);
     }
@@ -717,6 +788,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    * @param string $property
    *   The property name (i.e. the field name).
    * @param array $resource
+   *   Array with resource names, keyed by the bundle name.
    * @param array $request
    * @param stdClass $account
    *   The user object.
@@ -921,7 +993,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
         throw new RestfulBadRequestException(format_string('Property @name cannot be set.', array('@name' => $public_property)));
       }
 
-      $field_value = $this->propertyValuesPreprocess($property_name, $request[$public_property]);
+      $field_value = $this->propertyValuesPreprocess($property_name, $request[$public_property], $request, $account);
 
       $wrapper->{$property_name}->set($field_value);
       unset($original_request[$public_property]);
@@ -959,14 +1031,14 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    * @return mix
    *   The value to set using the wrapped property.
    */
-  public function propertyValuesPreprocess($property_name, $value) {
+  public function propertyValuesPreprocess($property_name, $value, $request, stdClass $account) {
     // Get the field info.
     $field_info = field_info_field($property_name);
 
     switch ($field_info['type']) {
       case 'entityreference':
       case 'taxonomy_term_reference':
-        return $this->propertyValuesPreprocessReference($property_name, $value, $field_info);
+        return $this->propertyValuesPreprocessReference($property_name, $value, $field_info, $request, $account);
 
       case 'text':
       case 'text_long':
@@ -995,11 +1067,18 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    * @return mix
    *   The value to set using the wrapped property.
    */
-  protected function propertyValuesPreprocessReference($property_name, $value, $field_info) {
+  protected function propertyValuesPreprocessReference($property_name, $value, $field_info, $request, stdClass $account) {
     if ($field_info['cardinality'] != 1 && !is_array($value)) {
       // If the field is entity reference type and its cardinality larger than
       // 1 set value to an array.
-      return explode(',', $value);
+      $value = explode(',', $value);
+    }
+
+    $public_fields = $this->getPublicFields();
+    if (is_array($value[0]) && !empty($public_fields[$property_name]['resource'])) {
+      // The value is a non-saved entity, so we need to recurse and create that
+      // entity.
+      $this->process();
     }
 
     return $value;
@@ -1265,17 +1344,6 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
   }
 
   /**
-   * Get the request array if any.
-   *
-   * @return array
-   *
-   * @todo There is no $this->request populated anywhere.
-   */
-  public function getRequest() {
-    return isset($this->request) ? $this->request : NULL;
-  }
-
-  /**
    * {@inheritdoc}
    */
   public function access() {
@@ -1364,16 +1432,6 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
     }
 
     return url($this->getPluginInfo('menu_item'), $options);
-  }
-
-  /**
-   * Helper function to remove the application generated request data.
-   *
-   * @param &array $request
-   *   The request array to be modified.
-   */
-  public static function cleanRequest(&$request) {
-    unset($request['__application']);
   }
 
   /**

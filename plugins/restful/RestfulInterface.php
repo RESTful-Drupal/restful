@@ -47,11 +47,15 @@ interface RestfulInterface {
    *   The request array
    * @param string $method
    *   The HTTP method.
+   * @param bool $check_rate_limit
+   *   Determines if rate limit should be checked. This could be set to FALSE
+   *   for example when inside a recursion, and we don't want to cout multiple
+   *   times the same request. Defautls to TRUE.
    *
    * @return mixed
    *   The return value can depend on the controller for the current $method.
    */
-  public function process($path = '', $request = NULL, $method = \RestfulInterface::GET);
+  public function process($path = '', $request = NULL, $method = \RestfulInterface::GET, $check_rate_limit = TRUE);
 
   /**
    * Return the properties that should be public.
