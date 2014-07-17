@@ -24,7 +24,7 @@ class RestfulSubResourcesCreateEntityTestCase extends DrupalWebTestCase {
   }
 
   function setUp() {
-    parent::setUp('restful_example', 'entityreference', 'entity_validator_example');
+    parent::setUp('restful_test', 'entity_validator_example');
 
     // Entity reference - single.
     $field = array(
