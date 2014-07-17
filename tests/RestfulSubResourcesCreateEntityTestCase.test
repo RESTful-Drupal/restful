@@ -19,7 +19,7 @@ class RestfulSubResourcesCreateEntityTestCase extends DrupalWebTestCase {
       'name' => 'Create Sub resources',
       'description' => 'Test the creation of sub-resources (referenced entities).',
       'group' => 'Restful',
-      'dependencies' => array('entity_validator_example'),
+      'dependencies' => array('entity_validator'),
     );
   }
 
