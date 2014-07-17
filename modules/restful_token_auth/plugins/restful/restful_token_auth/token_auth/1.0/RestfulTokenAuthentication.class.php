@@ -35,6 +35,7 @@ class RestfulTokenAuthentication extends \RestfulEntityBase {
    * Create a token for a user, and return its value.
    */
   public function getOrCreateToken() {
+    $account = $this->getAccount();
     // Check if there is a token that did not expire yet.
     $query = new EntityFieldQuery();
     $result = $query

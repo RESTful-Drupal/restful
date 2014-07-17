@@ -56,6 +56,9 @@ class RestfulEntityBaseMultipleBundles extends RestfulEntityBase {
       return;
     }
 
+    $account = $this->getAccount();
+    $request = $this->getRequest();
+
     $ids = array_keys($result[$entity_type]);
 
     // Pre-load all entities.

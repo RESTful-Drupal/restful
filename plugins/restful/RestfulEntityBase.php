@@ -206,14 +206,6 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
   }
 
   /**
-   * Clear the request and path.
-   */
-  public function clearRequestAndPath() {
-    $this->setRequest();
-    $this->setPath();
-  }
-
-  /**
    * Helper function to remove the application generated request data.
    *
    * @param &array $request
