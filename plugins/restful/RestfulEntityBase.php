@@ -1101,18 +1101,18 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
     $version = $this->getVersion();
     $handler = restful_get_restful_handler($resource_name, $version['major'], $version['minor']);
 
-    $result = $handler->process($this->getPath(), $value, $this->getMethod(), FALSE);
-
     // Return the entity ID that was created.
     if ($field_info['cardinality'] == 1) {
+      $result = $handler->process($this->getPath(), $value, $this->getMethod(), FALSE);
       // Single value.
       return $result['id'];
     }
 
     // Multiple values.
     $return = array();
-    foreach ($result as $row) {
-      $return[] = $row['id'];
+    foreach ($value as $value_item) {
+      $result = $handler->process($this->getPath(), $value_item, $this->getMethod(), FALSE);
+      $return[] = $result['id'];
     }
 
     return $return;
@@ -1243,6 +1243,12 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
 
       $map[$value['property']] = $field_name;
       $params['@fields'][] = $field_name;
+    }
+
+    if (empty($params['@fields'])) {
+      // There was a validation error, but on non-public fields, so we need to
+      // throw an exception, but can say on which fields it coccured.
+      throw new \RestfulBadRequestException('Invalid value(s) sent with the request.');
     }
 
     $params['@fields'] = implode(',', $params['@fields']);

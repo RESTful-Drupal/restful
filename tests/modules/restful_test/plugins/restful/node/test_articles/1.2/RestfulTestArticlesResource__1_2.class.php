@@ -13,6 +13,11 @@ class RestfulTestArticlesResource__1_2 extends RestfulEntityBaseNode {
   public function getPublicFields() {
     $public_fields = parent::getPublicFields();
 
+    $public_fields['body'] = array(
+      'property' => 'body',
+      'sub_property' => 'value',
+    );
+
     $public_fields['entity_reference_single'] = array(
       'property' => 'entity_reference_single',
       'resource' => array(
