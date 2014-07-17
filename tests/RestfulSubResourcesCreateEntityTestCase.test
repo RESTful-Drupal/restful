@@ -1,0 +1,141 @@
+<?php
+
+/**
+ * @file
+ * Contains RestfulSubResourcesCreateEntityTestCase.
+ */
+
+class RestfulSubResourcesCreateEntityTestCase extends DrupalWebTestCase {
+
+  /**
+   * Hold the RESTful handler.
+   *
+   * @var RestfulInterface | NULL
+   */
+  protected $handler = NULL;
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Create Sub resources',
+      'description' => 'Test the creation of sub-resources (referenced entities).',
+      'group' => 'Restful',
+      'dependencies' => array('entity_validator_example'),
+    );
+  }
+
+  function setUp() {
+    parent::setUp('restful_example', 'entityreference', 'entity_validator_example');
+
+    // Entity reference - single.
+    $field = array(
+      'entity_types' => array('node'),
+      'settings' => array(
+        'handler' => 'base',
+        'target_type' => 'node',
+        'handler_settings' => array(),
+      ),
+      'field_name' => 'entity_reference_single',
+      'type' => 'entityreference',
+      'cardinality' => 1,
+    );
+    field_create_field($field);
+
+    $instance = array(
+      'entity_type' => 'node',
+      'field_name' => 'entity_reference_single',
+      'bundle' => 'article',
+      'label' => t('Entity reference single'),
+    );
+
+    field_create_instance($instance);
+
+    // Entity reference - multiple.
+    $field = array(
+      'entity_types' => array('node'),
+      'settings' => array(
+        'handler' => 'base',
+        'target_type' => 'node',
+        'handler_settings' => array(),
+      ),
+      'field_name' => 'entity_reference_multiple',
+      'type' => 'entityreference',
+      'cardinality' => FIELD_CARDINALITY_UNLIMITED,
+    );
+    field_create_field($field);
+
+    $instance = array(
+      'entity_type' => 'node',
+      'field_name' => 'entity_reference_multiple',
+      'bundle' => 'article',
+      'label' => t('Entity reference multiple'),
+    );
+
+    field_create_instance($instance);
+
+    $this->handler = restful_get_restful_handler('test_articles', 1, 2);
+  }
+
+  /**
+   * Test creating an entity with sub-resources.
+   */
+  function testCreateEntity() {
+    $handler = $this->handler;
+    $request = array(
+      'label' => 'parent',
+      'body' => 'Gizra',
+      'entity_reference_single' => array(
+        'label' => 'child1',
+        'body' => 'Gizra1',
+      ),
+      'entity_reference_multiple' => array(
+        array(
+          'label' => 'child2',
+          'body' => 'Gizra2',
+        ),
+        array(
+          'label' => 'child3',
+          'body' => 'Gizra3',
+        ),
+      ),
+    );
+    $result = $handler->post('', $request);
+    $this->assertTrue($result['id'], 'Parent entity created.');
+    $this->assertTrue($result['entity_reference_single']['id'], 'Single sub-resource created.');
+    $this->assertTrue($result['entity_reference_multiple'][0]['id'] && $result['entity_reference_multiple'][1]['id'], 'Multiple sub-resource created.');
+
+    // Validation fail on the parent.
+    $request['label'] = 'no';
+    $this->assertInvalidRequest($request);
+
+
+    // Validation fail on the single resource.
+    $request['label'] = 'parent';
+    $request['entity_reference_single']['label'] = 'no';
+    $this->assertInvalidRequest($request);
+
+    // Validation fail on the multiple resource.
+    $request['entity_reference_single']['label'] = 'child1';
+    $request['entity_reference_multiple'][0]['label'] = 'no';
+    $this->assertInvalidRequest($request);
+  }
+
+  /**
+   * Validate an invalid request fails.
+   *
+   * @param array $request
+   *   The request array.
+   */
+  protected function assertInvalidRequest(array $request = array()) {
+    $handler = $this->handler;
+    try {
+      $handler->post('', $request);
+      $this->fail('No exception thrown on validation fail on the parent.');
+    }
+    catch (\RestfulBadRequestException $e) {
+      $this->fail('Correct exception thrown on validation fail on the parent.');
+    }
+    catch (\Exception $e) {
+      $this->fail('Wrong exception thrown on validation fail on the parent.');
+    }
+  }
+}
