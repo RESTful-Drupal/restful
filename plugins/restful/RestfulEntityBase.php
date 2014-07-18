@@ -956,7 +956,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    * @param $value
    *   The value passed in the request.
    *
-   * @return mix
+   * @return mixed
    *   The value to set using the wrapped property.
    */
   public function propertyValuesPreprocess($property_name, $value) {
@@ -992,7 +992,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    * @param array $field_info
    *   The field info array.
    *
-   * @return mix
+   * @return mixed
    *   The value to set using the wrapped property.
    */
   protected function propertyValuesPreprocessReference($property_name, $value, $field_info) {
@@ -1015,7 +1015,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    * @param array $field_info
    *   The field info array.
    *
-   * @return mix
+   * @return mixed
    *   The value to set using the wrapped property.
    */
   protected function propertyValuesPreprocessText($property_name, $value, $field_info) {
@@ -1059,7 +1059,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    * @param array $field_info
    *   The field info array.
    *
-   * @return mix
+   * @return mixed
    *   The value to set using the wrapped property.
    */
   protected function propertyValuesPreprocessFile($property_name, $value, $field_info) {
