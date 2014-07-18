@@ -10,7 +10,7 @@ class RestfulSubResourcesCreateEntityTestCase extends DrupalWebTestCase {
   /**
    * Hold the RESTful handler.
    *
-   * @var RestfulInterface | NULL
+   * @var RestfulInterface
    */
   protected $handler = NULL;
 
