@@ -18,7 +18,7 @@ interface RestfulAuthenticationInterface {
    * @return \stdClass|null
    *   The user object.
    */
-  public function authenticate(array $request = array(), $method = \RestfulBase::GET);
+  public function authenticate(array $request = array(), $method = \RestfulInterface::GET);
 
   /**
    * Determines if the request can be checked for authentication. For example,
