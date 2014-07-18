@@ -82,19 +82,19 @@ class RestfulSubResourcesCreateEntityTestCase extends DrupalWebTestCase {
     $handler = $this->handler;
     $request = array(
       'label' => 'parent',
-      'body' => 'Gizra',
+      'body' => 'Drupal',
       'entity_reference_single' => array(
         'label' => 'child1',
-        'body' => 'Gizra1',
+        'body' => 'Drupal1',
       ),
       'entity_reference_multiple' => array(
         array(
           'label' => 'child2',
-          'body' => 'Gizra2',
+          'body' => 'Drupal2',
         ),
         array(
           'label' => 'child3',
-          'body' => 'Gizra3',
+          'body' => 'Drupal3',
         ),
       ),
     );
