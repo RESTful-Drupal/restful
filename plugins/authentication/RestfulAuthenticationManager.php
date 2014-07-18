@@ -63,6 +63,7 @@ class RestfulAuthenticationManager extends \ArrayObject {
    * @param string $method
    *   The HTTP method.
    *
+   * @throws RestfulUnauthorizedException
    * @return \stdClass
    *   The user object.
    */

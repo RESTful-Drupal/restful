@@ -22,6 +22,13 @@ class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
    */
   private $imagePath;
 
+  /**
+   * @var \stdClass
+   *
+   * Holds the created account.
+   */
+  protected $account;
+
   function setUp() {
     parent::setUp('restful_test', 'entityreference');
 
@@ -31,6 +38,7 @@ class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
     $images = $this->drupalGetTestFiles('image');
     $image = reset($images);
     $this->imagePath = drupal_realpath($image->uri);
+    $this->account = $this->drupalCreateUser();
   }
 
   /**
@@ -185,8 +193,7 @@ class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
     $return = $this->uploadFile();
     $this->assertEqual($return['code'], 403, 'File upload is denied to anonymous users.');
 
-    $account = $this->drupalCreateUser();
-    $this->drupalLogin($account);
+    $this->drupalLogin($this->account);
     // Test access for authenticated users (allowed).
     $return = $this->uploadFile();
     $this->assertEqual($return['code'], 200, 'File upload is allowed to authenticated users.');

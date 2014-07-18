@@ -95,7 +95,12 @@ class RestfulFilesUpload extends \RestfulEntityBase {
    * Overrides RestfulEntityBase::access().
    */
   public function access() {
-    $account = $this->getAccount();
+    try {
+      $account = $this->getAccount();
+    }
+    catch (\RestfulUnauthorizedException $e) {
+      $account = drupal_anonymous_user();
+    }
     if (module_exists('file_entity')) {
       return user_access('bypass file access') || user_access('create files');
     }
