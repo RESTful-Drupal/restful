@@ -106,7 +106,7 @@ class RestfulCsrfTokenTestCase extends RestfulCurlBaseTestCase {
       }
 
       // Invalid CSRF token.
-      $result = $this->httpRequest($this->getPath($method), $method, $request, array('X-CSRF-Token: invalidToken'), FALSE);
+      $result = $this->httpRequest($this->getPath($method), $method, $request, array('X-CSRF-Token' => 'invalidToken'), FALSE);
       if ($csrf_required) {
         $params['@code'] = 403;
         $this->assertEqual($result['code'], $params['@code'], format_string('@code on @method with invalid CSRF token for @role user.', $params));
