@@ -33,7 +33,7 @@ interface RestfulAuthenticationInterface {
    * @return bool
    *   TRUE if the request can be checked for authentication, FALSE otherwise.
    */
-  public function applies(array $request = array(), $method = 'get');
+  public function applies(array $request = array(), $method = \RestfulInterface::GET);
 
   /**
    * Get the name of the authentication plugin.
