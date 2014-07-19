@@ -656,6 +656,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    * @throws Exception
    */
   public function viewEntity($entity_id) {
+    $account = $this->getAccount();
     $request = $this->getRequest();
 
     $cached_data = $this->getRenderedEntityCache($entity_id);
