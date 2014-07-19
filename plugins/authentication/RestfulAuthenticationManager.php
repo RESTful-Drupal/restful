@@ -63,10 +63,11 @@ class RestfulAuthenticationManager extends \ArrayObject {
    * @param string $method
    *   The HTTP method.
    *
+   * @throws RestfulUnauthorizedException
    * @return \stdClass
    *   The user object.
    */
-  public function getAccount($request = NULL, $method = 'get') {
+  public function getAccount($request = NULL, $method = \RestfulInterface::GET) {
     global $user;
     // Return the previously resolved user, if any.
     if (!empty($this->account)) {

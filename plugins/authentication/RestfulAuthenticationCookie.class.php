@@ -9,7 +9,7 @@ class RestfulAuthenticationCookie extends RestfulAuthenticationBase implements R
   /**
    * Implements RestfulAuthenticationInterface::authenticate().
    */
-  public function authenticate($request = NULL, $method = 'get') {
+  public function authenticate($request = NULL, $method = \RestfulInterface::GET) {
     if (!drupal_session_started() && !$this->isCli()) {
       return;
     }
@@ -17,7 +17,7 @@ class RestfulAuthenticationCookie extends RestfulAuthenticationBase implements R
     global $user;
     $account = user_load($user->uid);
 
-    if (in_array($method, array('get', 'head', 'options', 'trace')) || empty($request['__application']['rest_call'])) {
+    if (!\RestfulBase::isWriteMethod($method) || empty($request['__application']['rest_call'])) {
       // Request is done via API not CURL, or not a write operation, so we don't
       // need to check for a CSRF token.
       return $account;

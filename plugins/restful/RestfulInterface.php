@@ -11,15 +11,15 @@ interface RestfulInterface {
   /**
    * HTTP methods.
    */
-  const GET = 'get';
-  const PUT = 'put';
-  const POST = 'post';
-  const PATCH = 'patch';
-  const OPTIONS = 'options';
-  const HEAD = 'head';
-  const TRACE = 'trace';
-  const DELETE = 'delete';
-  const CONNECT = 'connect';
+  const GET = 'GET';
+  const PUT = 'PUT';
+  const POST = 'POST';
+  const PATCH = 'PATCH';
+  const OPTIONS = 'OPTIONS';
+  const HEAD = 'HEAD';
+  const TRACE = 'TRACE';
+  const DELETE = 'DELETE';
+  const CONNECT = 'CONNECT';
 
   /**
    * Token value for token generation functions.

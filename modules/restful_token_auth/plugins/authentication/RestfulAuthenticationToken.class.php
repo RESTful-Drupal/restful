@@ -9,7 +9,7 @@ class RestfulAuthenticationToken extends \RestfulAuthenticationBase {
   /**
    * {@inheritdoc}
    */
-  public function applies($request = NULL, $method = 'get') {
+  public function applies($request = NULL, $method = \RestfulInterface::GET) {
     $key_name = !empty($this->plugin['options']['param_name']) ? $this->plugin['options']['param_name'] : 'access_token';
 
     // Access token may be on the request, or in the headers.
@@ -19,7 +19,7 @@ class RestfulAuthenticationToken extends \RestfulAuthenticationBase {
   /**
    * {@inheritdoc}
    */
-  public function authenticate($request = NULL, $method = 'get') {
+  public function authenticate($request = NULL, $method = \RestfulInterface::GET) {
     $key_name = !empty($this->plugin['options']['param_name']) ? $this->plugin['options']['param_name'] : 'access_token';
     $token = !empty($request['__application'][$key_name]) ? $request['__application'][$key_name] : $request[$key_name];
 

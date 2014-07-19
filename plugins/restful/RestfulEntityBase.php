@@ -859,7 +859,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    *
    * @throws RestfulForbiddenException
    */
-  public function createEntity($request, $account) {
+  public function createEntity($request = NULL, stdClass $account = NULL) {
     $entity_info = entity_get_info($this->entityType);
     $bundle_key = $entity_info['entity keys']['bundle'];
     $values = array($bundle_key => $this->bundle);
@@ -1306,7 +1306,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    * @return \stdClass
    *   The user object.
    */
-  public function getAccount($request = NULL, $method = 'get') {
+  public function getAccount($request = NULL, $method = \RestfulInterface::GET) {
     $account = $this->getAuthenticationManager()->getAccount($request, $method);
 
     // If the limit rate is enabled for the current plugin then set the account.
