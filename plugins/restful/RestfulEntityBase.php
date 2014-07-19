@@ -947,6 +947,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    * @throws RestfulBadRequestException
    */
   protected function setPropertyValues(EntityMetadataWrapper $wrapper, $null_missing_fields = FALSE) {
+    $account = $this->getAccount();
     $request = $this->getRequest();
 
     static::cleanRequest($request);
@@ -972,7 +973,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
       }
 
       if (!$this->checkPropertyAccess($wrapper->{$property_name}, 'edit', $account)) {
-        throw new RestfulBadRequestException(format_string('Property @name cannot be set.', array('@name' => $public_property)));
+        throw new RestfulBadRequestException(format_string('Property @name cannot be set.', array('@name' => $public_field_name)));
       }
 
       $field_value = $this->propertyValuesPreprocess($property_name, $request[$public_field_name], $public_field_name);
