@@ -28,7 +28,7 @@ class RestfulEntityValidatorTestCase extends RestfulCurlBaseTestCase {
     user_role_change_permissions(DRUPAL_ANONYMOUS_RID, array('create article content' => TRUE));
 
     $request = array('label' => 'no');
-    $result = $this->httpRequest('api/v1/articles', 'POST', $request);
+    $result = $this->httpRequest('api/v1/articles', \RestfulInterface::POST, $request);
 
     $expected_result = array(
       'label' => array(
@@ -41,7 +41,7 @@ class RestfulEntityValidatorTestCase extends RestfulCurlBaseTestCase {
     $this->assertEqual($body['fields'], $expected_result, 'Correct error message passed in the JSON');
 
     $request = array('label' => 'yes');
-    $result = $this->httpRequest('api/v1/articles', 'POST', $request);
+    $result = $this->httpRequest('api/v1/articles', \RestfulInterface::POST, $request);
     $this->assertEqual($result['code'], 200, 'Entity with proper title length passed validation.');
   }
 }
