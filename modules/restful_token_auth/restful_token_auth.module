@@ -28,6 +28,20 @@ function restful_token_auth_menu() {
   return $items;
 }
 
+/**
+ * Implements hook_restful_parse_request_alter()
+ */
+function restful_token_auth_restful_parse_request_alter(&$request) {
+  $plugin = restful_get_authentication_plugin('token');
+  $param_name = $plugin['options']['param_name'];
+
+  $capital_name = strtoupper('HTTP_X_' . $param_name);
+
+  $request['__application'] += array(
+    $param_name => !empty($_SERVER[$capital_name]) ? $_SERVER[$capital_name] : NULL,
+  );
+}
+
 
 /**
  * Implements hook_ctools_plugin_directory().

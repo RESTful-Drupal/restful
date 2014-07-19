@@ -11,7 +11,9 @@ class RestfulAuthenticationToken extends \RestfulAuthenticationBase {
    */
   public function applies($request = NULL, $method = \RestfulInterface::GET) {
     $key_name = !empty($this->plugin['options']['param_name']) ? $this->plugin['options']['param_name'] : 'access_token';
-    return !empty($request[$key_name]);
+
+    // Access token may be on the request, or in the headers.
+    return !empty($request['__application'][$key_name]) || !empty($request[$key_name]);
   }
 
   /**
@@ -19,14 +21,17 @@ class RestfulAuthenticationToken extends \RestfulAuthenticationBase {
    */
   public function authenticate($request = NULL, $method = \RestfulInterface::GET) {
     $key_name = !empty($this->plugin['options']['param_name']) ? $this->plugin['options']['param_name'] : 'access_token';
+    $token = !empty($request['__application'][$key_name]) ? $request['__application'][$key_name] : $request[$key_name];
 
     // Check if there is a token that did not expire yet.
+
     $query = new EntityFieldQuery();
     $result = $query
       ->entityCondition('entity_type', 'restful_token_auth')
-      ->propertyCondition('token', $request[$key_name])
+      ->propertyCondition('token', $token)
       ->range(0, 1)
       ->execute();
+
 
     if (empty($result['restful_token_auth'])) {
       // No token exists.

@@ -412,7 +412,7 @@ function restful_menu_access_callback($major_version, $resource_name) {
     return;
   }
 
-  if (!\RestfulBase::isKnownMethod($_SERVER['REQUEST_METHOD'], FALSE)) {
+  if (!\RestfulBase::isValidMethod($_SERVER['REQUEST_METHOD'], FALSE)) {
     return;
   }
 
@@ -442,6 +442,15 @@ function restful_menu_process_callback($major_version, $resource_name) {
   $path = implode('/', $path);
 
   $method = strtolower($_SERVER['REQUEST_METHOD']);
+
+  if ($method == 'options') {
+    // OPTIONS method is a special case that might be sent by the browser
+    // before the actual method to check for CORS (known as preflight OPTIONS).
+    drupal_add_http_header('Status', 204);
+    drupal_add_http_header('Content-Type', 'application/hal+json; charset=utf-8');
+    return;
+  }
+
   $request = restful_parse_request();
 
   try {
@@ -514,6 +523,10 @@ function restful_parse_request() {
     'rest_call' => TRUE,
     'csrf_token' => !empty($_SERVER['HTTP_X_CSRF_TOKEN']) ? $_SERVER['HTTP_X_CSRF_TOKEN'] : NULL,
   );
+
+  // Allow implemeting modules to alter the request.
+  drupal_alter('restful_parse_request', $request);
+
   return $request;
 }
 
@@ -693,6 +706,5 @@ function restful_file_upload_access() {
  * Page callback: returns a session token for the currently active user.
  */
 function restful_csrf_session_token() {
-  drupal_add_http_header('Content-Type', 'text/plain');
   return array('X-CSRF-Token' => drupal_get_token(\RestfulInterface::TOKEN_VALUE));
 }
