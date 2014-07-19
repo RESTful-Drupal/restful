@@ -61,7 +61,7 @@ abstract class RestfulBase implements RestfulInterface {
    * @return boolean
    *   TRUE if it is a known method. FALSE otherwise.
    */
-  public static function isKnownMethod($method, $strict = TRUE) {
+  public static function isValidMethod($method, $strict = TRUE) {
     $method = $strict ? $method : strtolower($method);
     return static::isReadMethod($method, $strict) || static::isWriteMethod($method, $strict);
   }

@@ -95,14 +95,19 @@ class RestfulFilesUpload extends \RestfulEntityBase {
    * Overrides RestfulEntityBase::access().
    */
   public function access() {
+    // The getAccount method may return a RestfulUnauthorizedException when an
+    // authenticated user cannot be found. Since this is called from the access
+    // callback, not from the page callback we need to catch the exception.
     try {
       $account = $this->getAccount();
     }
     catch (\RestfulUnauthorizedException $e) {
+      // If a user is not found then load the anonymous user to check
+      // permissions.
       $account = drupal_anonymous_user();
     }
     if (module_exists('file_entity')) {
-      return user_access('bypass file access') || user_access('create files');
+      return user_access('bypass file access', $account) || user_access('create files', $account);
     }
 
     return variable_get('restful_file_upload_allow_anonymous_user', FALSE) || $account->uid;
