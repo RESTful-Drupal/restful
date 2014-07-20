@@ -106,7 +106,7 @@ class RestfulSubResourcesCreateEntityTestCase extends DrupalWebTestCase {
       'type' => 'article',
       'title' => 'title1',
     );
-    $node1 = $this->drupalCreateNode();
+    $node1 = $this->drupalCreateNode($settings);
     $request = $base_request;
 
     foreach (array('put', 'patch') as $method) {
@@ -123,9 +123,8 @@ class RestfulSubResourcesCreateEntityTestCase extends DrupalWebTestCase {
 
     // POST parent, reference existing on multiple reference, POST a new one,
     // PATCH existing one, and PUT existing one.
-    $node2 = $this->drupalCreateNode();
-    $node3 = $this->drupalCreateNode();
-    $node4 = $this->drupalCreateNode();
+    $node2 = $this->drupalCreateNode($settings);
+    $node3 = $this->drupalCreateNode($settings);
 
     $request = $base_request;
     $request['entity_reference_multiple'] = array(
