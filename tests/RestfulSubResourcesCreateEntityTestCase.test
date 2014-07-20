@@ -110,7 +110,7 @@ class RestfulSubResourcesCreateEntityTestCase extends DrupalWebTestCase {
     $request = $base_request;
 
     foreach (array('put', 'patch') as $method) {
-      $this->processRequests($method, $node1->nid, $request);
+       $this->processRequests($method, $node1->nid, $request);
     }
 
     // POST parent, reference existing on single reference, multiple reference
@@ -123,10 +123,11 @@ class RestfulSubResourcesCreateEntityTestCase extends DrupalWebTestCase {
 
     $request = $base_request;
     $request['entity_reference_single'] = $node1->nid;
-    $this->processRequests('post', '', $request);
     $request['entity_reference_multiple'] = array(
       $node2->nid,
+      $node3->nid,
     );
+    $this->processRequests('post', '', $request);
 
     // POST parent, reference existing on multiple reference, POST a new one,
     // PATCH existing one, and PUT existing one.
@@ -135,12 +136,12 @@ class RestfulSubResourcesCreateEntityTestCase extends DrupalWebTestCase {
     $request['entity_reference_multiple'] = array(
       $node3->nid,
       array(
-        'label' => 'post new one',
+        'label' => 'POST new one',
         'body' => 'Drupal',
       ),
       array(
         'id' => $node4->nid,
-        'label' => 'Patch existing one',
+        'label' => 'PATCH existing one',
         'body' => 'Drupal',
       ),
       array(
@@ -149,7 +150,7 @@ class RestfulSubResourcesCreateEntityTestCase extends DrupalWebTestCase {
           'method' => 'put',
         ),
         'id' => $node5->nid,
-        'label' => 'Patch existing one',
+        'label' => 'PUT existing one',
         'body' => 'Drupal',
       ),
     );
@@ -181,13 +182,19 @@ class RestfulSubResourcesCreateEntityTestCase extends DrupalWebTestCase {
 
     // Validation fail on the single resource.
     $request['label'] = 'parent';
-    $request['entity_reference_single']['label'] = 'no';
-    $this->assertInvalidRequest($method, $path, $request);
+
+    if (is_array($request['entity_reference_single'])) {
+      $request['entity_reference_single']['label'] = 'no';
+      $this->assertInvalidRequest($method, $path, $request);
+      $request['entity_reference_single']['label'] = 'child1';
+    }
+
 
     // Validation fail on the multiple resource.
-    $request['entity_reference_single']['label'] = 'child1';
-    $request['entity_reference_multiple'][0]['label'] = 'no';
-    $this->assertInvalidRequest($method, $path, $request);
+    if (is_array($request['entity_reference_multiple'][0]['label'])) {
+      $request['entity_reference_multiple'][0]['label'] = 'no';
+      $this->assertInvalidRequest($method, $path, $request);
+    }
   }
 
   /**
