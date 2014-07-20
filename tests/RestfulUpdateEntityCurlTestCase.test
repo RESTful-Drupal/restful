@@ -97,7 +97,7 @@ class RestfulUpdateEntityCurlTestCase extends RestfulCurlBaseTestCase {
       'id' => $id,
       'label' => $new_label,
       'self' => url('node/' . $id, array('absolute' => TRUE)),
-      'body' => $text,
+      'body' => '<p>' . $text . '</p>',
     );
 
     $this->assertEqual($result['body'], drupal_json_encode($expected_result));
