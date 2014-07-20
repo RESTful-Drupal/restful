@@ -808,6 +808,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
     }
 
     list($id,, $bundle) = entity_extract_ids($target_type, $entity);
+
     if (empty($resource[$bundle])) {
       // Bundle not mapped to a resource.
       return;
@@ -1102,37 +1103,50 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
 
     // Return the entity ID that was created.
     if ($field_info['cardinality'] == 1) {
-      $result = $handler->process($this->getPath(), $value, $this->getMethod(), FALSE);
       // Single value.
-      return $result['id'];
+      return $this->createOrUpdateSubResourceItem($value, $handler);
     }
 
     // Multiple values.
     $return = array();
     foreach ($value as $value_item) {
-      if (!is_array($value_item)) {
-        // Item that was passed is already a reference to an existing entity.
-        $return[] = $value_item;
-        continue;
-      }
-
-      // Figure the method that should be used.
-      if (empty($value_item['id'])) {
-        $method_name = \RestfulInterface::POST;
-        $path = '';
-      }
-      else {
-        // Use PATCH by default, unless client has explicitly set the method in
-        // the sub-resource.
-        $method_name = !empty($value_item['__application']['method']) ? $value_item['__application']['method'] : \RestfulInterface::PATCH;
-        $path = $value_item['id'];
-      }
-
-      $result = $handler->process($path, $value_item, $method_name, FALSE);
-      $return[] = $result['id'];
+      $return[] = $this->createOrUpdateSubResourceItem($value_item, $handler);
     }
 
     return $return;
+  }
+
+  /**
+   * Create, update or return an already saved entity.
+   *
+   * @param int | array $value
+   *   The entity ID, or array to POST, PATCH, or PUT entity from.
+   * @param \RestfulInterface $handler
+   *   The RESTful handler.
+   *
+   * @return int
+   *   The saved entity ID.
+   */
+  protected function createOrUpdateSubResourceItem($value, $handler) {
+    if (!is_array($value)) {
+      // Item that was passed is already a reference to an existing entity.
+      return $value;
+    }
+
+    // Figure the method that should be used.
+    if (empty($value['id'])) {
+      $method_name = \RestfulInterface::POST;
+      $path = '';
+    }
+    else {
+      // Use PATCH by default, unless client has explicitly set the method in
+      // the sub-resource.
+      $method_name = !empty($value['__application']['method']) ? strtoupper($value['__application']['method']) : \RestfulInterface::PATCH;
+      $path = $value['id'];
+    }
+
+    $result = $handler->process($path, $value, $method_name, FALSE);
+    return $result['id'];
   }
 
   /**
