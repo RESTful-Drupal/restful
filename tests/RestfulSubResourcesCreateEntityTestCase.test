@@ -16,8 +16,8 @@ class RestfulSubResourcesCreateEntityTestCase extends DrupalWebTestCase {
 
   public static function getInfo() {
     return array(
-      'name' => 'Create Sub resources',
-      'description' => 'Test the creation of sub-resources (referenced entities).',
+      'name' => 'Sub requests',
+      'description' => 'Test the creation of sub-resources (referenced entities) via sub requests.',
       'group' => 'Restful',
       'dependencies' => array('entity_validator'),
     );
@@ -173,18 +173,18 @@ class RestfulSubResourcesCreateEntityTestCase extends DrupalWebTestCase {
 
     // Validation fail on the parent.
     $request['label'] = 'no';
-    $this->assertInvalidRequest($request);
+    $this->assertInvalidRequest($method, $path, $request);
 
 
     // Validation fail on the single resource.
     $request['label'] = 'parent';
     $request['entity_reference_single']['label'] = 'no';
-    $this->assertInvalidRequest($request);
+    $this->assertInvalidRequest($method, $path, $request);
 
     // Validation fail on the multiple resource.
     $request['entity_reference_single']['label'] = 'child1';
     $request['entity_reference_multiple'][0]['label'] = 'no';
-    $this->assertInvalidRequest($request);
+    $this->assertInvalidRequest($method, $path, $request);
   }
 
   /**
