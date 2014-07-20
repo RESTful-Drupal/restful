@@ -171,8 +171,8 @@ class RestfulSubResourcesCreateEntityTestCase extends DrupalWebTestCase {
     $handler = $this->handler;
     $result = $handler->{$method}($path, $request);
     $this->assertTrue($result['id'], 'Parent entity created.');
-    $this->assertTrue($result['entity_reference_single']['id'], 'Single sub-resource created.');
-    $this->assertTrue($result['entity_reference_multiple'][0]['id'] && $result['entity_reference_multiple'][1]['id'], 'Multiple sub-resource created.');
+    $this->assertTrue($result['entity_reference_single']['id'], 'Single sub-resource created or updated.');
+    $this->assertTrue($result['entity_reference_multiple'][0]['id'] && $result['entity_reference_multiple'][1]['id'], 'Multiple sub-resource created or updated.');
 
     // Validation fail on the parent.
     $request['label'] = 'no';
