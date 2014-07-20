@@ -1280,7 +1280,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
 
     if (empty($params['@fields'])) {
       // There was a validation error, but on non-public fields, so we need to
-      // throw an exception, but can say on which fields it coccured.
+      // throw an exception, but can't say on which fields it occurred.
       throw new \RestfulBadRequestException('Invalid value(s) sent with the request.');
     }
 
