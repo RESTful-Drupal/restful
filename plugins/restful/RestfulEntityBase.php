@@ -1093,9 +1093,6 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
     if ($field_info['cardinality'] == 1 && !is_array($value)) {
       return $value;
     }
-    elseif ($field_info['cardinality'] != 1 && !is_array($value[0])) {
-      return $value;
-    }
 
     // In case we have multiple bundles, we opt for the first one.
     $resource_name = reset($public_fields[$public_field_name]['resource']);
@@ -1113,7 +1110,25 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
     // Multiple values.
     $return = array();
     foreach ($value as $value_item) {
-      $result = $handler->process($this->getPath(), $value_item, $this->getMethod(), FALSE);
+      if (!is_array($value_item)) {
+        // Item that was passed is already a reference to an existing entity.
+        $return[] = $value_item;
+        continue;
+      }
+
+      // Figure the method that should be used.
+      if (empty($value_item['id'])) {
+        $method_name = \RestfulInterface::POST;
+        $path = '';
+      }
+      else {
+        // Use PATCH by default, unless client has explicitly set the method in
+        // the sub-resource.
+        $method_name = !empty($value_item['__application']['method']) ? $value_item['__application']['method'] : \RestfulInterface::PATCH;
+        $path = $value_item['id'];
+      }
+
+      $result = $handler->process($path, $value_item, $method_name, FALSE);
       $return[] = $result['id'];
     }
 
