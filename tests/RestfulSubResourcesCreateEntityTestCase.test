@@ -79,8 +79,7 @@ class RestfulSubResourcesCreateEntityTestCase extends DrupalWebTestCase {
    * Test creating an entity with sub-resources.
    */
   function testCreateEntity() {
-    $handler = $this->handler;
-    $request = array(
+    $base_request = $request = array(
       'label' => 'parent',
       'body' => 'Drupal',
       'entity_reference_single' => array(
@@ -98,7 +97,76 @@ class RestfulSubResourcesCreateEntityTestCase extends DrupalWebTestCase {
         ),
       ),
     );
-    $result = $handler->post('', $request);
+
+    // POST parent
+    $this->processRequests('post', '', $request);
+
+    // PUT/ PATCH parent.
+    $settings = array(
+      'type' => 'article',
+      'title' => 'title1',
+    );
+    $node1 = $this->drupalCreateNode();
+    $request = $base_request;
+
+    foreach (array('put', 'patch') as $method) {
+      $this->processRequests($method, $node1->nid, $request);
+    }
+
+
+    // POST parent, reference existing on single reference, multiple reference
+    // empty.
+    $request = $base_request;
+    $request['entity_reference_single'] = $node1->nid;
+    unset($request['entity_reference_multiple']);
+    $this->processRequests($method, $node1->nid, $request);
+
+    // POST parent, reference existing on multiple reference, POST a new one,
+    // PATCH existing one, and PUT existing one.
+    $node2 = $this->drupalCreateNode();
+    $node3 = $this->drupalCreateNode();
+    $node4 = $this->drupalCreateNode();
+
+    $request = $base_request;
+    $request['entity_reference_multiple'] = array(
+      $node2->nid,
+      array(
+        'label' => 'post new one',
+        'body' => 'Drupal',
+      ),
+      array(
+        'id' => $node3->nid,
+        'label' => 'Patch existing one',
+        'body' => 'Drupal',
+      ),
+      array(
+        // Explicetly set the method.
+        '__application' => array(
+          'method' => 'put',
+        ),
+        'id' => $node3->nid,
+        'label' => 'Patch existing one',
+        'body' => 'Drupal',
+      ),
+    );
+
+    unset($request['entity_reference_single']);
+    $this->processRequests($method, $node1->nid, $request);
+  }
+
+  /**
+   * Assert valid and invalid requests.
+   *
+   * @param string $method
+   *   The method name.
+   * @param string $path
+   *   The path.
+   * @param array $request
+   *   The request array.
+   */
+  protected function processRequests($method = 'post', $path = '', array $request = array()) {
+    $handler = $this->handler;
+    $result = $handler->{$method}($path, $request);
     $this->assertTrue($result['id'], 'Parent entity created.');
     $this->assertTrue($result['entity_reference_single']['id'], 'Single sub-resource created.');
     $this->assertTrue($result['entity_reference_multiple'][0]['id'] && $result['entity_reference_multiple'][1]['id'], 'Multiple sub-resource created.');
@@ -120,15 +188,20 @@ class RestfulSubResourcesCreateEntityTestCase extends DrupalWebTestCase {
   }
 
   /**
-   * Validate an invalid request fails.
+   * Assert an invalid request fails.
    *
+   * @param string $method
+   *   The method name.
+   * @param string $path
+   *   The path.
    * @param array $request
    *   The request array.
    */
-  protected function assertInvalidRequest(array $request = array()) {
+  protected function assertInvalidRequest($method = 'post', $path = '', array $request = array()) {
+
     $handler = $this->handler;
     try {
-      $handler->post('', $request);
+      $handler->{$method}($path, $request);
       $this->fail('No exception thrown on validation fail on the parent.');
     }
     catch (\RestfulBadRequestException $e) {
