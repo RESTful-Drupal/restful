@@ -17,26 +17,6 @@ class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
 
   function setUp() {
     parent::setUp('restful_test');
-
-    // Text - single.
-    $field = array(
-      'field_name' => 'text_single',
-      'type' => 'text_long',
-      'entity_types' => array('node'),
-      'cardinality' => 1,
-    );
-    field_create_field($field);
-
-    $instance = array(
-      'field_name' => 'text_single',
-      'bundle' => 'article',
-      'entity_type' => 'node',
-      'label' => t('Text single'),
-      'settings' => array(
-        'text_processing' => 1,
-      ),
-    );
-    field_create_instance($instance);
   }
 
   /**
@@ -72,7 +52,7 @@ class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
     // Privileged user, with limited access to property, and that property
     // passed in the request.
     $text1 = $this->randomName();
-    $request['text_single'] = $text1;
+    $request['body'] = $text1;
 
     try {
       $handler->setAccount($user1);
@@ -131,7 +111,7 @@ class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
     // Privileged user, with limited access to property, and that property
     // passed in the request.
     $text1 = $this->randomName();
-    $request['text_single'] = $text1;
+    $request['body'] = $text1;
 
     try {
       $handler->setAccount($user1);
@@ -159,7 +139,7 @@ class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
     $wrapper = entity_metadata_wrapper('node' ,$node1);
 
     $text1 = $this->randomName();
-    $wrapper->text_single->set(array('value' => $text1));
+    $wrapper->body->set(array('value' => $text1));
     $wrapper->save();
 
     $handler = restful_get_restful_handler('test_articles');
@@ -167,13 +147,13 @@ class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
     // Privileged user.
     $handler->setAccount($user1);
     $result = $handler->get($node1->nid, array());
-    $this->assertTrue($result['text_single'], 'Privileged user can view entity.');
+    $this->assertTrue($result['body'], 'Privileged user can view entity.');
 
     // Privileged user, with limited access to property.
     restful_test_deny_access_field();
     $handler->setAccount($user1);
     $result = $handler->get($node1->nid, array());
-    $this->assertTrue(!isset($result['text_single']), 'Privileged user can view entity but without unaccessible properties.');
+    $this->assertTrue(!isset($result['body']), 'Privileged user can view entity but without unaccessible properties.');
     restful_test_clear_access();
 
     // Non-privileged user (Revoke "access content" permission).
