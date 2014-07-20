@@ -25,26 +25,6 @@ class RestfulUpdateEntityCurlTestCase extends RestfulCurlBaseTestCase {
   function setUp() {
     parent::setUp('restful_test');
 
-    // Text - single.
-    $field = array(
-      'field_name' => 'text_single',
-      'type' => 'text_long',
-      'entity_types' => array('node'),
-      'cardinality' => 1,
-    );
-    field_create_field($field);
-
-    $instance = array(
-      'field_name' => 'text_single',
-      'bundle' => 'article',
-      'entity_type' => 'node',
-      'label' => t('Text single'),
-      'settings' => array(
-        'text_processing' => 0,
-      ),
-    );
-    field_create_instance($instance);
-
     $this->account = $this->drupalCreateUser(array(
       'administer site configuration',
       'administer nodes',
@@ -69,7 +49,7 @@ class RestfulUpdateEntityCurlTestCase extends RestfulCurlBaseTestCase {
       'type' => 'article',
       'title' => $label,
     );
-    $settings['text_single'][LANGUAGE_NONE][0]['value'] = $text;
+    $settings['body'][LANGUAGE_NONE][0]['value'] = $text;
 
     $node = $this->drupalCreateNode($settings);
     $id = $node->nid;
@@ -82,7 +62,7 @@ class RestfulUpdateEntityCurlTestCase extends RestfulCurlBaseTestCase {
       'id' => $id,
       'label' => $new_label,
       'self' => url('node/' . $id, array('absolute' => TRUE)),
-      'text_single' => NULL,
+      'body' => NULL,
     );
 
     $this->assertEqual($result['body'], drupal_json_encode($expected_result));
@@ -106,7 +86,7 @@ class RestfulUpdateEntityCurlTestCase extends RestfulCurlBaseTestCase {
       'type' => 'article',
       'title' => $label,
     );
-    $settings['text_single'][LANGUAGE_NONE][0]['value'] = $text;
+    $settings['body'][LANGUAGE_NONE][0]['value'] = $text;
 
     $node = $this->drupalCreateNode($settings);
     $id = $node->nid;
@@ -117,7 +97,7 @@ class RestfulUpdateEntityCurlTestCase extends RestfulCurlBaseTestCase {
       'id' => $id,
       'label' => $new_label,
       'self' => url('node/' . $id, array('absolute' => TRUE)),
-      'text_single' => $text,
+      'body' => $text,
     );
 
     $this->assertEqual($result['body'], drupal_json_encode($expected_result));
