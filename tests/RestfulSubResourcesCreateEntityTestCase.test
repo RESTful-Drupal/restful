@@ -75,9 +75,9 @@ class RestfulSubResourcesCreateEntityTestCase extends DrupalWebTestCase {
   }
 
   /**
-   * Test creating an entity with sub-resources.
+   * Test creating and updating an entity with sub-resources.
    */
-  function testCreateEntity() {
+  function testCreateAndUpdateEntity() {
     $base_request = $request = array(
       'label' => 'parent',
       'body' => 'Drupal',
