@@ -113,43 +113,47 @@ class RestfulSubResourcesCreateEntityTestCase extends DrupalWebTestCase {
       $this->processRequests($method, $node1->nid, $request);
     }
 
-
     // POST parent, reference existing on single reference, multiple reference
     // empty.
+
+    $node2 = $this->drupalCreateNode($settings);
+    $node3 = $this->drupalCreateNode($settings);
+    $node4 = $this->drupalCreateNode($settings);
+    $node5 = $this->drupalCreateNode($settings);
+
     $request = $base_request;
     $request['entity_reference_single'] = $node1->nid;
-    unset($request['entity_reference_multiple']);
-    $this->processRequests($method, $node1->nid, $request);
+    $this->processRequests('post', '', $request);
+    $request['entity_reference_multiple'] = array(
+      $node2->nid,
+    );
 
     // POST parent, reference existing on multiple reference, POST a new one,
     // PATCH existing one, and PUT existing one.
-    $node2 = $this->drupalCreateNode($settings);
-    $node3 = $this->drupalCreateNode($settings);
-
     $request = $base_request;
+    $request['entity_reference_single'] = $node2->nid;
     $request['entity_reference_multiple'] = array(
-      $node2->nid,
+      $node3->nid,
       array(
         'label' => 'post new one',
         'body' => 'Drupal',
       ),
       array(
-        'id' => $node3->nid,
+        'id' => $node4->nid,
         'label' => 'Patch existing one',
         'body' => 'Drupal',
       ),
       array(
-        // Explicetly set the method.
+        // Explicitly set the method.
         '__application' => array(
           'method' => 'put',
         ),
-        'id' => $node3->nid,
+        'id' => $node5->nid,
         'label' => 'Patch existing one',
         'body' => 'Drupal',
       ),
     );
 
-    unset($request['entity_reference_single']);
     $this->processRequests($method, $node1->nid, $request);
   }
 
