@@ -90,7 +90,7 @@ class RestfulUpdateEntityTestCase extends DrupalWebTestCase {
       'body' => $text,
     );
 
-    $result['body']['body'] = trim(strip_tags($result['body']['body']));
+    $result['body'] = trim(strip_tags($result['body']));
     $this->assertEqual($result, $expected_result);
 
     // Update an entity with invalid property name.

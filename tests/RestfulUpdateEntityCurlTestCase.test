@@ -99,9 +99,11 @@ class RestfulUpdateEntityCurlTestCase extends RestfulCurlBaseTestCase {
       'self' => url('node/' . $id, array('absolute' => TRUE)),
       'body' => $text,
     );
-    $result['body']['body'] = trim(strip_tags($result['body']['body']));
 
-    $this->assertEqual($result['body'], drupal_json_encode($expected_result));
+    $result = drupal_json_decode($result['body']);
+    $result['body'] = trim(strip_tags($result['body']));
+
+    $this->assertEqual($result, $expected_result);
 
     // Update an entity with invalid property name.
     $request['invalid'] = 'wrong';
