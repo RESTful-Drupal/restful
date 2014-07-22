@@ -52,6 +52,11 @@ function restful_angular_example_form_page() {
   drupal_add_js($bower_path . '/ng-prettyjson/dist/ng-prettyjson.min.js');
   drupal_add_css($bower_path . '/ng-prettyjson/dist/ng-prettyjson.min.css');
 
+  // Select2.
+  drupal_add_js($bower_path . '/select2/select2.js');
+  drupal_add_css($bower_path . '/select2/select2.css');
+  drupal_add_js($bower_path . '/angular-ui-select2/src/select2.js');
+
   // Load our custom app.
   $app_path = drupal_get_path('module', 'restful_angular_example') . '/components/restful-app/dist';
   drupal_add_js($app_path . '/restful-app.js');

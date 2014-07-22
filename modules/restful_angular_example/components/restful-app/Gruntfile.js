@@ -192,9 +192,7 @@ module.exports = function(grunt) {
   grunt.registerTask('build', [
     'clean:dist',
     'copy:dist',
-    'concat:dist',
-    'ngmin:dist',
-    'uglify:dist'
+    'concat:dist'
   ]);
 
   grunt.registerTask('release', [
