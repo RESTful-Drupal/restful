@@ -85,10 +85,11 @@ angular.module('restfulApp')
       $http.get(url).success(function(data) {
         var terms = {results: []};
 
-        angular.forEach(data, function (term, index) {
+        angular.forEach(data, function (term) {
+          $log.log(term);
           terms.results.push({
-            text: term,
-            id: index
+            text: term.label,
+            id: term.id
           });
         });
         query.callback(terms);
