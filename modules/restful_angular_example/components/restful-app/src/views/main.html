@@ -29,11 +29,8 @@
   </div>
 
   <div>
-    <select multiple ui-select2 ng-model="data.tags" data-placeholder="Pick a number" style="width: 300px">
-      <option value="one">First</option>
-      <option value="two">Second</option>
-      <option value="three">Third</option>
-    </select>
+    <label>Tags</label>
+    <input multiple type="hidden" ui-select2="{query: tagsQuery, minimumInputLength: 3}" ng-model="data.tags" data-placeholder="Select or create tags" />
   </div>
 
   <input type="file" ng-file-select="onFileSelect($files)" >

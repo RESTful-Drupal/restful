@@ -62,9 +62,33 @@ angular.module('restfulApp', [
 'use strict';
 
 angular.module('restfulApp')
-  .controller('MainCtrl', function($scope, DrupalSettings, ArticlesResource, FileUpload) {
+  .controller('MainCtrl', function($scope, DrupalSettings, ArticlesResource, FileUpload, $http, $log) {
     $scope.data = DrupalSettings.getData('article');
     $scope.serverSide = {};
+
+    /**
+     * Get matching tags.
+     *
+     * @param query
+     *   The query string.
+     */
+    $scope.tagsQuery = function (query) {
+      $http.get('http://ws.spotify.com/search/1/track.json', {
+        params: {
+          q: query.term
+        }
+      }).then(function(res) {
+        var songs = { results: [] };
+        angular.forEach(res.data.tracks, function (song) {
+          songs.results.push({
+            text: song.artists[0].name + ' - ' + song.name,
+            id: song.href
+          });
+        });
+        $log.log(query.callback);
+        query.callback(songs);
+      });
+    };
 
     /**
      * Submit form (even if not valildated via client).
