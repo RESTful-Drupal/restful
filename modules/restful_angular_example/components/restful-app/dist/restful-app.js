@@ -73,20 +73,19 @@ angular.module('restfulApp')
      *   The query string.
      */
     $scope.tagsQuery = function (query) {
-      $http.get('http://ws.spotify.com/search/1/track.json', {
-        params: {
-          q: query.term
-        }
-      }).then(function(res) {
-        var songs = { results: [] };
-        angular.forEach(res.data.tracks, function (song) {
-          songs.results.push({
-            text: song.artists[0].name + ' - ' + song.name,
-            id: song.href
+      var url = DrupalSettings.getBasePath() + 'taxonomy/autocomplete/field_tags/' + query.term;
+      $log.log(url);
+
+      $http.get(url).success(function(data) {
+        var terms = {results: []};
+
+        angular.forEach(data, function (term, index) {
+          terms.results.push({
+            text: term,
+            id: index
           });
         });
-        $log.log(query.callback);
-        query.callback(songs);
+        query.callback(terms);
       });
     };
 
