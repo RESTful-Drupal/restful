@@ -14,8 +14,12 @@ angular.module('restfulApp')
      *   The query string.
      */
     $scope.tagsQuery = function (query) {
-      var url = DrupalSettings.getBasePath() + 'taxonomy/autocomplete/field_tags/' + query.term;
-      $log.log(url);
+      var url = DrupalSettings.getBasePath() + 'api/v1/tags';
+      $log.log(url, {
+        params: {
+          string: query.term
+        }
+      });
 
       $http.get(url).success(function(data) {
         var terms = {results: []};
