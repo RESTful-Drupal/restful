@@ -30,7 +30,7 @@
 
   <div>
     <label>Tags</label>
-    <input multiple type="hidden" ui-select2="{query: tagsQuery, minimumInputLength: 2}" ng-model="data.tags" data-placeholder="Select or create tags" />
+    <input multiple type="hidden" ui-select2="{query: tagsQuery, minimumInputLength: 2, createSearchChoice: createSearchChoice}" ng-model="data.tags" data-placeholder="Select or create tags" />
   </div>
 
   <input type="file" ng-file-select="onFileSelect($files)" >

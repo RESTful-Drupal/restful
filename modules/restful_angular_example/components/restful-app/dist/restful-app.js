@@ -90,6 +90,20 @@ angular.module('restfulApp')
     };
 
     /**
+     * Create a new term.
+     *
+     * @param term
+     *
+     * @returns {{text: *, id: number}}
+     */
+    $scope.createSearchChoice = function (term) {
+      return {
+        text: term,
+        id: -10
+      };
+    };
+
+    /**
      * Submit form (even if not valildated via client).
      */
     $scope.submitForm = function(){
