@@ -34,8 +34,17 @@ function restful_angular_example_theme() {
   );
 
   return $theme;
-
 }
+
+/**
+ * Implements hook_ctools_plugin_directory().
+ */
+function restful_angular_example_ctools_plugin_directory($module, $plugin) {
+  if ($module == 'restful') {
+    return 'plugins/' . $plugin;
+  }
+}
+
 
 /**
  * Page callback; Load the AngularJs form.
