@@ -6,7 +6,7 @@
 
 <form name="article" ng-submit="submitForm()">
 
-  <div class="text">
+  <div class="input-wrapper text">
     <label>Title</label>
     <input id="label" name="label" type="text" ng-model="data.label" placeholder="See how many characters are needed to validate..." ng-required="required" size="60">
 
@@ -18,7 +18,7 @@
 
   </div>
 
-  <div class="textarea">
+  <div class="input-wrapper textarea">
     <label>Description</label>
     <textarea id="body" name="body" type="textarea" ng-model="data.body" placeholder="Type some description. See which word is required..." rows="3" ng-minlength="3" ng-required="required" cols="60"></textarea>
     <div class="errors">
@@ -28,12 +28,12 @@
     </div>
   </div>
 
-  <div>
+  <div class="input-wrapper tags">
     <label>Tags</label>
     <input multiple type="hidden" ui-select2="{query: tagsQuery, minimumInputLength: 2}" ng-model="data.tags" data-placeholder="Select or create tags" />
   </div>
 
-  <div class="file-wrapper">
+  <div class="input-wrapper file-wrapper">
     <input type="file" ng-file-select="onFileSelect($files)" >
     <div ng-show="dropSupported" class="drop-box" ng-file-drop="onFileSelect($files);" ng-file-drop-available="dropSupported=true" ng-file-drag-over-class="file-upload-drag">
 
@@ -59,11 +59,6 @@
 
 <div>
   Tags: <pre pretty-json="data.tags" />
-</div>
-
-<div>
-  Tags cache: <pre pretty-json="tagsQueryCache" />
-
 </div>
 
 <div>
