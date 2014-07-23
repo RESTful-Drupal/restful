@@ -783,7 +783,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
       return $field['settings']['target_type'];
     }
     elseif ($field['type'] == 'taxonomy_term_reference') {
-      return 'taxonomy_terrm';
+      return 'taxonomy_term';
     }
 
     throw new Exception('Property is not an entity reference field.');
