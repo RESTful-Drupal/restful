@@ -20,7 +20,9 @@ class RestfulExampleArticlesResource__1_5 extends RestfulEntityBaseNode {
 
     $public_fields['tags'] = array(
       'property' => 'field_tags',
-      'resource' => 'tags',
+      'resource' => array(
+        'tags' => 'tags',
+      ),
     );
 
     $public_fields['image'] = array(

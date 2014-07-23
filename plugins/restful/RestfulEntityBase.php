@@ -779,11 +779,15 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
       throw new Exception('Property is not a field.');
     }
 
-    if ($field['type'] != 'entityreference') {
-      throw new Exception('Property is not an entity reference field.');
+    if ($field['type'] == 'entityreference') {
+      return $field['settings']['target_type'];
+    }
+    elseif ($field['type'] == 'taxonomy_term_reference') {
+      return 'taxonomy_terrm';
     }
 
-    return $field['settings']['target_type'];
+    throw new Exception('Property is not an entity reference field.');
+
   }
 
   /**
@@ -1364,14 +1368,14 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
     );
 
     if (!$entity = entity_load_single($entity_type, $entity_id)) {
-      throw new RestfulUnprocessableEntityException(format_string('The specific entity ID @id for @resource does not exist.', $params));
+      throw new RestfulUnprocessableEntityException(format_string('The entity ID @id for @resource does not exist.', $params));
     }
 
     list(,, $bundle) = entity_extract_ids($entity_type, $entity);
 
     $resource_bundle = $this->getBundle();
     if ($resource_bundle && $bundle != $resource_bundle) {
-      throw new RestfulUnprocessableEntityException(format_string('The specified entity ID @id is not a valid @resource.', $params));
+      throw new RestfulUnprocessableEntityException(format_string('The entity ID @id is not a valid @resource.', $params));
     }
 
     if (entity_access($op, $entity_type, $entity, $account) === FALSE) {

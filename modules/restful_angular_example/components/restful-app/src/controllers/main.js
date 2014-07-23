@@ -53,7 +53,7 @@ angular.module('restfulApp')
       angular.forEach(submitData.tags, function (term, index) {
         tags[index] = {};
         tags[index].label = term.text;
-        if (term.id === parseInt(term.id)) {
+        if (parseInt(term.id)) {
           tags[index].id = term.id;
         }
       });
