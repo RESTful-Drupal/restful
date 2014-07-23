@@ -48,9 +48,9 @@ angular.module('restfulApp')
     $scope.submitForm = function() {
       // Prepare the tags, by removing the IDs that are not integer, so it will
       // use POST to create them.
-      var submitData = $scope.data;
+      var submitData = angular.copy($scope.data);
       var tags = [];
-      angular.forEach(data.tags, function (term, index) {
+      angular.forEach(submitData.tags, function (term, index) {
         tags[index] = {};
         tags[index].label = term.text;
         if (term.id === parseInt(term.id)) {
