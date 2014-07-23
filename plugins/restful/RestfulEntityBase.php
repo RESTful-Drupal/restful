@@ -514,7 +514,11 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    */
   public function getList() {
     $request = $this->getRequest();
-    $account = $this->getAccount();
+    $autocomplete_options = $this->getPluginInfo('autocomplete');
+    if (!empty($autocomplete_options['enable']) && isset($request['string'])) {
+      // Return autocomplete list.
+      return $this->getListByAutocomplete();
+    }
 
     $entity_type = $this->entityType;
     $result = $this
@@ -611,6 +615,37 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
     $query->range($offset, $range);
 
     return $query;
+  }
+
+  /**
+   * Return the values of the types tags, with the ID.
+   *
+   * @return array
+   *   Array with the found terms keys by the entity ID.
+   *   ID. Otherwise, if the field allows auto-creating tags, the ID will be the
+   *   term name, to indicate for client it is an unsaved term.
+   *
+   * @see taxonomy_autocomplete()
+   */
+  protected function getListByAutocomplete() {
+    $request = $this->getRequest();
+    if (empty($request['string'])) {
+      // Empty string.
+      return array();
+    }
+
+    $string = drupal_strtolower($request['string']);
+    $autocomplete_options = $this->getPluginInfo('autocomplete');
+    $range = $autocomplete_options['range'];
+
+    $result = $this->getListByAutocompleteQueryResult($string, $range);
+
+    $return = array();
+    foreach ($result as $entity_id => $label) {
+      $return[$entity_id] = check_plain($label);
+    }
+
+    return $return;
   }
 
   /**

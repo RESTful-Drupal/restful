@@ -78,7 +78,11 @@ function restful_ctools_plugin_directory($module, $plugin) {
  *         ),
  *       ),
  *     ),
- *
+ * - autocomplete: Stores the autocomplete settings. An associative array with:
+ *   - enable: Determines if the autocomplete functionality should be used.
+ *     Defaults to TRUE.
+ *   - range: Determines how many matches should return on every query. Defaults
+ *     to 10.
  * Properties for the "authentication" plugin type:
  * - description: The description of the authentication provider. Defaults to
  *   empty string.
@@ -104,6 +108,7 @@ function restful_plugin_process(&$plugin, $info) {
       'authentication_optional' => FALSE,
       'hook_menu' => TRUE,
       'cache' => array(),
+      'autocomplete' => array(),
     );
 
     $plugin['cache'] += array(
@@ -112,6 +117,11 @@ function restful_plugin_process(&$plugin, $info) {
       'bin' => 'cache_restful',
       'expire' => CACHE_PERMANENT,
       'simple_invalidate' => TRUE,
+    );
+
+    $plugin['autocomplete'] += array(
+      'enable' => TRUE,
+      'range' => 10,
     );
 
     if (!empty($plugin['rate_limit'])) {
