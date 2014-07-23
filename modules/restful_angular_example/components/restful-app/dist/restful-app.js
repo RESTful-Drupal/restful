@@ -1,6 +1,6 @@
 /**
  * restful-app
- * @version v0.0.1 - 2014-07-22
+ * @version v0.0.1 - 2014-07-23
  * @link 
  * @author  <>
  * @license MIT License, http://www.opensource.org/licenses/MIT
@@ -76,22 +76,29 @@ angular.module('restfulApp')
      */
     $scope.tagsQuery = function (query) {
       var url = DrupalSettings.getBasePath() + 'api/v1/tags';
-      $log.log(url, {
+
+      $http.get(url, {
         params: {
           string: query.term
         }
-      });
-
-      $http.get(url).success(function(data) {
+      }).success(function(data) {
         var terms = {results: []};
 
-        angular.forEach(data, function (term) {
-          $log.log(term);
+        if (data.length == 0) {
           terms.results.push({
-            text: term.label,
-            id: term.id
+            text: query.term,
+            id: query.term
           });
-        });
+        }
+        else {
+          angular.forEach(data, function (label, id) {
+            terms.results.push({
+              text: label,
+              id: id
+            });
+          });
+        }
+
         query.callback(terms);
       });
     };

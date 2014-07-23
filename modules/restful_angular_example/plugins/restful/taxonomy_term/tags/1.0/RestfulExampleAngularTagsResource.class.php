@@ -14,7 +14,7 @@ class RestfulExampleAngularTagsResource extends \RestfulEntityBase {
    */
   public function getList() {
     $request = $this->getRequest();
-    return !isset($request['string']) ? parent::getList() : $this->taxonomyAutocomplete();
+    return !isset($request['string']) ? parent::getList() : $this->getListByAutocomplete();
   }
 
   /**
@@ -36,15 +36,17 @@ class RestfulExampleAngularTagsResource extends \RestfulEntityBase {
 
     $string = drupal_strtolower($request['string']);
     $options = $this->getPluginInfo('options');
-    $range = $options['autocomplete']['range'];
+    // $range = $options['autocomplete']['range'];
+    $range = 10;
 
     $result = $this->getListByAutocompleteQueryResult($string, $range);
 
+    $return = array();
     foreach ($result as $entity_id => $label) {
-      $string_matches[$entity_id] = check_plain($label);
+      $return[$entity_id] = check_plain($label);
     }
 
-    return $string_matches;
+    return $return;
   }
 
   /**
