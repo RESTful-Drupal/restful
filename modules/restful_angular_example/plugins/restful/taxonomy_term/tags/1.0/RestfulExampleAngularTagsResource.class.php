@@ -18,6 +18,30 @@ class RestfulExampleAngularTagsResource extends \RestfulEntityBase {
   }
 
   /**
+   * Set properties of the entity based on the request, and save the entity.
+   *
+   * @param EntityMetadataWrapper $wrapper
+   *   The wrapped entity object, passed by reference.
+   * @param bool $null_missing_fields
+   *   Determine if properties that are missing form the request array should
+   *   be treated as NULL, or should be skipped. Defaults to FALSE, which will
+   *   set the fields to NULL.
+   *
+   * @throws RestfulBadRequestException
+   */
+  protected function setPropertyValues(EntityMetadataWrapper $wrapper, $null_missing_fields = FALSE) {
+    $term = $wrapper->value();
+    if (!empty($term->tid)) {
+      return;
+    }
+
+    $vocabulary = taxonomy_vocabulary_machine_name_load($term->vocabulary_machine_name);
+    $term->vid = $vocabulary->vid;
+
+    parent::setPropertyValues($wrapper, $null_missing_fields);
+  }
+
+  /**
    * Return the values of the types tags, with the ID.
    *
    * @return array
