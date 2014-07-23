@@ -2,7 +2,8 @@
 
 angular.module('restfulApp', [
     'angularFileUpload',
-    'ngPrettyJson'
+    'ngPrettyJson',
+    'ui.select2'
   ], function($httpProvider) {
 
     // Use x-www-form-urlencoded Content-Type

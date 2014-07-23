@@ -28,6 +28,11 @@
     </div>
   </div>
 
+  <div>
+    <label>Tags</label>
+    <input multiple type="hidden" ui-select2="{query: tagsQuery, minimumInputLength: 2}" ng-model="data.tags" data-placeholder="Select or create tags" />
+  </div>
+
   <input type="file" ng-file-select="onFileSelect($files)" >
   <div ng-show="dropSupported" class="drop-box" ng-file-drop="onFileSelect($files);" ng-file-drop-available="dropSupported=true" ng-file-drag-over-class="file-upload-drag">OR drop files here</div>
 
@@ -37,6 +42,10 @@
 </form>
 
 <h2>Console (Server side)</h2>
+
+<div>
+  Tags: <pre pretty-json="data.tags" />
+</div>
 
 <div>
   <div ng-show="serverSide.status == 200" class="create-success">

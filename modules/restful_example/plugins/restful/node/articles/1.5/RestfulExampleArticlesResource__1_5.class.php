@@ -18,6 +18,13 @@ class RestfulExampleArticlesResource__1_5 extends RestfulEntityBaseNode {
       'sub_property' => 'value',
     );
 
+    $public_fields['tags'] = array(
+      'property' => 'field_tags',
+      'resource' => array(
+        'tags' => 'tags',
+      ),
+    );
+
     $public_fields['image'] = array(
       'property' => 'field_image',
       'process_callback' => array($this, 'imageProcess'),

@@ -129,6 +129,94 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
   protected $rateLimitManager = NULL;
 
   /**
+   * The HTTP method used for the request.
+   *
+   * @var string
+   */
+  protected $method = \RestfulInterface::GET;
+
+  /**
+   * Get the HTTP method used for the request.
+   * @return string
+   */
+  public function getMethod() {
+    return $this->method;
+  }
+
+  /**
+   * Set the HTTP method used for the request.
+   *
+   * @param string $method
+   *   The method name.
+   */
+  public function setMethod($method) {
+    $this->method = $method;
+  }
+
+  /**
+   * The path of the request.
+   *
+   * @var string
+   */
+  protected $path = '';
+
+  /**
+   * The request array.
+   *
+   * @var array
+   */
+  protected $request = array();
+
+  /**
+   * Return the path of the request.
+   *
+   * @return string
+   *   String with the path.
+   */
+  public function getPath() {
+    return $this->path;
+  }
+
+  /**
+   * Set the path of the request.
+   *
+   * @param string $path
+   */
+  public function setPath($path = '') {
+    $this->path = $path;
+  }
+
+  /**
+   * Get the request array.
+   *
+   * @return array
+   */
+  public function getRequest() {
+    return $this->request;
+  }
+
+  /**
+   * Set the request array.
+   *
+   * @param array $request
+   *   Array with the request.
+   */
+  public function setRequest(array $request = array()) {
+    $this->request = $request;
+  }
+
+  /**
+   * Helper function to remove the application generated request data.
+   *
+   * @param &array $request
+   *   The request array to be modified.
+   */
+  public static function cleanRequest(&$request) {
+    unset($request['__application']);
+  }
+
+
+  /**
    * Get the defined controllers
    *
    * @return array
@@ -289,13 +377,13 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    *
    * @param string $path
    *   (optional) The path.
-   * @param null $request
+   * @param array $request
    *   (optional) The request.
    *
    * @return mixed
    *   The return value can depend on the controller for the get method.
    */
-  public function get($path = '', $request = NULL) {
+  public function get($path = '', array $request = array()) {
     return $this->process($path, $request, \RestfulInterface::GET);
   }
 
@@ -304,13 +392,13 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    *
    * @param string $path
    *   (optional) The path.
-   * @param null $request
+   * @param array $request
    *   (optional) The request.
    *
    * @return mixed
    *   The return value can depend on the controller for the post method.
    */
-  public function post($path = '', $request = NULL) {
+  public function post($path = '', array $request = array()) {
     return $this->process($path, $request, \RestfulInterface::POST);
   }
 
@@ -319,13 +407,13 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    *
    * @param string $path
    *   (optional) The path.
-   * @param null $request
+   * @param array $request
    *   (optional) The request.
    *
    * @return mixed
    *   The return value can depend on the controller for the put method.
    */
-  public function put($path = '', $request = NULL) {
+  public function put($path = '', array $request = array()) {
     return $this->process($path, $request, \RestfulInterface::PUT);
   }
 
@@ -334,12 +422,12 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    *
    * @param string $path
    *   (optional) The path.
-   * @param null $request
+   * @param array $request
    *   (optional) The request.
    * @return mixed
    *   The return value can depend on the controller for the patch method.
    */
-  public function patch($path = '', $request = NULL) {
+  public function patch($path = '', array $request = array()) {
     return $this->process($path, $request, \RestfulInterface::PATCH);
   }
 
@@ -348,54 +436,49 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    *
    * @param string $path
    *   (optional) The path.
-   * @param null $request
+   * @param array $request
    *   (optional) The request.
    *
    * @return mixed
    *   The return value can depend on the controller for the delete method.
    */
-  public function delete($path = '', $request = NULL) {
+  public function delete($path = '', array $request = array()) {
     return $this->process($path, $request, \RestfulInterface::DELETE);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function process($path = '', $request = NULL, $method = \RestfulInterface::GET) {
-    $account = $this->getAccount($request, $method);
+  public function process($path = '', array $request = array(), $method = \RestfulInterface::GET, $check_rate_limit = TRUE) {
+    $this->setMethod($method);
+    $this->setPath($path);
+    $this->setRequest($request);
 
-    if (!$method_name = $this->getControllerFromPath($path, $method)) {
+    if (!$method_name = $this->getControllerFromPath()) {
       throw new RestfulBadRequestException('Path does not exist');
     }
 
-    if ($this->getRateLimitManager()) {
+    if ($check_rate_limit && $this->getRateLimitManager()) {
       // This will throw the appropriate exception if needed.
       $this->getRateLimitManager()->checkRateLimit($request);
     }
 
-    if (!$path) {
-      // If $path is empty we don't need to pass it along.
-      return $this->{$method_name}($request, $account);
-    }
-    else {
-      return $this->{$method_name}($path, $request, $account);
-    }
+    return $this->{$method_name}($path);
   }
 
   /**
    * Return the controller from a given path.
    *
-   * @param string $path
-   *   The requested path.
-   * @param string $http_method
-   *   The requested HTTP method.
    * @return string
    *   The appropriate method to call.
    *
    * @throws RestfulBadRequestException
    * @throws RestfulGoneException
    */
-  public function getControllerFromPath($path, $http_method) {
+  public function getControllerFromPath() {
+    $path = $this->getPath();
+    $method = $this->getMethod();
+
     $selected_controller = NULL;
     foreach ($this->getControllers() as $pattern => $controllers) {
       if ($pattern != $path && !($pattern && preg_match('/' . $pattern . '/', $path))) {
@@ -408,13 +491,13 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
         throw new RestfulGoneException(format_string('The path @path endpoint is not valid.', $params));
       }
 
-      if (!isset($controllers[$http_method])) {
-        $params = array('@method' => strtoupper($http_method));
+      if (!isset($controllers[$method])) {
+        $params = array('@method' => strtoupper($method));
         throw new RestfulBadRequestException(format_string('The http method @method is not allowed for this path.', $params));
       }
 
       // We found the controller, so we can break.
-      $selected_controller = $controllers[$http_method];
+      $selected_controller = $controllers[$method];
       break;
     }
 
@@ -424,20 +507,18 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
   /**
    * Get a list of entities.
    *
-   * @param array $request
-   *   (optional) The request.
-   * @param stdClass $account
-   *   (optional) The user object.
-   *
    * @return array
    *   Array of entities, as passed to RestfulEntityBase::viewEntity().
    *
    * @throws RestfulBadRequestException
    */
-  public function getList($request = NULL, stdClass $account = NULL) {
+  public function getList() {
+    $request = $this->getRequest();
+    $account = $this->getAccount();
+
     $entity_type = $this->entityType;
     $result = $this
-      ->getQueryForList($request, $account)
+      ->getQueryForList()
       ->execute();
 
 
@@ -455,10 +536,10 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
 
     $return = array('list' => array());
 
-    $this->getListAddHateoas($return, $ids, $request);
+    $this->getListAddHateoas($return, $ids);
 
     foreach ($ids as $id) {
-      $return['list'][] = $this->viewEntity($id, $request, $account);
+      $return['list'][] = $this->viewEntity($id);
     }
 
     return $return;
@@ -467,17 +548,14 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
   /**
    * Prepare a query for RestfulEntityBase::getList().
    *
-   * @param null $request
-   *   (optional) The request.
-   * @param stdClass $account
-   *   (optional) The user object.
-   *
    * @return EntityFieldQuery
    *   Tee EntityFieldQuery object.
    *
    * @throws RestfulBadRequestException
    */
-  public function getQueryForList($request, stdClass $account = NULL) {
+  public function getQueryForList() {
+    $request = $this->getRequest();
+
     $entity_info = entity_get_info($this->getEntityType());
     $query = new EntityFieldQuery();
     $query->entityCondition('entity_type', $this->getEntityType());
@@ -544,21 +622,21 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    * @param $ids
    *   Array of entity IDs retrieved for the list. Passed by reference, so we
    *   can check if there is an extra item, thus know there is a "next" page.
-   * @param $request
-   *   The request array.
    */
-  public function getListAddHateoas(&$return, &$ids, $request){
+  public function getListAddHateoas(&$return, &$ids){
+    $request = $this->getRequest();
+
     $return['_links'] = array();
     $page = !empty($request['page']) ? $request['page'] : 1;
 
     if ($page > 1) {
       $request['page'] = $page - 1;
-      $return['_links']['previous'] = $this->getUrl($request);
+      $return['_links']['previous'] = $this->getUrl();
     }
 
     if (count($ids) > $this->getRange()) {
       $request['page'] = $page + 1;
-      $return['_links']['next'] = $this->getUrl($request);
+      $return['_links']['next'] = $this->getUrl();
 
       // Remove the last ID, as it was just used to determine if there is a
       // "next" page.
@@ -571,23 +649,22 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    *
    * @param int $entity_id
    *   The entity ID.
-   * @param array $request
-   *   The request array.
-   * @param stdClass $account
-   *   The user object.
    *
    * @return array
    *   Array with the public fields populated.
    *
    * @throws Exception
    */
-  public function viewEntity($entity_id, $request, stdClass $account) {
-    $cached_data = $this->getRenderedEntityCache($entity_id, $request);
+  public function viewEntity($entity_id) {
+    $account = $this->getAccount();
+    $request = $this->getRequest();
+
+    $cached_data = $this->getRenderedEntityCache($entity_id);
     if (!empty($cached_data->data)) {
       return $cached_data->data;
     }
 
-    $this->isValidEntity('view', $entity_id, $account);
+    $this->isValidEntity('view', $entity_id);
 
     $wrapper = entity_metadata_wrapper($this->entityType, $entity_id);
     $values = array();
@@ -644,7 +721,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
             }
 
             if ($resource) {
-              if ($value_from_resource = $this->getValueFromResource($item_wrapper, $property, $resource, $request, $account)) {
+              if ($value_from_resource = $this->getValueFromResource($item_wrapper, $property, $resource)) {
                 $value[] = $value_from_resource;
               }
             }
@@ -661,7 +738,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
           }
 
           if ($resource) {
-            $value = $this->getValueFromResource($sub_wrapper, $property, $resource, $request, $account);
+            $value = $this->getValueFromResource($sub_wrapper, $property, $resource);
           }
           else {
             // Wrapper method.
@@ -682,7 +759,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
       $values[$public_property] = $value;
     }
 
-    $this->setRenderedEntityCache($values, $entity_id, $request);
+    $this->setRenderedEntityCache($values, $entity_id);
     return $values;
   }
 
@@ -702,11 +779,15 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
       throw new Exception('Property is not a field.');
     }
 
-    if ($field['type'] != 'entityreference') {
-      throw new Exception('Property is not an entity reference field.');
+    if ($field['type'] == 'entityreference') {
+      return $field['settings']['target_type'];
+    }
+    elseif ($field['type'] == 'taxonomy_term_reference') {
+      return 'taxonomy_term';
     }
 
-    return $field['settings']['target_type'];
+    throw new Exception('Property is not an entity reference field.');
+
   }
 
   /**
@@ -717,14 +798,12 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    * @param string $property
    *   The property name (i.e. the field name).
    * @param array $resource
-   * @param array $request
-   * @param stdClass $account
-   *   The user object.
+   *   Array with resource names, keyed by the bundle name.
    *
    * @return mixed
    *   The value if found, or NULL if bundle not defined.
    */
-  protected function getValueFromResource(EntityMetadataWrapper $wrapper, $property, $resource, $request, stdClass $account) {
+  protected function getValueFromResource(EntityMetadataWrapper $wrapper, $property, $resource) {
     $handlers = &drupal_static(__FUNCTION__, array());
 
     $target_type = $this->getTargetTypeFromEntityReference($property);
@@ -733,6 +812,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
     }
 
     list($id,, $bundle) = entity_extract_ids($target_type, $entity);
+
     if (empty($resource[$bundle])) {
       // Bundle not mapped to a resource.
       return;
@@ -744,7 +824,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
       $handlers[$bundle] = restful_get_restful_handler($resource[$bundle], $version['major'], $version['minor']);
     }
     $bundle_handler = $handlers[$bundle];
-    return $bundle_handler->viewEntity($id, $request, $account);
+    return $bundle_handler->viewEntity($id);
   }
 
   /**
@@ -754,17 +834,13 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    *
    * @param $entity_id
    *   The entity ID.
-   * @param $request
-   *   The request array.
-   * @param $account
-   *   The user object.
    *
    * @return array
    *   Array with the output of the new entity, passed to
    *   RestfulEntityInterface::viewEntity().
    */
-  public function putEntity($entity_id, $request, $account) {
-    return $this->updateEntity($entity_id, $request, $account, TRUE);
+  public function putEntity($entity_id) {
+    return $this->updateEntity($entity_id, TRUE);
   }
 
   /**
@@ -774,17 +850,13 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    *
    * @param $entity_id
    *   The entity ID.
-   * @param $request
-   *   The request array.
-   * @param $account
-   *   The user object.
    *
    * @return array
    *   Array with the output of the new entity, passed to
    *   RestfulEntityInterface::viewEntity().
    */
-  public function patchEntity($entity_id, $request, $account) {
-    return $this->updateEntity($entity_id, $request, $account, FALSE);
+  public function patchEntity($entity_id) {
+    return $this->updateEntity($entity_id, FALSE);
   }
 
   /**
@@ -794,13 +866,9 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    *
    * @param $entity_id
    *   The entity ID.
-   * @param $request
-   *   The request array.
-   * @param $account
-   *   The user object.
    */
-  public function deleteEntity($entity_id, $request, $account) {
-    $this->isValidEntity('update', $entity_id, $account);
+  public function deleteEntity($entity_id) {
+    $this->isValidEntity('update', $entity_id);
 
     $wrapper = entity_metadata_wrapper($this->entityType, $entity_id);
     $wrapper->delete();
@@ -814,10 +882,6 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    *
    * @param $entity_id
    *   The entity ID.
-   * @param $request
-   *   The request array.
-   * @param $account
-   *   The user object.
    * @param bool $null_missing_fields
    *   Determine if properties that are missing form the request array should
    *   be treated as NULL, or should be skipped. Defaults to FALSE, which will
@@ -827,12 +891,12 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    *   Array with the output of the new entity, passed to
    *   RestfulEntityInterface::viewEntity().
    */
-  protected function updateEntity($entity_id, $request, $account, $null_missing_fields = FALSE) {
-    $this->isValidEntity('update', $entity_id, $account);
+  protected function updateEntity($entity_id, $null_missing_fields = FALSE) {
+    $this->isValidEntity('update', $entity_id);
 
     $wrapper = entity_metadata_wrapper($this->entityType, $entity_id);
 
-    $this->setPropertyValues($wrapper, $request, $account, $null_missing_fields);
+    $this->setPropertyValues($wrapper, $null_missing_fields);
 
     // Set the HTTP headers.
     $this->setHttpHeaders('Status', 201);
@@ -841,17 +905,12 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
       $this->setHttpHeaders('Location', $url);
     }
 
-    return $this->viewEntity($wrapper->getIdentifier(), NULL, $account);
+    return $this->viewEntity($wrapper->getIdentifier());
   }
 
 
   /**
    * Create a new entity.
-   *
-   * @param $request
-   *   The request array.
-   * @param $account
-   *   The user object.
    *
    * @return array
    *   Array with the output of the new entity, passed to
@@ -859,7 +918,9 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    *
    * @throws RestfulForbiddenException
    */
-  public function createEntity($request = NULL, stdClass $account = NULL) {
+  public function createEntity() {
+    $account = $this->getAccount();
+
     $entity_info = entity_get_info($this->entityType);
     $bundle_key = $entity_info['entity keys']['bundle'];
     $values = array($bundle_key => $this->bundle);
@@ -874,8 +935,8 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
 
     $wrapper = entity_metadata_wrapper($this->entityType, $entity);
 
-    $this->setPropertyValues($wrapper, $request, $account);
-    return $this->viewEntity($wrapper->getIdentifier(), NULL, $account);
+    $this->setPropertyValues($wrapper);
+    return $this->viewEntity($wrapper->getIdentifier());
   }
 
   /**
@@ -883,10 +944,6 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    *
    * @param EntityMetadataWrapper $wrapper
    *   The wrapped entity object, passed by reference.
-   * @param array $request
-   *   The request array.
-   * @param stdClass $account
-   *   The user object.
    * @param bool $null_missing_fields
    *   Determine if properties that are missing form the request array should
    *   be treated as NULL, or should be skipped. Defaults to FALSE, which will
@@ -894,12 +951,15 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    *
    * @throws RestfulBadRequestException
    */
-  protected function setPropertyValues(EntityMetadataWrapper $wrapper, $request, stdClass $account, $null_missing_fields = FALSE) {
+  protected function setPropertyValues(EntityMetadataWrapper $wrapper, $null_missing_fields = FALSE) {
+    $account = $this->getAccount();
+    $request = $this->getRequest();
+
     static::cleanRequest($request);
     $save = FALSE;
     $original_request = $request;
 
-    foreach ($this->getPublicFields() as $public_property => $info) {
+    foreach ($this->getPublicFields() as $public_field_name => $info) {
       if (empty($info['property'])) {
         // We may have for example an entity with no label property, but with a
         // label callback. In that case the $info['property'] won't exist, so
@@ -908,7 +968,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
       }
 
       $property_name = $info['property'];
-      if (!isset($request[$public_property])) {
+      if (!isset($request[$public_field_name])) {
         // No property to set in the request.
         if ($null_missing_fields && $this->checkPropertyAccess($wrapper->{$property_name}, 'edit', $account)) {
           // We need to set the value to NULL.
@@ -918,13 +978,13 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
       }
 
       if (!$this->checkPropertyAccess($wrapper->{$property_name}, 'edit', $account)) {
-        throw new RestfulBadRequestException(format_string('Property @name cannot be set.', array('@name' => $public_property)));
+        throw new RestfulBadRequestException(format_string('Property @name cannot be set.', array('@name' => $public_field_name)));
       }
 
-      $field_value = $this->propertyValuesPreprocess($property_name, $request[$public_property]);
+      $field_value = $this->propertyValuesPreprocess($property_name, $request[$public_field_name], $public_field_name);
 
       $wrapper->{$property_name}->set($field_value);
-      unset($original_request[$public_property]);
+      unset($original_request[$public_field_name]);
       $save = TRUE;
     }
 
@@ -941,7 +1001,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
 
     // Allow changing the entity just before it's saved. For example, setting
     // the author of the node entity.
-    $this->entityPreSave($wrapper->value(), $request, $account);
+    $this->entityPreSave($wrapper);
 
     $this->entityValidate($wrapper);
 
@@ -955,18 +1015,20 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    *   The property name to set.
    * @param $value
    *   The value passed in the request.
+   * @param string $public_field_name
+   *   The name of the public field to set.
    *
    * @return mixed
    *   The value to set using the wrapped property.
    */
-  public function propertyValuesPreprocess($property_name, $value) {
+  public function propertyValuesPreprocess($property_name, $value, $public_field_name) {
     // Get the field info.
     $field_info = field_info_field($property_name);
 
     switch ($field_info['type']) {
       case 'entityreference':
       case 'taxonomy_term_reference':
-        return $this->propertyValuesPreprocessReference($property_name, $value, $field_info);
+        return $this->propertyValuesPreprocessReference($property_name, $value, $field_info, $public_field_name);
 
       case 'text':
       case 'text_long':
@@ -991,18 +1053,106 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    *   The value passed in the request.
    * @param array $field_info
    *   The field info array.
+   * @param string $public_field_name
+   *   The name of the public field to set.
    *
    * @return mixed
    *   The value to set using the wrapped property.
    */
-  protected function propertyValuesPreprocessReference($property_name, $value, $field_info) {
+  protected function propertyValuesPreprocessReference($property_name, $value, $field_info, $public_field_name) {
     if ($field_info['cardinality'] != 1 && !is_array($value)) {
       // If the field is entity reference type and its cardinality larger than
       // 1 set value to an array.
-      return explode(',', $value);
+      $value = explode(',', $value);
     }
 
+    $value = $this->createEntityFromReference($property_name, $value, $field_info, $public_field_name);
+
     return $value;
+  }
+
+  /**
+   * Helper function; Create an entity from a a sub-resource.
+   *
+   * @param string $property_name
+   *   The property name to set.
+   * @param $value
+   *   The value passed in the request.
+   * @param array $field_info
+   *   The field info array.
+   * @param string $public_field_name
+   *   The name of the public field to set.
+   *
+   * @return mix
+   *   The value to set using the wrapped property.
+   */
+  protected function createEntityFromReference($property_name, $value, $field_info, $public_field_name) {
+    $public_fields = $this->getPublicFields();
+
+    if (empty($public_fields[$public_field_name]['resource'])) {
+      // Field is not defined as "resource", which means it only accepts an
+      // integer as a valid value.
+      return $value;
+    }
+
+    if ($field_info['cardinality'] == 1 && !is_array($value)) {
+      return $value;
+    }
+
+    // In case we have multiple bundles, we opt for the first one.
+    $resource_name = reset($public_fields[$public_field_name]['resource']);
+
+    $version = $this->getVersion();
+    $handler = restful_get_restful_handler($resource_name, $version['major'], $version['minor']);
+
+    // Return the entity ID that was created.
+    if ($field_info['cardinality'] == 1) {
+      // Single value.
+      return $this->createOrUpdateSubResourceItem($value, $handler);
+    }
+
+    // Multiple values.
+    $return = array();
+    foreach ($value as $value_item) {
+      $return[] = $this->createOrUpdateSubResourceItem($value_item, $handler);
+    }
+
+    return $return;
+  }
+
+  /**
+   * Create, update or return an already saved entity.
+   *
+   * @param int | array $value
+   *   The entity ID, or array to POST, PATCH, or PUT entity from.
+   * @param \RestfulInterface $handler
+   *   The RESTful handler.
+   *
+   * @return int
+   *   The saved entity ID.
+   */
+  protected function createOrUpdateSubResourceItem($value, $handler) {
+    if (!is_array($value)) {
+      // Item that was passed is already a reference to an existing entity.
+      return $value;
+    }
+
+    // Figure the method that should be used.
+    if (empty($value['id'])) {
+      $method_name = \RestfulInterface::POST;
+      $path = '';
+    }
+    else {
+      // Use PATCH by default, unless client has explicitly set the method in
+      // the sub-resource.
+      $method_name = !empty($value['__application']['method']) ? strtoupper($value['__application']['method']) : \RestfulInterface::PATCH;
+      $path = $value['id'];
+      // Unset the ID from the sub-request.
+      unset($value['id']);
+    }
+
+    $result = $handler->process($path, $value, $method_name, FALSE);
+    return $result['id'];
   }
 
   /**
@@ -1085,14 +1235,10 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
   /**
    * Allow manipulating the entity before it is saved.
    *
-   * @param $entity
-   *   The unsaved entity object, passed by reference.
-   * @param array $request
-   *   The request array.
-   * @param stdClass $account
-   *   The user object.
+   * @param \EntityMetadataWrapper $wrapper
+   *   The unsaved wrapped entity.
    */
-  public function entityPreSave($entity, $request, stdClass $account) {}
+  public function entityPreSave(\EntityMetadataWrapper $wrapper) {}
 
 
   /**
@@ -1134,6 +1280,12 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
 
       $map[$value['property']] = $field_name;
       $params['@fields'][] = $field_name;
+    }
+
+    if (empty($params['@fields'])) {
+      // There was a validation error, but on non-public fields, so we need to
+      // throw an exception, but can't say on which fields it occurred.
+      throw new \RestfulBadRequestException('Invalid value(s) sent with the request.');
     }
 
     $params['@fields'] = implode(',', $params['@fields']);
@@ -1199,8 +1351,6 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    * @param $op
    * @param $entity_id
    *   The entity ID.
-   * @param $account
-   *   The user object.
    *
    * @return bool
    *   TRUE if entity is valid, and user can access it.
@@ -1208,7 +1358,8 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    * @throws RestfulUnprocessableEntityException
    * @throws RestfulForbiddenException
    */
-  protected function isValidEntity($op, $entity_id, $account) {
+  protected function isValidEntity($op, $entity_id) {
+    $account = $this->getAccount();
     $entity_type = $this->entityType;
 
     $params = array(
@@ -1217,14 +1368,14 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
     );
 
     if (!$entity = entity_load_single($entity_type, $entity_id)) {
-      throw new RestfulUnprocessableEntityException(format_string('The specific entity ID @id for @resource does not exist.', $params));
+      throw new RestfulUnprocessableEntityException(format_string('The entity ID @id for @resource does not exist.', $params));
     }
 
     list(,, $bundle) = entity_extract_ids($entity_type, $entity);
 
     $resource_bundle = $this->getBundle();
     if ($resource_bundle && $bundle != $resource_bundle) {
-      throw new RestfulUnprocessableEntityException(format_string('The specified entity ID @id is not a valid @resource.', $params));
+      throw new RestfulUnprocessableEntityException(format_string('The entity ID @id is not a valid @resource.', $params));
     }
 
     if (entity_access($op, $entity_type, $entity, $account) === FALSE) {
@@ -1265,17 +1416,6 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
   }
 
   /**
-   * Get the request array if any.
-   *
-   * @return array
-   *
-   * @todo There is no $this->request populated anywhere.
-   */
-  public function getRequest() {
-    return isset($this->request) ? $this->request : NULL;
-  }
-
-  /**
    * {@inheritdoc}
    */
   public function access() {
@@ -1306,7 +1446,10 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    * @return \stdClass
    *   The user object.
    */
-  public function getAccount($request = NULL, $method = \RestfulInterface::GET) {
+  public function getAccount() {
+    $request = $this->getRequest();
+    $method = $this->getMethod();
+
     $account = $this->getAuthenticationManager()->getAccount($request, $method);
 
     // If the limit rate is enabled for the current plugin then set the account.
@@ -1335,8 +1478,6 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    *
    * By default the URL is absolute.
    *
-   * @param $request
-   *   The request array.
    * @param $options
    *   Array with options passed to url().
    * @param $keep_query
@@ -1347,7 +1488,8 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    * @return string
    *   The URL address.
    */
-  public function getUrl($request = NULL, $options = array(), $keep_query = TRUE) {
+  public function getUrl($options = array(), $keep_query = TRUE) {
+    $request = $this->getRequest();
     // By default set URL to be absolute.
     $options += array(
       'absolute' => TRUE,
@@ -1364,16 +1506,6 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
     }
 
     return url($this->getPluginInfo('menu_item'), $options);
-  }
-
-  /**
-   * Helper function to remove the application generated request data.
-   *
-   * @param &array $request
-   *   The request array to be modified.
-   */
-  public static function cleanRequest(&$request) {
-    unset($request['__application']);
   }
 
   /**
@@ -1424,13 +1556,13 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    *
    * @see \RestfulEntityInterface::viewEntity().
    */
-  protected function getRenderedEntityCache($entity_id, $request) {
+  protected function getRenderedEntityCache($entity_id) {
     $cache_info = $this->getPluginInfo('cache');
     if (!$cache_info['render']) {
       return;
     }
 
-    $cid = $this->generateCacheId($entity_id, $request);
+    $cid = $this->generateCacheId($entity_id);
     return $this->getCacheController()->get($cid);
   }
 
@@ -1442,21 +1574,19 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    *   \RestfulEntityInterface::viewEntity().
    * @param mixed $entity_id
    *   The entity ID.
-   * @param array $request
-   *   The request array to match the condition how cached entity was generated.
    *
    * @return array
    *   The rendered entity as returned by \RestfulEntityInterface::viewEntity().
    *
    * @see \RestfulEntityInterface::viewEntity().
    */
-  protected function setRenderedEntityCache($data, $entity_id, $request) {
+  protected function setRenderedEntityCache($data, $entity_id) {
     $cache_info = $this->getPluginInfo('cache');
     if (!$cache_info['render']) {
       return;
     }
 
-    $cid = $this->generateCacheId($entity_id, $request);
+    $cid = $this->generateCacheId($entity_id);
     $this->getCacheController()->set($cid, $data, $cache_info['expire']);
   }
 
@@ -1471,7 +1601,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    * @return string
    *   The cache identifier.
    */
-  protected function generateCacheId($entity_id, $request) {
+  protected function generateCacheId($entity_id) {
     // Get the cache ID from the selected params. We will use a complex cache ID
     // for smarter invalidation. The cache id will be like:
     // v<major version>.<minor version>::et<entity type>::ei<entity id>::uu<user uid>::pa<params array>
@@ -1482,7 +1612,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
     $version = $this->getVersion();
     $cid = 'v' . $version['major'] . '.' . $version['minor'] . '::et' . $this->getEntityType() . '::ei' . $entity_id . '::uu' . $this->getAccount()->uid . '::pa';
     $cid_params = array();
-    $request = $request ? $request : array();
+    $request = $this->getRequest();
     foreach ($request as $param => $value) {
       // Some request parameters don't affect how the entity is rendered, this
       // means that we should skip them for the cache ID generation.
