@@ -21,50 +21,68 @@ class RestfulExampleAngularTagsResource extends \RestfulEntityBase {
    * Return the values of the types tags, with the ID.
    *
    * @return array
-   *   Array with the found terms which will have the ID populated with the term
+   *   Array with the found terms keys by the entity ID.
    *   ID. Otherwise, if the field allows auto-creating tags, the ID will be the
    *   term name, to indicate for client it is an unsaved term.
    *
    * @see taxonomy_autocomplete()
    */
-  protected function taxonomyAutocomplete() {
+  protected function getListByAutocomplete() {
     $request = $this->getRequest();
     if (empty($request['string'])) {
       // Empty string.
       return array();
     }
 
-    $term = drupal_strtolower($request['string']);
+    $string = drupal_strtolower($request['string']);
+    $options = $this->getPluginInfo('options');
+    $range = $options['autocomplete']['range'];
 
+    $result = $this->getListByAutocompleteQueryResult($string, $range);
 
-    $term_matches = array();
+    foreach ($result as $entity_id => $label) {
+      $string_matches[$entity_id] = check_plain($label);
+    }
 
-    // Part of the criteria for the query come from the field's own settings.
+    return $string_matches;
+  }
+
+  /**
+   * Return the bundles that should be used for the autocomplete search.
+   *
+   * @return array
+   *   Array with the vocabulary IDs.
+   */
+  protected function getListByAutocompleteBundles() {
     $vocabulary = taxonomy_vocabulary_machine_name_load($this->getBundle());
-    $vids = array($vocabulary->vid);
+    return array($vocabulary->vid);
+  }
+
+  /**
+   * Returns the result of a query for the auto complete.
+   *
+   * @param string $string
+   *   The string to query.
+   * @param int $range
+   *   The range of the query.
+   *
+   * @return array
+   *   Array keyed by the entity ID and the entity label as value.
+   */
+  protected function getListByAutocompleteQueryResult($string, $range) {
+    $bundles = $this->getListByAutocompleteBundles();
 
     $query = db_select('taxonomy_term_data', 't');
     $query->addTag('translatable');
     $query->addTag('term_access');
 
     // Select rows that match by term name.
-    $tags_return = $query
+    return $query
       ->fields('t', array('tid', 'name'))
-      ->condition('t.vid', $vids)
-      ->condition('t.name', '%' . db_like($term) . '%', 'LIKE')
-      ->range(0, 10)
+      ->condition('t.vid', $bundles, 'IN')
+      ->condition('t.name', '%' . db_like($string) . '%', 'LIKE')
+      ->range(0, $range)
       ->execute()
       ->fetchAllKeyed();
-
-    foreach ($tags_return as $tid => $name) {
-      $term_matches[$tid] = check_plain($name);
-    }
-
-    if (!$tags_return) {
-      // No result found.
-      $term_matches[$term] = check_plain($term);
-    }
-
-    return $term_matches;
   }
 }
