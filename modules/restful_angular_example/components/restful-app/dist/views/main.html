@@ -30,7 +30,7 @@
 
   <div class="input-wrapper tags">
     <label>Tags</label>
-    <input multiple type="hidden" ui-select2="{query: tagsQuery, minimumInputLength: 2}" ng-model="data.tags" data-placeholder="Select or create tags" />
+    <input multiple type="hidden" ui-select2="{query: tagsQuery, minimumInputLength: 2}" ng-model="data.tags" data-placeholder="Select or create tags" style="width: 300px"/>
   </div>
 
   <div class="input-wrapper file-wrapper">
@@ -57,7 +57,7 @@
 
 <h2>Console (Server side)</h2>
 
-<div>
+<div ng-show="data.tags">
   Tags: <pre pretty-json="data.tags" />
 </div>
 
