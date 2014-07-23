@@ -26,14 +26,16 @@ angular.module('restfulApp')
         if (data.length == 0) {
           terms.results.push({
             text: query.term,
-            id: query.term
+            id: query.term,
+            isNew: true
           });
         }
         else {
           angular.forEach(data, function (label, id) {
             terms.results.push({
               text: label,
-              id: id
+              id: id,
+              isNew: false
             });
           });
         }
@@ -53,7 +55,7 @@ angular.module('restfulApp')
       angular.forEach(submitData.tags, function (term, index) {
         tags[index] = {};
         tags[index].label = term.text;
-        if (parseInt(term.id)) {
+        if (!term.isNew) {
           tags[index].id = term.id;
         }
       });
