@@ -6,6 +6,7 @@ angular.module('restfulApp')
     $scope.data.label = 'yes',
     $scope.data.body = 'Drupal stuff',
     $scope.serverSide = {};
+    $scope.tagsQueryCache = [];
 
     /**
      * Get matching tags.
@@ -15,13 +16,21 @@ angular.module('restfulApp')
      */
     $scope.tagsQuery = function (query) {
       var url = DrupalSettings.getBasePath() + 'api/v1/tags';
+      var terms = {results: []};
+
+      var lowerCaseTerm = query.term.toLowerCase();
+      if (angular.isDefined($scope.tagsQueryCache[lowerCaseTerm])) {
+        // Add caching.
+        terms.results = $scope.tagsQueryCache[lowerCaseTerm];
+        query.callback(terms);
+        return;
+      }
 
       $http.get(url, {
         params: {
           string: query.term
         }
       }).success(function(data) {
-        var terms = {results: []};
 
         if (data.length == 0) {
           terms.results.push({
@@ -38,6 +47,7 @@ angular.module('restfulApp')
               isNew: false
             });
           });
+          $scope.tagsQueryCache[lowerCaseTerm] = terms;
         }
 
         query.callback(terms);
