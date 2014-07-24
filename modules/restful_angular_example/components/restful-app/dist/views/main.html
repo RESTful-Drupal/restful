@@ -41,11 +41,15 @@
         OR drop files here
       </div>
 
-
       <div ng-show="serverSide.image">
         <img ng-src="{{ serverSide.image.self }}" />
       </div>
+    </div>
 
+    <div class="errors">
+      <ul ng-show="serverSide.data.errors.image">
+        <li ng-repeat="error in serverSide.data.errors.image">{{error}}</li>
+      </ul>
     </div>
 
   </div>
@@ -57,15 +61,15 @@
 
 <h2>Console (Server side)</h2>
 
-<div ng-show="data.tags">
-  Tags: <pre pretty-json="data.tags" />
-</div>
-
 <div>
   <div ng-show="serverSide.status == 200" class="create-success">
     <strong>
       New article created: <a ng-href="{{ serverSide.data.self }}" target="_blank">{{ serverSide.data.label }}</a> (node ID {{ serverSide.data.id }})
     </strong>
+  </div>
+
+  <div ng-show="data.tags">
+    Tags: <pre pretty-json="data.tags" />
   </div>
 
   <div ng-show="serverSide.status">
