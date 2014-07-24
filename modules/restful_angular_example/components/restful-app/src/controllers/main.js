@@ -63,10 +63,14 @@ angular.module('restfulApp')
       var submitData = angular.copy($scope.data);
       var tags = [];
       angular.forEach(submitData.tags, function (term, index) {
-        tags[index] = {};
-        tags[index].label = term.text;
-        if (!term.isNew) {
-          tags[index].id = term.id;
+        if (term.isNew) {
+          // New term.
+          tags[index] = {};
+          tags[index].label = term.id;
+        }
+        else {
+          // Existing term.
+          tags[index] = term.id;
         }
       });
 

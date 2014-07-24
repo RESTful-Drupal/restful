@@ -1381,9 +1381,8 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
   /**
    * Determine if an entity is valid, and accessible.
    *
-   * @params $op
-   *   The operation to perform on the entity (view, update, delete).
    * @param $op
+   *   The operation to perform on the entity (view, update, delete).
    * @param $entity_id
    *   The entity ID.
    *
