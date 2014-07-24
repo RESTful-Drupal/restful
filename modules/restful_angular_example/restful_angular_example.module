@@ -45,7 +45,6 @@ function restful_angular_example_ctools_plugin_directory($module, $plugin) {
   }
 }
 
-
 /**
  * Page callback; Load the AngularJs form.
  */

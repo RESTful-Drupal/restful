@@ -7,7 +7,7 @@ $plugin = array(
   'entity_type' => 'taxonomy_term',
   'bundle' => 'tags',
   'description' => t('Export the "tags" taxonomy term.'),
-  'class' => 'RestfulEntityBaseTaxonomyTerm',
+  'class' => 'RestfulEntityTaxonomyTermTags',
   'authentication_types' => TRUE,
   'authentication_optional' => TRUE,
 );

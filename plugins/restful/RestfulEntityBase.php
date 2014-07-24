@@ -741,7 +741,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
         $sub_wrapper = $info['wrapper_method_on_entity'] ? $wrapper : $wrapper->{$property};
 
         // Check user has access to the property.
-        if ($property && !$this->checkPropertyAccess($sub_wrapper, 'view', $account)) {
+        if ($property && !$this->checkPropertyAccess($sub_wrapper, 'view', $wrapper)) {
           continue;
         }
 
@@ -1005,14 +1005,14 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
       $property_name = $info['property'];
       if (!isset($request[$public_field_name])) {
         // No property to set in the request.
-        if ($null_missing_fields && $this->checkPropertyAccess($wrapper->{$property_name}, 'edit', $account)) {
+        if ($null_missing_fields && $this->checkPropertyAccess($wrapper->{$property_name}, 'edit', $wrapper)) {
           // We need to set the value to NULL.
           $wrapper->{$property_name}->set(NULL);
         }
         continue;
       }
 
-      if (!$this->checkPropertyAccess($wrapper->{$property_name}, 'edit', $account)) {
+      if (!$this->checkPropertyAccess($wrapper->{$property_name}, 'edit', $wrapper)) {
         throw new RestfulBadRequestException(format_string('Property @name cannot be set.', array('@name' => $public_field_name)));
       }
 
@@ -1354,11 +1354,14 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    * @param $op
    *   The operation that access should be checked for. Can be "view" or "edit".
    *   Defaults to "edit".
+   * @param EntityMetadataWrapper $wrapper
+   *   The wrapped entity.
    *
    * @return bool
    *   TRUE if the current user has access to set the property, FALSE otherwise.
    */
-  protected function checkPropertyAccess(EntityMetadataWrapper $property, $op = 'edit', $account) {
+  protected function checkPropertyAccess(EntityMetadataWrapper $property, $op = 'edit', EntityMetadataWrapper $wrapper) {
+    $account = $this->getAccount();
     // @todo Hack to check format access for text fields. Should be removed once
     // this is handled properly on the Entity API level.
     if ($property->type() == 'text_formatted' && $property->value() && $property->format->value()) {
