@@ -21,7 +21,7 @@ class RestfulEntityTaxonomyTermTags extends \RestfulEntityBaseTaxonomyTerm {
 
 
   /**
-   * Overrides \RestfulEntityBaseTaxonomyTerm::createEntity().
+   * Overrides \RestfulEntityBaseTaxonomyTerm::checkPropertyAccess().
    *
    * Allow user to create a label for the term.
    */
