@@ -34,7 +34,7 @@ class RestfulEntityBaseTaxonomyTerm extends RestfulEntityBase {
    * @return array
    *   Array with the vocabulary IDs.
    */
-  protected function getListByAutocompleteBundles() {
+  protected function getListForAutocompleteBundles() {
     $vocabulary = taxonomy_vocabulary_machine_name_load($this->getBundle());
     return array($vocabulary->vid);
   }
@@ -51,7 +51,7 @@ class RestfulEntityBaseTaxonomyTerm extends RestfulEntityBase {
    *   Array keyed by the entity ID and the entity label as value.
    */
   protected function getListByAutocompleteQueryResult($string, $range) {
-    $bundles = $this->getListByAutocompleteBundles();
+    $bundles = $this->getListForAutocompleteBundles();
 
     $query = db_select('taxonomy_term_data', 't');
     $query->addTag('translatable');
