@@ -962,7 +962,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
 
     $entity = entity_create($this->entityType, $values);
 
-    if (entity_access('create', $this->entityType, $entity, $account) === FALSE) {
+    if ($this->checkEntityAccess('create', $this->entityType, $entity) === FALSE) {
       // User does not have access to create entity.
       $params = array('@resource' => $this->plugin['label']);
       throw new RestfulForbiddenException(format_string('You do not have access to create a new @resource resource.', $params));
@@ -1415,12 +1415,32 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
       throw new RestfulUnprocessableEntityException(format_string('The entity ID @id is not a valid @resource.', $params));
     }
 
-    if (entity_access($op, $entity_type, $entity, $account) === FALSE) {
+    if ($this->checkEntityAccess($op, $entity_type, $entity) === FALSE) {
       // Entity was explicitly denied.
       throw new RestfulForbiddenException(format_string('You do not have access to entity ID @id of resource @resource', $params));
     }
 
     return TRUE;
+  }
+
+
+  /**
+   * Check access to CRUD an entity.
+   *
+   * @param $op
+   *   The operation. Allowed values are "create", "update" and "delete".
+   * @param $entity_type
+   *   The entity type.
+   * @param $entity
+   *   The entity object.
+   *
+   * @return bool
+   *   TRUE or FALSE based on the access. If no access is known about the entity
+   *   return NULL.
+   */
+  protected function checkEntityAccess($op, $entity_type, $entity) {
+    $account = $this->getAccount();
+    return entity_access($op, $entity_type, $entity, $account);
   }
 
   /**

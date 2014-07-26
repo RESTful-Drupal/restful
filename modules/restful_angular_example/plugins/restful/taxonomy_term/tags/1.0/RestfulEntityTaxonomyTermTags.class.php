@@ -8,31 +8,17 @@
 class RestfulEntityTaxonomyTermTags extends \RestfulEntityBaseTaxonomyTerm {
 
   /**
-   * Overrides \RestfulEntityBaseTaxonomyTerm::createEntity().
+   * Overrides \RestfulEntityBaseTaxonomyTerm::checkEntityAccess().
    *
    * Allow access to create "Tags" resource for privileged users, as
    * we can't use entity_access() since entity_metadata_taxonomy_access()
    * denies it for a non-admin user.
    */
-  public function createEntity() {
+  protected function checkEntityAccess($op, $entity_type, $entity) {
     $account = $this->getAccount();
-    if (!user_access('create article content', $account)) {
-      // User does not have access to create entity.
-      $params = array('@resource' => $this->plugin['label']);
-      throw new RestfulForbiddenException(format_string('You do not have access to create a new @resource resource.', $params));
-    }
-
-    $entity_info = entity_get_info($this->entityType);
-    $bundle_key = $entity_info['entity keys']['bundle'];
-    $values = array($bundle_key => $this->bundle);
-
-    $entity = entity_create($this->entityType, $values);
-
-    $wrapper = entity_metadata_wrapper($this->entityType, $entity);
-
-    $this->setPropertyValues($wrapper);
-    return $this->viewEntity($wrapper->getIdentifier());
+    return user_access('create article content', $account);
   }
+
 
   /**
    * Overrides \RestfulEntityBaseTaxonomyTerm::createEntity().
