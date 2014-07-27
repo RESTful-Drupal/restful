@@ -65,7 +65,7 @@ class RestfulEntityBaseTaxonomyTerm extends RestfulEntityBase {
    * @return array
    *   Array keyed by the entity ID and the entity label as value.
    */
-  protected function getListByAutocompleteQueryResult($string, $range) {
+  protected function getListForAutocompleteQueryResult($string, $range) {
     $bundles = $this->getListForAutocompleteBundles();
 
     $query = db_select('taxonomy_term_data', 't');

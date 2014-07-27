@@ -517,7 +517,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
     $autocomplete_options = $this->getPluginInfo('autocomplete');
     if (!empty($autocomplete_options['enable']) && isset($request['string'])) {
       // Return autocomplete list.
-      return $this->getListByAutocomplete();
+      return $this->getListForAutocomplete();
     }
 
     $entity_type = $this->entityType;
@@ -627,7 +627,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    *
    * @see taxonomy_autocomplete()
    */
-  protected function getListByAutocomplete() {
+  protected function getListForAutocomplete() {
     $request = $this->getRequest();
     if (empty($request['string'])) {
       // Empty string.
@@ -638,7 +638,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
     $autocomplete_options = $this->getPluginInfo('autocomplete');
     $range = $autocomplete_options['range'];
 
-    $result = $this->getListByAutocompleteQueryResult($string, $range);
+    $result = $this->getListForAutocompleteQueryResult($string, $range);
 
     $return = array();
     foreach ($result as $entity_id => $label) {
