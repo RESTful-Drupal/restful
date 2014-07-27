@@ -29,6 +29,21 @@ class RestfulEntityBaseTaxonomyTerm extends RestfulEntityBase {
   }
 
   /**
+   * Overrides \RestfulEntityBase::checkPropertyAccess().
+   *
+   * Allow user to create a label for the unsaved term, even if the user doesn't
+   * have access to update existing terms.
+   */
+  protected function checkPropertyAccess(EntityMetadataWrapper $property, $op = 'edit', EntityMetadataWrapper $wrapper) {
+    $info = $property->info();
+    $term = $wrapper->value();
+    if (!empty($info['name']) && $info['name'] == 'name' && empty($term->tid) && $op == 'edit') {
+      return TRUE;
+    }
+    return parent::checkPropertyAccess($property, $op, $wrapper);
+  }
+
+  /**
    * Return the bundles that should be used for the autocomplete search.
    *
    * @return array

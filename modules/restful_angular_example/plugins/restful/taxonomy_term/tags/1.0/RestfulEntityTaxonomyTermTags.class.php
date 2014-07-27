@@ -18,19 +18,4 @@ class RestfulEntityTaxonomyTermTags extends \RestfulEntityBaseTaxonomyTerm {
     $account = $this->getAccount();
     return user_access('create article content', $account);
   }
-
-
-  /**
-   * Overrides \RestfulEntityBaseTaxonomyTerm::checkPropertyAccess().
-   *
-   * Allow user to create a label for the term.
-   */
-  protected function checkPropertyAccess(EntityMetadataWrapper $property, $op = 'edit', EntityMetadataWrapper $wrapper) {
-    $info = $property->info();
-    $term = $wrapper->value();
-    if (!empty($info['name']) && $info['name'] == 'name' && empty($term->tid) && $op == 'edit') {
-      return TRUE;
-    }
-    return parent::checkPropertyAccess($property, $op, $wrapper);
-  }
 }
