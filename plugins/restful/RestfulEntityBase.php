@@ -1172,21 +1172,26 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
       return $value;
     }
 
+    // Value is actually a sub request, so for clarity we will name it $request.
+    $request = $value;
+
     // Figure the method that should be used.
-    if (empty($value['id'])) {
+    if (empty($request['id'])) {
       $method_name = \RestfulInterface::POST;
       $path = '';
     }
     else {
       // Use PATCH by default, unless client has explicitly set the method in
       // the sub-resource.
-      $method_name = !empty($value['__application']['method']) ? strtoupper($value['__application']['method']) : \RestfulInterface::PATCH;
-      $path = $value['id'];
+      // As any request, under the the "__application" we may pass additional
+      // metadata.
+      $method_name = !empty($request['__application']['method']) ? strtoupper($request['__application']['method']) : \RestfulInterface::PATCH;
+      $path = $request['id'];
       // Unset the ID from the sub-request.
-      unset($value['id']);
+      unset($request['id']);
     }
 
-    $result = $handler->process($path, $value, $method_name, FALSE);
+    $result = $handler->process($path, $request, $method_name, FALSE);
     return $result['id'];
   }
 
