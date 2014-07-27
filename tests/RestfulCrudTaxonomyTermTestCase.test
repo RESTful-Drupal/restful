@@ -1,0 +1,51 @@
+<?php
+
+/**
+ * @file
+ * Contains RestfulCrudTaxonomyTermTestCase
+ */
+
+class RestfulCrudTaxonomyTermTestCase extends DrupalWebTestCase {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Taxonomy term integration',
+      'description' => 'Test the CRUD of a taxonomy term entity type.',
+      'group' => 'Restful',
+    );
+  }
+
+  function setUp() {
+    parent::setUp('restful_test');
+  }
+
+  /**
+   * Test the CRUD of a taxonomy term entity type.
+   */
+  function testCrud() {
+    $user1 = $this->drupalCreateUser(array('create article content'));
+    $this->drupalLogin($user1);
+
+    $handler = restful_get_restful_handler('test_tags');
+    $handler->setAccount($user1);
+
+    $text1 = $this->randomName();
+    $request = array('label' => $text1);
+    $result = $handler->post('', $request);
+
+    $id = $result['id'];
+    $this->assertTrue($id, 'Term was created by a non-admin user.');
+
+    $request = array('label' => 'new label');
+    $handler->patch($id, $request);
+    $term = taxonomy_term_load($id);
+    $this->assertEqual($term->name, 'new label', 'Term was update by a non-admin user.');
+
+    $handler->delete($id);
+    $term = taxonomy_term_load($id);
+    $this->assertFalse($term, 'Term was update by a non-admin user.');
+
+
+
+  }
+}
