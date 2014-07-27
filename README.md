@@ -218,6 +218,57 @@ Will result with an HTTP code 400, and the following JSON:
 }
 ```
 
+## Sub-requests
+It is possible to create multiple referencing entities in a single request. A
+typical example would be a node referencing a new taxonomy term. For example if
+there was a taxonomy reference or entity reference field called ``field_tags``
+on the  Article bundle (node) with an ``articles`` and a Tags bundle (taxonomy
+term) with a ``tags`` resource, we would define the relation via the
+``RestfulEntityBase::getPublicFields()``
+
+```php
+public function getPublicFields() {
+  // ...
+  $public_fields['tags'] = array(
+    'property' => 'field_tags',
+    'resource' => array(
+      'tags' => 'tags',
+    ),
+  );
+}
+
+```
+
+And create both entities with a single request:
+
+```php
+$handler = restful_get_restful_handler('articles');
+$request = array(
+  'label' => 'parent',
+  'body' => 'Drupal',
+  'tags' => array(
+    array(
+      // Create a new term.
+      'label' => 'child1',
+    ),
+    array(
+      // PATCH an existing term.
+      'label' => 'new title by PATCH',
+    ),
+    array(
+      '__application' => array(
+        'method' => \RestfulInterface::PUT,
+      ),
+      // PUT an existing term.
+      'label' => 'new title by PUT',
+    ),
+  ),
+);
+
+$handler->post('', $request);
+
+```
+
 ## Cache layer
 The RESTful module is compatible and leverages the popular
 [Entity Cache](https://drupal.org/project/entitycache) module and adds a new
