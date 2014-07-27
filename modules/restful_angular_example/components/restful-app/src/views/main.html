@@ -6,7 +6,7 @@
 
 <form name="article" ng-submit="submitForm()">
 
-  <div class="text">
+  <div class="input-wrapper text">
     <label>Title</label>
     <input id="label" name="label" type="text" ng-model="data.label" placeholder="See how many characters are needed to validate..." ng-required="required" size="60">
 
@@ -18,7 +18,7 @@
 
   </div>
 
-  <div class="textarea">
+  <div class="input-wrapper textarea">
     <label>Description</label>
     <textarea id="body" name="body" type="textarea" ng-model="data.body" placeholder="Type some description. See which word is required..." rows="3" ng-minlength="3" ng-required="required" cols="60"></textarea>
     <div class="errors">
@@ -28,8 +28,31 @@
     </div>
   </div>
 
-  <input type="file" ng-file-select="onFileSelect($files)" >
-  <div ng-show="dropSupported" class="drop-box" ng-file-drop="onFileSelect($files);" ng-file-drop-available="dropSupported=true" ng-file-drag-over-class="file-upload-drag">OR drop files here</div>
+  <div class="input-wrapper tags">
+    <label>Tags</label>
+    <input multiple type="hidden" ui-select2="{query: tagsQuery, minimumInputLength: 2}" ng-model="data.tags" data-placeholder="Select or create tags" style="width: 300px"/>
+  </div>
+
+  <div class="input-wrapper file-wrapper">
+    <input type="file" ng-file-select="onFileSelect($files)" >
+    <div ng-show="dropSupported" class="drop-box" ng-file-drop="onFileSelect($files);" ng-file-drop-available="dropSupported=true" ng-file-drag-over-class="file-upload-drag">
+
+      <div ng-hide="serverSide.image">
+        OR drop files here
+      </div>
+
+      <div ng-show="serverSide.image">
+        <img ng-src="{{ serverSide.image.self }}" />
+      </div>
+    </div>
+
+    <div class="errors">
+      <ul ng-show="serverSide.data.errors.image">
+        <li ng-repeat="error in serverSide.data.errors.image">{{error}}</li>
+      </ul>
+    </div>
+
+  </div>
 
   <div class="actions">
     <button type="submit" tabindex="100">Submit</button>
@@ -43,6 +66,10 @@
     <strong>
       New article created: <a ng-href="{{ serverSide.data.self }}" target="_blank">{{ serverSide.data.label }}</a> (node ID {{ serverSide.data.id }})
     </strong>
+  </div>
+
+  <div ng-show="data.tags">
+    Tags: <pre pretty-json="data.tags" />
   </div>
 
   <div ng-show="serverSide.status">

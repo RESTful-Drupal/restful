@@ -514,7 +514,11 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    */
   public function getList() {
     $request = $this->getRequest();
-    $account = $this->getAccount();
+    $autocomplete_options = $this->getPluginInfo('autocomplete');
+    if (!empty($autocomplete_options['enable']) && isset($request['autocomplete']['string'])) {
+      // Return autocomplete list.
+      return $this->getListForAutocomplete();
+    }
 
     $entity_type = $this->entityType;
     $result = $this
@@ -614,6 +618,117 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
   }
 
   /**
+   * Return the values of the types tags, with the ID.
+   *
+   * @return array
+   *   Array with the found terms keys by the entity ID.
+   *   ID. Otherwise, if the field allows auto-creating tags, the ID will be the
+   *   term name, to indicate for client it is an unsaved term.
+   *
+   * @see taxonomy_autocomplete()
+   *
+   * @throws \Exception
+   */
+  protected function getListForAutocomplete() {
+    $entity_info = entity_get_info($this->getEntityType());
+    if (empty($entity_info['entity keys']['label'])) {
+      // Entity is invalid for autocomplete, as it doesn't have a "label"
+      // property.
+      $params = array('@entity' => $this->getEntityType());
+      throw new \Exception(format_string('Cannot autocomplete @entity as it does not have a "label" property defined.', $params));
+    }
+
+    $request = $this->getRequest();
+    if (empty($request['autocomplete']['string'])) {
+      // Empty string.
+      return array();
+    }
+
+    $result = $this->getQueryResultForAutocomplete();
+
+    $return = array();
+    foreach ($result as $entity_id => $label) {
+      $return[$entity_id] = check_plain($label);
+    }
+
+    return $return;
+  }
+
+  /**
+   * Return the bundles that should be used for the autocomplete search.
+   *
+   * @return array
+   *   Array with the bundle name(s).
+   */
+  protected function getBundlesForAutocomplete() {
+    return array($this->getBundle());
+  }
+
+  /**
+   * Request the query object to get a list for autocomplete.
+   *
+   * @return EntityFieldQuery
+   *   Return a query object, before it is executed.
+   */
+  protected function getQueryForAutocomplete() {
+    $autocomplete_options = $this->getPluginInfo('autocomplete');
+    $entity_type = $this->getEntityType();
+    $entity_info = entity_get_info($entity_type);
+    $request = $this->getRequest();
+
+    $string = drupal_strtolower($request['autocomplete']['string']);
+    $operator = !empty($request['autocomplete']['operator']) ? $request['autocomplete']['operator'] : $autocomplete_options['operator'];
+
+    $query = new EntityFieldQuery();
+
+    $query->entityCondition('entity_type', $entity_type);
+    if ($bundles = $this->getBundlesForAutocomplete()) {
+      $query->entityCondition('bundle', $bundles, 'IN');
+    }
+
+    $query->propertyCondition($entity_info['entity keys']['label'], $string, $operator);
+
+    // Add a generic entity access tag to the query.
+    $query->addTag($entity_type . '_access');
+    $query->addTag('restful');
+    $query->addMetaData('restful_handler', $this);
+
+    // Sort by label.
+    $query->propertyOrderBy($entity_info['entity keys']['label']);
+
+    // Add range.
+    $query->range(0, $autocomplete_options['range']);
+
+    return $query;
+  }
+
+  /**
+   * Returns the result of a query for the auto complete.
+   *
+   * @return array
+   *   Array keyed by the entity ID and the unsanitized entity label as value.
+   */
+  protected function getQueryResultForAutocomplete() {
+    $entity_type = $this->getEntityType();
+    $query = $this->getQueryForAutocomplete();
+    $result = $query->execute();
+
+    if (empty($result[$entity_type])) {
+      // No entities found.
+      return array();
+    }
+
+    $ids = array_keys($result[$entity_type]);
+    $return = array();
+
+    foreach (entity_load($entity_type, $ids) as $id => $entity) {
+      $return[$id] = entity_label($entity_type, $entity);
+    }
+
+    return $return;
+  }
+
+  /**
    * Add HATEOAS links to list of item.
    *
    * @param $return
@@ -706,7 +821,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
         $sub_wrapper = $info['wrapper_method_on_entity'] ? $wrapper : $wrapper->{$property};
 
         // Check user has access to the property.
-        if ($property && !$this->checkPropertyAccess($sub_wrapper, 'view', $account)) {
+        if ($property && !$this->checkPropertyAccess($sub_wrapper, 'view', $wrapper)) {
           continue;
         }
 
@@ -779,11 +894,15 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
       throw new Exception('Property is not a field.');
     }
 
-    if ($field['type'] != 'entityreference') {
-      throw new Exception('Property is not an entity reference field.');
+    if ($field['type'] == 'entityreference') {
+      return $field['settings']['target_type'];
+    }
+    elseif ($field['type'] == 'taxonomy_term_reference') {
+      return 'taxonomy_term';
     }
 
-    return $field['settings']['target_type'];
+    throw new Exception('Property is not an entity reference field.');
+
   }
 
   /**
@@ -923,7 +1042,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
 
     $entity = entity_create($this->entityType, $values);
 
-    if (entity_access('create', $this->entityType, $entity, $account) === FALSE) {
+    if ($this->checkEntityAccess('create', $this->entityType, $entity) === FALSE) {
       // User does not have access to create entity.
       $params = array('@resource' => $this->plugin['label']);
       throw new RestfulForbiddenException(format_string('You do not have access to create a new @resource resource.', $params));
@@ -966,14 +1085,14 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
       $property_name = $info['property'];
       if (!isset($request[$public_field_name])) {
         // No property to set in the request.
-        if ($null_missing_fields && $this->checkPropertyAccess($wrapper->{$property_name}, 'edit', $account)) {
+        if ($null_missing_fields && $this->checkPropertyAccess($wrapper->{$property_name}, 'edit', $wrapper)) {
           // We need to set the value to NULL.
           $wrapper->{$property_name}->set(NULL);
         }
         continue;
       }
 
-      if (!$this->checkPropertyAccess($wrapper->{$property_name}, 'edit', $account)) {
+      if (!$this->checkPropertyAccess($wrapper->{$property_name}, 'edit', $wrapper)) {
         throw new RestfulBadRequestException(format_string('Property @name cannot be set.', array('@name' => $public_field_name)));
       }
 
@@ -1320,11 +1439,14 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    * @param $op
    *   The operation that access should be checked for. Can be "view" or "edit".
    *   Defaults to "edit".
+   * @param EntityMetadataWrapper $wrapper
+   *   The wrapped entity.
    *
    * @return bool
    *   TRUE if the current user has access to set the property, FALSE otherwise.
    */
-  protected function checkPropertyAccess(EntityMetadataWrapper $property, $op = 'edit', $account) {
+  protected function checkPropertyAccess(EntityMetadataWrapper $property, $op = 'edit', EntityMetadataWrapper $wrapper) {
+    $account = $this->getAccount();
     // @todo Hack to check format access for text fields. Should be removed once
     // this is handled properly on the Entity API level.
     if ($property->type() == 'text_formatted' && $property->value() && $property->format->value()) {
@@ -1347,9 +1469,8 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
   /**
    * Determine if an entity is valid, and accessible.
    *
-   * @params $op
-   *   The operation to perform on the entity (view, update, delete).
    * @param $op
+   *   The operation to perform on the entity (view, update, delete).
    * @param $entity_id
    *   The entity ID.
    *
@@ -1369,22 +1490,42 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
     );
 
     if (!$entity = entity_load_single($entity_type, $entity_id)) {
-      throw new RestfulUnprocessableEntityException(format_string('The specific entity ID @id for @resource does not exist.', $params));
+      throw new RestfulUnprocessableEntityException(format_string('The entity ID @id for @resource does not exist.', $params));
     }
 
     list(,, $bundle) = entity_extract_ids($entity_type, $entity);
 
     $resource_bundle = $this->getBundle();
     if ($resource_bundle && $bundle != $resource_bundle) {
-      throw new RestfulUnprocessableEntityException(format_string('The specified entity ID @id is not a valid @resource.', $params));
+      throw new RestfulUnprocessableEntityException(format_string('The entity ID @id is not a valid @resource.', $params));
     }
 
-    if (entity_access($op, $entity_type, $entity, $account) === FALSE) {
+    if ($this->checkEntityAccess($op, $entity_type, $entity) === FALSE) {
       // Entity was explicitly denied.
       throw new RestfulForbiddenException(format_string('You do not have access to entity ID @id of resource @resource', $params));
     }
 
     return TRUE;
+  }
+
+
+  /**
+   * Check access to CRUD an entity.
+   *
+   * @param $op
+   *   The operation. Allowed values are "create", "update" and "delete".
+   * @param $entity_type
+   *   The entity type.
+   * @param $entity
+   *   The entity object.
+   *
+   * @return bool
+   *   TRUE or FALSE based on the access. If no access is known about the entity
+   *   return NULL.
+   */
+  protected function checkEntityAccess($op, $entity_type, $entity) {
+    $account = $this->getAccount();
+    return entity_access($op, $entity_type, $entity, $account);
   }
 
   /**

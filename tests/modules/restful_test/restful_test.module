@@ -304,16 +304,27 @@ function restful_test_add_fields() {
 /**
  * Helper function; Create a vocabulary and terms.
  *
+ * @param string $machine_name
+ *   The machine name of the vocabulary. Defaults to 'test_vocab'.
+ * @param bool $create_vocab
+ *   Determines if to create a vocabulary, or use an existing one.
+ *
  * @return int
  *   The newly created vocabulary ID.
  */
-function restful_test_create_vocabulary_and_terms() {
-  $vocabulary = (object) array(
-    'name' => 'Tags test',
-    'description' => '',
-    'machine_name' => 'test_vocab',
-  );
-  taxonomy_vocabulary_save($vocabulary);
+function restful_test_create_vocabulary_and_terms($machine_name = 'test_vocab', $create_vocab = TRUE) {
+  if ($create_vocab) {
+    $vocabulary = (object) array(
+      'name' => 'Tags test',
+      'description' => '',
+      'machine_name' => $machine_name,
+    );
+    taxonomy_vocabulary_save($vocabulary);
+  }
+  else {
+    $vocabulary = taxonomy_vocabulary_machine_name_load($machine_name);
+  }
+
 
   $vid = $vocabulary->vid;
 
