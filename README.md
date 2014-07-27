@@ -150,6 +150,27 @@ array(
 );
 ```
 
+### Autocomplete
+By passing the autocomplete query string in the request, it is possible to change
+the normal listing behavior into autocomplete.
+
+The following is the API equivilent of
+``https://example.com?autocomplete[string]=foo&autocomplete[operator]=STARTS_WITH``
+
+```php
+$handler = restful_get_restful_handler('articles');
+
+$request = array(
+  'autocomplete' => array(
+    'string' => 'foo',
+    // Optional, defaults to "CONTAINS".
+    'operator' => 'STARTS_WITH',
+  ),
+);
+
+$handler->get('', $request);
+```
+
 ## API via URL
 
 ### View an Article

@@ -515,7 +515,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
   public function getList() {
     $request = $this->getRequest();
     $autocomplete_options = $this->getPluginInfo('autocomplete');
-    if (!empty($autocomplete_options['enable']) && isset($request['string'])) {
+    if (!empty($autocomplete_options['enable']) && isset($request['autocomplete']['string'])) {
       // Return autocomplete list.
       return $this->getListForAutocomplete();
     }
@@ -626,23 +626,103 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    *   term name, to indicate for client it is an unsaved term.
    *
    * @see taxonomy_autocomplete()
+   *
+   * @throws \Exception
    */
   protected function getListForAutocomplete() {
+    $entity_info = entity_get_info($this->getEntityType());
+    if (empty($entity_info['entity keys']['label'])) {
+      // Entity is invalid for autocomplete, as it doesn't have a "label"
+      // property.
+      $params = array('@entity' => $this->getEntityType());
+      throw new \Exception(format_string('Cannot autocomplete @entity as it does not have a "label" property defined.', $params));
+    }
+
     $request = $this->getRequest();
-    if (empty($request['string'])) {
+    if (empty($request['autocomplete']['string'])) {
       // Empty string.
       return array();
     }
 
-    $string = drupal_strtolower($request['string']);
-    $autocomplete_options = $this->getPluginInfo('autocomplete');
-    $range = $autocomplete_options['range'];
-
-    $result = $this->getListForAutocompleteQueryResult($string, $range);
+    $result = $this->getQueryResultForAutocomplete();
 
     $return = array();
     foreach ($result as $entity_id => $label) {
       $return[$entity_id] = check_plain($label);
+    }
+
+    return $return;
+  }
+
+  /**
+   * Return the bundles that should be used for the autocomplete search.
+   *
+   * @return array
+   *   Array with the bundle name(s).
+   */
+  protected function getBundlesForAutocomplete() {
+    return array($this->getBundle());
+  }
+
+  /**
+   * Request the query object to get a list for autocomplete.
+   *
+   * @return EntityFieldQuery
+   *   Return a query object, before it is executed.
+   */
+  protected function getQueryForAutocomplete() {
+    $autocomplete_options = $this->getPluginInfo('autocomplete');
+    $entity_type = $this->getEntityType();
+    $entity_info = entity_get_info($entity_type);
+    $request = $this->getRequest();
+
+    $string = drupal_strtolower($request['autocomplete']['string']);
+    $operator = !empty($request['autocomplete']['operator']) ? $request['autocomplete']['operator'] : $autocomplete_options['operator'];
+
+    $query = new EntityFieldQuery();
+
+    $query->entityCondition('entity_type', $entity_type);
+    if ($bundles = $this->getBundlesForAutocomplete()) {
+      $query->entityCondition('bundle', $bundles, 'IN');
+    }
+
+    $query->propertyCondition($entity_info['entity keys']['label'], $string, $operator);
+
+    // Add a generic entity access tag to the query.
+    $query->addTag($entity_type . '_access');
+    $query->addTag('restful');
+    $query->addMetaData('restful_handler', $this);
+
+    // Sort by label.
+    $query->propertyOrderBy($entity_info['entity keys']['label']);
+
+    // Add range.
+    $query->range(0, $autocomplete_options['range']);
+
+    return $query;
+  }
+
+  /**
+   * Returns the result of a query for the auto complete.
+   *
+   * @return array
+   *   Array keyed by the entity ID and the unsanitized entity label as value.
+   */
+  protected function getQueryResultForAutocomplete() {
+    $entity_type = $this->getEntityType();
+    $query = $this->getQueryForAutocomplete();
+    $result = $query->execute();
+
+    if (empty($result[$entity_type])) {
+      // No entities found.
+      return array();
+    }
+
+    $ids = array_keys($result[$entity_type]);
+    $return = array();
+
+    foreach (entity_load($entity_type, $ids) as $id => $entity) {
+      $return[$id] = entity_label($entity_type, $entity);
     }
 
     return $return;

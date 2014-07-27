@@ -83,6 +83,8 @@ function restful_ctools_plugin_directory($module, $plugin) {
  *     Defaults to TRUE.
  *   - range: Determines how many matches should return on every query. Defaults
  *     to 10.
+ *   - operator: Determines the operator used to match the given string. Values
+ *     can be 'STARTS_WITH' or 'CONTAINS'. Defaults to 'CONTAINS'.
  * Properties for the "authentication" plugin type:
  * - description: The description of the authentication provider. Defaults to
  *   empty string.
@@ -121,6 +123,7 @@ function restful_plugin_process(&$plugin, $info) {
 
     $plugin['autocomplete'] += array(
       'enable' => TRUE,
+      'operator' => 'CONTAINS',
       'range' => 10,
     );
 
