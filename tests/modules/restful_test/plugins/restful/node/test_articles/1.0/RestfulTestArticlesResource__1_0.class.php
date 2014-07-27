@@ -13,8 +13,9 @@ class RestfulTestArticlesResource__1_0 extends RestfulExampleArticlesResource {
   public function getPublicFields() {
     $public_fields = parent::getPublicFields();
 
-    $public_fields['text_single'] = array(
-      'property' => 'text_single',
+    $public_fields['body'] = array(
+      'property' => 'body',
+      'sub_property' => 'value',
     );
 
     return $public_fields;

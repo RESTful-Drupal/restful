@@ -18,9 +18,9 @@ function restful_test_ctools_plugin_directory($module, $plugin) {
  * Flag a field to not be accessible.
  *
  * @param $field_name
- *   The field name. Defaults to "text_single".
+ *   The field name. Defaults to "body".
  */
-function restful_test_deny_access_field($field_name = 'text_single') {
+function restful_test_deny_access_field($field_name = 'body') {
   variable_set('restful_test_deny_access_field', $field_name);
 }
 
