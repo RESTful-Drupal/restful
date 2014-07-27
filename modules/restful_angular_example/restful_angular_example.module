@@ -74,3 +74,4 @@ function restful_angular_example_form_page() {
   $url = url($app_path . '/views/main.html', array('absolute' => TRUE));
   return theme('restful_angular_example_angular_form', array('url' => $url));
 }
+
