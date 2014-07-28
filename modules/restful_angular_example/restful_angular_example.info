@@ -1,7 +1,8 @@
 name = RESTful AngularJs example
 description = Example module for the RESTful AngularJs module.
 core = 7.x
-dependencies[] = restful
-dependencies[] = restful_example
 dependencies[] = entity_validator
 dependencies[] = entity_validator_example
+dependencies[] = jquery_update
+dependencies[] = restful
+dependencies[] = restful_example

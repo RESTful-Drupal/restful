@@ -10,7 +10,7 @@ class RestfulRateLimitRequest implements RestfulRateLimitInterface {
   /**
    * {@inheritdoc}
    */
-  public function isRequestedEvent($request = NULL) {
+  public function isRequestedEvent(array $request = array()) {
     return TRUE;
   }
 }

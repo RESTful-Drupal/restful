@@ -12,23 +12,33 @@ class RestfulEntityValidatorTestCase extends RestfulCurlBaseTestCase {
       'name' => 'Entity validator',
       'description' => 'Test integration with entity validator module.',
       'group' => 'Restful',
-      'dependencies' => array('entity_validator'),
     );
   }
 
   function setUp() {
-    parent::setUp('restful_example', 'entity_validator_example');
+    parent::setUp('restful_test', 'entity_validator_example');
   }
 
   /**
    * Test entity validator.
    */
   function testEntityValidator() {
-    // Allow anonymous user to create article content.
-    user_role_change_permissions(DRUPAL_ANONYMOUS_RID, array('create article content' => TRUE));
+    $user1 = $this->drupalCreateUser(array('create article content'));
+    $this->drupalLogin($user1);
 
-    $request = array('label' => 'no');
-    $result = $this->httpRequest('api/v1/articles', 'POST', $request);
+    $handler = restful_get_restful_handler('test_articles');
+    $handler->setAccount($user1);
+
+    $request = array('label' => 'no', 'body' => 'Text with Drupal');
+
+    try {
+      $handler->post('', $request);
+      $this->fail('Too short title did not cause a "Bad request" error.');
+    }
+    catch (\RestfulBadRequestException $e) {
+      $field_errors = $e->getFieldErrors();
+      $this->pass('Too short title did not caused a "Bad request" error.');
+    }
 
     $expected_result = array(
       'label' => array(
@@ -36,12 +46,10 @@ class RestfulEntityValidatorTestCase extends RestfulCurlBaseTestCase {
       ),
     );
 
-    $body = drupal_json_decode($result['body']);
-    $this->assertEqual($result['code'], 400, 'Too short title caused a "Bad request" error.');
-    $this->assertEqual($body['fields'], $expected_result, 'Correct error message passed in the JSON');
+    $this->assertEqual($field_errors, $expected_result, 'Correct error message passed in the JSON');
 
-    $request = array('label' => 'yes');
-    $result = $this->httpRequest('api/v1/articles', 'POST', $request);
-    $this->assertEqual($result['code'], 200, 'Entity with proper title length passed validation.');
+    $request['label'] = 'yes';
+    $result = $handler->post('', $request);
+    $this->assertTrue($result['id'], 'Entity with proper title length passed validation and was created.');
   }
 }

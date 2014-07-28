@@ -26,11 +26,11 @@ class RestfulCurlBaseTestCase extends DrupalWebTestCase {
    * @return array
    *   Array keyed with the "code", "headers", and "body" of the response.
    */
-  protected function httpRequest($url, $method = 'GET', $body = NULL, $headers = array(), $use_token = TRUE) {
+  protected function httpRequest($url, $method = \RestfulInterface::GET, $body = NULL, $headers = array(), $use_token = TRUE) {
     $format = 'json';
 
     switch ($method) {
-      case 'GET':
+      case \RestfulInterface::GET:
         // Set query if there are addition GET parameters.
         $options = isset($body) ? array('absolute' => TRUE, 'query' => $body) : array('absolute' => TRUE);
         $curl_options = array(
@@ -40,67 +40,72 @@ class RestfulCurlBaseTestCase extends DrupalWebTestCase {
         );
         break;
 
-      case 'POST':
+      case \RestfulInterface::POST:
         $curl_options = array(
           CURLOPT_HTTPGET => FALSE,
           CURLOPT_POST => TRUE,
-          CURLOPT_POSTFIELDS => http_build_query($body),
+          CURLOPT_POSTFIELDS => $body,
           CURLOPT_URL => url($url, array('absolute' => TRUE)),
           CURLOPT_NOBODY => FALSE,
-          CURLOPT_HTTPHEADER => array('Content-Type: application/' . $format),
         );
+        if (empty($headers['Content-Type'])) {
+          $headers['Content-Type'] = 'application/' . $format;
+          $curl_options[CURLOPT_POSTFIELDS] = http_build_query($body);
+        }
         break;
 
-      case 'PUT':
-      case 'PATCH':
+      case \RestfulInterface::PUT:
+      case \RestfulInterface::PATCH:
         $curl_options = array(
           CURLOPT_HTTPGET => FALSE,
           CURLOPT_CUSTOMREQUEST => $method,
-          CURLOPT_POSTFIELDS => http_build_query($body),
+          CURLOPT_POSTFIELDS => $body,
           CURLOPT_URL => url($url, array('absolute' => TRUE)),
           CURLOPT_NOBODY => FALSE,
-          CURLOPT_HTTPHEADER => array('Content-Type: application/' . $format),
         );
+        if (empty($headers['Content-Type'])) {
+          $headers['Content-Type'] = 'application/' . $format;
+          $curl_options[CURLOPT_POSTFIELDS] = http_build_query($body);
+        }
         break;
 
-      case 'DELETE':
+      case \RestfulInterface::DELETE:
         $curl_options = array(
           CURLOPT_HTTPGET => FALSE,
-          CURLOPT_CUSTOMREQUEST => 'DELETE',
+          CURLOPT_CUSTOMREQUEST => \RestfulInterface::DELETE,
           CURLOPT_URL => url($url, array('absolute' => TRUE)),
           CURLOPT_NOBODY => FALSE,
-          CURLOPT_HTTPHEADER => array(),
         );
         break;
     }
 
     $curl_options += array(CURLOPT_HTTPHEADER => array());
 
-    if ($this->loggedInUser && !in_array($method, array('GET', 'OPTIONS', 'HEAD', 'TRACE')) && $use_token) {
+    if ($this->loggedInUser && \RestfulBase::isWriteMethod($method, FALSE) && $use_token) {
       // Add CSRF token for write operations.
       $result = $this->drupalGet('api/session/token');
       $result = drupal_json_decode($result);
-      $curl_options[CURLOPT_HTTPHEADER][] = 'X-CSRF-Token: ' . $result['X-CSRF-Token'];
+      $headers['X-CSRF-Token'] = $result['X-CSRF-Token'];
     }
 
-    if ($headers) {
-      $curl_options[CURLOPT_HTTPHEADER] = array_merge($curl_options[CURLOPT_HTTPHEADER], $headers);
+    foreach ($headers as $key => $value) {
+      $curl_options[CURLOPT_HTTPHEADER][] = $key . ': ' . $value;
     }
 
     $response = $this->curlExec($curl_options);
-    $headers = $this->drupalGetHeaders();
-    $headers = implode("\n", $headers);
+    $response_headers = $this->drupalGetHeaders();
+    $response_headers = implode("\n", $response_headers);
 
     $code = curl_getinfo($this->curlHandle, CURLINFO_HTTP_CODE);
 
     $this->verbose($method . ' request to: ' . $url .
       '<hr />Code: ' . $code .
-      '<hr />Response headers: ' . $headers .
+      '<hr />Response headers: ' . $response_headers .
       '<hr />Response body: ' . $response);
 
     return array(
       'code' => $code,
-      'headers' => $headers,
+      'headers' => $response_headers,
       'body' => $response,
     );
   }
