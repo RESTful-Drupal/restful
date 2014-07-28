@@ -12,6 +12,10 @@
   text-align: center;
 }
 
+.input-wrapper {
+  margin-bottom: 20px;
+}
+
 .drop-box {
   height: 80px;
   width: 200px;
@@ -25,4 +29,9 @@
 .file-upload-drag {
   background: grey;
   border-color: lightBlue;
+}
+
+.file-wrapper img {
+  height: 50px;
+  width: 50px;
 }

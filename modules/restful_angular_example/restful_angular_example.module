@@ -34,7 +34,15 @@ function restful_angular_example_theme() {
   );
 
   return $theme;
+}
 
+/**
+ * Implements hook_ctools_plugin_directory().
+ */
+function restful_angular_example_ctools_plugin_directory($module, $plugin) {
+  if ($module == 'restful') {
+    return 'plugins/' . $plugin;
+  }
 }
 
 /**
@@ -52,6 +60,11 @@ function restful_angular_example_form_page() {
   drupal_add_js($bower_path . '/ng-prettyjson/dist/ng-prettyjson.min.js');
   drupal_add_css($bower_path . '/ng-prettyjson/dist/ng-prettyjson.min.css');
 
+  // Select2.
+  drupal_add_js($bower_path . '/select2/select2.js');
+  drupal_add_css($bower_path . '/select2/select2.css');
+  drupal_add_js($bower_path . '/angular-ui-select2/src/select2.js');
+
   // Load our custom app.
   $app_path = drupal_get_path('module', 'restful_angular_example') . '/components/restful-app/dist';
   drupal_add_js($app_path . '/restful-app.js');
@@ -60,7 +73,7 @@ function restful_angular_example_form_page() {
   // Pass info via Drupal.settings.
   $settings['restfulExample'] = array(
     'basePath' => url('', array('absolute' => TRUE)),
-    'csrfToken' => drupal_get_token('rest'),
+    'csrfToken' => drupal_get_token(\RestfulInterface::TOKEN_VALUE),
     'data' => array(
       'article' => array(
         'label' => 'no',
@@ -74,3 +87,4 @@ function restful_angular_example_form_page() {
   $url = url($app_path . '/views/main.html', array('absolute' => TRUE));
   return theme('restful_angular_example_angular_form', array('url' => $url));
 }
+

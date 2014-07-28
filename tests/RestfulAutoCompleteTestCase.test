@@ -1,0 +1,69 @@
+<?php
+
+/**
+ * @file
+ * Contains RestfulAutoCompleteTestCase
+ */
+
+class RestfulAutoCompleteTestCase extends DrupalWebTestCase {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Autocomplete',
+      'description' => 'Test the autocomplete functionality.',
+      'group' => 'Restful',
+    );
+  }
+
+  function setUp() {
+    parent::setUp('restful_test');
+  }
+
+  /**
+   * Test the autocomplete functionality.
+   */
+  function testAutocomplete() {
+    // Create terms.
+    restful_test_create_vocabulary_and_terms('tags', FALSE);
+
+    $handler = restful_get_restful_handler('test_tags');
+
+    // "CONTAINS" operator.
+    $request = array(
+      'autocomplete' => array(
+        'string' => 'ter',
+      ),
+    );
+    $result = $handler->get('', $request);
+
+    $expected_result = array (
+      1 => 'term1',
+      2 => 'term2',
+      3 => 'term3',
+    );
+    $this->assertEqual($result, $expected_result, 'Autocomplete with "CONTAINS" operator returned expected results.');
+
+    // "STARTS_WITH" operator.
+    $request = array(
+      'autocomplete' => array(
+        'string' => 'term1',
+        'operator' => 'STARTS_WITH'
+      ),
+    );
+    $result = $handler->get('', $request);
+
+    $expected_result = array (
+      1 => 'term1',
+    );
+    $this->assertEqual($result, $expected_result, 'Autocomplete with "CONTAINS" operator returned expected results.');
+
+    // Empty query.
+    $request = array(
+      'autocomplete' => array(
+        'string' => 'non-existing',
+      ),
+    );
+    $result = $handler->get('', $request);
+    $this->assertFalse($result, 'No values returned from empty query.');
+  }
+}
