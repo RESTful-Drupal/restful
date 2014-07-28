@@ -5,7 +5,7 @@
  * Contains RestfulRateLimitGlobal
  */
 
-class RestfulRateLimitGlobal implements \RestfulRateLimitInterface {
+class RestfulRateLimitGlobal implements RestfulRateLimitInterface {
 
   /**
    * {@inheritdoc}
