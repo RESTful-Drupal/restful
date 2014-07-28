@@ -16,5 +16,6 @@ interface RestfulRateLimitInterface {
    *   TRUE if the event is met and the rate limit hits counter should be
    *   incremented.
    */
-  public function isRequestedEvent($request = NULL);
+  public function isRequestedEvent($request = array());
+
 }
