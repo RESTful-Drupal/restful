@@ -8,20 +8,23 @@ class RestfulRateLimitManager {
   const UNLIMITED_RATE_LIMIT = -1;
 
   /**
-   * The identified user account for the request.
    * @var \stdClass
+   *
+   * The identified user account for the request.
    */
   protected $account;
 
   /**
-   * The plugin info array for the rate limit.
    * @var array
+   *
+   * The plugin info array for the rate limit.
    */
   protected $pluginInfo;
 
   /**
-   * Resource name being checked.
    * @var string
+   *
+   * Resource name being checked.
    */
   protected $resource;
 
@@ -89,6 +92,7 @@ class RestfulRateLimitManager {
     foreach ($this->getPluginInfo() as $event_name => $info) {
       // If the limit is unlimited then skip everything.
       $limit = $this->rateLimit($info);
+      $period = $this->getPeriod($info);
       if ($limit == static::UNLIMITED_RATE_LIMIT) {
         // User has unlimited access to the resources.
         continue;
@@ -102,24 +106,24 @@ class RestfulRateLimitManager {
       // If the current request matches the configured event then check if the
       // limit has been reached.
       if (!$handler->isRequestedEvent($request)) {
-        return;
+        continue;
       }
       if (!$rate_limit_entity = $this->loadRateLimitEntity($event_name)) {
         // If there is no entity, then create one.
         // We don't need to save it since it will be saved upon hit.
         $rate_limit_entity = entity_create('rate_limit', array(
           'timestamp' => REQUEST_TIME,
-          'expiration' => $now->add($info['period'])->format('U'),
+          'expiration' => $now->add($period)->format('U'),
           'hits' => 0,
           'event' => $event_name,
-          'identifier' => $this->generateIdentifier(),
+          'identifier' => $this->generateIdentifier($event_name),
         ));
       }
       if ($rate_limit_entity->isExpired()) {
         // If the rate limit has expired renew the timestamps and assume 0
         // hits.
         $rate_limit_entity->timestamp = REQUEST_TIME;
-        $rate_limit_entity->expiration = $now->add($info['period'])->format('U');
+        $rate_limit_entity->expiration = $now->add($period)->format('U');
         $rate_limit_entity->hits = 0;
         if ($limit == 0) {
           throw new \RestfulFloodException('Rate limit reached');
@@ -139,17 +143,24 @@ class RestfulRateLimitManager {
       drupal_add_http_header('X-Rate-Limit-Remaining', $remaining, TRUE);
       $time_remaining = $rate_limit_entity->expiration - REQUEST_TIME;
       drupal_add_http_header('X-Rate-Limit-Reset', $time_remaining, TRUE);
-
     }
   }
 
   /**
    * Generates an identifier for the event and the request.
    *
+   * @param string $event_name
+   *   The name of the event.
+   *
    * @return string
    */
-  protected function generateIdentifier() {
+  protected function generateIdentifier($event_name) {
     $identifier = $this->resource . '::';
+    if ($event_name == 'global') {
+      // Don't split the id by resource if the event is global.
+      $identifier = '';
+    }
+    $identifier .= $event_name . '::';
     $identifier .= empty($this->account->uid) ? ip_address() : $this->account->uid;
     return $identifier;
   }
@@ -168,7 +179,7 @@ class RestfulRateLimitManager {
     $results = $query
       ->entityCondition('entity_type', 'rate_limit')
       ->entityCondition('bundle', $event_name)
-      ->propertyCondition('identifier', $this->generateIdentifier())
+      ->propertyCondition('identifier', $this->generateIdentifier($event_name))
       ->execute();
     if (empty($results['rate_limit'])) {
       return;
@@ -209,6 +220,19 @@ class RestfulRateLimitManager {
       $max_limit = $event_plugin_info['limits'][$role];
     }
     return $max_limit;
+  }
+
+  /**
+   * Gets the period for the current event.
+   *
+   * @param array $event_plugin_info
+   *   The array containing the plugin info for the current event.
+   *
+   * @return \DateInterval
+   *   The period.
+   */
+  protected function getPeriod($event_plugin_info) {
+    return $event_plugin_info['period'];
   }
 
 }

@@ -60,7 +60,11 @@ function restful_ctools_plugin_directory($module, $plugin) {
  *   - simple_invalidate: Set it to false to prevent the RESTful module to
  *     invalidate any cache it may have been generated. The developer will be
  *     responsible to invalidate caches in this scenario. Defaults to TRUE.
- * - rate_limit: The configuration array for the rate limits.
+ * - rate_limit: The configuration array for the rate limits. There is a special
+ *   limit category called 'global' that will not be limited to resource but
+ *   will aggregate all request hits across all resources. To enable the global
+ *   limit set the variable 'restful_global_rate_limit' to the desired limit and
+ *   'restful_global_rate_period' to the wanted period.
  *   - period: A \DateInterval object representing the period on which the rate
  *     limitations apply.
  *   - event: The name of the event to limit as declared in the rate_limit
@@ -117,6 +121,23 @@ function restful_plugin_process(&$plugin, $info) {
     if (!empty($plugin['rate_limit'])) {
       foreach ($plugin['rate_limit'] as $event_name => $rate_limit_info) {
         $plugin['rate_limit'][$event_name]['limits'] += array('anonymous user' => 0);
+      }
+    }
+
+    // Set the global limit. This limit is always attached, but it can be
+    // disabled by unsetting the variable 'restful_global_rate_limit'. The
+    // global limit can be overridden in the restful plugin definition.
+    if (empty($plugin['rate_limit']['global'])) {
+      $plugin['rate_limit'] = empty($plugin['rate_limit']) ? array() : $plugin['rate_limit'];
+      // Setup the global limits to the variable value.
+      $plugin['rate_limit']['global'] = array(
+        'event' => 'global',
+        'period' => new \DateInterval(variable_get('restful_global_rate_period', 'P1D')),
+        'limits' => array(),
+      );
+      $limit = variable_get('restful_global_rate_limit', 0);
+      foreach (user_roles() as $rid => $role_info) {
+        $plugin['rate_limit']['global']['limits'][$rid] = $limit;
       }
     }
 
