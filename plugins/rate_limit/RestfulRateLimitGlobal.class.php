@@ -1,7 +1,8 @@
 <?php
 
 /**
- * Contains \RestfulRateLimitGlobal
+ * @file
+ * Contains RestfulRateLimitGlobal
  */
 
 class RestfulRateLimitGlobal implements \RestfulRateLimitInterface {

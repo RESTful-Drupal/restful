@@ -13,5 +13,5 @@ class RestfulRateLimitRequest implements RestfulRateLimitInterface {
   public function isRequestedEvent($request = NULL) {
     return TRUE;
   }
-}
 
+}
