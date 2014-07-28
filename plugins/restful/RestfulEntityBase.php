@@ -617,6 +617,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
     $query->addTag($entity_type . '_access');
     $query->addTag('restful');
     $query->addMetaData('restful_handler', $this);
+    $query->addMetaData('account', $this->getAccount());
 
     $query->range($offset, $range);
 
@@ -698,6 +699,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
     $query->addTag($entity_type . '_access');
     $query->addTag('restful');
     $query->addMetaData('restful_handler', $this);
+    $query->addMetaData('account', $this->getAccount());
 
     // Sort by label.
     $query->propertyOrderBy($entity_info['entity keys']['label']);
