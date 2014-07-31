@@ -553,14 +553,15 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    * Prepare a query for RestfulEntityBase::getList().
    *
    * @return EntityFieldQuery
-   *   Tee EntityFieldQuery object.
+   *   The EntityFieldQuery object.
    *
    * @throws RestfulBadRequestException
    */
   public function getQueryForList() {
     $request = $this->getRequest();
 
-    $entity_info = entity_get_info($this->getEntityType());
+    $entity_type = $this->getEntityType();
+    $entity_info = entity_get_info($entity_type);
     $query = new EntityFieldQuery();
     $query->entityCondition('entity_type', $this->getEntityType());
 
@@ -611,6 +612,12 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
     // "next" page.
     $range = $this->getRange() + 1;
     $offset = ($page - 1) * $range;
+
+    // Add a generic entity access tag to the query.
+    $query->addTag($entity_type . '_access');
+    $query->addTag('restful');
+    $query->addMetaData('restful_handler', $this);
+    $query->addMetaData('account', $this->getAccount());
 
     $query->range($offset, $range);
 
@@ -692,6 +699,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
     $query->addTag($entity_type . '_access');
     $query->addTag('restful');
     $query->addMetaData('restful_handler', $this);
+    $query->addMetaData('account', $this->getAccount());
 
     // Sort by label.
     $query->propertyOrderBy($entity_info['entity keys']['label']);
