@@ -32,6 +32,29 @@ class RestfulRateLimitTestCase extends DrupalWebTestCase {
   }
 
   /**
+   * Tests global rate limits.
+   */
+  public function testGlobalLimits() {
+    // Test the global limit.
+    variable_set('restful_global_rate_limit', 1);
+    variable_set('restful_global_rate_period', 'P3D');
+
+    $account = $this->drupalCreateUser();
+    $this->roleExecute($account, 1, array('articles', 1, 0));
+
+    // Test invalid 'restful_global_rate_period' format.
+    try {
+      variable_set('restful_global_rate_period', 'fail');
+
+      $this->roleExecute($account, 1, array('articles', 1, 0));
+      $this->fail('Invalid \DateInterval format in restful_global_rate_period did not raise an error');
+    }
+    catch (Exception $e) {
+      $this->pass('Invalid \DateInterval format in restful_global_rate_period raises an error');
+    }
+  }
+
+  /**
    * Tests the rate limits and its expiration feature.
    */
   public function testLimits() {
@@ -58,21 +81,6 @@ class RestfulRateLimitTestCase extends DrupalWebTestCase {
     $rl->expiration = REQUEST_TIME - 1;
     $rl->save();
     $this->roleExecute($account, 3, array('articles', 1, 4));
-
-    // Test the global limit.
-    variable_set('restful_global_rate_limit', 1);
-    variable_set('restful_global_rate_period', 'P3D');
-    $this->roleExecute($account, 1, array('articles', 1, 0));
-
-    // Test invalid 'restful_global_rate_period' format.
-    try {
-      variable_set('restful_global_rate_period', 'fail');
-      $this->roleExecute($account, 1, array('articles', 1, 0));
-      $this->fail('Invalid \DateInterval format in restful_global_rate_period did not raise an error');
-    }
-    catch (Exception $e) {
-      $this->pass('Invalid \DateInterval format in restful_global_rate_period raises an error');
-    }
   }
 
   /**

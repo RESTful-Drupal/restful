@@ -148,10 +148,6 @@ function restful_plugin_process(&$plugin, $info) {
         'period' => new \DateInterval(variable_get('restful_global_rate_period', 'P1D')),
         'limits' => array(),
       );
-      $limit = variable_get('restful_global_rate_limit', 0);
-      foreach (user_roles() as $rid => $role_info) {
-        $plugin['rate_limit']['global']['limits'][$rid] = $limit;
-      }
     }
 
     if ($plugin['hook_menu'] && empty($plugin['menu_item'])) {

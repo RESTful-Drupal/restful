@@ -38,6 +38,16 @@ class RestfulRateLimitManager {
   }
 
   /**
+   * Get the account.
+   *
+   * @return \stdClass
+   *   The account object,
+   */
+  public function getAccount() {
+    return $this->account;
+  }
+
+  /**
    * Set the plugin info.
    *
    * @param array $pluginInfo
@@ -90,25 +100,26 @@ class RestfulRateLimitManager {
     $now->setTimestamp(REQUEST_TIME);
     // Check all rate limits configured for this handler.
     foreach ($this->getPluginInfo() as $event_name => $info) {
-      // If the limit is unlimited then skip everything.
-      $limit = $this->rateLimit($info);
-      $period = $this->getPeriod($info);
-      if ($limit == static::UNLIMITED_RATE_LIMIT) {
-        // User has unlimited access to the resources.
-        continue;
-      }
       // Check if there is a rate_limit plugin for the event.
       // There are no error checks on purpose, let the exceptions bubble up.
       $rate_limit_plugin = restful_get_rate_limit_plugin($info['event']);
       $rate_limit_class = ctools_plugin_get_class($rate_limit_plugin, 'class');
 
-      $handler = new $rate_limit_class();
+      /** @var \RestfulRateLimitBase $handler */
+      $handler = new $rate_limit_class($info, $this->resource);
+      // If the limit is unlimited then skip everything.
+      $limit = $handler->getLimit($this->account);
+      $period = $handler->getPeriod();
+      if ($limit == static::UNLIMITED_RATE_LIMIT) {
+        // User has unlimited access to the resources.
+        continue;
+      }
       // If the current request matches the configured event then check if the
       // limit has been reached.
       if (!$handler->isRequestedEvent($request)) {
         continue;
       }
-      if (!$rate_limit_entity = $this->loadRateLimitEntity($event_name)) {
+      if (!$rate_limit_entity = $handler->loadRateLimitEntity($this->account)) {
         // If there is no entity, then create one.
         // We don't need to save it since it will be saved upon hit.
         $rate_limit_entity = entity_create('rate_limit', array(
@@ -116,7 +127,7 @@ class RestfulRateLimitManager {
           'expiration' => $now->add($period)->format('U'),
           'hits' => 0,
           'event' => $event_name,
-          'identifier' => $this->generateIdentifier($event_name),
+          'identifier' => $handler->generateIdentifier($this->account),
         ));
       }
       if ($rate_limit_entity->isExpired()) {
@@ -144,95 +155,6 @@ class RestfulRateLimitManager {
       $time_remaining = $rate_limit_entity->expiration - REQUEST_TIME;
       drupal_add_http_header('X-Rate-Limit-Reset', $time_remaining, TRUE);
     }
-  }
-
-  /**
-   * Generates an identifier for the event and the request.
-   *
-   * @param string $event_name
-   *   The name of the event.
-   *
-   * @return string
-   */
-  protected function generateIdentifier($event_name) {
-    $identifier = $this->resource . '::';
-    if ($event_name == 'global') {
-      // Don't split the id by resource if the event is global.
-      $identifier = '';
-    }
-    $identifier .= $event_name . '::';
-    $identifier .= empty($this->account->uid) ? ip_address() : $this->account->uid;
-    return $identifier;
-  }
-
-  /**
-   * Load rate limit entity.
-   *
-   * @param string $event_name
-   *   The name of the event.
-   *
-   * @return \RestfulRateLimit
-   *   The loaded entity or NULL if none found.
-   */
-  protected function loadRateLimitEntity($event_name) {
-    $query = new \EntityFieldQuery();
-    $results = $query
-      ->entityCondition('entity_type', 'rate_limit')
-      ->entityCondition('bundle', $event_name)
-      ->propertyCondition('identifier', $this->generateIdentifier($event_name))
-      ->execute();
-    if (empty($results['rate_limit'])) {
-      return;
-    }
-    $rlid = key($results['rate_limit']);
-    $rate_limit_entity = entity_load_single('rate_limit', $rlid);
-    return $rate_limit_entity ? $rate_limit_entity : NULL;
-  }
-
-  /**
-   * Gets the limit for the identified user.
-   *
-   * @param array $event_plugin_info
-   *   The array containing the plugin info for the current event.
-   *
-   * @return int
-   *   The limit.
-   */
-  protected function rateLimit($event_plugin_info) {
-    // If the user is anonymous.
-    if (empty($this->account->roles)) {
-      return $event_plugin_info['limits']['anonymous user'];
-    }
-    // If the user is logged then return the best limit for all the roles the
-    // user has.
-    $max_limit = 0;
-    foreach ($this->account->roles as $rid => $role) {
-      if (!isset($event_plugin_info['limits'][$role])) {
-        // No limit configured for this role.
-        continue;
-      }
-      if ($event_plugin_info['limits'][$role] < $max_limit &&
-        $event_plugin_info['limits'][$role] != static::UNLIMITED_RATE_LIMIT) {
-        // The limit is smaller than one previously found.
-        continue;
-      }
-      // This is the highest limit for the current user given all their roles.
-      $max_limit = $event_plugin_info['limits'][$role];
-    }
-    return $max_limit;
-  }
-
-  /**
-   * Gets the period for the current event.
-   *
-   * @param array $event_plugin_info
-   *   The array containing the plugin info for the current event.
-   *
-   * @return \DateInterval
-   *   The period.
-   */
-  protected function getPeriod($event_plugin_info) {
-    return $event_plugin_info['period'];
   }
 
 }

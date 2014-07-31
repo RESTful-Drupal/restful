@@ -5,7 +5,7 @@
  * Contains RestfulRateLimitRequest.
  */
 
-class RestfulRateLimitRequest implements \RestfulRateLimitInterface {
+class RestfulRateLimitRequest extends \RestfulRateLimitBase {
 
   /**
    * {@inheritdoc}
