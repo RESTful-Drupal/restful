@@ -343,6 +343,11 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
     $this->bundle = $plugin['bundle'];
     $this->authenticationManager = $auth_manager ? $auth_manager : new \RestfulAuthenticationManager();
     $this->cacheController = $cache_controller ? $cache_controller : $this->newCacheObject();
+    
+    $this->entityId = $plugin['entity_id'] ? $plugin['entity_id'] : 'id';
+    $this->entityCount = $plugin['entity_count'] ? $plugin['entity_count'] : FALSE;
+    $this->entityListName = $plugin['entity_list_name'] ? $plugin['entity_list_name'] : 'list';    
+    
     if (!empty($plugin['rate_limit'])) {
       $this->setRateLimitManager(new \RestfulRateLimitManager($plugin['resource'], $plugin['rate_limit']));
     }
@@ -538,14 +543,18 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
       entity_load($entity_type, $ids);
     }
 
-    $return = array('list' => array());
+    $return = array($this->entityListName => array());
 
     $this->getListAddHateoas($return, $ids);
 
     foreach ($ids as $id) {
-      $return['list'][] = $this->viewEntity($id);
+      $return[$this->entityListName][] = $this->viewEntity($id);
     }
-
+    
+    // add count if requested in plugin config
+    if ($this->entityCount) {
+        $return['count'] = count($ids);
+    }
     return $return;
   }
 
@@ -586,7 +595,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
     }
     else {
       // Sort by default using the entity ID.
-      $sorts['id'] = 'ASC';
+      $sorts[$this->entityId] = 'ASC';
     }
 
     foreach ($sorts as $sort => $direction) {
@@ -1546,7 +1555,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
     $id_key = $entity_info['entity keys']['id'];
 
     $public_fields += array(
-      'id' => array(
+      $this->entityId => array(
         'wrapper_method' => 'getIdentifier',
         'wrapper_method_on_entity' => TRUE,
         'property' => $id_key,
