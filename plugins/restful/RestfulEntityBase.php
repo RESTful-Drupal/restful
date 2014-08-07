@@ -344,9 +344,9 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
     $this->authenticationManager = $auth_manager ? $auth_manager : new \RestfulAuthenticationManager();
     $this->cacheController = $cache_controller ? $cache_controller : $this->newCacheObject();
     
-    $this->entityId = $plugin['entity_id'] ? $plugin['entity_id'] : 'id';
-    $this->entityCount = $plugin['entity_count'] ? $plugin['entity_count'] : FALSE;
-    $this->entityListName = $plugin['entity_list_name'] ? $plugin['entity_list_name'] : 'list';    
+    $this->entityId = !empty($plugin['entity_id']) ? $plugin['entity_id'] : 'id';
+    $this->entityCount = !empty($plugin['entity_count']) ? $plugin['entity_count'] : FALSE;
+    $this->entityListName = !empty($plugin['entity_list_name']) ? $plugin['entity_list_name'] : 'list';    
     
     if (!empty($plugin['rate_limit'])) {
       $this->setRateLimitManager(new \RestfulRateLimitManager($plugin['resource'], $plugin['rate_limit']));
