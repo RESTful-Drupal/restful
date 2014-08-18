@@ -524,12 +524,11 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
       // Return autocomplete list.
       return $this->getListForAutocomplete();
     }
-
+    
     $entity_type = $this->entityType;
     $result = $this
       ->getQueryForList()
       ->execute();
-
 
     if (empty($result[$entity_type])) {
       return array();
@@ -551,9 +550,11 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
       $return[$this->entityListName][] = $this->viewEntity($id);
     }
     
-    // add count if requested in plugin config
+    // add count if requested in plugin config.
     if ($this->entityCount) {
-        $return['count'] = count($ids);
+        $count_query = $this->getQueryForList()->count();
+        unset($count_query->range);
+        $return['count'] = $count_query->execute();
     }
     return $return;
   }
@@ -629,7 +630,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
     $query->addMetaData('account', $this->getAccount());
 
     $query->range($offset, $range);
-
+    
     return $query;
   }
 
@@ -802,13 +803,12 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
     $values = array();
 
     $limit_fields = !empty($request['fields']) ? explode(',', $request['fields']) : array();
-
+    
     foreach ($this->getPublicFields() as $public_property => $info) {
       if ($limit_fields && !in_array($public_property, $limit_fields)) {
         // Limit fields doesn't include this property.
         continue;
       }
-
       // Set default values.
       $info += array(
         'property' => FALSE,
