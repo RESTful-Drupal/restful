@@ -36,9 +36,13 @@ class RestfulHookMenuTestCase extends RestfulCurlBaseTestCase {
     // Test version 1.0
     $result = $this->httpRequest('api/v1/articles/' . $node1->nid);
     $expected_result = array(
-      'id' => $node1->nid,
-      'label' => $node1->title,
-      'self' => url('node/' . $node1->nid, array('absolute' => TRUE)),
+      'data' => array(
+        'id' => $node1->nid,
+        'label' => $node1->title,
+        'self' => url('node/' . $node1->nid, array('absolute' => TRUE)),
+      ),
+      '_links' => array(),
+      'count' => 1,
     );
 
     $this->assertEqual($result['body'], json_encode($expected_result));
@@ -46,7 +50,7 @@ class RestfulHookMenuTestCase extends RestfulCurlBaseTestCase {
     // Test version 1.1
     $headers = array('X-Restful-Minor-Version' => '1');
     $result = $this->httpRequest('api/v1/articles/' . $node1->nid, \RestfulInterface::GET, NULL, $headers);
-    unset($expected_result['self']);
+    unset($expected_result['data']['self']);
     $this->assertEqual($result['body'], json_encode($expected_result));
   }
 
