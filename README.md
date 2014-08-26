@@ -106,7 +106,7 @@ $result = $handler->get();
 
 // Output:
 array(
-  'list' => array(
+  'data' => array(
     array(
       'id' => 1,
       'label' => 'example title',
@@ -135,7 +135,7 @@ $result = $handler->get('', $request);
 
 // Output:
 array(
-  'list' => array(
+  'data' => array(
     array(
       'id' => 2,
       'label' => 'another title',

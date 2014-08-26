@@ -72,6 +72,6 @@ class RestfulEntityUserAccessTestCase extends DrupalWebTestCase {
     $result = $handler->get();
     // Check we have all the expected users count (user ID 1 and our declared
     // users).
-    $this->assertTrue(count($result['list']) == 3, 'Privileged user can access listing of users.');
+    $this->assertTrue(count($result['data']) == 3, 'Privileged user can access listing of users.');
   }
 }

@@ -34,7 +34,7 @@ class RestfulListEntityMultipleBundlesTestCase extends DrupalWebTestCase {
     $entity3->save();
 
     $expected_result = array(
-      'list' => array(
+      'data' => array(
         array(
           'id' => (int)$entity1->pid,
           'label' => 'Main test type',

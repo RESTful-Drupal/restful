@@ -82,8 +82,8 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
       // POST
       \RestfulInterface::POST => 'createEntity',
     ),
-    '\d+' => array(
-      \RestfulInterface::GET => 'viewEntity',
+    '(\d+,?)+' => array(
+      \RestfulInterface::GET => 'viewEntities',
       \RestfulInterface::PUT => 'putEntity',
       \RestfulInterface::PATCH => 'patchEntity',
       \RestfulInterface::DELETE => 'deleteEntity',
@@ -538,15 +538,44 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
       entity_load($entity_type, $ids);
     }
 
-    $return = array('list' => array());
+    $return = array('data' => array());
 
     $this->getListAddHateoas($return, $ids);
 
     foreach ($ids as $id) {
-      $return['list'][] = $this->viewEntity($id);
+      $return['data'][] = $this->viewEntity($id);
     }
 
     return $return;
+  }
+
+  /**
+   * Get a list of entities based on a list of IDs.
+   *
+   * @param string $entity_ids_string
+   *   Coma separated list of entities.
+   *
+   * @return array
+   *   Array of entities, as passed to RestfulEntityBase::viewEntity().
+   *
+   * @throws RestfulBadRequestException
+   */
+  public function viewEntities($entity_ids_string) {
+    $entity_ids = array_filter(explode(',', $entity_ids_string));
+    $output = array('data' => array());
+    $this->getListAddHateoas($output, $entity_ids);
+
+    // If there is one ID, then treat this as a single item.
+    if (count($entity_ids) == 1) {
+      $entity_id = reset($entity_ids);
+      $output['data'] = $this->viewEntity($entity_id);
+    }
+    else {
+      foreach ($entity_ids as $entity_id) {
+        $output['data'][] = $this->viewEntity($entity_id);
+      }
+    }
+    return $output;
   }
 
   /**
@@ -765,6 +794,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
       // "next" page.
       array_pop($ids);
     }
+    $return['count'] = count($ids);
   }
 
   /**
