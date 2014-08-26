@@ -82,7 +82,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
       // POST
       \RestfulInterface::POST => 'createEntity',
     ),
-    '(\d+,?)+' => array(
+    '(\d+,)*\d+' => array(
       \RestfulInterface::GET => 'viewEntities',
       \RestfulInterface::PUT => 'putEntity',
       \RestfulInterface::PATCH => 'patchEntity',

@@ -146,7 +146,8 @@ class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
 
     // Privileged user.
     $handler->setAccount($user1);
-    $result = $handler->get($node1->nid, array());
+    $response = $handler->get($node1->nid, array());
+    $result = $response['data'];
     $this->assertTrue($result['body'], 'Privileged user can view entity.');
 
     // Privileged user, with limited access to property.

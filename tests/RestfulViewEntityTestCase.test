@@ -66,7 +66,8 @@ class RestfulViewEntityTestCase extends DrupalWebTestCase {
     $handler = restful_get_restful_handler('main', 1, 0);
     $expected_result = $base_expected_result;
 
-    $result = $handler->get($id);
+    $response = $handler->get($id);
+    $result = $response['data'];
     $this->assertEqual($result, $expected_result, 'Entity view has expected result for "main" resource v1');
 
     // v1.1 - Text and entity reference field.
