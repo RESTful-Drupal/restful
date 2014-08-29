@@ -538,12 +538,12 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
       entity_load($entity_type, $ids);
     }
 
-    $return = array('data' => array());
+    $return = array();
 
-    $this->getListAddHateoas($return, $ids);
+//    $this->getListAddHateoas($return, $ids);
 
     foreach ($ids as $id) {
-      $return['data'][] = $this->viewEntity($id);
+      $return[] = $this->viewEntity($id);
     }
 
     return $return;
@@ -562,17 +562,17 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    */
   public function viewEntities($entity_ids_string) {
     $entity_ids = array_filter(explode(',', $entity_ids_string));
-    $output = array('data' => array());
-    $this->getListAddHateoas($output, $entity_ids);
+    $output = array();
+//    $this->getListAddHateoas($output, $entity_ids);
 
     // If there is one ID, then treat this as a single item.
     if (count($entity_ids) == 1) {
       $entity_id = reset($entity_ids);
-      $output['data'] = $this->viewEntity($entity_id);
+      $output = $this->viewEntity($entity_id);
     }
     else {
       foreach ($entity_ids as $entity_id) {
-        $output['data'][] = $this->viewEntity($entity_id);
+        $output[] = $this->viewEntity($entity_id);
       }
     }
     return $output;
@@ -1618,16 +1618,13 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
   /**
    * Proxy method to get the account from the authenticationManager.
    *
-   * @param $request
-   *   The request.
-   * @param string $method
-   *   The HTTP method. Defaults to "get".
-   *
    * @return \stdClass
    *   The user object.
    */
   public function getAccount() {
+    // The request.
     $request = $this->getRequest();
+    // The HTTP method. Defaults to "get".
     $method = $this->getMethod();
 
     $account = $this->getAuthenticationManager()->getAccount($request, $method);
