@@ -105,7 +105,6 @@ class RestfulRateLimitManager {
       $rate_limit_plugin = restful_get_rate_limit_plugin($info['event']);
       $rate_limit_class = ctools_plugin_get_class($rate_limit_plugin, 'class');
 
-      /** @var \RestfulRateLimitBase $handler */
       $handler = new $rate_limit_class($info, $this->resource);
       // If the limit is unlimited then skip everything.
       $limit = $handler->getLimit($this->account);

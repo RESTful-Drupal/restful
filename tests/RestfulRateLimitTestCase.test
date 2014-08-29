@@ -37,6 +37,9 @@ class RestfulRateLimitTestCase extends DrupalWebTestCase {
   public function testGlobalLimits() {
     // Test the global limit.
     variable_set('restful_global_rate_limit', 1);
+    // P3D for 3 days period. See
+    // http://php.net/manual/en/class.dateinterval.php for more information
+    // about the interval format.
     variable_set('restful_global_rate_period', 'P3D');
 
     $account = $this->drupalCreateUser();

@@ -31,17 +31,19 @@ class RestfulRateLimitGlobal extends \RestfulRateLimitBase {
 
   /**
    * {@inheritdoc}
+   *
+   * All limits are the same for the global limit. Return the first one.
    */
   public function getLimit(\stdClass $account = NULL) {
-    // All limits are the same for the global limit. Return the first one.
     return reset($this->limits);
   }
 
   /**
    * {@inheritdoc}
+   *
+   * Only track the global limit for the current user if the variable is on.
    */
   public function isRequestedEvent(array $request = array()) {
-    // Only track the global limit for the current user if the variable is on.
     return $this->getLimit() > 0;
   }
 
