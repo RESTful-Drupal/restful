@@ -437,6 +437,29 @@ function restful_get_formatter_handler($formatter_plugin_name, $restful_handler)
 }
 
 /**
+ * Helper function to get the restful handler for the selected path.
+ *
+ * @param string $path
+ *   The path you want to get the handler for. Defaults to the current page.
+ *
+ * @return \RestfulEntityBase
+ *   The restful handler or NULL.
+ */
+function restful_get_restful_handler_for_path($path = NULL) {
+  $path = is_null($path) ? $_GET['q'] : $path;
+  $router_item = menu_get_item($path);
+  // We can only get the information if the current path was processed by
+  // restful_menu_process_callback.
+  if ($router_item['page_callback'] != 'restful_menu_process_callback') {
+    return;
+  }
+  list($major_version, $resource) = $router_item['page_arguments'];
+  $major_version = intval(str_replace('v', '', $major_version));
+  $minor_version = !empty($_SERVER['HTTP_X_RESTFUL_MINOR_VERSION']) && is_numeric($_SERVER['HTTP_X_RESTFUL_MINOR_VERSION']) ? $_SERVER['HTTP_X_RESTFUL_MINOR_VERSION'] : 0;
+  return restful_get_restful_handler($resource, $major_version, $minor_version);
+}
+
+/**
  * Access callback; Determine access for an API call.
  *
  * @param $major_version
@@ -599,9 +622,7 @@ function restful_delivery($var = NULL) {
   }
 
   // Get the formatter for the current resource.
-  $major_version = intval(str_replace('v', '', arg(1)));
-  $minor_version = !empty($_SERVER['HTTP_X_RESTFUL_MINOR_VERSION']) && is_numeric($_SERVER['HTTP_X_RESTFUL_MINOR_VERSION']) ? $_SERVER['HTTP_X_RESTFUL_MINOR_VERSION'] : 0;
-  $restful_handler = restful_get_restful_handler(arg(2), $major_version, $minor_version);
+  $restful_handler = restful_get_restful_handler_for_path();
   $formatter_name = $restful_handler->getPluginInfo('formatter');
   $formatter_handler = restful_get_formatter_handler($formatter_name, $restful_handler);
 

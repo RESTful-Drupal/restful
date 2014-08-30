@@ -1831,4 +1831,18 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
     $this->getCacheController()->clear($cid, TRUE);
   }
 
+  /**
+   * Helper method to know if the current request is for a list of entities.
+   *
+   * @return boolean
+   *   TRUE if the request is for a list. FALSE otherwise.
+   */
+  public function isListRequest() {
+    if ($this->getMethod() != \RestfulInterface::GET) {
+      return FALSE;
+    }
+    $path = $this->getPath();
+    return empty($path) || strpos($path, ',') !== FALSE;
+  }
+
 }

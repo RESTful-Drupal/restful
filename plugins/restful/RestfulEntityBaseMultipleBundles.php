@@ -64,7 +64,7 @@ class RestfulEntityBaseMultipleBundles extends RestfulEntityBase {
     // Pre-load all entities.
     $entities = entity_load($entity_type, $ids);
 
-    $return = array('data' => array());
+    $return = array();
 
     $handlers = array();
     $resources_info = $this->getBundles();
@@ -78,7 +78,7 @@ class RestfulEntityBaseMultipleBundles extends RestfulEntityBase {
       }
 
       $bundle_handler = $handlers[$bundle];
-      $return['data'][] = $bundle_handler->viewEntity($id, $request, $account);
+      $return[] = $bundle_handler->viewEntity($id, $request, $account);
     }
 
     return $return;

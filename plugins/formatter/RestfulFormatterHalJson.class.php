@@ -11,9 +11,16 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
    */
   public function massage(array $data) {
     // Here we get the data after calling the backend storage for the resources.
-    $output = array('data' => $data);
+    if (count($data) == 1 && !$this->handler->isListRequest()) {
+      $output = array('data' => reset($data));
+    }
+    else {
+      $output = array('data' => $data);
+    }
     $this->addHateoas($output);
-    $output['count'] = count($output['data']);
+    // TODO: Provide a count of all the possible entities (not only the current
+    // page)
+    // $output['count'] = count($output['data']);
     return $output;
   }
 
