@@ -794,7 +794,6 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
       // "next" page.
       array_pop($ids);
     }
-    $return['count'] = count($ids);
   }
 
   /**

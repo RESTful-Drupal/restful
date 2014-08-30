@@ -184,6 +184,14 @@ curl https://example.com/api/v1/articles/1 \
   -H "X-Restful-Minor-Version: 1"
 ```
 
+### View multiple Articles at once
+
+```shell
+# Handler v1.1
+curl https://example.com/api/v1/articles/1,2 \
+  -H "X-Restful-Minor-Version: 1"
+```
+
 ## Authentication providers
 
 Restful comes with ``cookie``, ``base_auth`` (user name and password in the HTTP header)
