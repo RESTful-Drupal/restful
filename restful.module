@@ -261,6 +261,7 @@ function restful_menu() {
       'page callback' => 'restful_menu_process_callback',
       'page arguments' => array(1, 2),
       'delivery callback' => 'restful_delivery',
+      'type' => MENU_CALLBACK,
     );
   }
 
@@ -274,6 +275,7 @@ function restful_menu() {
       'page callback' => 'restful_menu_process_callback',
       'page arguments' => array('1', 'login_cookie'),
       'delivery callback' => 'restful_delivery',
+      'type' => MENU_CALLBACK,
     );
   }
 
@@ -287,6 +289,7 @@ function restful_menu() {
       'page callback' => 'restful_menu_process_callback',
       'page arguments' => array('1', 'files'),
       'delivery callback' => 'restful_delivery',
+      'type' => MENU_CALLBACK,
     );
   }
 

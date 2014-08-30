@@ -52,6 +52,9 @@ function restful_restful_per_role_content_get_children($plugin, $parent) {
     );
     // Create endpoints like api/v1/administrator, api/v1/authenticated, etc'.
     $plugins[$parent . ':' . $role_name]['resource'] = str_replace(' ', '-', drupal_strtolower($role_name));
+    // We need to add the name, otherwise the caching mechanism in
+    // restful_get_restful_handler will return invalid data.
+    $plugins[$parent . ':' . $role_name]['name'] = $parent . ':' . $role_name;
   }
 
   // Return the array of plugins available for this parent plugin. This is the
