@@ -16,7 +16,7 @@ class RestfulListTestCase extends DrupalWebTestCase {
   }
 
   function setUp() {
-    parent::setUp('restful_example');
+    parent::setUp('restful_example', 'restful_test');
   }
 
   /**
@@ -199,8 +199,9 @@ class RestfulListTestCase extends DrupalWebTestCase {
       $settings = array(
         'type' => 'article',
         'title' => $title,
-        'integer_single' => array(LANGUAGE_NONE => array('value' => $row['integer_single'])),
       );
+
+      $settings['integer_single'][LANGUAGE_NONE][0]['value'] = $row['integer_single'];
 
       foreach ($row['integer_multiple'] as $key => $value) {
         $settings['integer_multiple'][LANGUAGE_NONE][$key]['value'] = $value;
@@ -221,7 +222,7 @@ class RestfulListTestCase extends DrupalWebTestCase {
 
 
     // Single value property.
-    $request['filter'] = array('title' => 'abc');
+    $request['filter'] = array('label' => 'abc');
     $result = $handler->get('', $request);
     $expected_result = array(
       array(

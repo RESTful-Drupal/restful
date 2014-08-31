@@ -663,26 +663,26 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
 
     $public_fields = $this->getPublicFields();
 
-    foreach (explode(',', $request['filter']) as $filter) {
-      if (empty($public_fields[$filter])) {
-        throw new RestfulBadRequestException(format_string('The filter @filter is not allowed for this path.', array('@filter' => $filter)));
+    foreach ($request['filter'] as $property => $value) {
+      if (empty($public_fields[$property])) {
+        throw new RestfulBadRequestException(format_string('The filter @filter is not allowed for this path.', array('@filter' => $property)));
       }
 
-      if (!is_array($filter)) {
+      if (!is_array($value)) {
         // Request uses the shorthand form for filter. For example
         // filter[foo]=bar would be converted to filter[foo][value] = bar.
-        $filter['value'] = $filter;
+        $value = array('value' => $value);
       }
 
       // Set default operator.
-      $filter += array('operator' => '=');
+      $value += array('operator' => '=');
 
       // Determine if sorting is by field or property.
-      if (empty($public_fields[$filter]['column'])) {
-        $query->propertyCondition($public_fields[$filter]['property'], $filter['value'], $filter['operator']);
+      if (empty($public_fields[$property]['column'])) {
+        $query->propertyCondition($public_fields[$property]['property'], $value['value'], $value['operator']);
       }
       else {
-        $query->fieldCondition($public_fields[$filter]['property'], $public_fields[$filter]['column'], $filter['value'], $filter['operator']);
+        $query->fieldCondition($public_fields[$property]['property'], $public_fields[$property]['column'], $value['value'], $value['operator']);
       }
     }
   }
