@@ -650,10 +650,41 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    * @param \EntityFieldQuery $query
    *   The query object.
    *
+   * @throws \RestfulBadRequestException
+   *
    * @see \RestfulEntityBase::getQueryForList
    */
   protected function queryForListFilter(\EntityFieldQuery $query) {
+    $request = $this->getRequest();
+    if (empty($request['filter'])) {
+      // No filtering is needed.
+      return;
+    }
 
+    $public_fields = $this->getPublicFields();
+
+    foreach (explode(',', $request['filter']) as $filter) {
+      if (empty($public_fields[$filter])) {
+        throw new RestfulBadRequestException(format_string('The filter @filter is not allowed for this path.', array('@filter' => $filter)));
+      }
+
+      if (!is_array($filter)) {
+        // Request uses the shorthand form for filter. For example
+        // filter[foo]=bar would be converted to filter[foo][value] = bar.
+        $filter['value'] = $filter;
+      }
+
+      // Set default operator.
+      $filter += array('operator' => '=');
+
+      // Determine if sorting is by field or property.
+      if (empty($public_fields[$filter]['column'])) {
+        $query->propertyCondition($public_fields[$filter]['property'], $filter['value'], $filter['operator']);
+      }
+      else {
+        $query->fieldCondition($public_fields[$filter]['property'], $public_fields[$filter]['column'], $filter['value'], $filter['operator']);
+      }
+    }
   }
 
   /**
