@@ -66,12 +66,14 @@ class RestfulViewEntityTestCase extends DrupalWebTestCase {
     $handler = restful_get_restful_handler('main', 1, 0);
     $expected_result = $base_expected_result;
 
-    $result = $handler->get($id);
+    $response = $handler->get($id);
+    $result = $response['data'];
     $this->assertEqual($result, $expected_result, 'Entity view has expected result for "main" resource v1');
 
     // v1.1 - Text and entity reference field.
     $handler = restful_get_restful_handler('main', 1, 1);
-    $result = $handler->get($id);
+    $response = $handler->get($id);
+    $result = $response['data'];
 
     $base_expected_result_v1 = $base_expected_result;
 
@@ -96,10 +98,13 @@ class RestfulViewEntityTestCase extends DrupalWebTestCase {
       $entity2->pid,
     );
 
-    $expected_result['entity_reference_single_resource'] = $handler->get($entity1->pid);
+    $response = $handler->get($entity1->pid);
+    $expected_result['entity_reference_single_resource'] = $response['data'];
+    $response1 = $handler->get($entity1->pid);
+    $response2 = $handler->get($entity2->pid);
     $expected_result['entity_reference_multiple_resource'] = array(
-      $handler->get($entity1->pid),
-      $handler->get($entity2->pid),
+      $response1['data'],
+      $response2['data'],
     );
 
     $stripped_result = $result;
@@ -118,7 +123,8 @@ class RestfulViewEntityTestCase extends DrupalWebTestCase {
     $wrapper->entity_reference_multiple->set(NULL);
     $wrapper->save();
 
-    $result = $handler->get($id);
+    $response = $handler->get($id);
+    $result = $response['data'];
     $expected_result = $base_expected_result_v1;
     $expected_result['text_single'] = NULL;
     $expected_result['text_multiple'] = NULL;
@@ -135,7 +141,8 @@ class RestfulViewEntityTestCase extends DrupalWebTestCase {
 
     // v1.2 - "callback" and "process callback".
     $handler = restful_get_restful_handler('main', 1, 2);
-    $result = $handler->get($id);
+    $response = $handler->get($id);
+    $result = $response['data'];
     $expected_result = $base_expected_result;
     $expected_result['callback'] = 'callback';
     $expected_result['process_callback_from_callback'] = 'callback processed from callback';

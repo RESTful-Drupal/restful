@@ -54,12 +54,14 @@ class RestfulEntityUserAccessTestCase extends DrupalWebTestCase {
     }
 
     // View own user account.
-    $result = $handler->get($user1->uid);
+    $response = $handler->get($user1->uid);
+    $result = $response['data'];
     $this->assertEqual($result['mail'], $user1->mail, 'User can see own mail.');
 
     // Privileged user, watching another user's profile.
     $handler->setAccount($user2);
-    $result = $handler->get($user1->uid);
+    $response = $handler->get($user1->uid);
+    $result = $response['data'];
     $expected_result = array(
       'id' => $user1->uid,
       'label' => $user1->name,
@@ -72,6 +74,6 @@ class RestfulEntityUserAccessTestCase extends DrupalWebTestCase {
     $result = $handler->get();
     // Check we have all the expected users count (user ID 1 and our declared
     // users).
-    $this->assertTrue(count($result['list']) == 3, 'Privileged user can access listing of users.');
+    $this->assertTrue(count($result['data']) == 3, 'Privileged user can access listing of users.');
   }
 }

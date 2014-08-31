@@ -106,7 +106,7 @@ $result = $handler->get();
 
 // Output:
 array(
-  'list' => array(
+  'data' => array(
     array(
       'id' => 1,
       'label' => 'example title',
@@ -135,7 +135,7 @@ $result = $handler->get('', $request);
 
 // Output:
 array(
-  'list' => array(
+  'data' => array(
     array(
       'id' => 2,
       'label' => 'another title',
@@ -181,6 +181,14 @@ curl https://example.com/api/v1/articles/1
 
 # Handler v1.1
 curl https://example.com/api/v1/articles/1 \
+  -H "X-Restful-Minor-Version: 1"
+```
+
+### View multiple Articles at once
+
+```shell
+# Handler v1.1
+curl https://example.com/api/v1/articles/1,2 \
   -H "X-Restful-Minor-Version: 1"
 ```
 
