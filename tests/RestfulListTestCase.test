@@ -229,10 +229,6 @@ class RestfulListTestCase extends DrupalWebTestCase {
         'id' => $nodes['abc'],
         'label' => 'abc',
       ),
-      array(
-        'id' => $nodes['another abc'],
-        'label' => 'another abc',
-      ),
     );
 
     $this->assertEqual($result['data'], $expected_result);
