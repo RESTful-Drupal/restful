@@ -583,12 +583,8 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    *
    * @return EntityFieldQuery
    *   The EntityFieldQuery object.
-   *
-   * @throws RestfulBadRequestException
    */
   public function getQueryForList() {
-    $request = $this->getRequest();
-
     $entity_type = $this->getEntityType();
     $entity_info = entity_get_info($entity_type);
     $query = new EntityFieldQuery();
@@ -598,6 +594,24 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
       $query->entityCondition('bundle', $this->getBundle());
     }
 
+    $this->queryForListSort($query);
+    $this->queryForListFilter($query);
+    $this->queryForListPagination($query);
+
+    return $query;
+  }
+
+  /**
+   * Sort the query for list.
+   *
+   * @param \EntityFieldQuery $query
+   *   The query object.
+   *
+   * @throws \RestfulBadRequestException
+   *
+   * @see \RestfulEntityBase::getQueryForList
+   */
+  protected function queryForListSort(\EntityFieldQuery $query) {
     $public_fields = $this->getPublicFields();
 
     $sorts = array();
@@ -627,10 +641,35 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
         $query->fieldOrderBy($public_fields[$sort]['property'], $public_fields[$sort]['column'], $direction);
       }
     }
+  }
 
+  /**
+   * Filter the query for list.
+   *
+   * @param \EntityFieldQuery $query
+   *   The query object.
+   *
+   * @see \RestfulEntityBase::getQueryForList
+   */
+  protected function queryForListFilter(\EntityFieldQuery $query) {
 
-    // Determine the page that should be seen. Page 1, is actually offset 0
-    // in the query range.
+  }
+
+  /**
+   * Set correct page (i.e. range) for the query for list.
+   *
+   * Determine the page that should be seen. Page 1, is actually offset 0 in the
+   * query range.
+   *
+   * @param \EntityFieldQuery $query
+   *   The query object.
+   *
+   * @throws \RestfulBadRequestException
+   *
+   * @see \RestfulEntityBase::getQueryForList
+   */
+  protected function queryForListPagination(\EntityFieldQuery $query) {
+    $request = $this->getRequest();
     $page = isset($request['page']) ? $request['page'] : 1;
 
     if (!ctype_digit((string)$page) || $page < 1) {
@@ -641,17 +680,26 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
     // "next" page.
     $range = $this->getRange() + 1;
     $offset = ($page - 1) * $range;
+    $query->range($offset, $range);
+  }
 
+  /**
+   * Add query tags for the query for list.
+   *
+   * @param \EntityFieldQuery $query
+   *   The query object.
+   *
+   * @see \RestfulEntityBase::getQueryForList
+   */
+  protected function queryForListTags(\EntityFieldQuery $query) {
     // Add a generic entity access tag to the query.
-    $query->addTag($entity_type . '_access');
+    $query->addTag($this->getEntityType() . '_access');
     $query->addTag('restful');
     $query->addMetaData('restful_handler', $this);
     $query->addMetaData('account', $this->getAccount());
-
-    $query->range($offset, $range);
-
-    return $query;
   }
+
+
 
   /**
    * Return the values of the types tags, with the ID.
