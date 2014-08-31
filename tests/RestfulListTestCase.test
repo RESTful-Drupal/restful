@@ -22,7 +22,7 @@ class RestfulListTestCase extends DrupalWebTestCase {
   /**
    * Test the sorting of entities.
    */
-  function testSort() {
+  function __testSort() {
     $settings = array('type' => 'article');
 
     $titles = array(
@@ -203,7 +203,7 @@ class RestfulListTestCase extends DrupalWebTestCase {
       );
 
       foreach ($row['integer_multiple'] as $key => $value) {
-        $settings[integer_multiple][LANGUAGE_NONE][$key]['value'] = $value;
+        $settings['integer_multiple'][LANGUAGE_NONE][$key]['value'] = $value;
       }
 
       $node = $this->drupalCreateNode($settings);
@@ -275,7 +275,7 @@ class RestfulListTestCase extends DrupalWebTestCase {
   /**
    * Test pagination.
    */
-  function testPagination() {
+  function __testPagination() {
     foreach(range(1, 9) as $key) {
       $settings = array(
         'type' => 'article',
