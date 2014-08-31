@@ -5,7 +5,7 @@
  * Contains RestfulRateLimitRequest.
  */
 
-class RestfulRateLimitRequest implements RestfulRateLimitInterface {
+class RestfulRateLimitRequest extends \RestfulRateLimitBase {
 
   /**
    * {@inheritdoc}
@@ -13,5 +13,5 @@ class RestfulRateLimitRequest implements RestfulRateLimitInterface {
   public function isRequestedEvent(array $request = array()) {
     return TRUE;
   }
-}
 
+}

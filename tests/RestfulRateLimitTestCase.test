@@ -32,16 +32,44 @@ class RestfulRateLimitTestCase extends DrupalWebTestCase {
   }
 
   /**
+   * Tests global rate limits.
+   */
+  public function testGlobalLimits() {
+    // Test the global limit.
+    variable_set('restful_global_rate_limit', 1);
+    // P3D for 3 days period. See
+    // http://php.net/manual/en/class.dateinterval.php for more information
+    // about the interval format.
+    variable_set('restful_global_rate_period', 'P3D');
+
+    $account = $this->drupalCreateUser();
+    $this->roleExecute($account, 1, array('articles', 1, 0));
+
+    // Test invalid 'restful_global_rate_period' format.
+    try {
+      variable_set('restful_global_rate_period', 'fail');
+
+      $this->roleExecute($account, 1, array('articles', 1, 0));
+      $this->fail('Invalid \DateInterval format in restful_global_rate_period did not raise an error');
+    }
+    catch (Exception $e) {
+      $this->pass('Invalid \DateInterval format in restful_global_rate_period raises an error');
+    }
+  }
+
+  /**
    * Tests the rate limits and its expiration feature.
    */
   public function testLimits() {
+    variable_del('restful_global_rate_limit');
+    variable_del('restful_global_rate_period');
     // This handler has a limit of 2 requests for the anonymous user.
     $account = drupal_anonymous_user();
-    $this->roleExecute($account, 2);
+    $this->roleExecute($account, 2, array('articles', 1, 4));
 
     // This handler has a limit of 3 requests for the authenticated user.
     $account = $this->drupalCreateUser();
-    $this->roleExecute($account, 3);
+    $this->roleExecute($account, 3, array('articles', 1, 4));
 
     // Now that the limit has been reached for $account. Fake expiration and see
     // that the limit has been renewed.
@@ -49,13 +77,13 @@ class RestfulRateLimitTestCase extends DrupalWebTestCase {
     $results = $query
       ->entityCondition('entity_type', 'rate_limit')
       ->entityCondition('bundle', 'request')
-      ->propertyCondition('identifier', 'articles::' . $account->uid)
+      ->propertyCondition('identifier', 'articles::request::' . $account->uid)
       ->execute();
     $rl = entity_load_single('rate_limit', key($results['rate_limit']));
     $rl->timestamp = REQUEST_TIME - 2;
     $rl->expiration = REQUEST_TIME - 1;
     $rl->save();
-    $this->roleExecute($account, 3);
+    $this->roleExecute($account, 3, array('articles', 1, 4));
   }
 
   /**
@@ -65,9 +93,11 @@ class RestfulRateLimitTestCase extends DrupalWebTestCase {
    *   The user account object.
    * @param $limit
    *   The number of calls allowed for a user with the same roles as $account.
+   * @param $resource_options
+   *   Array of options as received in restful_get_restful_handler.
    */
-  protected function roleExecute($account, $limit) {
-    $handler = restful_get_restful_handler('articles', 1, 4);
+  protected function roleExecute($account, $limit, $resource_options) {
+    $handler = restful_get_restful_handler($resource_options[0], $resource_options[1], $resource_options[2]);
     $handler->setAccount($account);
 
     // Test rate limits.
