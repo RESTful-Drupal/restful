@@ -210,8 +210,14 @@ class RestfulListTestCase extends DrupalWebTestCase {
       $nodes[$title] = $node->nid;
     }
 
-    $handler = restful_get_restful_handler('articles');
-    $request['fields'] = 'id,label';
+    $handler = restful_get_restful_handler('test_articles', 1, 2);
+    $fields = array(
+      'id',
+      'label',
+      'integer_single',
+      'intger_multiple',
+    );
+    $request['fields'] = implode(',', $fields);
 
 
     // Single value property.
