@@ -597,6 +597,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
     $this->queryForListSort($query);
     $this->queryForListFilter($query);
     $this->queryForListPagination($query);
+    $this->queryForListTags($query);
 
     return $query;
   }
