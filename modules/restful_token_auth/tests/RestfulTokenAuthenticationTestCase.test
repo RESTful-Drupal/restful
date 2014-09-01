@@ -51,7 +51,7 @@ class RestfulTokenAuthenticationTestCase extends DrupalWebTestCase {
     // Get a "protected" resource without the access token.
     $handler = restful_get_restful_handler('articles', 1, 3);
     try {
-      $result = $handler->get($id);
+      $handler->get($id);
       $this->fail('"Unauthorized" exception not thrown.');
     }
     catch (\RestfulUnauthorizedException $e) {
@@ -63,7 +63,7 @@ class RestfulTokenAuthenticationTestCase extends DrupalWebTestCase {
 
     // Get a "protected" resource with invalid access token.
     try {
-      $result = $handler->get($id, array('access_token' => 'invalid'));
+      $handler->get($id, array('access_token' => 'invalid'));
       $this->fail('"Unauthorized" exception not thrown.');
     }
     catch (\RestfulUnauthorizedException $e) {
@@ -74,7 +74,8 @@ class RestfulTokenAuthenticationTestCase extends DrupalWebTestCase {
     }
 
     // Get a "protected" resource with the access token.
-    $result = $handler->get(1, array('access_token' => $access_token));
+    $response = $handler->get(1, array('access_token' => $access_token));
+    $result = $response['data'];
     $this->assertEqual($result['label'], $title1, 'Article resource can be accessed with valid access token.');
   }
 }

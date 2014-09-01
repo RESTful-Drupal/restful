@@ -187,7 +187,7 @@ class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
     // file that was uploaded.
     $original = hash_file('md5', $this->imagePath);
     $return_array = drupal_json_decode($return['body']);
-    $uploaded = hash_file('md5', $return_array['list'][0]['self']);
+    $uploaded = hash_file('md5', $return_array['data'][0]['self']);
     $this->assertEqual($original, $uploaded, 'Original and uploaded file are identical.');
     // Test access for anonymous user (denied).
     $return = $this->uploadFile();

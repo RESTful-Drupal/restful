@@ -106,7 +106,7 @@ $result = $handler->get();
 
 // Output:
 array(
-  'list' => array(
+  'data' => array(
     array(
       'id' => 1,
       'label' => 'example title',
@@ -135,7 +135,7 @@ $result = $handler->get('', $request);
 
 // Output:
 array(
-  'list' => array(
+  'data' => array(
     array(
       'id' => 2,
       'label' => 'another title',
@@ -181,6 +181,14 @@ curl https://example.com/api/v1/articles/1
 
 # Handler v1.1
 curl https://example.com/api/v1/articles/1 \
+  -H "X-Restful-Minor-Version: 1"
+```
+
+### View multiple Articles at once
+
+```shell
+# Handler v1.1
+curl https://example.com/api/v1/articles/1,2 \
   -H "X-Restful-Minor-Version: 1"
 ```
 
@@ -303,6 +311,59 @@ for every resource, meaning that very volatile resources can skip cache entirely
 while other resources can have its cache in MemCached or the database. To
 configure this developers just have to specify the following keys in their
 _restful_ plugin definition.
+
+## Rate Limit
+RESTful provides rate limit functionality out of the box. A rate limit is a way
+to protect your API service from flooding, basically consisting on checking is
+the number of times an event has happened in a given period is greater that the
+maximum allowed.
+
+### Rate Limit events
+You can define your own rate limit events for your resources and define the
+limit an period for those, for that you only need to create a new _rate\_limit_
+CTools plugin and implement the `isRequestedEvent` method. Every request the
+`isRequestedEvent` will be evaluated and if it returns true that request will
+increase the number of hits -for that particular user- for that event. If the
+number of hits is bigger than the allowed limit an exception will be raised.
+
+Two events are provided out of the box: the request event -that is always true
+for every request- and the global event -that is always true and is not
+contained for a given resource, all resources will increment the hit counter-.
+
+This way, for instance, you could define different limit for read operations
+than for write operations by checking the HTTP method in `isRequestedEvent`.
+
+### Configuring your Rate Limits
+You can configure the declared Rate Limit events in every resource by providing
+a configuration array. The following is taken from the example resource articles
+1.4 (articles\_\_1\_4.inc):
+
+```php
+…
+  'rate_limit' => array(
+    // The 'request' event is the basic event. You can declare your own events.
+    'request' => array(
+      'event' => 'request',
+      // Rate limit is cleared every day.
+      'period' => new \DateInterval('P1D'),
+      'limits' => array(
+        'authenticated user' => 3,
+        'anonymous user' => 2,
+        'administrator' => \RestfulRateLimitManager::UNLIMITED_RATE_LIMIT,
+      ),
+    ),
+  ),
+…
+```
+
+As you can see in the example you can set the rate limit differently depending
+on the role of the visiting user.
+
+Since the global event is not tied to any resource the limit and period is specified by setting the following variables:
+  - `restful_global_rate_limit`: The number of allowed hits. This is global for
+    all roles.
+  - `restful_global_rate_period`: The period string compatible with
+    \DateInterval.
 
 ## Modules integration
 * [Entity validator](https://www.drupal.org/project/entity_validator): Integrate

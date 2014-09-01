@@ -85,7 +85,7 @@ class RestfulFilesUpload extends \RestfulEntityBase {
     }
 
     foreach ($ids as $id) {
-      $return['list'][] = $this->viewEntity($id);
+      $return['data'][] = $this->viewEntity($id);
     }
 
     return $return;

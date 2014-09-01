@@ -59,7 +59,7 @@ class RestfulListTestCase extends DrupalWebTestCase {
         'label' => 'efg',
       ),
     );
-    $this->assertEqual($result['list'], $expected_result, 'No sorting (default sorting).');
+    $this->assertEqual($result['data'], $expected_result, 'No sorting (default sorting).');
 
     // Sort by ID descending.
     $request['sort'] = '-id';
@@ -78,7 +78,7 @@ class RestfulListTestCase extends DrupalWebTestCase {
         'label' => 'abc',
       ),
     );
-    $this->assertEqual($result['list'], $expected_result, 'Sort by ID descending.');
+    $this->assertEqual($result['data'], $expected_result, 'Sort by ID descending.');
 
     // Sort by label ascending.
     $request['sort'] = 'label';
@@ -97,7 +97,7 @@ class RestfulListTestCase extends DrupalWebTestCase {
         'label' => 'xyz',
       ),
     );
-    $this->assertEqual($result['list'], $expected_result, 'Sort by label ascending.');
+    $this->assertEqual($result['data'], $expected_result, 'Sort by label ascending.');
 
     // Sort by label and by ID. For that we add another node titled "abc".
     $settings = array(
@@ -126,7 +126,7 @@ class RestfulListTestCase extends DrupalWebTestCase {
         'label' => 'xyz',
       ),
     );
-    $this->assertEqual($result['list'], $expected_result, 'Sort by ID and by label.');
+    $this->assertEqual($result['data'], $expected_result, 'Sort by ID and by label.');
 
     // Illegal sort property.
     $request['sort'] = 'wrong_key';
@@ -162,7 +162,7 @@ class RestfulListTestCase extends DrupalWebTestCase {
 
     $request = array('fields' => 'roles');
     $response = $handler->get('', $request);
-    foreach ($response['list'] as $item) {
+    foreach ($response['data'] as $item) {
       $roles = array_map('trim', explode(',', $item['roles']));
       $this->assertTrue(in_array($role_name, $roles), format_string('%role role found in content list.', array('%role' => $role_name)));
     }
@@ -186,7 +186,7 @@ class RestfulListTestCase extends DrupalWebTestCase {
 
     // Check pagination of first page.
     $result = $handler->get('', array('page' => 1));
-    $this->assertEqual(count($result['list']), 3);
+    $this->assertEqual(count($result['data']), 3);
     $this->assertTrue($result['_links']['next'], '"Next" link exists on the first page.');
     $this->assertTrue(empty($result['_links']['previous']), '"Previous" link does not exist on the first page.');
 
