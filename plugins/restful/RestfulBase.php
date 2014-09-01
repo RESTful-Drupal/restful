@@ -8,6 +8,13 @@
 abstract class RestfulBase implements RestfulInterface {
 
   /**
+   * The plugin definition.
+   *
+   * @var array $plugin
+   */
+  protected $plugin;
+
+  /**
    * Determines if the HTTP method represents a write operation.
    *
    * @param string $method
@@ -64,5 +71,32 @@ abstract class RestfulBase implements RestfulInterface {
   public static function isValidMethod($method, $strict = TRUE) {
     $method = $strict ? $method : strtolower($method);
     return static::isReadMethod($method, $strict) || static::isWriteMethod($method, $strict);
+  }
+
+  /**
+   * Gets information about the restful plugin.
+   *
+   * @param string
+   *   (optional) The name of the key to return.
+   *
+   * @return mixed
+   *   Depends on the requested value.
+   */
+  public function getPluginInfo($key = NULL) {
+    return isset($key) ? $this->plugin[$key] : $this->plugin;
+  }
+
+  /**
+   * Call the output format on the passed in array.
+   *
+   * @param array $data
+   *   The array of data to format.
+   *
+   * @return string
+   *   The output string to return.
+   */
+  public function format(array $data) {
+    $formatter_handler = restful_get_formatter_handler($this->getPluginInfo('formatter'), $this);
+    return $formatter_handler->format($data);
   }
 }

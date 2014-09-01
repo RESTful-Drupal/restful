@@ -7,20 +7,35 @@
 
 class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulFormatterInterface {
   /**
+   * Content Type
+   *
+   * @var string
+   */
+  protected $contentType = 'application/hal+json; charset=utf-8';
+
+  /**
    * {@inheritdoc}
    */
   public function massage(array $data) {
+    // If we're returning an error then set the content type to
+    // 'application/problem+json; charset=utf-8'.
+    if (!empty($data['status']) && floor($data['status'] / 100) != 2) {
+      $this->contentType = 'application/problem+json; charset=utf-8';
+      return $data;
+    }
     // Here we get the data after calling the backend storage for the resources.
-    if (count($data) == 1 && !$this->handler->isListRequest()) {
-      $output = array('data' => reset($data));
+    $output = array('data' => $data);
+
+    if (!empty($this->handler)) {
+      // Get the total number of items for the current request without pagination.
+      $output['count'] = $this->handler->getTotalCount();
     }
     else {
-      $output = array('data' => $data);
+      $output['count'] = count($output['data']);
     }
+
+    // Add HATEOAS to the output.
     $this->addHateoas($output);
-    // TODO: Provide a count of all the possible entities (not only the current
-    // page)
-    // $output['count'] = count($output['data']);
     return $output;
   }
 
@@ -35,7 +50,7 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
    * {@inheritdoc}
    */
   public function getContentTypeHeader() {
-    return 'application/hal+json; charset=utf-8';
+    return $this->contentType;
   }
 
   /**
@@ -45,6 +60,9 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
    *   The data array after initial massaging.
    */
   protected function addHateoas(array &$data) {
+    if (!$this->handler) {
+      return;
+    }
     $request = $this->handler->getRequest();
 
     $data['_links'] = array();
@@ -55,7 +73,12 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
       $data['_links']['previous'] = $this->handler->getUrl();
     }
 
-    if (count($data['data']) > $this->handler->getRange()) {
+    // We know that there are more pages if the total count is bigger than the
+    // number of items of the current request plus the number of items in
+    // previous pages.
+    $items_per_page = $this->handler->getRange();
+    $previous_items = ($page - 1) * $items_per_page;
+    if ($data['count'] > count($data['data']) + $previous_items) {
       $request['page'] = $page + 1;
       $data['_links']['next'] = $this->handler->getUrl();
 

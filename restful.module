@@ -111,7 +111,7 @@ function restful_plugin_process(&$plugin, $info) {
       'hook_menu' => TRUE,
       'cache' => array(),
       'autocomplete' => array(),
-      'formatter' => 'hal_json',
+      'formatter' => variable_get('restful_default_output_formatter', 'hal_json'),
     );
 
     $plugin['cache'] += array(
@@ -422,7 +422,7 @@ function restful_get_authentication_handler($auth_plugin_name) {
  * @param string $formatter_plugin_name
  *   Name of the formatter plugin.
  *
- * @param \RestfulEntityBase $restful_handler
+ * @param \RestfulBase $restful_handler
  *   The resource handler.
  *
  * @return \RestfulAuthenticationInterface
@@ -622,17 +622,25 @@ function restful_delivery($var = NULL) {
   }
 
   // Get the formatter for the current resource.
-  $restful_handler = restful_get_restful_handler_for_path();
-  $formatter_name = $restful_handler->getPluginInfo('formatter');
-  $formatter_handler = restful_get_formatter_handler($formatter_name, $restful_handler);
-
-  // Allow the handler to change the HTTP headers.
-  foreach ($restful_handler->getHttpHeaders() as $key => $value) {
-    drupal_add_http_header($key, $value);
+  if ($restful_handler = restful_get_restful_handler_for_path()) {
+    $formatter_name = $restful_handler->getPluginInfo('formatter');
+    // Allow the handler to change the HTTP headers.
+    foreach ($restful_handler->getHttpHeaders() as $key => $value) {
+      drupal_add_http_header($key, $value);
+    }
   }
+  else {
+    $formatter_name = variable_get('restful_default_output_formatter', 'hal_json');
+  }
+  $formatter_handler = restful_get_formatter_handler($formatter_name, $restful_handler);
+  $output = $formatter_handler->format($var);
+
+  // The content type header is modified after the massaging if there is an
+  // error code. Therefore we need to set the content type header after
+  // formatting the output.
   drupal_add_http_header('Content-Type', $formatter_handler->getContentTypeHeader());
 
-  echo $formatter_handler->format($var);
+  echo $output;
 }
 
 /**

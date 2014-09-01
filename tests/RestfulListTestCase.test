@@ -59,7 +59,7 @@ class RestfulListTestCase extends DrupalWebTestCase {
         'label' => 'efg',
       ),
     );
-    $this->assertEqual($result['data'], $expected_result, 'No sorting (default sorting).');
+    $this->assertEqual($result, $expected_result, 'No sorting (default sorting).');
 
     // Sort by ID descending.
     $request['sort'] = '-id';
@@ -78,7 +78,7 @@ class RestfulListTestCase extends DrupalWebTestCase {
         'label' => 'abc',
       ),
     );
-    $this->assertEqual($result['data'], $expected_result, 'Sort by ID descending.');
+    $this->assertEqual($result, $expected_result, 'Sort by ID descending.');
 
     // Sort by label ascending.
     $request['sort'] = 'label';
@@ -97,7 +97,7 @@ class RestfulListTestCase extends DrupalWebTestCase {
         'label' => 'xyz',
       ),
     );
-    $this->assertEqual($result['data'], $expected_result, 'Sort by label ascending.');
+    $this->assertEqual($result, $expected_result, 'Sort by label ascending.');
 
     // Sort by label and by ID. For that we add another node titled "abc".
     $settings = array(
@@ -126,7 +126,7 @@ class RestfulListTestCase extends DrupalWebTestCase {
         'label' => 'xyz',
       ),
     );
-    $this->assertEqual($result['data'], $expected_result, 'Sort by ID and by label.');
+    $this->assertEqual($result, $expected_result, 'Sort by ID and by label.');
 
     // Illegal sort property.
     $request['sort'] = 'wrong_key';
@@ -162,7 +162,7 @@ class RestfulListTestCase extends DrupalWebTestCase {
 
     $request = array('fields' => 'roles');
     $response = $handler->get('', $request);
-    foreach ($response['data'] as $item) {
+    foreach ($response as $item) {
       $roles = array_map('trim', explode(',', $item['roles']));
       $this->assertTrue(in_array($role_name, $roles), format_string('%role role found in content list.', array('%role' => $role_name)));
     }
@@ -186,23 +186,27 @@ class RestfulListTestCase extends DrupalWebTestCase {
 
     // Check pagination of first page.
     $result = $handler->get('', array('page' => 1));
-    $this->assertEqual(count($result['data']), 3);
-    $this->assertTrue($result['_links']['next'], '"Next" link exists on the first page.');
-    $this->assertTrue(empty($result['_links']['previous']), '"Previous" link does not exist on the first page.');
+    $output = drupal_json_decode($handler->format($result));
+    $this->assertEqual(count($result), 3);
+    $this->assertTrue($output['_links']['next'], '"Next" link exists on the first page.');
+    $this->assertTrue(empty($output['_links']['previous']), '"Previous" link does not exist on the first page.');
 
     // Check pagination of middle pages
     $result = $handler->get('', array('page' => 2));
-    $this->assertTrue($result['_links']['next'], '"Next" link exists on the middle page.');
-    $this->assertTrue($result['_links']['previous'], '"Previous" link exists on the middle page.');
+    $output = drupal_json_decode($handler->format($result));
+    $this->assertTrue($output['_links']['next'], '"Next" link exists on the middle page.');
+    $this->assertTrue($output['_links']['previous'], '"Previous" link exists on the middle page.');
 
     // Check pagination of last page.
     $result = $handler->get('', array('page' => 3));
-    $this->assertTrue(empty($result['_links']['next']), '"Next" link does not exist on the last page.');
-    $this->assertTrue($result['_links']['previous'], '"Previous" link exists on the last page.');
+    $output = drupal_json_decode($handler->format($result));
+    $this->assertTrue(empty($output['_links']['next']), '"Next" link does not exist on the last page.');
+    $this->assertTrue($output['_links']['previous'], '"Previous" link exists on the last page.');
 
     // Check other query strings are retained in the _links.
     $result = $handler->get('', array('page' => 3, 'sort' => '-id'));
-    $this->assertTrue(strpos($result['_links']['previous'], 'sort=-id'), 'Query strings are retained in the _links.');
+    $output = drupal_json_decode($handler->format($result));
+    $this->assertTrue(strpos($output['_links']['previous'], 'sort=-id'), 'Query strings are retained in the _links.');
 
     // Check pagination with non-numeric value.
     try {
@@ -233,5 +237,10 @@ class RestfulListTestCase extends DrupalWebTestCase {
     // results, but is a valid call.
     $result = $handler->get('', array('page' => 100));
     $this->assertEqual($result, array(), 'pagination with high number, where there are not items yielded no results.');
+
+    // Check total number of results.
+    $result = $handler->get('', array('page' => 3));
+    $output = drupal_json_decode($handler->format($result));
+    $this->assertEqual($output['count'], 9, 'Total count exists and is correct.');
   }
 }

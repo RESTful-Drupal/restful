@@ -34,14 +34,14 @@ class RestfulGetHandlersTestCase extends DrupalWebTestCase {
     $handler = restful_get_restful_handler('articles');
     $this->assertEqual(get_class($handler), 'RestfulExampleArticlesResource');
     $response = $handler->get($node1->nid);
-    $result = $response['data'];
+    $result = $response[0];
     $this->assertTrue(!empty($result['self']), '"self" property appears in minor version 0.');
 
 
     $handler = restful_get_restful_handler('articles', 1, 1);
     $this->assertEqual(get_class($handler), 'RestfulExampleArticlesResource__1_1');
     $response = $handler->get($node1->nid);
-    $result = $response['data'];
+    $result = $response[0];
     $this->assertTrue(empty($result['self']), '"self" property does not appear in minor version 1.');
   }
 

@@ -83,8 +83,9 @@ class RestfulCurlBaseTestCase extends DrupalWebTestCase {
 
     if ($this->loggedInUser && \RestfulBase::isWriteMethod($method, FALSE) && $use_token) {
       // Add CSRF token for write operations.
-      $result = $this->drupalGet('api/session/token');
-      $result = drupal_json_decode($result);
+      $response = $this->drupalGet('api/session/token');
+      $response = drupal_json_decode($response);
+      $result = $response['data'];
       $headers['X-CSRF-Token'] = $result['X-CSRF-Token'];
     }
 

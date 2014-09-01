@@ -67,13 +67,13 @@ class RestfulViewEntityTestCase extends DrupalWebTestCase {
     $expected_result = $base_expected_result;
 
     $response = $handler->get($id);
-    $result = $response['data'];
+    $result = $response[0];
     $this->assertEqual($result, $expected_result, 'Entity view has expected result for "main" resource v1');
 
     // v1.1 - Text and entity reference field.
     $handler = restful_get_restful_handler('main', 1, 1);
     $response = $handler->get($id);
-    $result = $response['data'];
+    $result = $response[0];
 
     $base_expected_result_v1 = $base_expected_result;
 
@@ -99,12 +99,12 @@ class RestfulViewEntityTestCase extends DrupalWebTestCase {
     );
 
     $response = $handler->get($entity1->pid);
-    $expected_result['entity_reference_single_resource'] = $response['data'];
+    $expected_result['entity_reference_single_resource'] = $response[0];
     $response1 = $handler->get($entity1->pid);
     $response2 = $handler->get($entity2->pid);
     $expected_result['entity_reference_multiple_resource'] = array(
-      $response1['data'],
-      $response2['data'],
+      $response1[0],
+      $response2[0],
     );
 
     $stripped_result = $result;
@@ -124,7 +124,7 @@ class RestfulViewEntityTestCase extends DrupalWebTestCase {
     $wrapper->save();
 
     $response = $handler->get($id);
-    $result = $response['data'];
+    $result = $response[0];
     $expected_result = $base_expected_result_v1;
     $expected_result['text_single'] = NULL;
     $expected_result['text_multiple'] = NULL;
@@ -142,7 +142,7 @@ class RestfulViewEntityTestCase extends DrupalWebTestCase {
     // v1.2 - "callback" and "process callback".
     $handler = restful_get_restful_handler('main', 1, 2);
     $response = $handler->get($id);
-    $result = $response['data'];
+    $result = $response[0];
     $expected_result = $base_expected_result;
     $expected_result['callback'] = 'callback';
     $expected_result['process_callback_from_callback'] = 'callback processed from callback';

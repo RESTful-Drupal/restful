@@ -26,13 +26,6 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
   protected $bundle;
 
   /**
-   * The plugin definition.
-   *
-   * @var array $plugin
-   */
-  protected $plugin;
-
-  /**
    * The public fields that are exposed to the API.
    *
    *  Array with the optional values:
@@ -525,7 +518,6 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
       ->getQueryForList()
       ->execute();
 
-
     if (empty($result[$entity_type])) {
       return array();
     }
@@ -539,8 +531,6 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
     }
 
     $return = array();
-
-//    $this->getListAddHateoas($return, $ids);
 
     foreach ($ids as $id) {
       $return[] = $this->viewEntity($id);
@@ -563,17 +553,9 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
   public function viewEntities($entity_ids_string) {
     $entity_ids = array_filter(explode(',', $entity_ids_string));
     $output = array();
-//    $this->getListAddHateoas($output, $entity_ids);
 
-    // If there is one ID, then treat this as a single item.
-    if (count($entity_ids) == 1) {
-      $entity_id = reset($entity_ids);
-      $output = $this->viewEntity($entity_id);
-    }
-    else {
-      foreach ($entity_ids as $entity_id) {
-        $output[] = $this->viewEntity($entity_id);
-      }
+    foreach ($entity_ids as $entity_id) {
+      $output[] = $this->viewEntity($entity_id);
     }
     return $output;
   }
@@ -637,20 +619,72 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
       throw new \RestfulBadRequestException('"Page" property should be numeric and equal or higher than 1.');
     }
 
-    // We get 1 more item more than the range, in order to know if there is a
-    // "next" page.
-    $range = $this->getRange() + 1;
+    $range = $this->getRange();
     $offset = ($page - 1) * $range;
 
+    // Add a generic entity access tag to the query.
+    $this->addExtraInfoToQuery($query);
+
+    $query->range($offset, $range);
+
+    return $query;
+  }
+
+  /**
+   * Prepare a query for RestfulEntityBase::getTotalCount().
+   *
+   * @return EntityFieldQuery
+   *   The EntityFieldQuery object.
+   *
+   * @throws RestfulBadRequestException
+   */
+  public function getQueryCount() {
+    $entity_type = $this->getEntityType();
+    $entity_info = entity_get_info($entity_type);
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', $this->getEntityType());
+
+    if ($this->bundle && $entity_info['entity keys']['bundle']) {
+      $query->entityCondition('bundle', $this->getBundle());
+    }
+
+    $this->addExtraInfoToQuery($query);
+    $query->addTag('restful_count');
+
+    return $query;
+  }
+
+  /**
+   * Helper method to get the total count of entities that match certain
+   * request.
+   *
+   * @return int
+   *   The total number of results without including pagination.
+   */
+  public function getTotalCount() {
+    $count_results = $this
+      ->getQueryCount()
+      ->execute();
+    $entity_type = $this->getEntityType();
+    if (!empty($count_results[$entity_type])) {
+      return count($count_results[$entity_type]);
+    }
+    return 0;
+  }
+
+  /**
+   * Adds tags and metadata to the EntityFieldQuery.
+   *
+   * @param \EntityFieldQuery $query
+   *   The query to enhance.
+   */
+  protected function addExtraInfoToQuery(\EntityFieldQuery $query) {
+    $entity_type = $this->getEntityType();
     // Add a generic entity access tag to the query.
     $query->addTag($entity_type . '_access');
     $query->addTag('restful');
     $query->addMetaData('restful_handler', $this);
     $query->addMetaData('account', $this->getAccount());
-
-    $query->range($offset, $range);
-
-    return $query;
   }
 
   /**
@@ -1057,7 +1091,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
       $this->setHttpHeaders('Location', $url);
     }
 
-    return $this->viewEntity($wrapper->getIdentifier());
+    return array($this->viewEntity($wrapper->getIdentifier()));
   }
 
 
@@ -1088,7 +1122,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
     $wrapper = entity_metadata_wrapper($this->entityType, $entity);
 
     $this->setPropertyValues($wrapper);
-    return $this->viewEntity($wrapper->getIdentifier());
+    return array($this->viewEntity($wrapper->getIdentifier()));
   }
 
   /**
@@ -1309,7 +1343,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
     }
 
     $result = $handler->process($path, $request, $method_name, FALSE);
-    return $result['id'];
+    return $result[0]['id'];
   }
 
   /**
@@ -1599,19 +1633,6 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    */
   public function access() {
     return TRUE;
-  }
-
-  /**
-   * Gets information about the restful plugin.
-   *
-   * @param string
-   *   (optional) The name of the key to return.
-   *
-   * @return mixed
-   *   Depends on the requested value.
-   */
-  public function getPluginInfo($key = NULL) {
-    return isset($key) ? $this->plugin[$key] : $this->plugin;
   }
 
   /**

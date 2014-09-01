@@ -21,9 +21,14 @@ abstract class RestfulFormatterBase implements \RestfulFormatterInterface {
   protected $plugin;
 
   /**
-   * General constructor.
+   * Generic constructor.
+   *
+   * @param array $plugin
+   *   The formatter plugin definition.
+   * @param \RestfulBase $handler
+   *   The restful handler that will call the output formatter.
    */
-  public function __construct(array $plugin, \RestfulEntityBase $handler) {
+  public function __construct(array $plugin, $handler = NULL) {
     $this->plugin = $plugin;
     $this->handler = $handler;
   }
@@ -39,8 +44,8 @@ abstract class RestfulFormatterBase implements \RestfulFormatterInterface {
    * {@inheritdoc}
    */
   public function getContentTypeHeader() {
-    // Default to the most general & obvious content type.
-    return 'text/html';
+    // Default to the most general content type.
+    return 'application/hal+json; charset=utf-8';
   }
 
 }

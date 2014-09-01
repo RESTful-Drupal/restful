@@ -169,7 +169,8 @@ class RestfulSubResourcesCreateEntityTestCase extends DrupalWebTestCase {
    */
   protected function processRequests($method = 'post', $path = '', array $request = array()) {
     $handler = $this->handler;
-    $result = $handler->{$method}($path, $request);
+    $response = $handler->{$method}($path, $request);
+    $result = $response[0];
     $this->assertTrue($result['id'], 'Parent entity created.');
     $this->assertTrue($result['entity_reference_single']['id'], 'Single sub-resource created or updated.');
     $this->assertTrue($result['entity_reference_multiple'][0]['id'] && $result['entity_reference_multiple'][1]['id'], 'Multiple sub-resource created or updated.');
@@ -190,7 +191,10 @@ class RestfulSubResourcesCreateEntityTestCase extends DrupalWebTestCase {
 
 
     // Validation fail on the multiple resource.
-    if (is_array($request['entity_reference_multiple'][0]['label'])) {
+    if (
+      !empty($request['entity_reference_multiple'][0]['label']) &&
+      is_array($request['entity_reference_multiple'][0]['label'])
+    ) {
       $request['entity_reference_multiple'][0]['label'] = 'no';
       $this->assertInvalidRequest($method, $path, $request);
     }
