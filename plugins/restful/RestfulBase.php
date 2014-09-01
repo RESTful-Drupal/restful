@@ -15,6 +15,20 @@ abstract class RestfulBase implements RestfulInterface {
   protected $plugin;
 
   /**
+   * Constructs a RestfulEntityBase object.
+   *
+   * @param array $plugin
+   *   Plugin definition.
+   * @param RestfulAuthenticationManager $auth_manager
+   *   (optional) Injected authentication manager.
+   * @param DrupalCacheInterface $cache_controller
+   *   (optional) Injected cache backend.
+   */
+  public function __construct($plugin, \RestfulAuthenticationManager $auth_manager = NULL, \DrupalCacheInterface $cache_controller = NULL) {
+    $this->plugin = $plugin;
+  }
+
+  /**
    * Determines if the HTTP method represents a write operation.
    *
    * @param string $method
@@ -83,7 +97,10 @@ abstract class RestfulBase implements RestfulInterface {
    *   Depends on the requested value.
    */
   public function getPluginInfo($key = NULL) {
-    return isset($key) ? $this->plugin[$key] : $this->plugin;
+    if (isset($key)) {
+      return empty($this->plugin[$key]) ? NULL : $this->plugin[$key];
+    }
+    return $this->plugin;
   }
 
   /**

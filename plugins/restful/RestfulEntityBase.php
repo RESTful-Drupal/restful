@@ -331,6 +331,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    *   (optional) Injected cache backend.
    */
   public function __construct($plugin, \RestfulAuthenticationManager $auth_manager = NULL, \DrupalCacheInterface $cache_controller = NULL) {
+    parent::__construct($plugin);
     $this->plugin = $plugin;
     $this->entityType = $plugin['entity_type'];
     $this->bundle = $plugin['bundle'];
