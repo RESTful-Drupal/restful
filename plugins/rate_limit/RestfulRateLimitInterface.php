@@ -17,4 +17,5 @@ interface RestfulRateLimitInterface {
    *   incremented.
    */
   public function isRequestedEvent(array $request = array());
+
 }
