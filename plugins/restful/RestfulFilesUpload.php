@@ -28,7 +28,9 @@ class RestfulFilesUpload extends \RestfulEntityBase {
   public function __construct($plugin, \RestfulAuthenticationManager $auth_manager = NULL, \DrupalCacheInterface $cache_controller = NULL) {
     parent::__construct($plugin, $auth_manager, $cache_controller);
 
-    $options = $this->getPluginInfo('options');
+    if (!$options = $this->getPluginInfo('options')) {
+      $options = array();
+    }
 
     $default_values = array(
       'validators' => array(
