@@ -79,10 +79,6 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
     if ($data['count'] > count($data['data']) + $previous_items) {
       $request['page'] = $page + 1;
       $data['_links']['next'] = $this->handler->getUrl();
-
-      // Remove the last item, as it was just used to determine if there is a
-      // "next" page.
-      array_pop($data['data']);
     }
   }
 }

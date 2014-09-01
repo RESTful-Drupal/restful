@@ -5,7 +5,7 @@
  * Contains RestfulViewEntityTestCase
  */
 
-class RestfulViewEntityTestCase extends DrupalWebTestCase {
+class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
 
   public static function getInfo() {
     return array(
@@ -168,5 +168,36 @@ class RestfulViewEntityTestCase extends DrupalWebTestCase {
     catch(Exception $e) {
       $this->pass('Non-existing "process callback" property triggered an exception.');
     }
+
+    // v1.6 - XML output format.
+    $node = $this->drupalCreateNode(array(
+      'type' => 'article',
+      'uid' => $user1->uid,
+    ));
+
+    $response = $this->httpRequest('api/v1/articles', \RestfulInterface::GET, NULL, array(
+      'X-Restful-Minor-Version' => 6,
+    ));
+    // Returns something like:
+    // <api>
+    //   <data>
+    //     <item0>
+    //       <id>1</id>
+    //       <label>Humo</label>
+    //       <self>http://restful.local/node/1</self>
+    //       <body>...</body>
+    //     </item0>
+    //   </data>
+    //   <count>50</count>
+    //   <_links>
+    //     <next>http://restful.local/api/v1/articles</next>
+    //   </_links>
+    // </api>
+
+    $xml = new SimpleXMLElement($response['body']);
+    $results = $xml->xpath('/api/data/item0/label');
+    $result = reset($results);
+
+    $this->assertEqual($node->title, $result->__toString(), 'XML parsed correctlty.');
   }
 }
