@@ -1461,7 +1461,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
 
     $map = array();
     foreach ($this->getPublicFields() as $field_name => $value) {
-      if (!$value['property']) {
+      if (empty($value['property'])) {
         continue;
       }
 
