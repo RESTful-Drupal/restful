@@ -16,7 +16,7 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
   /**
    * {@inheritdoc}
    */
-  public function massage(array $data) {
+  public function prepare(array $data) {
     // If we're returning an error then set the content type to
     // 'application/problem+json; charset=utf-8'.
     if (!empty($data['status']) && floor($data['status'] / 100) != 2) {
@@ -68,7 +68,7 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
 
     if ($page > 1) {
       $request['page'] = $page - 1;
-      $data['_links']['previous'] = $this->handler->getUrl();
+      $data['_links']['previous'] = $this->handler->getUrl($request);
     }
 
     // We know that there are more pages if the total count is bigger than the
@@ -78,7 +78,7 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
     $previous_items = ($page - 1) * $items_per_page;
     if ($data['count'] > count($data['data']) + $previous_items) {
       $request['page'] = $page + 1;
-      $data['_links']['next'] = $this->handler->getUrl();
+      $data['_links']['next'] = $this->handler->getUrl($request);
     }
   }
 }

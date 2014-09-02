@@ -15,14 +15,14 @@ interface RestfulFormatterInterface {
    * @return array
    *   The data prepared to be rendered.
    */
-  public function massage(array $data);
+  public function prepare(array $data);
 
   /**
    * Renders an array in the selected format.
    *
    * @param array $structured_data
    *   The data prepared to be rendered as returned by
-   *   \RestfulFormatterInterface::massage().
+   *   \RestfulFormatterInterface::prepare().
    *
    * @return string
    *   The body contents for the HTTP response.
@@ -38,7 +38,7 @@ interface RestfulFormatterInterface {
    * @return string
    *   The body contents for the HTTP response.
    *
-   * @see \RestfulFormatterInterface::massage()
+   * @see \RestfulFormatterInterface::prepare()
    * @see \RestfulFormatterInterface::render()
    */
   public function format(array $data);

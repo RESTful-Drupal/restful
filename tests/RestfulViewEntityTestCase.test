@@ -29,6 +29,7 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
    * v1.2 - "callback" and "process callback".
    * v1.3 - Non-existing "callback" property.
    * v1.4 - Non-existing "process callback" property.
+   * v1.6 - XML output format.
    */
   function testViewEntity() {
     $user1 = $this->drupalCreateUser();
@@ -183,14 +184,14 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
     //   <data>
     //     <item0>
     //       <id>1</id>
-    //       <label>Humo</label>
-    //       <self>http://restful.local/node/1</self>
+    //       <label>Foo</label>
+    //       <self>http://example.com/node/1</self>
     //       <body>...</body>
     //     </item0>
     //   </data>
     //   <count>50</count>
     //   <_links>
-    //     <next>http://restful.local/api/v1/articles</next>
+    //     <next>http://example.com/api/v1/articles</next>
     //   </_links>
     // </api>
 

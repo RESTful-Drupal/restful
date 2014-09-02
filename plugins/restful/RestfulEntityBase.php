@@ -663,18 +663,13 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    *   The total number of results without including pagination.
    */
   public function getTotalCount() {
-    $count_results = $this
+    return $this
       ->getQueryCount()
       ->execute();
-    $entity_type = $this->getEntityType();
-    if (!empty($count_results[$entity_type])) {
-      return count($count_results[$entity_type]);
-    }
-    return 0;
   }
 
   /**
-   * Adds tags and metadata to the EntityFieldQuery.
+   * Adds query tags and metadata to the EntityFieldQuery.
    *
    * @param \EntityFieldQuery $query
    *   The query to enhance.
@@ -798,37 +793,6 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
     }
 
     return $return;
-  }
-
-  /**
-   * Add HATEOAS links to list of item.
-   *
-   * @param $return
-   *   The array that will be returned from \RestfulEntityBase::getList().
-   *   Passed by reference, as this will add a "_links" property to that array.
-   * @param $ids
-   *   Array of entity IDs retrieved for the list. Passed by reference, so we
-   *   can check if there is an extra item, thus know there is a "next" page.
-   */
-  public function getListAddHateoas(&$return, &$ids){
-    $request = $this->getRequest();
-
-    $return['_links'] = array();
-    $page = !empty($request['page']) ? $request['page'] : 1;
-
-    if ($page > 1) {
-      $request['page'] = $page - 1;
-      $return['_links']['previous'] = $this->getUrl();
-    }
-
-    if (count($ids) > $this->getRange()) {
-      $request['page'] = $page + 1;
-      $return['_links']['next'] = $this->getUrl();
-
-      // Remove the last ID, as it was just used to determine if there is a
-      // "next" page.
-      array_pop($ids);
-    }
   }
 
   /**
@@ -1676,6 +1640,8 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    *
    * By default the URL is absolute.
    *
+   * @param $request
+   *   The request array.
    * @param $options
    *   Array with options passed to url().
    * @param $keep_query
@@ -1686,8 +1652,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    * @return string
    *   The URL address.
    */
-  public function getUrl($options = array(), $keep_query = TRUE) {
-    $request = $this->getRequest();
+  public function getUrl($request = NULL, $options = array(), $keep_query = TRUE) {
     // By default set URL to be absolute.
     $options += array(
       'absolute' => TRUE,

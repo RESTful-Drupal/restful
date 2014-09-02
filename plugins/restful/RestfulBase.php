@@ -104,13 +104,13 @@ abstract class RestfulBase implements RestfulInterface {
   }
 
   /**
-   * Call the output format on the passed in array.
+   * Call the output format on the given data.
    *
    * @param array $data
    *   The array of data to format.
    *
    * @return string
-   *   The output string to return.
+   *   The formatted output.
    */
   public function format(array $data) {
     $formatter_handler = restful_get_formatter_handler($this->getPluginInfo('formatter'), $this);

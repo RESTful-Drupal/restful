@@ -37,7 +37,7 @@ abstract class RestfulFormatterBase implements \RestfulFormatterInterface {
    * {@inheritdoc}
    */
   public function format(array $data) {
-    return $this->render($this->massage($data));
+    return $this->render($this->prepare($data));
   }
 
   /**
