@@ -652,7 +652,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
     $this->addExtraInfoToQuery($query);
     $query->addTag('restful_count');
 
-    return $query;
+    return $query->count();
   }
 
   /**
@@ -663,9 +663,9 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    *   The total number of results without including pagination.
    */
   public function getTotalCount() {
-    return $this
+    return intval($this
       ->getQueryCount()
-      ->execute();
+      ->execute());
   }
 
   /**
