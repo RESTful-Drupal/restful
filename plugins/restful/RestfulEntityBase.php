@@ -617,6 +617,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    * @see \RestfulEntityBase::getQueryForList
    */
   protected function queryForListSort(\EntityFieldQuery $query) {
+    $request = $this->getRequest();
     $public_fields = $this->getPublicFields();
 
     $sorts = array();
