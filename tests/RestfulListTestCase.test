@@ -234,7 +234,7 @@ class RestfulListTestCase extends DrupalWebTestCase {
     // Multiple value field.
     $request['filter'] = array(
       'integer_multiple' => array(
-        'value' => array(3, 5),
+        'value' => array(4, 5),
         'operator' => 'BETWEEN',
       ),
     );
