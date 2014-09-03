@@ -22,7 +22,7 @@ class RestfulListTestCase extends DrupalWebTestCase {
   /**
    * Test the sorting of entities.
    */
-  function __testSort() {
+  function testSort() {
     $settings = array('type' => 'article');
 
     $titles = array(
@@ -258,7 +258,7 @@ class RestfulListTestCase extends DrupalWebTestCase {
   /**
    * Test pagination.
    */
-  function __testPagination() {
+  function testPagination() {
     foreach(range(1, 9) as $key) {
       $settings = array(
         'type' => 'article',
