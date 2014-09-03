@@ -8,10 +8,10 @@
 class RestfulTestMainResource__1_4 extends RestfulTestMainResource {
 
   /**
-   * Overrides RestfulTestEntityTestsResource::getPublicFields().
+   * Overrides RestfulTestEntityTestsResource::publicFieldsInfo().
    */
-  public function getPublicFields() {
-    $public_fields = parent::getPublicFields();
+  public function publicFieldsInfo() {
+    $public_fields = parent::publicFieldsInfo();
 
     $public_fields['process_callback'] = array(
       'wrapper_method' => 'label',

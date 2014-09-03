@@ -8,10 +8,10 @@
 class RestfulTestArticlesResource__1_0 extends RestfulExampleArticlesResource {
 
   /**
-   * Overrides RestfulExampleArticlesResource::getPublicFields().
+   * Overrides RestfulExampleArticlesResource::publicFieldsInfo().
    */
-  public function getPublicFields() {
-    $public_fields = parent::getPublicFields();
+  public function publicFieldsInfo() {
+    $public_fields = parent::publicFieldsInfo();
 
     $public_fields['body'] = array(
       'property' => 'body',

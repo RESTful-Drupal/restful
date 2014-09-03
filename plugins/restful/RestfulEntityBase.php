@@ -35,35 +35,39 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
   /**
    * The public fields that are exposed to the API.
    *
-   *  Array with the optional values:
-   *  - "property": The entity property (e.g. "title", "nid").
-   *  - "sub_property": A sub property name of a property to take from it the
-   *    content. This can be used for example on a text field with filtered text
-   *    input format where we would need to do $wrapper->body->value->value().
-   *    Defaults to FALSE.
-   *  - "wrapper_method": The wrapper's method name to perform on the field.
-   *    This can be used for example to get the entity label, by setting the
-   *    value to "label". Defaults to "value".
-   *  - "wrapper_method_on_entity": A Boolean to indicate on what to perform
-   *    the wrapper method. If TRUE the method will perform on the entity (e.g.
-   *    $wrapper->label()) and FALSE on the property or sub property
-   *    (e.g. $wrapper->field_reference->label()). Defaults to FALSE.
-   *  - "callback": A callable callback to get a computed value. Defaults To
-   *    FALSE.
-   *    The callback function receive as first argument the entity
-   *    EntityMetadataWrapper object.
-   *  - "process_callback": A callable callback to perform on the returned
-   *    value, or an array with the object and method. Defaults To FALSE.
-   *  - "resource": This property can be assigned only to an entity reference
-   *    field. Array of restful resources keyed by the target bundle. For
-   *    example, if the field is referencing a node entity, with "Article" and
-   *    "Page" bundles, we are able to map those bundles to their related
-   *    resource. Items with bundles that were not explicitly set would be
-   *    ignored.
-   *    array(
-   *      'article' => 'articles',
-   *      'page' => 'pages',
-   *    );
+   * Array with the optional values:
+   * - "property": The entity property (e.g. "title", "nid").
+   * - "sub_property": A sub property name of a property to take from it the
+   *   content. This can be used for example on a text field with filtered text
+   *   input format where we would need to do $wrapper->body->value->value().
+   *   Defaults to FALSE.
+   * - "wrapper_method": The wrapper's method name to perform on the field.
+   *   This can be used for example to get the entity label, by setting the
+   *   value to "label". Defaults to "value".
+   * - "wrapper_method_on_entity": A Boolean to indicate on what to perform
+   *   the wrapper method. If TRUE the method will perform on the entity (e.g.
+   *   $wrapper->label()) and FALSE on the property or sub property
+   *   (e.g. $wrapper->field_reference->label()). Defaults to FALSE.
+   * - "column": If the property is a field, set the column that would be used
+   *   in queries. For example, the default column for a text field would be
+   *   "value". Defaults to the first column returned by field_info_field(),
+   *   otherwise FALSE.
+   * - "callback": A callable callback to get a computed value. Defaults To
+   *   FALSE.
+   *   The callback function receive as first argument the entity
+   *   EntityMetadataWrapper object.
+   * - "process_callback": A callable callback to perform on the returned
+   *   value, or an array with the object and method. Defaults To FALSE.
+   * - "resource": This property can be assigned only to an entity reference
+   *   field. Array of restful resources keyed by the target bundle. For
+   *   example, if the field is referencing a node entity, with "Article" and
+   *   "Page" bundles, we are able to map those bundles to their related
+   *   resource. Items with bundles that were not explicitly set would be
+   *   ignored.
+   *   array(
+   *     'article' => 'articles',
+   *     'page' => 'pages',
+   *   );
    *
    * @var array
    */
@@ -1598,7 +1602,6 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    * @throws RestfulForbiddenException
    */
   protected function isValidEntity($op, $entity_id) {
-    $account = $this->getAccount();
     $entity_type = $this->entityType;
 
     $params = array(
@@ -1648,13 +1651,11 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
   /**
    * {@inheritdoc}
    */
-  public function getPublicFields() {
-    $public_fields = $this->publicFields;
-
+  public function publicFieldsInfo() {
     $entity_info = entity_get_info($this->getEntityType());
     $id_key = $entity_info['entity keys']['id'];
 
-    $public_fields += array(
+    $public_fields = array(
       'id' => array(
         'wrapper_method' => 'getIdentifier',
         'wrapper_method_on_entity' => TRUE,
@@ -1672,6 +1673,55 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
     }
 
     return $public_fields;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getPublicFields() {
+    if ($public_fields = $this->publicFields) {
+      // Return early.
+      return $this->publicFields;
+    }
+
+    // Get the public fields that were defined by the user.
+    $public_fields = $this->publicFieldsInfo();
+
+    // Set defaults values.
+    foreach (array_keys($public_fields) as $key) {
+      // Set default values.
+      $info = &$public_fields[$key];
+      $info += array(
+        'property' => FALSE,
+        'wrapper_method' => 'value',
+        'wrapper_method_on_entity' => FALSE,
+        'sub_property' => FALSE,
+        'process_callback' => FALSE,
+        'callback' => FALSE,
+        'resource' => array(),
+        'column' => FALSE,
+      );
+
+      if ($info['property'] && !$info['column'] && $field = field_info_field($info['property'])) {
+        // Set the column name.
+        $info['column'] = key($field['columns']);
+      }
+    }
+
+    // Cache the processed fields.
+    $this->setPublicFields($public_fields);
+
+    return $public_fields;
+  }
+
+  /**
+   * Set the public fields.
+   *
+   * @param array $public_fields
+   *   The processed public fields array.
+   */
+  public function setPublicFields(array $public_fields = array()) {
+    $this->publicFields = $public_fields;
   }
 
   /**

@@ -8,11 +8,11 @@
 class RestfulTokenAuthentication extends \RestfulEntityBase {
 
   /**
-   * Overrides RestfulEntityBase::getPublicFields().
+   * Overrides RestfulEntityBase::publicFieldsInfo().
    *
    * Keep only the "token" property.
    */
-  public function getPublicFields() {
+  public function publicFieldsInfo() {
     $public_fields['access_token'] = array(
       'property' => 'token',
     );
