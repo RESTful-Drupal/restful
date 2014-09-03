@@ -8,10 +8,10 @@
 class RestfulTestArticlesResource__1_2 extends RestfulEntityBaseNode {
 
   /**
-   * Overrides \RestfulEntityBase::getPublicFields().
+   * Overrides \RestfulEntityBase::publicFieldsInfo().
    */
-  public function getPublicFields() {
-    $public_fields = parent::getPublicFields();
+  public function publicFieldsInfo() {
+    $public_fields = parent::publicFieldsInfo();
 
     $public_fields['body'] = array(
       'property' => 'body',

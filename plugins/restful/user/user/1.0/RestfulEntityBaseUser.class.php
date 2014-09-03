@@ -8,10 +8,10 @@
 class RestfulEntityBaseUser extends \RestfulEntityBase {
 
   /**
-   * Overrides \RestfulEntityBase::getPublicFields().
+   * Overrides \RestfulEntityBase::publicFieldsInfo().
    */
-  public function getPublicFields() {
-    $public_fields = parent::getPublicFields();
+  public function publicFieldsInfo() {
+    $public_fields = parent::publicFieldsInfo();
     $public_fields['id'] = array(
       'property' => 'uid',
     );

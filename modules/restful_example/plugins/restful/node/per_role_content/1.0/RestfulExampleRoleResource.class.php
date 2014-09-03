@@ -18,8 +18,8 @@ class RestfulExampleRoleResource extends \RestfulEntityBase implements \RestfulE
   /**
    * Overrides \RestfulEntityBase::publicFields().
    */
-  public function getPublicFields() {
-    $public_fields = parent::getPublicFields();
+  public function publicFieldsInfo() {
+    $public_fields = parent::publicFieldsInfo();
     $public_fields['type'] = array(
       'property' => 'type',
       'wrapper_method' => 'getBundle',

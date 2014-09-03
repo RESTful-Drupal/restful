@@ -8,10 +8,10 @@
 class RestfulTestMainResource__1_2 extends RestfulTestMainResource {
 
   /**
-   * Overrides RestfulTestEntityTestsResource::getPublicFields().
+   * Overrides RestfulTestEntityTestsResource::publicFieldsInfo().
    */
-  public function getPublicFields() {
-    $public_fields = parent::getPublicFields();
+  public function publicFieldsInfo() {
+    $public_fields = parent::publicFieldsInfo();
 
     $public_fields['callback'] = array(
       'callback' => array($this, 'callback'),
@@ -19,13 +19,17 @@ class RestfulTestMainResource__1_2 extends RestfulTestMainResource {
 
     $public_fields['process_callback_from_callback'] = array(
       'callback' => array($this, 'callback'),
-      'process_callback' => array($this, 'processCallbackFromCallback'),
+      'process_callbacks' => array(
+        array($this, 'processCallbackFromCallback'),
+      ),
     );
 
     $public_fields['process_callback_from_value'] = array(
       'wrapper_method' => 'getIdentifier',
       'wrapper_method_on_entity' => TRUE,
-      'process_callback' => array($this, 'processCallbackFromValue'),
+      'process_callbacks' => array(
+        array($this, 'processCallbackFromValue'),
+      ),
     );
 
     return $public_fields;

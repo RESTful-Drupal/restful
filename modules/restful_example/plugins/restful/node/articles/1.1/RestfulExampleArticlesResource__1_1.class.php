@@ -8,10 +8,10 @@
 class RestfulExampleArticlesResource__1_1 extends RestfulExampleArticlesResource {
 
   /**
-   * Overrides RestfulExampleArticlesResource::getPublicFields().
+   * Overrides RestfulExampleArticlesResource::publicFieldsInfo().
    */
-  public function getPublicFields() {
-    $public_fields = parent::getPublicFields();
+  public function publicFieldsInfo() {
+    $public_fields = parent::publicFieldsInfo();
     unset($public_fields['self']);
     return $public_fields;
   }
