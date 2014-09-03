@@ -224,39 +224,25 @@ class RestfulListTestCase extends DrupalWebTestCase {
     // Single value property.
     $request['filter'] = array('label' => 'abc');
     $result = $handler->get('', $request);
-    $expected_result = array(
-      array(
-        'id' => $nodes['abc'],
-        'label' => 'abc',
-      ),
-    );
-
-    $this->assertEqual($result['data'], $expected_result);
+    $this->assertEqual($result['data'][0]['id'], $nodes['abc']);
 
     // Single value field.
     $request['filter'] = array('integer_single' => '1');
     $result = $handler->get('', $request);
-    $expected_result = array(
-      array(
-        'id' => $nodes['abc'],
-        'label' => 'abc',
-      ),
-    );
-    $this->assertEqual($result['data'], $expected_result);
+    $this->assertEqual($result['data'][0]['id'], $nodes['abc']);
 
     // Multiple value field.
-    $request['filter'] = array('integer_multiple' => '3, 4');
-    $result = $handler->get('', $request);
-    $expected_result = array(
-      array(
-        'id' => $nodes['another abc'],
-        'label' => 'another abc',
+    $request['filter'] = array(
+      'integer_multiple' => array(
+        'value' => array(3, 5),
+        'operator' => 'BETWEEN',
       ),
     );
-    $this->assertEqual($result['data'], $expected_result);
+    $result = $handler->get('', $request);
+    $this->assertEqual($result['data'][0]['id'], $nodes['another abc']);
 
     // Invalid key.
-    $request['filter'] = array('invalid_key' => '3, 4');
+    $request['filter'] = array('invalid_key' => '3');
     try {
       $handler->get('', $request);
       $this->fail('No exception was thrown on invalid key for filter.');
