@@ -191,7 +191,7 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
     //   </data>
     //   <count>50</count>
     //   <_links>
-    //     <next>http://example.com/api/v1/articles</next>
+    //     <next>https://example.com/api/v1/articles</next>
     //   </_links>
     // </api>
 
