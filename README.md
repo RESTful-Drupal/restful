@@ -253,10 +253,11 @@ typical example would be a node referencing a new taxonomy term. For example if
 there was a taxonomy reference or entity reference field called ``field_tags``
 on the  Article bundle (node) with an ``articles`` and a Tags bundle (taxonomy
 term) with a ``tags`` resource, we would define the relation via the
-``RestfulEntityBase::getPublicFields()``
+``RestfulEntityBase::publicFieldsInfo()``
 
 ```php
 public function publicFieldsInfo() {
+  $public_fields = parent::publicFieldsInfo();
   // ...
   $public_fields['tags'] = array(
     'property' => 'field_tags',
