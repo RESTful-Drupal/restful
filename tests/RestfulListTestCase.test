@@ -224,12 +224,12 @@ class RestfulListTestCase extends DrupalWebTestCase {
     // Single value property.
     $request['filter'] = array('label' => 'abc');
     $result = $handler->get('', $request);
-    $this->assertEqual($result['data'][0]['id'], $nodes['abc']);
+    $this->assertEqual($result['data'][0]['id'], $nodes['abc'], 'Filter list by single value property.');
 
     // Single value field.
     $request['filter'] = array('integer_single' => '1');
     $result = $handler->get('', $request);
-    $this->assertEqual($result['data'][0]['id'], $nodes['abc']);
+    $this->assertEqual($result['data'][0]['id'], $nodes['abc'], 'Filter list by Single value field.');
 
     // Multiple value field.
     $request['filter'] = array(
@@ -239,7 +239,7 @@ class RestfulListTestCase extends DrupalWebTestCase {
       ),
     );
     $result = $handler->get('', $request);
-    $this->assertEqual($result['data'][0]['id'], $nodes['another abc']);
+    $this->assertEqual($result['data'][0]['id'], $nodes['another abc'], 'Filter list by multiple value field.');
 
     // Invalid key.
     $request['filter'] = array('invalid_key' => '3');
