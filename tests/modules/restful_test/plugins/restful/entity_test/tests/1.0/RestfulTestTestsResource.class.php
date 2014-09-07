@@ -8,10 +8,10 @@
 class RestfulTestTestsResource extends RestfulEntityBase {
 
   /**
-   * Overrides RestfulEntityBase::getPublicFields().
+   * Overrides RestfulEntityBase::publicFieldsInfo().
    */
-  public function getPublicFields() {
-    $public_fields = parent::getPublicFields();
+  public function publicFieldsInfo() {
+    $public_fields = parent::publicFieldsInfo();
     $public_fields['type'] = array(
       'property' => 'name',
       'wrapper_method' => 'getBundle',

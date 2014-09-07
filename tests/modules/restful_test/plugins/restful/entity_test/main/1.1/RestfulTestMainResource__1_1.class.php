@@ -8,10 +8,10 @@
 class RestfulTestMainResource__1_1 extends RestfulTestMainResource {
 
   /**
-   * Overrides RestfulTestEntityTestsResource::getPublicFields().
+   * Overrides RestfulTestEntityTestsResource::publicFieldsInfo().
    */
-  public function getPublicFields() {
-    $public_fields = parent::getPublicFields();
+  public function publicFieldsInfo() {
+    $public_fields = parent::publicFieldsInfo();
 
     $public_fields['text_single'] = array(
       'property' => 'text_single',
@@ -69,23 +69,31 @@ class RestfulTestMainResource__1_1 extends RestfulTestMainResource {
 
     $public_fields['file_single'] = array(
       'property' => 'file_single',
-      'process_callback' => array($this, 'getFileId'),
-
+      'process_callbacks' =>
+        array(
+          array($this, 'getFileId'),
+        )
     );
 
     $public_fields['file_multiple'] = array(
       'property' => 'file_multiple',
-      'process_callback' => array($this, 'getFilesId'),
+      'process_callbacks' => array(
+        array($this, 'getFilesId'),
+      ),
     );
 
     $public_fields['image_single'] = array(
       'property' => 'image_single',
-      'process_callback' => array($this, 'getFileId'),
+      'process_callbacks' => array(
+        array($this, 'getFileId'),
+      ),
     );
 
     $public_fields['image_multiple'] = array(
       'property' => 'image_multiple',
-      'process_callback' => array($this, 'getFilesId'),
+      'process_callbacks' => array(
+        array($this, 'getFilesId'),
+      ),
     );
 
 

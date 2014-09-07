@@ -256,7 +256,7 @@ term) with a ``tags`` resource, we would define the relation via the
 ``RestfulEntityBase::getPublicFields()``
 
 ```php
-public function getPublicFields() {
+public function publicFieldsInfo() {
   // ...
   $public_fields['tags'] = array(
     'property' => 'field_tags',
