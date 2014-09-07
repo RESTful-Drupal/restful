@@ -33,7 +33,7 @@ class RestfulCreateTaxonomyTermTestCase extends DrupalWebTestCase {
     $request = array('label' => $text1);
     $result = $handler->post('', $request);
 
-    $id = $result['id'];
+    $id = $result[0]['id'];
     $this->assertTrue($id, 'Term was created by a non-admin user.');
   }
 }

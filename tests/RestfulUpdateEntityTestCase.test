@@ -41,12 +41,12 @@ class RestfulUpdateEntityTestCase extends DrupalWebTestCase {
     $request = array('label' => $new_label);
 
     $result = $handler->put($id, $request);
-    $expected_result = array(
+    $expected_result = array(array(
       'id' => $id,
       'label' => $new_label,
       'self' => url('node/' . $id, array('absolute' => TRUE)),
       'body' => NULL,
-    );
+    ));
 
     $this->assertEqual($result, $expected_result);
 
@@ -83,14 +83,14 @@ class RestfulUpdateEntityTestCase extends DrupalWebTestCase {
     $request = array('label' => $new_label);
 
     $result = $handler->patch($id, $request);
-    $expected_result = array(
+    $expected_result = array(array(
       'id' => $id,
       'label' => $new_label,
       'self' => url('node/' . $id, array('absolute' => TRUE)),
       'body' => $text,
-    );
+    ));
 
-    $result['body'] = trim(strip_tags($result['body']));
+    $result[0]['body'] = trim(strip_tags($result[0]['body']));
     $this->assertEqual($result, $expected_result);
 
     // Update an entity with invalid property name.

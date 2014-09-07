@@ -26,13 +26,6 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
   protected $bundle;
 
   /**
-   * The plugin definition.
-   *
-   * @var array $plugin
-   */
-  protected $plugin;
-
-  /**
    * The public fields that are exposed to the API.
    *
    * Array with the optional values:
@@ -342,6 +335,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    *   (optional) Injected cache backend.
    */
   public function __construct($plugin, \RestfulAuthenticationManager $auth_manager = NULL, \DrupalCacheInterface $cache_controller = NULL) {
+    parent::__construct($plugin);
     $this->plugin = $plugin;
     $this->entityType = $plugin['entity_type'];
     $this->bundle = $plugin['bundle'];
@@ -529,7 +523,6 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
       ->getQueryForList()
       ->execute();
 
-
     if (empty($result[$entity_type])) {
       return array();
     }
@@ -542,12 +535,10 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
       entity_load($entity_type, $ids);
     }
 
-    $return = array('data' => array());
-
-    $this->getListAddHateoas($return, $ids);
+    $return = array();
 
     foreach ($ids as $id) {
-      $return['data'][] = $this->viewEntity($id);
+      $return[] = $this->viewEntity($id);
     }
 
     return $return;
@@ -566,18 +557,10 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    */
   public function viewEntities($entity_ids_string) {
     $entity_ids = array_filter(explode(',', $entity_ids_string));
-    $output = array('data' => array());
-    $this->getListAddHateoas($output, $entity_ids);
+    $output = array();
 
-    // If there is one ID, then treat this as a single item.
-    if (count($entity_ids) == 1) {
-      $entity_id = reset($entity_ids);
-      $output['data'] = $this->viewEntity($entity_id);
-    }
-    else {
-      foreach ($entity_ids as $entity_id) {
-        $output['data'][] = $this->viewEntity($entity_id);
-      }
+    foreach ($entity_ids as $entity_id) {
+      $output[] = $this->viewEntity($entity_id);
     }
     return $output;
   }
@@ -641,20 +624,67 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
       throw new \RestfulBadRequestException('"Page" property should be numeric and equal or higher than 1.');
     }
 
-    // We get 1 more item more than the range, in order to know if there is a
-    // "next" page.
-    $range = $this->getRange() + 1;
+    $range = $this->getRange();
     $offset = ($page - 1) * $range;
 
+    // Add a generic entity access tag to the query.
+    $this->addExtraInfoToQuery($query);
+
+    $query->range($offset, $range);
+
+    return $query;
+  }
+
+  /**
+   * Prepare a query for RestfulEntityBase::getTotalCount().
+   *
+   * @return EntityFieldQuery
+   *   The EntityFieldQuery object.
+   *
+   * @throws RestfulBadRequestException
+   */
+  public function getQueryCount() {
+    $entity_type = $this->getEntityType();
+    $entity_info = entity_get_info($entity_type);
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', $this->getEntityType());
+
+    if ($this->bundle && $entity_info['entity keys']['bundle']) {
+      $query->entityCondition('bundle', $this->getBundle());
+    }
+
+    $this->addExtraInfoToQuery($query);
+    $query->addTag('restful_count');
+
+    return $query->count();
+  }
+
+  /**
+   * Helper method to get the total count of entities that match certain
+   * request.
+   *
+   * @return int
+   *   The total number of results without including pagination.
+   */
+  public function getTotalCount() {
+    return intval($this
+      ->getQueryCount()
+      ->execute());
+  }
+
+  /**
+   * Adds query tags and metadata to the EntityFieldQuery.
+   *
+   * @param \EntityFieldQuery $query
+   *   The query to enhance.
+   */
+  protected function addExtraInfoToQuery(\EntityFieldQuery $query) {
+    $entity_type = $this->getEntityType();
     // Add a generic entity access tag to the query.
     $query->addTag($entity_type . '_access');
     $query->addTag('restful');
     $query->addMetaData('restful_handler', $this);
     $query->addMetaData('account', $this->getAccount());
-
-    $query->range($offset, $range);
-
-    return $query;
   }
 
   /**
@@ -767,37 +797,6 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
     }
 
     return $return;
-  }
-
-  /**
-   * Add HATEOAS links to list of item.
-   *
-   * @param $return
-   *   The array that will be returned from \RestfulEntityBase::getList().
-   *   Passed by reference, as this will add a "_links" property to that array.
-   * @param $ids
-   *   Array of entity IDs retrieved for the list. Passed by reference, so we
-   *   can check if there is an extra item, thus know there is a "next" page.
-   */
-  public function getListAddHateoas(&$return, &$ids){
-    $request = $this->getRequest();
-
-    $return['_links'] = array();
-    $page = !empty($request['page']) ? $request['page'] : 1;
-
-    if ($page > 1) {
-      $request['page'] = $page - 1;
-      $return['_links']['previous'] = $this->getUrl();
-    }
-
-    if (count($ids) > $this->getRange()) {
-      $request['page'] = $page + 1;
-      $return['_links']['next'] = $this->getUrl();
-
-      // Remove the last ID, as it was just used to determine if there is a
-      // "next" page.
-      array_pop($ids);
-    }
   }
 
   /**
@@ -1052,7 +1051,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
       $this->setHttpHeaders('Location', $url);
     }
 
-    return $this->viewEntity($wrapper->getIdentifier());
+    return array($this->viewEntity($wrapper->getIdentifier()));
   }
 
 
@@ -1083,7 +1082,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
     $wrapper = entity_metadata_wrapper($this->entityType, $entity);
 
     $this->setPropertyValues($wrapper);
-    return $this->viewEntity($wrapper->getIdentifier());
+    return array($this->viewEntity($wrapper->getIdentifier()));
   }
 
   /**
@@ -1304,7 +1303,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
     }
 
     $result = $handler->process($path, $request, $method_name, FALSE);
-    return $result['id'];
+    return $result[0]['id'];
   }
 
   /**
@@ -1643,31 +1642,15 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
   }
 
   /**
-   * Gets information about the restful plugin.
-   *
-   * @param string
-   *   (optional) The name of the key to return.
-   *
-   * @return mixed
-   *   Depends on the requested value.
-   */
-  public function getPluginInfo($key = NULL) {
-    return isset($key) ? $this->plugin[$key] : $this->plugin;
-  }
-
-  /**
    * Proxy method to get the account from the authenticationManager.
-   *
-   * @param $request
-   *   The request.
-   * @param string $method
-   *   The HTTP method. Defaults to "get".
    *
    * @return \stdClass
    *   The user object.
    */
   public function getAccount() {
+    // The request.
     $request = $this->getRequest();
+    // The HTTP method. Defaults to "get".
     $method = $this->getMethod();
 
     $account = $this->getAuthenticationManager()->getAccount($request, $method);
@@ -1698,6 +1681,8 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    *
    * By default the URL is absolute.
    *
+   * @param $request
+   *   The request array.
    * @param $options
    *   Array with options passed to url().
    * @param $keep_query
@@ -1708,8 +1693,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    * @return string
    *   The URL address.
    */
-  public function getUrl($options = array(), $keep_query = TRUE) {
-    $request = $this->getRequest();
+  public function getUrl($request = NULL, $options = array(), $keep_query = TRUE) {
     // By default set URL to be absolute.
     $options += array(
       'absolute' => TRUE,
@@ -1873,6 +1857,20 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
       }
     }
     $this->getCacheController()->clear($cid, TRUE);
+  }
+
+  /**
+   * Helper method to know if the current request is for a list of entities.
+   *
+   * @return boolean
+   *   TRUE if the request is for a list. FALSE otherwise.
+   */
+  public function isListRequest() {
+    if ($this->getMethod() != \RestfulInterface::GET) {
+      return FALSE;
+    }
+    $path = $this->getPath();
+    return empty($path) || strpos($path, ',') !== FALSE;
   }
 
 }

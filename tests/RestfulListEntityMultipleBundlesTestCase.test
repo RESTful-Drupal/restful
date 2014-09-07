@@ -34,24 +34,22 @@ class RestfulListEntityMultipleBundlesTestCase extends DrupalWebTestCase {
     $entity3->save();
 
     $expected_result = array(
-      'data' => array(
-        array(
-          'id' => (int)$entity1->pid,
-          'label' => 'Main test type',
-          'self' => url('custom/' . $entity1->pid, array('absolute' => TRUE)),
-        ),
-        array(
-          'id' => (int)$entity2->pid,
-          'label' => 'Main test type',
-          'self' => url('custom/' . $entity2->pid, array('absolute' => TRUE)),
-        ),
-        array(
-          'id' => (int)$entity3->pid,
-          'label' => 'label',
-          'self' => url('custom/' . $entity3->pid, array('absolute' => TRUE)),
-          // The "test" bundle also exposes the "type" property.
-          'type' => 'test',
-        ),
+      array(
+        'id' => (int)$entity1->pid,
+        'label' => 'Main test type',
+        'self' => url('custom/' . $entity1->pid, array('absolute' => TRUE)),
+      ),
+      array(
+        'id' => (int)$entity2->pid,
+        'label' => 'Main test type',
+        'self' => url('custom/' . $entity2->pid, array('absolute' => TRUE)),
+      ),
+      array(
+        'id' => (int)$entity3->pid,
+        'label' => 'label',
+        'self' => url('custom/' . $entity3->pid, array('absolute' => TRUE)),
+        // The "test" bundle also exposes the "type" property.
+        'type' => 'test',
       ),
     );
 

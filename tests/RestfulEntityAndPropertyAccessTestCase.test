@@ -41,13 +41,13 @@ class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
     $user2 = $this->drupalCreateUser(array('create article content'));
     $handler->setAccount($user2);
     $result = $handler->post('', $request);
-    $this->assertTrue($result, 'Privileged user can create entity.');
+    $this->assertTrue($result[0], 'Privileged user can create entity.');
 
     // Privileged user, with limited access to property.
     restful_test_deny_access_field();
     $handler->setAccount($user2);
     $result = $handler->post('', $request);
-    $this->assertTrue($result, 'Privileged user can create entity, with limited access to property.');
+    $this->assertTrue($result[0], 'Privileged user can create entity, with limited access to property.');
 
     // Privileged user, with limited access to property, and that property
     // passed in the request.
@@ -98,15 +98,15 @@ class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
     $user2 = $this->drupalCreateUser(array('edit any article content'));
     $handler->setAccount($user2);
     $result = $handler->put($id, $request);
-    $this->assertTrue($result, 'Privileged user can update entity.');
-    $this->assertEqual($result['id'], $id, 'Updated entity has the same entity ID.');
-    $this->assertEqual($result['label'], $new_label, 'Entity label was updated.');
+    $this->assertTrue($result[0], 'Privileged user can update entity.');
+    $this->assertEqual($result[0]['id'], $id, 'Updated entity has the same entity ID.');
+    $this->assertEqual($result[0]['label'], $new_label, 'Entity label was updated.');
 
     // Privileged user, with limited access to property.
     restful_test_deny_access_field();
     $handler->setAccount($user2);
     $result = $handler->put($id, $request);
-    $this->assertTrue($result, 'Privileged user can update entity, with limited access to property.');
+    $this->assertTrue($result[0], 'Privileged user can update entity, with limited access to property.');
 
     // Privileged user, with limited access to property, and that property
     // passed in the request.
@@ -147,7 +147,7 @@ class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
     // Privileged user.
     $handler->setAccount($user1);
     $response = $handler->get($node1->nid, array());
-    $result = $response['data'];
+    $result = $response[0];
     $this->assertTrue($result['body'], 'Privileged user can view entity.');
 
     // Privileged user, with limited access to property.
