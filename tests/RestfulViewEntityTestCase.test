@@ -171,14 +171,14 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
     }
 
     // v1.6 - XML output format.
-    $node = $this->drupalCreateNode(array(
+    $settings = array(
       'type' => 'article',
       'uid' => $user1->uid,
-    ));
+    );
+    $node = $this->drupalCreateNode($settings);
 
-    $response = $this->httpRequest('api/v1/articles', \RestfulInterface::GET, NULL, array(
-      'X-Restful-Minor-Version' => 6,
-    ));
+    $headers = array('X-Restful-Minor-Version' => 6);
+    $response = $this->httpRequest('api/v1/articles', \RestfulInterface::GET, NULL, $headers);
     // Returns something like:
     // <api>
     //   <data>
