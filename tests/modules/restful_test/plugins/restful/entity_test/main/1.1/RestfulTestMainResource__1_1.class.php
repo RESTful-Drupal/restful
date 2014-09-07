@@ -69,23 +69,31 @@ class RestfulTestMainResource__1_1 extends RestfulTestMainResource {
 
     $public_fields['file_single'] = array(
       'property' => 'file_single',
-      'process_callback' => array($this, 'getFileId'),
-
+      'process_callbacks' =>
+        array(
+          array($this, 'getFileId'),
+        )
     );
 
     $public_fields['file_multiple'] = array(
       'property' => 'file_multiple',
-      'process_callback' => array($this, 'getFilesId'),
+      'process_callbacks' => array(
+        array($this, 'getFilesId'),
+      ),
     );
 
     $public_fields['image_single'] = array(
       'property' => 'image_single',
-      'process_callback' => array($this, 'getFileId'),
+      'process_callbacks' => array(
+        array($this, 'getFileId'),
+      ),
     );
 
     $public_fields['image_multiple'] = array(
       'property' => 'image_multiple',
-      'process_callback' => array($this, 'getFilesId'),
+      'process_callbacks' => array(
+        array($this, 'getFilesId'),
+      ),
     );
 
 

@@ -449,6 +449,16 @@ function restful_menu_access_callback($major_version, $resource_name) {
     return;
   }
 
+  $method = strtoupper($_SERVER['REQUEST_METHOD']);
+  if ($method == \RestfulInterface::POST && !empty($_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE'])) {
+    $method = strtoupper($_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE']);
+  }
+
+  if (!\RestfulBase::isValidMethod($method, FALSE)) {
+    // HTTP method is invalid.
+    return;
+  }
+
   return $handler->access();
 }
 
@@ -474,9 +484,13 @@ function restful_menu_process_callback($major_version, $resource_name) {
   unset($path[0], $path[1]);
   $path = implode('/', $path);
 
-  $method = strtolower($_SERVER['REQUEST_METHOD']);
+  $method = strtoupper($_SERVER['REQUEST_METHOD']);
 
-  if ($method == 'options') {
+  if ($method == \RestfulInterface::POST && !empty($_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE'])) {
+    $method = strtoupper($_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE']);
+  }
+
+  if ($method == \RestfulInterface::OPTIONS) {
     // OPTIONS method is a special case that might be sent by the browser
     // before the actual method to check for CORS (known as preflight OPTIONS).
     drupal_add_http_header('Status', 204);
@@ -484,6 +498,7 @@ function restful_menu_process_callback($major_version, $resource_name) {
     return;
   }
 
+  $method = strtolower($method);
   $request = restful_parse_request();
 
   try {

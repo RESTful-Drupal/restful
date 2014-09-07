@@ -56,8 +56,8 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    *   FALSE.
    *   The callback function receive as first argument the entity
    *   EntityMetadataWrapper object.
-   * - "process_callback": A callable callback to perform on the returned
-   *   value, or an array with the object and method. Defaults To FALSE.
+   * - "process_callbacks": An array of callbacks to perform on the returned
+   *   value, or an array with the object and method. Defaults To empty array.
    * - "resource": This property can be assigned only to an entity reference
    *   field. Array of restful resources keyed by the target bundle. For
    *   example, if the field is referencing a node entity, with "Article" and
@@ -914,24 +914,13 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
         continue;
       }
 
-      // Set default values.
-      $info += array(
-        'property' => FALSE,
-        'wrapper_method' => 'value',
-        'wrapper_method_on_entity' => FALSE,
-        'sub_property' => FALSE,
-        'process_callback' => FALSE,
-        'callback' => FALSE,
-        'resource' => array(),
-      );
-
       $value = NULL;
 
       if ($info['callback']) {
         // Calling a callback to receive the value.
         if (!is_callable($info['callback'])) {
           $callback_name = is_array($info['callback']) ? $info['callback'][1] : $info['callback'];
-          throw new Exception(format_string('Process callback function: @callback does not exists.', array('@callback' => $callback_name)));
+          throw new Exception(format_string('Callback function: @callback does not exists.', array('@callback' => $callback_name)));
         }
 
         $value = call_user_func($info['callback'], $wrapper);
@@ -984,13 +973,15 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
         }
       }
 
-      if ($value && $info['process_callback']) {
-        if (!is_callable($info['process_callback'])) {
-          $callback_name = is_array($info['process_callback']) ? $info['process_callback'][1] : $info['process_callback'];
-          throw new Exception(format_string('Process callback function: @callback does not exists.', array('@callback' => $callback_name)));
-        }
+      if ($value && $info['process_callbacks']) {
+        foreach ($info['process_callbacks'] as $process_callback) {
+          if (!is_callable($process_callback)) {
+            $callback_name = is_array($process_callback) ? $process_callback[1] : $process_callback;
+            throw new Exception(format_string('Process callback function: @callback does not exists.', array('@callback' => $callback_name)));
+          }
 
-        $value = call_user_func($info['process_callback'], $value);
+          $value = call_user_func($process_callback, $value);
+        }
       }
 
       $values[$public_property] = $value;
@@ -1511,7 +1502,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
 
     $map = array();
     foreach ($this->getPublicFields() as $field_name => $value) {
-      if (!$value['property']) {
+      if (empty($value['property'])) {
         continue;
       }
 
@@ -1680,7 +1671,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    * {@inheritdoc}
    */
   public function getPublicFields() {
-    if ($public_fields = $this->publicFields) {
+    if ($this->publicFields) {
       // Return early.
       return $this->publicFields;
     }
@@ -1697,7 +1688,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
         'wrapper_method' => 'value',
         'wrapper_method_on_entity' => FALSE,
         'sub_property' => FALSE,
-        'process_callback' => FALSE,
+        'process_callbacks' => array(),
         'callback' => FALSE,
         'resource' => array(),
         'column' => FALSE,
@@ -1905,8 +1896,6 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    *
    * @param mixed $entity_id
    *   The entity ID.
-   * @param array $request
-   *   The request array to match the condition how cached entity was generated.
    *
    * @return string
    *   The cache identifier.

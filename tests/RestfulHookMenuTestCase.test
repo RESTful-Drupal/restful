@@ -17,6 +17,9 @@ class RestfulHookMenuTestCase extends RestfulCurlBaseTestCase {
 
   function setUp() {
     parent::setUp('restful_example');
+
+    // Allow anonymous users to edit articles.
+    user_role_change_permissions(DRUPAL_ANONYMOUS_RID, array('edit any article content' => TRUE));
   }
 
   /**
@@ -51,6 +54,18 @@ class RestfulHookMenuTestCase extends RestfulCurlBaseTestCase {
     $result = $this->httpRequest('api/v1/articles/' . $node1->nid, \RestfulInterface::GET, NULL, $headers);
     unset($expected_result['data']['self']);
     $this->assertEqual($result['body'], json_encode($expected_result));
+
+    // Test method override.
+    $headers = array('X-HTTP-Method-Override' => \RestfulInterface::PATCH);
+    $body = array(
+      'label' => 'new title',
+    );
+    $this->httpRequest('api/v1/articles/' . $node1->nid, \RestfulInterface::POST, $body, $headers);
+
+    $node1 = node_load($node1->nid);
+    $this->assertEqual($node1->title, 'new title', 'HTTP method was overriden.');
+
+
   }
 
   /**
