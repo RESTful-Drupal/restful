@@ -277,7 +277,7 @@ function restful_menu() {
       'access arguments' => array(1, 2),
       'page callback' => 'restful_menu_process_callback',
       'page arguments' => array(1, 2),
-      'delivery callback' => 'restful_delivery',
+      'delivery callback' => 'restful_formatted_delivery',
       'type' => MENU_CALLBACK,
     );
   }
@@ -291,7 +291,7 @@ function restful_menu() {
       'access callback' => 'user_is_anonymous',
       'page callback' => 'restful_menu_process_callback',
       'page arguments' => array('1', 'login_cookie'),
-      'delivery callback' => 'restful_delivery',
+      'delivery callback' => 'restful_formatted_delivery',
       'type' => MENU_CALLBACK,
     );
   }
@@ -305,7 +305,7 @@ function restful_menu() {
       'access arguments' => array('v1', 'files'),
       'page callback' => 'restful_menu_process_callback',
       'page arguments' => array('1', 'files'),
-      'delivery callback' => 'restful_delivery',
+      'delivery callback' => 'restful_formatted_delivery',
       'type' => MENU_CALLBACK,
     );
   }
@@ -313,7 +313,7 @@ function restful_menu() {
   $items['api/session/token'] = array(
     'page callback' => 'restful_csrf_session_token',
     'access callback' => 'user_is_logged_in',
-    'delivery callback' => 'restful_delivery',
+    'delivery callback' => 'restful_unprepared_delivery',
     'type' => MENU_CALLBACK,
   );
 
@@ -623,9 +623,12 @@ function restful_parse_request() {
  * @param $var
  *   (optional) If set, the variable will be converted to JSON and output.
  *
+ * @param string $format
+ *   Name of the method for the formatter.
+ *
  * @see restful_menu_process_callback()
  */
-function restful_delivery($var = NULL) {
+function restful_delivery($var = NULL, $method = 'format') {
   if (!isset($var)) {
     return;
   }
@@ -650,7 +653,7 @@ function restful_delivery($var = NULL) {
     $formatter_name = variable_get('restful_default_output_formatter', 'hal_json');
   }
   $formatter_handler = restful_get_formatter_handler($formatter_name, $restful_handler);
-  $output = $formatter_handler->format($var);
+  $output = $formatter_handler->{$method}($var);
 
   // The content type header is modified after the massaging if there is an
   // error code. Therefore we need to set the content type header after
@@ -658,6 +661,31 @@ function restful_delivery($var = NULL) {
   drupal_add_http_header('Content-Type', $formatter_handler->getContentTypeHeader());
 
   echo $output;
+}
+
+/**
+ * Returns data in JSON format using data preparation in the formatter plugin.
+ *
+ * @param $var
+ *   (optional) If set, the variable will be converted to JSON and output.
+ *
+ * @see restful_menu_process_callback()
+ */
+function restful_formatted_delivery($var = NULL) {
+  restful_delivery($var, 'format');
+}
+
+/**
+ * Returns data in JSON format not using data preparation in the formatter
+ * plugin.
+ *
+ * @param $var
+ *   (optional) If set, the variable will be converted to JSON and output.
+ *
+ * @see restful_menu_process_callback()
+ */
+function restful_unprepared_delivery($var = NULL) {
+  restful_delivery($var, 'render');
 }
 
 /**
