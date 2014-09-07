@@ -150,6 +150,16 @@ array(
 );
 ```
 
+### Filter
+RESTful allows filtering of a list.
+
+```php
+$handler = restful_get_restful_handler('articles');
+// Single value property.
+$request['filter'] = array('label' => 'abc');
+$result = $handler->get('', $request);
+```
+
 ### Autocomplete
 By passing the autocomplete query string in the request, it is possible to change
 the normal listing behavior into autocomplete.
