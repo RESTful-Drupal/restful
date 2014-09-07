@@ -75,7 +75,7 @@ class RestfulTokenAuthenticationTestCase extends DrupalWebTestCase {
 
     // Get a "protected" resource with the access token.
     $response = $handler->get(1, array('access_token' => $access_token));
-    $result = $response['data'];
+    $result = $response[0];
     $this->assertEqual($result['label'], $title1, 'Article resource can be accessed with valid access token.');
   }
 }

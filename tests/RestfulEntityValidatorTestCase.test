@@ -50,6 +50,6 @@ class RestfulEntityValidatorTestCase extends RestfulCurlBaseTestCase {
 
     $request['label'] = 'yes';
     $result = $handler->post('', $request);
-    $this->assertTrue($result['id'], 'Entity with proper title length passed validation and was created.');
+    $this->assertTrue($result[0]['id'], 'Entity with proper title length passed validation and was created.');
   }
 }

@@ -92,7 +92,8 @@ class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
       'image_multiple' => array($images[0], $images[1]),
     );
 
-    $result = $handler->post('', $request);
+    $response = $handler->post('', $request);
+    $result = $response[0];
 
     $text_single = trim(strip_tags($result['text_single']));
     $text_multiple = array(
@@ -150,25 +151,29 @@ class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
 
     // Create entity with comma separated multiple entity reference.
     $request = array('entity_reference_multiple' => implode(',', $ids));
-    $result = $handler->post('', $request);
+    $response = $handler->post('', $request);
+    $result = $response[0];
     $this->assertEqual($result['entity_reference_multiple'], $ids, 'Created entity with comma separated multiple entity reference.');
 
     // Create entity with comma separated multiple taxonomy term reference.
     $ids = array($tids[0], $tids[1]);
     $request = array('term_multiple' => implode(',', $ids));
-    $result = $handler->post('', $request);
+    $response = $handler->post('', $request);
+    $result = $response[0];
     $this->assertEqual($result['term_multiple'], $ids, 'Created entity with comma separated multiple taxonomy term reference.');
 
     // Create entity with comma separated multiple file reference.
     $ids = array($images[0], $images[1]);
     $request = array('file_multiple' => implode(',', $ids));
-    $result = $handler->post('', $request);
+    $response = $handler->post('', $request);
+    $result = $response[0];
     $this->assertEqual($result['file_multiple'], $ids, 'Created entity with comma separated multiple file reference.');
 
     // Create entity with comma separated multiple image reference.
     $ids = array($images[0], $images[1]);
     $request = array('image_multiple' => implode(',', $ids));
-    $result = $handler->post('', $request);
+    $response = $handler->post('', $request);
+    $result = $response[0];
     $this->assertEqual($result['image_multiple'], $ids, 'Created entity with comma separated multiple image reference.');
 
   }
