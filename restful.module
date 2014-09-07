@@ -115,6 +115,7 @@ function restful_plugin_process(&$plugin, $info) {
       'hook_menu' => TRUE,
       'cache' => array(),
       'autocomplete' => array(),
+      'formatter' => variable_get('restful_default_output_formatter', 'hal_json'),
     );
 
     $plugin['cache'] += array(
@@ -174,7 +175,7 @@ function restful_plugin_process(&$plugin, $info) {
  * Implements hook_ctools_plugin_type().
  */
 function restful_ctools_plugin_type() {
-  $plugins['authentication'] = $plugins['restful'] = $plugins['rate_limit'] = array(
+  $plugins['authentication'] = $plugins['restful'] = $plugins['rate_limit'] = $plugins['formatter'] = array(
     'classes' => array('class'),
     'process' => 'restful_plugin_process',
   );
@@ -231,13 +232,27 @@ function restful_get_authentication_plugin($plugin_name) {
 }
 
 /**
+ * Include CTools plugins and get the specified formatter plugin.
+ *
+ * @param string $plugin_name
+ *   If provided this function only returns the selected plugin.
+ *
+ * @return array
+ *   The selected plugin for restful formatter.
+ */
+function restful_get_formatter_plugin($plugin_name) {
+  ctools_include('plugins');
+  return ctools_get_plugins('restful', 'formatter', $plugin_name);
+}
+
+/**
  * Include CTools plugins and get the specified rate_limit plugin.
  *
  * @param string $plugin_name
  *   If provided this function only returns the selected plugin.
  *
  * @return array
- *   The selected plugin for restful authentication.
+ *   The selected plugin for rate limits.
  */
 function restful_get_rate_limit_plugin($plugin_name) {
   ctools_include('plugins');
@@ -262,7 +277,7 @@ function restful_menu() {
       'access arguments' => array(1, 2),
       'page callback' => 'restful_menu_process_callback',
       'page arguments' => array(1, 2),
-      'delivery callback' => 'restful_json_output',
+      'delivery callback' => 'restful_formatted_delivery',
       'type' => MENU_CALLBACK,
     );
   }
@@ -276,7 +291,7 @@ function restful_menu() {
       'access callback' => 'user_is_anonymous',
       'page callback' => 'restful_menu_process_callback',
       'page arguments' => array('1', 'login_cookie'),
-      'delivery callback' => 'restful_json_output',
+      'delivery callback' => 'restful_formatted_delivery',
       'type' => MENU_CALLBACK,
     );
   }
@@ -290,7 +305,7 @@ function restful_menu() {
       'access arguments' => array('v1', 'files'),
       'page callback' => 'restful_menu_process_callback',
       'page arguments' => array('1', 'files'),
-      'delivery callback' => 'restful_json_output',
+      'delivery callback' => 'restful_formatted_delivery',
       'type' => MENU_CALLBACK,
     );
   }
@@ -298,7 +313,7 @@ function restful_menu() {
   $items['api/session/token'] = array(
     'page callback' => 'restful_csrf_session_token',
     'access callback' => 'user_is_logged_in',
-    'delivery callback' => 'restful_json_output',
+    'delivery callback' => 'restful_unprepared_delivery',
     'type' => MENU_CALLBACK,
   );
 
@@ -419,6 +434,49 @@ function restful_get_authentication_handler($auth_plugin_name) {
 }
 
 /**
+ * Return the formatter handler based on the formatter plugin name.
+ *
+ * @param string $formatter_plugin_name
+ *   Name of the formatter plugin.
+ *
+ * @param \RestfulBase $restful_handler
+ *   The resource handler.
+ *
+ * @return \RestfulAuthenticationInterface
+ *   The formatter provider object.
+ *
+ * @throws \RestfulException if the formatter provider does not exist.
+ */
+function restful_get_formatter_handler($formatter_plugin_name, $restful_handler) {
+  $formatter_plugin = restful_get_formatter_plugin($formatter_plugin_name);
+  $formatter_class = ctools_plugin_get_class($formatter_plugin, 'class');
+  return new $formatter_class($formatter_plugin, $restful_handler);
+}
+
+/**
+ * Helper function to get the restful handler for the selected path.
+ *
+ * @param string $path
+ *   The path you want to get the handler for. Defaults to the current page.
+ *
+ * @return \RestfulEntityBase
+ *   The restful handler or NULL.
+ */
+function restful_get_restful_handler_for_path($path = NULL) {
+  $path = is_null($path) ? $_GET['q'] : $path;
+  $router_item = menu_get_item($path);
+  // We can only get the information if the current path was processed by
+  // restful_menu_process_callback.
+  if ($router_item['page_callback'] != 'restful_menu_process_callback') {
+    return;
+  }
+  list($major_version, $resource) = $router_item['page_arguments'];
+  $major_version = intval(str_replace('v', '', $major_version));
+  $minor_version = !empty($_SERVER['HTTP_X_RESTFUL_MINOR_VERSION']) && is_numeric($_SERVER['HTTP_X_RESTFUL_MINOR_VERSION']) ? $_SERVER['HTTP_X_RESTFUL_MINOR_VERSION'] : 0;
+  return restful_get_restful_handler($resource, $major_version, $minor_version);
+}
+
+/**
  * Access callback; Determine access for an API call.
  *
  * @param $major_version
@@ -502,14 +560,7 @@ function restful_menu_process_callback($major_version, $resource_name) {
   $request = restful_parse_request();
 
   try {
-    $result = $handler->{$method}($path, $request);
-    // Allow the handler to change the HTTP headers.
-    foreach ($handler->getHttpHeaders() as $key => $value) {
-      drupal_add_http_header($key, $value);
-    }
-
-    drupal_add_http_header('Content-Type', 'application/hal+json; charset=utf-8');
-    return $result;
+    return $handler->{$method}($path, $request);
   }
   catch (RestfulException $e) {
     $result = array(
@@ -587,9 +638,12 @@ function restful_parse_request() {
  * @param $var
  *   (optional) If set, the variable will be converted to JSON and output.
  *
+ * @param string $format
+ *   Name of the method for the formatter.
+ *
  * @see restful_menu_process_callback()
  */
-function restful_json_output($var = NULL) {
+function restful_delivery($var = NULL, $method = 'format') {
   if (!isset($var)) {
     return;
   }
@@ -602,7 +656,51 @@ function restful_json_output($var = NULL) {
     drupal_add_http_header('Content-Type', 'application/problem+json; charset=utf-8');
   }
 
-  echo drupal_json_encode($var);
+  // Get the formatter for the current resource.
+  if ($restful_handler = restful_get_restful_handler_for_path()) {
+    $formatter_name = $restful_handler->getPluginInfo('formatter');
+    // Allow the handler to change the HTTP headers.
+    foreach ($restful_handler->getHttpHeaders() as $key => $value) {
+      drupal_add_http_header($key, $value);
+    }
+  }
+  else {
+    $formatter_name = variable_get('restful_default_output_formatter', 'hal_json');
+  }
+  $formatter_handler = restful_get_formatter_handler($formatter_name, $restful_handler);
+  $output = $formatter_handler->{$method}($var);
+
+  // The content type header is modified after the massaging if there is an
+  // error code. Therefore we need to set the content type header after
+  // formatting the output.
+  drupal_add_http_header('Content-Type', $formatter_handler->getContentTypeHeader());
+
+  echo $output;
+}
+
+/**
+ * Returns data in JSON format using data preparation in the formatter plugin.
+ *
+ * @param $var
+ *   (optional) If set, the variable will be converted to JSON and output.
+ *
+ * @see restful_menu_process_callback()
+ */
+function restful_formatted_delivery($var = NULL) {
+  restful_delivery($var, 'format');
+}
+
+/**
+ * Returns data in JSON format not using data preparation in the formatter
+ * plugin.
+ *
+ * @param $var
+ *   (optional) If set, the variable will be converted to JSON and output.
+ *
+ * @see restful_menu_process_callback()
+ */
+function restful_unprepared_delivery($var = NULL) {
+  restful_delivery($var, 'render');
 }
 
 /**

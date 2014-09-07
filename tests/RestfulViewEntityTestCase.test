@@ -5,7 +5,7 @@
  * Contains RestfulViewEntityTestCase
  */
 
-class RestfulViewEntityTestCase extends DrupalWebTestCase {
+class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
 
   public static function getInfo() {
     return array(
@@ -29,6 +29,7 @@ class RestfulViewEntityTestCase extends DrupalWebTestCase {
    * v1.2 - "callback" and "process callback".
    * v1.3 - Non-existing "callback" property.
    * v1.4 - Non-existing "process callback" property.
+   * v1.6 - XML output format.
    */
   function testViewEntity() {
     $user1 = $this->drupalCreateUser();
@@ -67,13 +68,13 @@ class RestfulViewEntityTestCase extends DrupalWebTestCase {
     $expected_result = $base_expected_result;
 
     $response = $handler->get($id);
-    $result = $response['data'];
+    $result = $response[0];
     $this->assertEqual($result, $expected_result, 'Entity view has expected result for "main" resource v1');
 
     // v1.1 - Text and entity reference field.
     $handler = restful_get_restful_handler('main', 1, 1);
     $response = $handler->get($id);
-    $result = $response['data'];
+    $result = $response[0];
 
     $base_expected_result_v1 = $base_expected_result;
 
@@ -99,12 +100,12 @@ class RestfulViewEntityTestCase extends DrupalWebTestCase {
     );
 
     $response = $handler->get($entity1->pid);
-    $expected_result['entity_reference_single_resource'] = $response['data'];
+    $expected_result['entity_reference_single_resource'] = $response[0];
     $response1 = $handler->get($entity1->pid);
     $response2 = $handler->get($entity2->pid);
     $expected_result['entity_reference_multiple_resource'] = array(
-      $response1['data'],
-      $response2['data'],
+      $response1[0],
+      $response2[0],
     );
 
     $stripped_result = $result;
@@ -124,7 +125,7 @@ class RestfulViewEntityTestCase extends DrupalWebTestCase {
     $wrapper->save();
 
     $response = $handler->get($id);
-    $result = $response['data'];
+    $result = $response[0];
     $expected_result = $base_expected_result_v1;
     $expected_result['text_single'] = NULL;
     $expected_result['text_multiple'] = NULL;
@@ -142,7 +143,7 @@ class RestfulViewEntityTestCase extends DrupalWebTestCase {
     // v1.2 - "callback" and "process callback".
     $handler = restful_get_restful_handler('main', 1, 2);
     $response = $handler->get($id);
-    $result = $response['data'];
+    $result = $response[0];
     $expected_result = $base_expected_result;
     $expected_result['callback'] = 'callback';
     $expected_result['process_callback_from_callback'] = 'callback processed from callback';
@@ -168,5 +169,36 @@ class RestfulViewEntityTestCase extends DrupalWebTestCase {
     catch(Exception $e) {
       $this->pass('Non-existing "process callback" property triggered an exception.');
     }
+
+    // v1.6 - XML output format.
+    $node = $this->drupalCreateNode(array(
+      'type' => 'article',
+      'uid' => $user1->uid,
+    ));
+
+    $response = $this->httpRequest('api/v1/articles', \RestfulInterface::GET, NULL, array(
+      'X-Restful-Minor-Version' => 6,
+    ));
+    // Returns something like:
+    // <api>
+    //   <data>
+    //     <item0>
+    //       <id>1</id>
+    //       <label>Foo</label>
+    //       <self>http://example.com/node/1</self>
+    //       <body>...</body>
+    //     </item0>
+    //   </data>
+    //   <count>50</count>
+    //   <_links>
+    //     <next>https://example.com/api/v1/articles</next>
+    //   </_links>
+    // </api>
+
+    $xml = new SimpleXMLElement($response['body']);
+    $results = $xml->xpath('/api/data/item0/label');
+    $result = reset($results);
+
+    $this->assertEqual($node->title, $result->__toString(), 'XML parsed correctlty.');
   }
 }

@@ -8,6 +8,27 @@
 abstract class RestfulBase implements RestfulInterface {
 
   /**
+   * The plugin definition.
+   *
+   * @var array $plugin
+   */
+  protected $plugin;
+
+  /**
+   * Constructs a RestfulEntityBase object.
+   *
+   * @param array $plugin
+   *   Plugin definition.
+   * @param RestfulAuthenticationManager $auth_manager
+   *   (optional) Injected authentication manager.
+   * @param DrupalCacheInterface $cache_controller
+   *   (optional) Injected cache backend.
+   */
+  public function __construct($plugin, \RestfulAuthenticationManager $auth_manager = NULL, \DrupalCacheInterface $cache_controller = NULL) {
+    $this->plugin = $plugin;
+  }
+
+  /**
    * Determines if the HTTP method represents a write operation.
    *
    * @param string $method
@@ -64,5 +85,35 @@ abstract class RestfulBase implements RestfulInterface {
   public static function isValidMethod($method, $strict = TRUE) {
     $method = $strict ? $method : strtolower($method);
     return static::isReadMethod($method, $strict) || static::isWriteMethod($method, $strict);
+  }
+
+  /**
+   * Gets information about the restful plugin.
+   *
+   * @param string
+   *   (optional) The name of the key to return.
+   *
+   * @return mixed
+   *   Depends on the requested value.
+   */
+  public function getPluginInfo($key = NULL) {
+    if (isset($key)) {
+      return empty($this->plugin[$key]) ? NULL : $this->plugin[$key];
+    }
+    return $this->plugin;
+  }
+
+  /**
+   * Call the output format on the given data.
+   *
+   * @param array $data
+   *   The array of data to format.
+   *
+   * @return string
+   *   The formatted output.
+   */
+  public function format(array $data) {
+    $formatter_handler = restful_get_formatter_handler($this->getPluginInfo('formatter'), $this);
+    return $formatter_handler->format($data);
   }
 }

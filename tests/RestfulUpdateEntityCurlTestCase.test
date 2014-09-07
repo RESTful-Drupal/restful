@@ -59,10 +59,14 @@ class RestfulUpdateEntityCurlTestCase extends RestfulCurlBaseTestCase {
     $result = $this->httpRequest("api/v1/test_articles/$id", \RestfulInterface::PUT, $request);
 
     $expected_result = array(
-      'id' => $id,
-      'label' => $new_label,
-      'self' => url('node/' . $id, array('absolute' => TRUE)),
-      'body' => NULL,
+      'data' => array(array(
+        'id' => $id,
+        'label' => $new_label,
+        'self' => url('node/' . $id, array('absolute' => TRUE)),
+        'body' => NULL,
+      )),
+      'count' => 1,
+      '_links' => array(),
     );
 
     $this->assertEqual($result['body'], drupal_json_encode($expected_result));
@@ -94,14 +98,20 @@ class RestfulUpdateEntityCurlTestCase extends RestfulCurlBaseTestCase {
     $request = array('label' => $new_label);
     $result = $this->httpRequest("api/v1/test_articles/$id", \RestfulInterface::PATCH, $request);
     $expected_result = array(
-      'id' => $id,
-      'label' => $new_label,
-      'self' => url('node/' . $id, array('absolute' => TRUE)),
-      'body' => $text,
+      'data' => array(array(
+        'id' => $id,
+        'label' => $new_label,
+        'self' => url('node/' . $id, array('absolute' => TRUE)),
+        'body' => $text,
+      )),
+      'count' => 1,
+      '_links' => array(),
     );
 
     $result = drupal_json_decode($result['body']);
-    $result['body'] = trim(strip_tags($result['body']));
+    $result['data'][0]['body'] = trim(strip_tags($result['data'][0]['body']));
+    ksort($result);
+    ksort($expected_result);
 
     $this->assertEqual($result, $expected_result);
 
