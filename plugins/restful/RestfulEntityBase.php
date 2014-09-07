@@ -570,12 +570,8 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    *
    * @return EntityFieldQuery
    *   The EntityFieldQuery object.
-   *
-   * @throws RestfulBadRequestException
    */
   public function getQueryForList() {
-    $request = $this->getRequest();
-
     $entity_type = $this->getEntityType();
     $entity_info = entity_get_info($entity_type);
     $query = new EntityFieldQuery();
@@ -585,6 +581,26 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
       $query->entityCondition('bundle', $this->getBundle());
     }
 
+    $this->queryForListSort($query);
+    $this->queryForListFilter($query);
+    $this->queryForListPagination($query);
+    $this->addExtraInfoToQuery($query);
+
+    return $query;
+  }
+
+  /**
+   * Sort the query for list.
+   *
+   * @param \EntityFieldQuery $query
+   *   The query object.
+   *
+   * @throws \RestfulBadRequestException
+   *
+   * @see \RestfulEntityBase::getQueryForList
+   */
+  protected function queryForListSort(\EntityFieldQuery $query) {
+    $request = $this->getRequest();
     $public_fields = $this->getPublicFields();
 
     $sorts = array();
@@ -614,10 +630,66 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
         $query->fieldOrderBy($public_fields[$sort]['property'], $public_fields[$sort]['column'], $direction);
       }
     }
+  }
 
+  /**
+   * Filter the query for list.
+   *
+   * @param \EntityFieldQuery $query
+   *   The query object.
+   *
+   * @throws \RestfulBadRequestException
+   *
+   * @see \RestfulEntityBase::getQueryForList
+   */
+  protected function queryForListFilter(\EntityFieldQuery $query) {
+    $request = $this->getRequest();
+    if (empty($request['filter'])) {
+      // No filtering is needed.
+      return;
+    }
 
-    // Determine the page that should be seen. Page 1, is actually offset 0
-    // in the query range.
+    $public_fields = $this->getPublicFields();
+
+    foreach ($request['filter'] as $property => $value) {
+      if (empty($public_fields[$property])) {
+        throw new RestfulBadRequestException(format_string('The filter @filter is not allowed for this path.', array('@filter' => $property)));
+      }
+
+      if (!is_array($value)) {
+        // Request uses the shorthand form for filter. For example
+        // filter[foo]=bar would be converted to filter[foo][value] = bar.
+        $value = array('value' => $value);
+      }
+
+      // Set default operator.
+      $value += array('operator' => '=');
+
+      // Determine if sorting is by field or property.
+      if (empty($public_fields[$property]['column'])) {
+        $query->propertyCondition($public_fields[$property]['property'], $value['value'], $value['operator']);
+      }
+      else {
+        $query->fieldCondition($public_fields[$property]['property'], $public_fields[$property]['column'], $value['value'], $value['operator']);
+      }
+    }
+  }
+
+  /**
+   * Set correct page (i.e. range) for the query for list.
+   *
+   * Determine the page that should be seen. Page 1, is actually offset 0 in the
+   * query range.
+   *
+   * @param \EntityFieldQuery $query
+   *   The query object.
+   *
+   * @throws \RestfulBadRequestException
+   *
+   * @see \RestfulEntityBase::getQueryForList
+   */
+  protected function queryForListPagination(\EntityFieldQuery $query) {
+    $request = $this->getRequest();
     $page = isset($request['page']) ? $request['page'] : 1;
 
     if (!ctype_digit((string)$page) || $page < 1) {
@@ -626,13 +698,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
 
     $range = $this->getRange();
     $offset = ($page - 1) * $range;
-
-    // Add a generic entity access tag to the query.
-    $this->addExtraInfoToQuery($query);
-
     $query->range($offset, $range);
-
-    return $query;
   }
 
   /**
@@ -1799,8 +1865,6 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    *
    * @param mixed $entity_id
    *   The entity ID.
-   * @param array $request
-   *   The request array to match the condition how cached entity was generated.
    *
    * @return string
    *   The cache identifier.
