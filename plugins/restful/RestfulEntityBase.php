@@ -180,7 +180,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    * @param string $path
    */
   public function setPath($path = '') {
-    $this->path = $path;
+    $this->path = implode(',', array_unique(array_filter(explode(',', $path))));
   }
 
   /**
@@ -556,7 +556,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    * @throws RestfulBadRequestException
    */
   public function viewEntities($entity_ids_string) {
-    $entity_ids = array_filter(explode(',', $entity_ids_string));
+    $entity_ids = array_unique(array_filter(explode(',', $entity_ids_string)));
     $output = array();
 
     foreach ($entity_ids as $entity_id) {
@@ -579,6 +579,12 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
 
     if ($this->bundle && $entity_info['entity keys']['bundle']) {
       $query->entityCondition('bundle', $this->getBundle());
+    }
+    if ($path = $this->getPath()) {
+      $ids = explode(',', $path);
+      if (!empty($ids)) {
+        $query->entityCondition('entity_id', $ids, 'IN');
+      }
     }
 
     $this->queryForListSort($query);
@@ -717,6 +723,10 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
 
     if ($this->bundle && $entity_info['entity keys']['bundle']) {
       $query->entityCondition('bundle', $this->getBundle());
+    }
+    if ($path = $this->getPath()) {
+      $ids = explode(',', $path);
+      $query->entityCondition('entity_id', $ids, 'IN');
     }
 
     $this->addExtraInfoToQuery($query);
@@ -900,7 +910,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
 
       $value = NULL;
 
-      if ($info['callback']) {
+      if (!empty($info['callback'])) {
         // Calling a callback to receive the value.
         if (!is_callable($info['callback'])) {
           $callback_name = is_array($info['callback']) ? $info['callback'][1] : $info['callback'];
@@ -913,15 +923,15 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
         // Exposing an entity field.
         $property = $info['property'];
 
-        $sub_wrapper = $info['wrapper_method_on_entity'] ? $wrapper : $wrapper->{$property};
+        $sub_wrapper = !empty($info['wrapper_method_on_entity']) ? $wrapper : $wrapper->{$property};
 
         // Check user has access to the property.
         if ($property && !$this->checkPropertyAccess($sub_wrapper, 'view', $wrapper)) {
           continue;
         }
 
-        $method = $info['wrapper_method'];
-        $resource = $info['resource'];
+        $method = !empty($info['wrapper_method']) ? $info['wrapper_method'] : NULL;
+        $resource = !empty($info['resource']) ? $info['resource'] : NULL;
 
         if ($sub_wrapper instanceof EntityListWrapper) {
           // Multiple value.
@@ -1363,7 +1373,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
       // As any request, under the the "__application" we may pass additional
       // metadata.
       $method_name = !empty($request['__application']['method']) ? strtoupper($request['__application']['method']) : \RestfulInterface::PATCH;
-      $path = $request['id'];
+      $path = implode(',', array_unique(array_filter(explode(',', $request['id']))));
       // Unset the ID from the sub-request.
       unset($request['id']);
     }
