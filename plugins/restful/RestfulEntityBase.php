@@ -910,7 +910,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
 
       $value = NULL;
 
-      if (!empty($info['callback'])) {
+      if ($info['callback']) {
         // Calling a callback to receive the value.
         if (!is_callable($info['callback'])) {
           $callback_name = is_array($info['callback']) ? $info['callback'][1] : $info['callback'];
@@ -923,15 +923,15 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
         // Exposing an entity field.
         $property = $info['property'];
 
-        $sub_wrapper = !empty($info['wrapper_method_on_entity']) ? $wrapper : $wrapper->{$property};
+        $sub_wrapper = $info['wrapper_method_on_entity'] ? $wrapper : $wrapper->{$property};
 
         // Check user has access to the property.
         if ($property && !$this->checkPropertyAccess($sub_wrapper, 'view', $wrapper)) {
           continue;
         }
 
-        $method = !empty($info['wrapper_method']) ? $info['wrapper_method'] : NULL;
-        $resource = !empty($info['resource']) ? $info['resource'] : NULL;
+        $method = $info['wrapper_method'] ? $info['wrapper_method'] : NULL;
+        $resource = $info['resource'] ? $info['resource'] : NULL;
 
         if ($sub_wrapper instanceof EntityListWrapper) {
           // Multiple value.
