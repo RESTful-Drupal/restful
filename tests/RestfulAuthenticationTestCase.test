@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains RestfulAuthorizationEntityTestCase.
+ * Contains RestfulAuthenticationTestCase.
  */
 
-class RestfulAuthorizationTestCase extends RestfulCurlBaseTestCase {
+class RestfulAuthenticationTestCase extends RestfulCurlBaseTestCase {
 
   /**
    * Holds the generated account.

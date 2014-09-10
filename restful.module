@@ -825,7 +825,7 @@ function _restful_invalidate_entity_cache($cid) {
       $version = $handler->getVersion();
       // Get the uid for the invalidation.
       try {
-        $uid = $handler->getAccount()->uid;
+        $uid = $handler->getAccount(FALSE)->uid;
       }
       catch (\RestfulUnauthorizedException $e) {
         // If no user could be found using the handler default to the logged in

@@ -492,16 +492,19 @@ abstract class RestfulBase implements RestfulInterface {
   /**
    * Proxy method to get the account from the authenticationManager.
    *
+   * @param boolean $cache
+   *   Boolean indicating if the resolved user should be cached for next calls.
+   *
    * @return \stdClass
    *   The user object.
    */
-  public function getAccount() {
+  public function getAccount($cache = TRUE) {
     // The request.
     $request = $this->getRequest();
     // The HTTP method. Defaults to "get".
     $method = $this->getMethod();
 
-    $account = $this->getAuthenticationManager()->getAccount($request, $method);
+    $account = $this->getAuthenticationManager()->getAccount($request, $method, $cache);
 
     // If the limit rate is enabled for the current plugin then set the account.
     if ($this->getRateLimitManager()) {
