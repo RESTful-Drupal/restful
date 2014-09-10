@@ -89,6 +89,9 @@ function restful_ctools_plugin_directory($module, $plugin) {
  *     to 10.
  *   - operator: Determines the operator used to match the given string. Values
  *     can be 'STARTS_WITH' or 'CONTAINS'. Defaults to 'CONTAINS'.
+ * - formatter: The name of the formatter plugin. It defaults to the contents of
+ *   the variable 'restful_default_output_formatter'. If the variable is empty
+ *   it defaults to 'hal_json'.
  * Properties for the "authentication" plugin type:
  * - description: The description of the authentication provider. Defaults to
  *   empty string.

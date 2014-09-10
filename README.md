@@ -140,12 +140,12 @@ array(
       'id' => 2,
       'label' => 'another title',
       'self' => 'https://example.com/node/2',
-    );
+    ),
     array(
       'id' => 1,
       'label' => 'example title',
       'self' => 'https://example.com/node/1',
-    );
+    ),
   ),
 );
 ```
@@ -307,6 +307,76 @@ $request = array(
 
 $handler->post('', $request);
 
+```
+## Output formats
+
+The RESTful module outputs all resources by using HAL+JSON encoding by default.
+That means that when you have the following data:
+
+```php
+array(
+  array(
+    'id' => 2,
+    'label' => 'another title',
+    'self' => 'https://example.com/node/2',
+  ),
+  array(
+    'id' => 1,
+    'label' => 'example title',
+    'self' => 'https://example.com/node/1',
+  ),
+);
+```
+
+Then the following output is generated (using the header
+`ContentType:application/hal+json; charset=utf-8`):
+
+```javascript
+{
+  "data": [
+    {
+      "id": 2,
+      "label": "another title",
+      "self": "https:\/\/example.com\/node\/2"
+    },
+    {
+      "id": 1,
+      "label": "example title",
+      "self": "https:\/\/example.com\/node\/1"
+    }
+  ],
+  "count": 2,
+  "_links": []
+}
+```
+
+You can change that to be anything that you need. You have a plugin that will
+allow you to output XML instead of JSON in
+[the example module](./modules/restful_example/plugins/formatter). Take that
+example and create you custom module that contains the formatter plugin the you
+need (maybe you need to output JSON but following a different data structure,
+you may even want to use YAML, ...). All that you will need is to create a
+formatter plugin and tell your restful resource to use that in the restful
+plugin definition:
+
+```php
+$plugin = array(
+  'label' => t('Articles'),
+  'resource' => 'articles',
+  'description' => t('Export the article content type in my cool format.'),
+  ...
+  'formatter' => 'my_formatter', // <-- The name of the formatter plugin.
+);
+```
+
+### Changing the default output format.
+If you need to change the output format for everything at once then you just
+have to set a special variable with the name of the new output format plugin.
+When you do that all the resources that don't specify a `'formatter'` key in the
+plugin definition will use that output format by default. Ex:
+
+```php
+variable_set('restful_default_output_formatter', 'my_formatter');
 ```
 
 ## Cache layer
