@@ -62,12 +62,14 @@ class RestfulAuthenticationManager extends \ArrayObject {
    *   The request.
    * @param string $method
    *   The HTTP method.
+   * @param boolean $cache
+   *   Boolean indicating if the resolved user should be cached for next calls.
    *
    * @throws RestfulUnauthorizedException
    * @return \stdClass
    *   The user object.
    */
-  public function getAccount(array $request = array(), $method = \RestfulInterface::GET) {
+  public function getAccount(array $request = array(), $method = \RestfulInterface::GET, $cache = TRUE) {
     global $user;
     // Return the previously resolved user, if any.
     if (!empty($this->account)) {
@@ -100,7 +102,9 @@ class RestfulAuthenticationManager extends \ArrayObject {
         $account = $user->uid ? user_load($user->uid) : $account;
       }
     }
-    $this->setAccount($account);
+    if ($cache) {
+      $this->setAccount($account);
+    }
     return $account;
   }
 

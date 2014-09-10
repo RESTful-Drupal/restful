@@ -781,7 +781,7 @@ function restful_cron() {
  */
 function restful_entity_update($entity, $type) {
   list($entity_id) = entity_extract_ids($type, $entity);
-  $cid = 'et' . $type . '::ei' . $entity_id . '::uu';
+  $cid = 'paet:' . $type . '::ei:' . $entity_id;
   _restful_invalidate_entity_cache($cid);
 }
 
@@ -790,7 +790,7 @@ function restful_entity_update($entity, $type) {
  */
 function restful_entity_delete($entity, $type) {
   list($entity_id) = entity_extract_ids($type, $entity);
-  $cid = 'et' . $type . '::ei' . $entity_id . '::uu';
+  $cid = 'paet:' . $type . '::ei:' . $entity_id;
   _restful_invalidate_entity_cache($cid);
 }
 
@@ -826,7 +826,16 @@ function _restful_invalidate_entity_cache($cid) {
     $reflector = new \ReflectionClass($handler);
     if ($reflector->hasMethod('cacheInvalidate')) {
       $version = $handler->getVersion();
-      $version_cid = 'v' . $version['major'] . '.' . $version['minor'];
+      // Get the uid for the invalidation.
+      try {
+        $uid = $handler->getAccount(FALSE)->uid;
+      }
+      catch (\RestfulUnauthorizedException $e) {
+        // If no user could be found using the handler default to the logged in
+        // user.
+        $uid = $GLOBALS['user']->uid;
+      }
+      $version_cid = 'v' . $version['major'] . '.' . $version['minor'] . '::uu' . $uid;
       $handler->cacheInvalidate($version_cid . '::' . $cid);
     }
   }
