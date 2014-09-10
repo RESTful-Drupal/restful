@@ -56,7 +56,7 @@ class RestfulRenderCacheTestCase extends DrupalWebTestCase {
     $this->assertEqual($pre_cache_results[0], $post_cache_results[0], 'Cached data is consistent.');
     // Get a cached result directly from the cache backend.
     $node = reset($nodes);
-    $cid = 'v1.1::etnode::ei' . $node->nid . '::uu' . $account->uid . '::pa';
+    $cid = 'v1.1' . '::uu' . $account->uid . '::pa' . 'et:node::ei:' . $node->nid;
     $record = $cache->get($cid);
     $this->assertEqual($pre_cache_results[0], $record->data, 'Data in cache bins is correct.');
 
@@ -87,7 +87,7 @@ class RestfulRenderCacheTestCase extends DrupalWebTestCase {
     // Check that the cached results for the entity without request array are
     // different than with the request array.
     $cid_wo_request = $cid;
-    $cid_w_request = $cid_wo_request . 'fi:id,label';
+    $cid_w_request = $cid_wo_request . '::fi:id,label';
     $record = $cache->get($cid_w_request);
     // Check that the stored data for both cache ids exists and is different.
     $this->assertNotEqual($record->data, $cache->get($cid_wo_request)->data, 'Cache with request params is different.');

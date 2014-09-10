@@ -88,159 +88,11 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
   );
 
   /**
-   * Array keyed by the header property, and the value.
-   *
-   * This can be used for example to change the "Status" code of the HTTP
-   * response, or to add a "Location" property.
-   *
-   * @var array $httpHeaders
-   */
-  protected $httpHeaders = array();
-
-  /**
    * Determines the number of items that should be returned when viewing lists.
    *
    * @var int
    */
   protected $range = 50;
-
-  /**
-   * Cache controller object.
-   *
-   * @var \DrupalCacheInterface
-   */
-  protected $cacheController;
-
-  /**
-   * Authentication manager.
-   *
-   * @var \RestfulAuthenticationManager
-   */
-  protected $authenticationManager;
-
-  /**
-   * Rate limit manager.
-   *
-   * @var \RestfulRateLimitManager
-   */
-  protected $rateLimitManager = NULL;
-
-  /**
-   * The HTTP method used for the request.
-   *
-   * @var string
-   */
-  protected $method = \RestfulInterface::GET;
-
-  /**
-   * Get the HTTP method used for the request.
-   * @return string
-   */
-  public function getMethod() {
-    return $this->method;
-  }
-
-  /**
-   * Set the HTTP method used for the request.
-   *
-   * @param string $method
-   *   The method name.
-   */
-  public function setMethod($method) {
-    $this->method = $method;
-  }
-
-  /**
-   * The path of the request.
-   *
-   * @var string
-   */
-  protected $path = '';
-
-  /**
-   * The request array.
-   *
-   * @var array
-   */
-  protected $request = array();
-
-  /**
-   * Return the path of the request.
-   *
-   * @return string
-   *   String with the path.
-   */
-  public function getPath() {
-    return $this->path;
-  }
-
-  /**
-   * Set the path of the request.
-   *
-   * @param string $path
-   */
-  public function setPath($path = '') {
-    $this->path = implode(',', array_unique(array_filter(explode(',', $path))));
-  }
-
-  /**
-   * Get the request array.
-   *
-   * @return array
-   */
-  public function getRequest() {
-    return $this->request;
-  }
-
-  /**
-   * Set the request array.
-   *
-   * @param array $request
-   *   Array with the request.
-   */
-  public function setRequest(array $request = array()) {
-    $this->request = $request;
-  }
-
-  /**
-   * Helper function to remove the application generated request data.
-   *
-   * @param &array $request
-   *   The request array to be modified.
-   */
-  public static function cleanRequest(&$request) {
-    unset($request['__application']);
-  }
-
-
-  /**
-   * Get the defined controllers
-   *
-   * @return array
-   *   The defined controllers.
-   */
-  public function getControllers() {
-    return $this->controllers;
-  }
-
-  /**
-   * Set the HTTP headers.
-   *
-   * @param string $key
-   *   The HTTP header key.
-   * @param string $value
-   *   The HTTP header value.
-   */
-  public function setHttpHeaders($key, $value) {
-    $this->httpHeaders[$key] = $value;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getHttpHeaders() {
-    return $this->httpHeaders;
-  }
 
   /**
    * Set the pager range.
@@ -262,24 +114,6 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
   }
 
   /**
-   * Setter for $authenticationManager.
-   *
-   * @param \RestfulAuthenticationManager $authenticationManager
-   */
-  public function setAuthenticationManager($authenticationManager) {
-    $this->authenticationManager = $authenticationManager;
-  }
-
-  /**
-   * Getter for $authenticationManager.
-   *
-   * @return \RestfulAuthenticationManager
-   */
-  public function getAuthenticationManager() {
-    return $this->authenticationManager;
-  }
-
-  /**
    * Getter for $bundle.
    *
    * @return string
@@ -289,39 +123,12 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
   }
 
   /**
-   * Getter for $cacheController.
-   *
-   * @return \DrupalCacheInterface
-   */
-  public function getCacheController() {
-    return $this->cacheController;
-  }
-
-  /**
    * Getter for $entityType.
    *
    * @return string
    */
   public function getEntityType() {
     return $this->entityType;
-  }
-
-  /**
-   * Setter for rateLimitManager.
-   *
-   * @param \RestfulRateLimitManager $rateLimitManager
-   */
-  public function setRateLimitManager($rateLimitManager) {
-    $this->rateLimitManager = $rateLimitManager;
-  }
-
-  /**
-   * Getter for rateLimitManager.
-
-   * @return \RestfulRateLimitManager
-   */
-  public function getRateLimitManager() {
-    return $this->rateLimitManager;
   }
 
   /**
@@ -335,171 +142,9 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    *   (optional) Injected cache backend.
    */
   public function __construct($plugin, \RestfulAuthenticationManager $auth_manager = NULL, \DrupalCacheInterface $cache_controller = NULL) {
-    parent::__construct($plugin);
-    $this->plugin = $plugin;
+    parent::__construct($plugin, $auth_manager, $cache_controller);
     $this->entityType = $plugin['entity_type'];
     $this->bundle = $plugin['bundle'];
-    $this->authenticationManager = $auth_manager ? $auth_manager : new \RestfulAuthenticationManager();
-    $this->cacheController = $cache_controller ? $cache_controller : $this->newCacheObject();
-    if (!empty($plugin['rate_limit'])) {
-      $this->setRateLimitManager(new \RestfulRateLimitManager($plugin['resource'], $plugin['rate_limit']));
-    }
-  }
-
-  /**
-   * Return the resource name.
-   *
-   * @return string
-   *   Gets the name of the resource.
-   */
-  public function getResourceName() {
-    return $this->getPluginInfo('resource');
-  }
-
-  /**
-   * Return array keyed with the major and minor version of the resource.
-   *
-   * @return array
-   *   Keyed array with the major and minor version as provided in the plugin
-   *   definition.
-   */
-  public function getVersion() {
-    return array(
-      'major' => $this->plugin['major_version'],
-      'minor' => $this->plugin['minor_version'],
-    );
-  }
-
-  /**
-   * Call resource using the GET http method.
-   *
-   * @param string $path
-   *   (optional) The path.
-   * @param array $request
-   *   (optional) The request.
-   *
-   * @return mixed
-   *   The return value can depend on the controller for the get method.
-   */
-  public function get($path = '', array $request = array()) {
-    return $this->process($path, $request, \RestfulInterface::GET);
-  }
-
-  /**
-   * Call resource using the POST http method.
-   *
-   * @param string $path
-   *   (optional) The path.
-   * @param array $request
-   *   (optional) The request.
-   *
-   * @return mixed
-   *   The return value can depend on the controller for the post method.
-   */
-  public function post($path = '', array $request = array()) {
-    return $this->process($path, $request, \RestfulInterface::POST);
-  }
-
-  /**
-   * Call resource using the PUT http method.
-   *
-   * @param string $path
-   *   (optional) The path.
-   * @param array $request
-   *   (optional) The request.
-   *
-   * @return mixed
-   *   The return value can depend on the controller for the put method.
-   */
-  public function put($path = '', array $request = array()) {
-    return $this->process($path, $request, \RestfulInterface::PUT);
-  }
-
-  /**
-   * Call resource using the PATCH http method.
-   *
-   * @param string $path
-   *   (optional) The path.
-   * @param array $request
-   *   (optional) The request.
-   * @return mixed
-   *   The return value can depend on the controller for the patch method.
-   */
-  public function patch($path = '', array $request = array()) {
-    return $this->process($path, $request, \RestfulInterface::PATCH);
-  }
-
-  /**
-   * Call resource using the DELETE http method.
-   *
-   * @param string $path
-   *   (optional) The path.
-   * @param array $request
-   *   (optional) The request.
-   *
-   * @return mixed
-   *   The return value can depend on the controller for the delete method.
-   */
-  public function delete($path = '', array $request = array()) {
-    return $this->process($path, $request, \RestfulInterface::DELETE);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function process($path = '', array $request = array(), $method = \RestfulInterface::GET, $check_rate_limit = TRUE) {
-    $this->setMethod($method);
-    $this->setPath($path);
-    $this->setRequest($request);
-
-    if (!$method_name = $this->getControllerFromPath()) {
-      throw new RestfulBadRequestException('Path does not exist');
-    }
-
-    if ($check_rate_limit && $this->getRateLimitManager()) {
-      // This will throw the appropriate exception if needed.
-      $this->getRateLimitManager()->checkRateLimit($request);
-    }
-
-    return $this->{$method_name}($path);
-  }
-
-  /**
-   * Return the controller from a given path.
-   *
-   * @return string
-   *   The appropriate method to call.
-   *
-   * @throws RestfulBadRequestException
-   * @throws RestfulGoneException
-   */
-  public function getControllerFromPath() {
-    $path = $this->getPath();
-    $method = $this->getMethod();
-
-    $selected_controller = NULL;
-    foreach ($this->getControllers() as $pattern => $controllers) {
-      if ($pattern != $path && !($pattern && preg_match('/' . $pattern . '/', $path))) {
-        continue;
-      }
-
-      if ($controllers === FALSE) {
-        // Method isn't valid anymore, due to a deprecated API endpoint.
-        $params = array('@path' => $path);
-        throw new RestfulGoneException(format_string('The path @path endpoint is not valid.', $params));
-      }
-
-      if (!isset($controllers[$method])) {
-        $params = array('@method' => strtoupper($method));
-        throw new RestfulBadRequestException(format_string('The http method @method is not allowed for this path.', $params));
-      }
-
-      // We found the controller, so we can break.
-      $selected_controller = $controllers[$method];
-      break;
-    }
-
-    return $selected_controller;
   }
 
   /**
@@ -755,12 +400,11 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    *   The query to enhance.
    */
   protected function addExtraInfoToQuery(\EntityFieldQuery $query) {
+    parent::addExtraInfoToQuery($query);
     $entity_type = $this->getEntityType();
     // Add a generic entity access tag to the query.
     $query->addTag($entity_type . '_access');
-    $query->addTag('restful');
     $query->addMetaData('restful_handler', $this);
-    $query->addMetaData('account', $this->getAccount());
   }
 
   /**
@@ -887,10 +531,12 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    * @throws Exception
    */
   public function viewEntity($entity_id) {
-    $account = $this->getAccount();
     $request = $this->getRequest();
 
-    $cached_data = $this->getRenderedEntityCache($entity_id);
+    $cached_data = $this->getRenderedCache(array(
+      'et' => $this->getEntityType(),
+      'ei' => $entity_id,
+    ));
     if (!empty($cached_data->data)) {
       return $cached_data->data;
     }
@@ -981,7 +627,10 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
       $values[$public_property] = $value;
     }
 
-    $this->setRenderedEntityCache($values, $entity_id);
+    $this->setRenderedCache($values, array(
+      'et' => $this->getEntityType(),
+      'ei' => $entity_id,
+    ));
     return $values;
   }
 
@@ -1267,7 +916,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
   }
 
   /**
-   * Preprocess value for "Entity reference" field types.
+   * Pre-process value for "Entity reference" field types.
    *
    * @param string $property_name
    *   The property name to set.
@@ -1305,7 +954,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    * @param string $public_field_name
    *   The name of the public field to set.
    *
-   * @return mix
+   * @return mixed
    *   The value to set using the wrapped property.
    */
   protected function createEntityFromReference($property_name, $value, $field_info, $public_field_name) {
@@ -1708,229 +1357,6 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    */
   public function setPublicFields(array $public_fields = array()) {
     $this->publicFields = $public_fields;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function access() {
-    return TRUE;
-  }
-
-  /**
-   * Proxy method to get the account from the authenticationManager.
-   *
-   * @return \stdClass
-   *   The user object.
-   */
-  public function getAccount() {
-    // The request.
-    $request = $this->getRequest();
-    // The HTTP method. Defaults to "get".
-    $method = $this->getMethod();
-
-    $account = $this->getAuthenticationManager()->getAccount($request, $method);
-
-    // If the limit rate is enabled for the current plugin then set the account.
-    if ($this->getRateLimitManager()) {
-      $this->getRateLimitManager()->setAccount($account);
-    }
-    return $account;
-  }
-
-  /**
-   * Proxy method to set the account from the authenticationManager.
-   *
-   * @param \stdClass $account
-   *   The account to set.
-   */
-  public function setAccount(\stdClass $account) {
-    // If the limit rate is enabled for the current plugin then set the account.
-    if ($this->getRateLimitManager()) {
-      $this->getRateLimitManager()->setAccount($account);
-    }
-    $this->getAuthenticationManager()->setAccount($account);
-  }
-
-  /**
-   * Helper method; Get the URL of the resource and query strings.
-   *
-   * By default the URL is absolute.
-   *
-   * @param $request
-   *   The request array.
-   * @param $options
-   *   Array with options passed to url().
-   * @param $keep_query
-   *   If TRUE the $request will be appended to the $options['query']. This is
-   *   the typical behavior for $_GET method, however it is not for $_POST.
-   *   Defaults to TRUE.
-   *
-   * @return string
-   *   The URL address.
-   */
-  public function getUrl($request = NULL, $options = array(), $keep_query = TRUE) {
-    // By default set URL to be absolute.
-    $options += array(
-      'absolute' => TRUE,
-      'query' => array(),
-    );
-
-    if ($keep_query) {
-      // Remove special params.
-      unset($request['q']);
-      static::cleanRequest($request);
-
-      // Add the request as query strings.
-      $options['query'] += $request;
-    }
-
-    return url($this->getPluginInfo('menu_item'), $options);
-  }
-
-  /**
-   * Get the default cache object based on the plugin configuration.
-   *
-   * By default, this returns an instance of the DrupalDatabaseCache class.
-   * Classes implementing DrupalCacheInterface can register themselves both as a
-   * default implementation and for specific bins.
-   *
-   * @return \DrupalCacheInterface
-   *   The cache object associated with the specified bin.
-   *
-   * @see \DrupalCacheInterface
-   * @see _cache_get_object().
-   */
-  protected function newCacheObject() {
-    // We do not use drupal_static() here because we do not want to change the
-    // storage of a cache bin mid-request.
-    static $cache_object;
-    if (isset($cache_object)) {
-      // Return cached object.
-      return $cache_object;
-    }
-
-    $cache_info = $this->getPluginInfo('cache');
-    $class = $cache_info['class'];
-    if (empty($class)) {
-      $class = variable_get('cache_class_' . $cache_info['bin']);
-      if (empty($class)) {
-        $class = variable_get('cache_default_class', 'DrupalDatabaseCache');
-      }
-    }
-    $cache_object = new $class($cache_info['bin']);
-    return $cache_object;
-  }
-
-  /**
-   * Get a rendered entity from cache.
-   *
-   * @param mixed $entity_id
-   *   The entity ID.
-   * @param array $request
-   *   The request array to match the condition how cached entity was generated.
-   *
-   * @return \stdClass
-   *   The cache with rendered entity as returned by
-   *   \RestfulEntityInterface::viewEntity().
-   *
-   * @see \RestfulEntityInterface::viewEntity().
-   */
-  protected function getRenderedEntityCache($entity_id) {
-    $cache_info = $this->getPluginInfo('cache');
-    if (!$cache_info['render']) {
-      return;
-    }
-
-    $cid = $this->generateCacheId($entity_id);
-    return $this->getCacheController()->get($cid);
-  }
-
-  /**
-   * Store a rendered entity into the cache.
-   *
-   * @param mixed $data
-   *   The data to be stored into the cache generated by
-   *   \RestfulEntityInterface::viewEntity().
-   * @param mixed $entity_id
-   *   The entity ID.
-   *
-   * @return array
-   *   The rendered entity as returned by \RestfulEntityInterface::viewEntity().
-   *
-   * @see \RestfulEntityInterface::viewEntity().
-   */
-  protected function setRenderedEntityCache($data, $entity_id) {
-    $cache_info = $this->getPluginInfo('cache');
-    if (!$cache_info['render']) {
-      return;
-    }
-
-    $cid = $this->generateCacheId($entity_id);
-    $this->getCacheController()->set($cid, $data, $cache_info['expire']);
-  }
-
-  /**
-   * Generate a cache identifier for the request and the current entity.
-   *
-   * @param mixed $entity_id
-   *   The entity ID.
-   *
-   * @return string
-   *   The cache identifier.
-   */
-  protected function generateCacheId($entity_id) {
-    // Get the cache ID from the selected params. We will use a complex cache ID
-    // for smarter invalidation. The cache id will be like:
-    // v<major version>.<minor version>::et<entity type>::ei<entity id>::uu<user uid>::pa<params array>
-    // The code before every bit is a 2 letter representation of the label. For
-    // instance, the params array will be something like:
-    // fi:id,title::re:admin
-    // When the request has ?fields=id,title&restrict=admin
-    $version = $this->getVersion();
-    $cid = 'v' . $version['major'] . '.' . $version['minor'] . '::et' . $this->getEntityType() . '::ei' . $entity_id . '::uu' . $this->getAccount()->uid . '::pa';
-    $cid_params = array();
-    $request = $this->getRequest();
-    foreach ($request as $param => $value) {
-      // Some request parameters don't affect how the entity is rendered, this
-      // means that we should skip them for the cache ID generation.
-      if (in_array($param, array('page', 'sort', 'q', '__application'))) {
-        continue;
-      }
-      // Make sure that ?fields=title,id and ?fields=id,title hit the same cache
-      // identifier.
-      $values = explode(',', $value);
-      sort($values);
-      $value = implode(',', $values);
-
-      $cid_params[] = substr($param, 0, 2) . ':' . $value;
-    }
-    $cid .= implode('::', $cid_params);
-    return $cid;
-  }
-
-  /**
-   * Invalidates cache for a certain entity.
-   *
-   * @param string $cid
-   *   The wildcard cache id to invalidate.
-   */
-  public function cacheInvalidate($cid) {
-    $cache_info = $this->getPluginInfo('cache');
-    if (!$cache_info['simple_invalidate']) {
-      // Simple invalidation is disabled. This means it is up to the
-      // implementing module to take care of the invalidation.
-      return;
-    }
-    // If the $cid is not '*' then remove the asterisk since it can mess with
-    // dynamically built wildcards.
-    if ($cid != '*') {
-      $pos = strpos($cid, '*');
-      if ($pos !== FALSE) {
-        $cid = substr($cid, 0, $pos);
-      }
-    }
-    $this->getCacheController()->clear($cid, TRUE);
   }
 
   /**
