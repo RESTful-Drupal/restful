@@ -22,7 +22,7 @@ function restful_token_auth_menu() {
     'access callback' => 'user_is_anonymous',
     'page callback' => 'restful_menu_process_callback',
     'page arguments' => array('1', 'token_auth'),
-    'delivery callback' => 'restful_delivery',
+    'delivery callback' => 'restful_unprepared_delivery',
   );
 
   return $items;
