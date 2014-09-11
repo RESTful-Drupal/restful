@@ -640,8 +640,7 @@ function restful_parse_request() {
  *
  * @param $var
  *   (optional) If set, the variable will be converted to JSON and output.
- *
- * @param string $format
+ * @param string $method
  *   Name of the method for the formatter.
  *
  * @see restful_menu_process_callback()
