@@ -11,4 +11,9 @@ $plugin = array(
   'authentication_types' => TRUE,
   'authentication_optional' => TRUE,
   'minor_version' => 5,
+  'options' => array(
+    'image_styles' => array(
+      'image' => array('thumbnail', 'medium', 'large'),
+    ),
+  ),
 );

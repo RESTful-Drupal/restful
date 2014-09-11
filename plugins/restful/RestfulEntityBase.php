@@ -557,13 +557,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
       $value = NULL;
 
       if ($info['callback']) {
-        // Calling a callback to receive the value.
-        if (!is_callable($info['callback'])) {
-          $callback_name = is_array($info['callback']) ? $info['callback'][1] : $info['callback'];
-          throw new Exception(format_string('Callback function: @callback does not exists.', array('@callback' => $callback_name)));
-        }
-
-        $value = call_user_func($info['callback'], $wrapper);
+        $value = static::executeCallback($info['callback'], array($value));
       }
       else {
         // Exposing an entity field.
@@ -615,12 +609,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
 
       if ($value && $info['process_callbacks']) {
         foreach ($info['process_callbacks'] as $process_callback) {
-          if (!is_callable($process_callback)) {
-            $callback_name = is_array($process_callback) ? $process_callback[1] : $process_callback;
-            throw new Exception(format_string('Process callback function: @callback does not exists.', array('@callback' => $callback_name)));
-          }
-
-          $value = call_user_func($process_callback, $value);
+          $value = static::executeCallback($process_callback, array($value));
         }
       }
 
@@ -790,8 +779,6 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    * @throws RestfulForbiddenException
    */
   public function createEntity() {
-    $account = $this->getAccount();
-
     $entity_info = entity_get_info($this->entityType);
     $bundle_key = $entity_info['entity keys']['bundle'];
     $values = array($bundle_key => $this->bundle);
@@ -1337,9 +1324,15 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
         'column' => FALSE,
       );
 
+      // Get the image styles.
+      $options = $this->getPluginInfo('options');
       if ($info['property'] && !$info['column'] && $field = field_info_field($info['property'])) {
         // Set the column name.
         $info['column'] = key($field['columns']);
+        // If it's an image check if we need to add image style processing.
+        if ($field['type'] == 'image' && !empty($options['image_styles'][$key])) {
+          array_unshift($info['process_callbacks'], array(array($this, 'getImageUris'), array($key)));
+        }
       }
     }
 
@@ -1371,6 +1364,22 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
     }
     $path = $this->getPath();
     return empty($path) || strpos($path, ',') !== FALSE;
+  }
+
+  /**
+   * Get the image variants based on the configured styles.
+   */
+  public function getImageUris(array $file_array, $public_field) {
+    // Get the image styles.
+    $options = $this->getPluginInfo('options');
+    if (empty($options['image_styles'][$public_field])) {
+      return $file_array;
+    }
+    $file_array['image_styles'] = array();
+    foreach ($options['image_styles'][$public_field] as $style) {
+      $file_array['image_styles'][$style] = image_style_path($style, $file_array['uri']);
+    }
+    return $file_array;
   }
 
 }
