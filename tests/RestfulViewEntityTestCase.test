@@ -200,5 +200,18 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
     $result = reset($results);
 
     $this->assertEqual($node->title, $result->__toString(), 'XML parsed correctlty.');
+
+    // Test Image variations based on image styles.
+    $images = $this->drupalGetTestFiles('image');
+    $image = reset($images);
+    $image = file_save((object) $image);
+    $article = $this->drupalCreateNode(array(
+      'type' => 'article',
+      'field_image' => array(LANGUAGE_NONE => array(array('fid' => $image->fid))),
+    ));
+    $handler = restful_get_restful_handler('articles', 1, 5);
+    $result = $handler->get($article->nid);
+    $this->assertEqual(array_keys($result[0]['image']['styles']) == array('thumbnail', 'medium', 'large'), 'The selected image styles are present.');
+    $this->assertEqual(count(array_filter(array_values($result[0]['image']['styles']))) == 3, 'The image styles are populated.');
   }
 }

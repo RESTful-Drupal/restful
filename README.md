@@ -56,6 +56,50 @@ $handler->patch($id, $request);
 ```
 
 ### View an entity
+By default the RESTful module will expose the ID, label and URL of the entity.
+You probably want to expose more than that. To do so you will need to implement
+the `publicFieldsInfo` method defining the names in the output array and how
+those are mapped to the queried entity. For instance the following example will
+retrieve the basic fields plus the body, tags and images from an article node.
+The RESTful module will know to use the `MyRestfulPlugin` class because your
+plugin definition will say so.
+
+```php
+class MyArticlesResource extends \RestfulEntityBase {
+
+  /**
+   * Overrides \RestfulEntityBase::publicFieldsInfo().
+   */
+  public function publicFieldsInfo() {
+    $public_fields = parent::publicFieldsInfo();
+
+    $public_fields['body'] = array(
+      'property' => 'body',
+      'sub_property' => 'value',
+    );
+
+    $public_fields['tags'] = array(
+      'property' => 'field_tags',
+      'resource' => array(
+        'tags' => 'tags',
+      ),
+    );
+
+    $public_fields['image'] = array(
+      'property' => 'field_image',
+      'process_callbacks' => array(
+        array($this, 'imageProcess'),
+      ),
+      // This will add 3 image variants in the output.
+      'image_styles' => array('thumbnail', 'medium', 'large'),
+    );
+
+    return $public_fields;
+  }
+
+}
+```
+
 ```php
 // Handler v1.0
 $handler = restful_get_restful_handler('articles');
@@ -98,6 +142,14 @@ array(
   'label' => 'another title',
 );
 ```
+
+#### Image derivatives
+Many client side technologies have lots of problems resizing images to serve
+them optimized and thus avoiding browser scaling. For that reason the RESTful
+module will let you specify an array of image style names to get an array of
+image derivatives for your image fields. Just add an `'image_styles'` key in
+your public field info (as shown above) with the list of styles to use and be
+done with it.
 
 ### List entities
 ```php

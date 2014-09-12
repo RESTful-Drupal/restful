@@ -30,6 +30,7 @@ class RestfulExampleArticlesResource__1_5 extends RestfulEntityBaseNode {
       'process_callbacks' => array(
         array($this, 'imageProcess'),
       ),
+      'image_styles' => array('thumbnail', 'medium', 'large'),
     );
 
     return $public_fields;
@@ -52,6 +53,7 @@ class RestfulExampleArticlesResource__1_5 extends RestfulEntityBaseNode {
       'filesize' => $value['filesize'],
       'width' => $value['width'],
       'height' => $value['height'],
+      'styles' => $value['image_styles'],
     );
   }
 }
