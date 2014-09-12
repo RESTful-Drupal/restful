@@ -28,10 +28,7 @@ function restful_ctools_plugin_directory($module, $plugin) {
  *   Defaults to 0.
  * - options: Array of options needed for the plugin. See
  *   "per_role_content__1_0.inc" in RESTful example module. Defaults to empty
- *   array. Add a 'image_styles' option that contains an associative array
- *   mapping the public fields for the images to the image styles you want to
- *   use to generate variations for that particular image automatically.  See
- *   articles__1_5.inc for an example.
+ *   array.
  * - entity type: The entity type of the resource. Defaults to FALSE, which
  *   indicates the resource isn't connected to any entity type.
  * - bundle: The name of a single bundle the resource is connected to. Defaults

@@ -1383,7 +1383,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
     }
     $file_array['image_styles'] = array();
     foreach ($image_styles as $style) {
-      $file_array['image_styles'][$style] = image_style_path($style, $file_array['uri']);
+      $file_array['image_styles'][$style] = image_style_url($style, $file_array['uri']);
     }
     return $file_array;
   }
