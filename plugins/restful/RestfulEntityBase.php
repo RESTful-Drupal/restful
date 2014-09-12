@@ -810,7 +810,6 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    * @throws RestfulBadRequestException
    */
   protected function setPropertyValues(EntityMetadataWrapper $wrapper, $null_missing_fields = FALSE) {
-    $account = $this->getAccount();
     $request = $this->getRequest();
 
     static::cleanRequest($request);
@@ -1324,14 +1323,14 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
         'column' => FALSE,
       );
 
-      // Get the image styles.
-      $options = $this->getPluginInfo('options');
-      if ($info['property'] && !$info['column'] && $field = field_info_field($info['property'])) {
-        // Set the column name.
-        $info['column'] = key($field['columns']);
+      if ($field = field_info_field($info['property'])) {
         // If it's an image check if we need to add image style processing.
-        if ($field['type'] == 'image' && !empty($options['image_styles'][$key])) {
-          array_unshift($info['process_callbacks'], array(array($this, 'getImageUris'), array($key)));
+        if ($field['type'] == 'image' && !empty($info['image_styles'])) {
+          array_unshift($info['process_callbacks'], array(array($this, 'getImageUris'), array($info['image_styles'])));
+        }
+        if ($info['property'] && !$info['column']) {
+          // Set the column name.
+          $info['column'] = key($field['columns']);
         }
       }
     }
@@ -1367,16 +1366,23 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
   }
 
   /**
-   * Get the image variants based on the configured styles.
+   * Get the image URLs based on the configured image styles.
+   *
+   * @param array $file_array
+   *   The file array from EMW.
+   * @param array $image_styles
+   *   The list of image styles to use.
+   *
+   * @return array
+   *   The input file array with an extra key for the image styles.
    */
-  public function getImageUris(array $file_array, $public_field) {
-    // Get the image styles.
-    $options = $this->getPluginInfo('options');
-    if (empty($options['image_styles'][$public_field])) {
+  public function getImageUris(array $file_array, $image_styles) {
+    // Return early if there are no image styles.
+    if (empty($image_styles)) {
       return $file_array;
     }
     $file_array['image_styles'] = array();
-    foreach ($options['image_styles'][$public_field] as $style) {
+    foreach ($image_styles as $style) {
       $file_array['image_styles'][$style] = image_style_path($style, $file_array['uri']);
     }
     return $file_array;

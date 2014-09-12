@@ -329,17 +329,21 @@ abstract class RestfulBase implements RestfulInterface {
    *   Array of additional parameters to pass in.
    *
    * @return mixed
-   *   Whatever the callback returns.
+   *   The return value of the callback.
    *
    * @throws \RestfulException
    */
   public static function executeCallback($callback, array $params = array()) {
     if (!is_callable($callback)) {
       if (is_array($callback) && count($callback) == 2 && is_array($callback[1])) {
+        // This code deals with the third scenario in the docblock. Get the
+        // callback and the parameters from the array, merge the parameters with
+        // the existing ones and call recursively to reuse the logic for the
+        // other cases.
         return static::executeCallback($callback[0], array_merge($params, $callback[1]));
       }
       $callback_name = is_array($callback) ? $callback[1] : $callback;
-      throw new \RestfulException(format_string('Process callback function: @callback does not exists.', array('@callback' => $callback_name)));
+      throw new \RestfulException(format_string('Callback function: @callback does not exists.', array('@callback' => $callback_name)));
     }
 
     return call_user_func_array($callback, $params);
