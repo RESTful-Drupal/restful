@@ -77,6 +77,10 @@ class RestfulTokenAuthentication extends \RestfulEntityBase {
       $id = $auth_token->id;
     }
 
-    return $this->viewEntity($id);
+    $output = $this->viewEntity($id);
+
+    // Add CSRF token.
+    $output += restful_csrf_session_token();
+    return $output;
   }
 }
