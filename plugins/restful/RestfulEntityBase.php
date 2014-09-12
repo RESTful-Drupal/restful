@@ -57,9 +57,18 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    *   "Page" bundles, we are able to map those bundles to their related
    *   resource. Items with bundles that were not explicitly set would be
    *   ignored.
+   *   It is also possible to pass an array as the value, with:
+   *   - "name": The resource name.
+   *   - "full_view": Determines if the referenced resource should be rendered,
+   *   or just the referenced ID(s) to appear. Defaults to TRUE.
    *   array(
+   *     // Shorthand.
    *     'article' => 'articles',
-   *     'page' => 'pages',
+   *     // Verbose
+   *     'page' => array(
+   *       'name' => 'pages',
+   *       'full_view' => FALSE,
+   *     ),
    *   );
    *
    * @var array
@@ -678,10 +687,15 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
       return;
     }
 
+    if (!$resource[$bundle]['full_view']) {
+      // Show only the ID(s) of the referenced resource.
+      return $wrapper->value(array('identifier' => TRUE));
+    }
+
 
     if (empty($handlers[$bundle])) {
       $version = $this->getVersion();
-      $handlers[$bundle] = restful_get_restful_handler($resource[$bundle], $version['major'], $version['minor']);
+      $handlers[$bundle] = restful_get_restful_handler($resource[$bundle]['name'], $version['major'], $version['minor']);
     }
     $bundle_handler = $handlers[$bundle];
     return $bundle_handler->viewEntity($id);
@@ -1333,6 +1347,17 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
           $info['column'] = key($field['columns']);
         }
       }
+
+      foreach ($info['resource'] as &$resource) {
+        // Expand array to be verbose.
+        if (is_array($resource)) {
+          continue;
+        }
+        $resource = array(
+          'name' => $resource,
+          'full_view' => TRUE,
+        );
+      }
     }
 
     // Cache the processed fields.
@@ -1387,5 +1412,4 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
     }
     return $file_array;
   }
-
 }
