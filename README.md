@@ -60,12 +60,12 @@ By default the RESTful module will expose the ID, label and URL of the entity.
 You probably want to expose more than that. To do so you will need to implement
 the `publicFieldsInfo` method defining the names in the output array and how
 those are mapped to the queried entity. For instance the following example will
-retrieve the basic fields plus the body, tags and images from (probably) an
-article node. The RESTful module will know to use the `MyRestfulPlugin` class
-because your plugin definition will say so.
+retrieve the basic fields plus the body, tags and images from an article node.
+The RESTful module will know to use the `MyRestfulPlugin` class because your
+plugin definition will say so.
 
 ```php
-class MyRestfulPlugin extends \RestfulEntityBase {
+class MyArticlesResource extends \RestfulEntityBase {
 
   /**
    * Overrides \RestfulEntityBase::publicFieldsInfo().

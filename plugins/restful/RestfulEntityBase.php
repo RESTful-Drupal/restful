@@ -1369,7 +1369,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    * Get the image URLs based on the configured image styles.
    *
    * @param array $file_array
-   *   The file array from EMW.
+   *   The file array.
    * @param array $image_styles
    *   The list of image styles to use.
    *
