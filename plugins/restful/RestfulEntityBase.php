@@ -124,22 +124,25 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
     parent::__construct($plugin, $auth_manager, $cache_controller);
     $this->entityType = $plugin['entity_type'];
     $this->bundle = $plugin['bundle'];
-    $this->controllers = array(
-      '' => array(
-        // GET returns a list of entities.
-        \RestfulInterface::GET => 'getList',
-        \RestfulInterface::HEAD => 'getList',
-        // POST
-        \RestfulInterface::POST => 'createEntity',
-      ),
-      '^(\d+,)*\d+$' => array(
-        \RestfulInterface::GET => 'viewEntities',
-        \RestfulInterface::HEAD => 'viewEntities',
-        \RestfulInterface::PUT => 'putEntity',
-        \RestfulInterface::PATCH => 'patchEntity',
-        \RestfulInterface::DELETE => 'deleteEntity',
-      ),
-    );
+    // Add default controllers.
+    if (empty($this->controllers)) {
+      $this->controllers = array(
+        '' => array(
+          // GET returns a list of entities.
+          \RestfulInterface::GET => 'getList',
+          \RestfulInterface::HEAD => 'getList',
+          // POST
+          \RestfulInterface::POST => 'createEntity',
+        ),
+        '^(\d+,)*\d+$' => array(
+          \RestfulInterface::GET => 'viewEntities',
+          \RestfulInterface::HEAD => 'viewEntities',
+          \RestfulInterface::PUT => 'putEntity',
+          \RestfulInterface::PATCH => 'patchEntity',
+          \RestfulInterface::DELETE => 'deleteEntity',
+        ),
+      );
+    }
   }
 
   /**
@@ -263,8 +266,10 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
       }
     }
     else {
-      // Sort by default using the entity ID.
-      $sorts['id'] = 'ASC';
+      if (!empty($public_fields['id'])) {
+        // Sort by default using the entity ID.
+        $sorts['id'] = 'ASC';
+      }
     }
 
     foreach ($sorts as $sort => $direction) {
