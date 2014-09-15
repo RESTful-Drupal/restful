@@ -675,11 +675,11 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
   protected function getValueFromResource(EntityMetadataWrapper $wrapper, $property, $resource) {
     $handlers = &drupal_static(__FUNCTION__, array());
 
-    $target_type = $this->getTargetTypeFromEntityReference($property);
     if (!$entity = $wrapper->value()) {
       return;
     }
 
+    $target_type = $this->getTargetTypeFromEntityReference($property);
     list($id,, $bundle) = entity_extract_ids($target_type, $entity);
 
     if (empty($resource[$bundle])) {
