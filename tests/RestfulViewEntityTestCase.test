@@ -117,6 +117,22 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
     ksort($expected_result);
     $this->assertEqual($stripped_result, $expected_result, 'Entity view has correct result for "main" resource v1.1');
 
+    // Test the "full_view" property on a referenced entity.
+    // We change the definition via the handler instead of creating another
+    // plugin.
+    $public_fields = $handler->getPublicFields();
+    // Single entity reference field with "resource".
+    $public_fields['entity_reference_single_resource']['resource'] = array(
+      'main' => array(
+        'name' => 'main',
+        'full_view' => FALSE,
+      ),
+    );
+    $handler->setPublicFields($public_fields);
+
+    $result = $handler->get($id);
+    $this->assertEqual($result[0]['entity_reference_single_resource'], $entity1->pid, '"full_view" property is working properly.');
+
     // Empty the text and entity reference fields.
     $wrapper->text_single->set(NULL);
     $wrapper->text_multiple->set(NULL);
@@ -139,6 +155,7 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
     ksort($result);
     ksort($expected_result);
     $this->assertEqual($result, $expected_result, 'Entity view has correct result for "main" resource v1.1 with empty entity reference.');
+
 
     // v1.2 - "callback" and "process callback".
     $handler = restful_get_restful_handler('main', 1, 2);
