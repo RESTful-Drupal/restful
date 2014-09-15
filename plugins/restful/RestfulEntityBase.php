@@ -386,6 +386,8 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
     $this->addExtraInfoToQuery($query);
     $query->addTag('restful_count');
 
+    $this->queryForListFilter($query);
+
     return $query->count();
   }
 
@@ -971,7 +973,8 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
     }
 
     // In case we have multiple bundles, we opt for the first one.
-    $resource_name = reset($public_fields[$public_field_name]['resource']);
+    $resource = reset($public_fields[$public_field_name]['resource']);
+    $resource_name = $resource['name'];
 
     $version = $this->getVersion();
     $handler = restful_get_restful_handler($resource_name, $version['major'], $version['minor']);
@@ -1350,13 +1353,12 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
 
       foreach ($info['resource'] as &$resource) {
         // Expand array to be verbose.
-        if (is_array($resource)) {
-          continue;
+        if (!is_array($resource)) {
+          $resource = array('name' => $resource);
         }
-        $resource = array(
-          'name' => $resource,
-          'full_view' => TRUE,
-        );
+
+        // Set default value.
+        $resource += array('full_view' => TRUE);
       }
     }
 
