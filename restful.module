@@ -801,8 +801,8 @@ function restful_page_delivery_callback_alter(&$callback) {
   $base_path = variable_get('restful_hook_menu_base_path', 'api');
 
 
-  if (strpos($_GET['q'], $base_path . '/') !== 0) {
-    // Page doesn't start with the base path (e.g. "api/").
+  if (strpos($_GET['q'], $base_path . '/') !== 0 && $_GET['q'] != $base_path) {
+    // Page doesn't start with the base path (e.g. "api" or "api/").
     return;
   }
 
