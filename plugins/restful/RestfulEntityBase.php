@@ -1352,13 +1352,13 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
 
       foreach ($info['resource'] as &$resource) {
         // Expand array to be verbose.
-        if (is_array($resource)) {
+        if (!is_array($resource)) {
           continue;
+          $resource = array('name' => $resource);
         }
-        $resource = array(
-          'name' => $resource,
-          'full_view' => TRUE,
-        );
+
+        // Set default value.
+        $resource += array('full_view' => TRUE);
       }
     }
 
