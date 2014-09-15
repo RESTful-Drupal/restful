@@ -294,6 +294,13 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    * @see \RestfulEntityBase::getQueryForList
    */
   protected function queryForListFilter(\EntityFieldQuery $query) {
+    if (!$this->isListRequest()) {
+      // Not a list request, so we don't need to filter.
+      // We explicitly check this, as this function might be called from a
+      // formatter plugin, after RESTful's error handling has finished, and an
+      // invalid key might be passed.
+      return;
+    }
     $request = $this->getRequest();
     if (empty($request['filter'])) {
       // No filtering is needed.

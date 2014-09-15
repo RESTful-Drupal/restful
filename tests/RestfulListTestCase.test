@@ -5,7 +5,7 @@
  * Contains RestfulListTestCase
  */
 
-class RestfulListTestCase extends DrupalWebTestCase {
+class RestfulListTestCase extends RestfulCurlBaseTestCase {
 
   public static function getInfo() {
     return array(
@@ -258,6 +258,13 @@ class RestfulListTestCase extends DrupalWebTestCase {
     catch (\Exception $e) {
       $this->fail('Incorrect exception was thrown on invalid key for filter.');
     }
+
+    // Assert filtering doesn't apply for non-list request
+    // (e.g. /api/v1/articles/1?filter[label]=foo), as this might be called from
+    // a formatter plugin, after RESTful's error handling has finished.
+    $query = array('filter' => array('invalid-key' => 'foo'));
+    $result = $this->httpRequest('api/v1/articles/', \RestfulInterface::GET, $query);
+    $this->assertEqual($result['code'], '200', 'Invalid filter key was ignored on non-list query.');
   }
 
   /**
