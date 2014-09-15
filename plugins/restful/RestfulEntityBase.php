@@ -973,7 +973,8 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
     }
 
     // In case we have multiple bundles, we opt for the first one.
-    $resource_name = reset($public_fields[$public_field_name]['resource']);
+    $resource = reset($public_fields[$public_field_name]['resource']);
+    $resource_name = $resource['name'];
 
     $version = $this->getVersion();
     $handler = restful_get_restful_handler($resource_name, $version['major'], $version['minor']);
