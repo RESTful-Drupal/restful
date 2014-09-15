@@ -386,6 +386,8 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
     $this->addExtraInfoToQuery($query);
     $query->addTag('restful_count');
 
+    $this->queryForListFilter($query);
+
     return $query->count();
   }
 

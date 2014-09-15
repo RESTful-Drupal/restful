@@ -86,6 +86,16 @@ interface RestfulInterface {
   public function getHttpHeaders();
 
   /**
+   * Set the HTTP headers.
+   *
+   * @param string $key
+   *   The HTTP header key.
+   * @param string $value
+   *   The HTTP header value.
+   */
+  public function setHttpHeaders($key, $value);
+
+  /**
    * Determine if user can access the handler.
    *
    * @return bool

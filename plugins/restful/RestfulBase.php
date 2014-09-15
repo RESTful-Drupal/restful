@@ -143,12 +143,7 @@ abstract class RestfulBase implements RestfulInterface {
   }
 
   /**
-   * Set the HTTP headers.
-   *
-   * @param string $key
-   *   The HTTP header key.
-   * @param string $value
-   *   The HTTP header value.
+   * {@inheritdoc}
    */
   public function setHttpHeaders($key, $value) {
     $this->httpHeaders[$key] = $value;
