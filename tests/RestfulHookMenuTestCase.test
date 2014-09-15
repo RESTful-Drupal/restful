@@ -10,7 +10,7 @@ class RestfulHookMenuTestCase extends RestfulCurlBaseTestCase {
   public static function getInfo() {
     return array(
       'name' => 'Menu API',
-      'description' => 'Test the hook_menu() implementation.',
+      'description' => 'Test the hook_menu() and delivery callback implementations.',
       'group' => 'Restful',
     );
   }
@@ -86,5 +86,28 @@ class RestfulHookMenuTestCase extends RestfulCurlBaseTestCase {
     $this->httpauth_credentials = NULL;
     $result = $this->httpRequest('api/login');
     $this->assertEqual($result['code'], '503', '503 status code sent for site in offline mode.');
+  }
+
+  /**
+   * Test hijacking of api/* pages and showing proper error messages.
+   */
+  function testNotFoundDelivery() {
+    // Invalid URLs.
+    $urls = array(
+      'api',
+      'api/',
+      'api-invalid',
+    );
+
+    foreach ($urls as $url) {
+      $result = $this->httpRequest($url);
+      $this->assertEqual($result['code'], '404', format_string('404 status code sent for @url url.', array('@url' => $url)));
+      $this->assertTrue(strpos($result['headers'], 'application/problem+json;'), '"application/problem+json" found in invalid request.');
+    }
+
+    // Non-related url.
+    $result = $this->httpRequest('api-api');
+    $this->assertEqual($result['code'], '404', format_string('404 status code sent for @url url.', array('@url' => $url)));
+    $this->assertFalse(strpos($result['headers'], 'application/problem+json;'), '"application/problem+json" found in valid request.');
   }
 }
