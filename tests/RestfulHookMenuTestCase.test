@@ -96,7 +96,7 @@ class RestfulHookMenuTestCase extends RestfulCurlBaseTestCase {
     $urls = array(
       'api',
       'api/',
-      'api-invalid',
+      'api/invalid',
     );
 
     foreach ($urls as $url) {
@@ -108,6 +108,6 @@ class RestfulHookMenuTestCase extends RestfulCurlBaseTestCase {
     // Non-related url.
     $result = $this->httpRequest('api-api');
     $this->assertEqual($result['code'], '404', format_string('404 status code sent for @url url.', array('@url' => $url)));
-    $this->assertFalse(strpos($result['headers'], 'application/problem+json;'), '"application/problem+json" found in valid request.');
+    $this->assertFalse(strpos($result['headers'], 'application/problem+json;'), 'Only correct URL is hijacked.');
   }
 }
