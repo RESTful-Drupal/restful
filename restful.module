@@ -164,8 +164,8 @@ function restful_plugin_process_restful(&$plugin, $info) {
 
   if ($plugin['hook_menu'] && empty($plugin['menu_item'])) {
     // Set a default menu item.
-    $base_path = variable_get('restful_hook_menu_base_path', 'api/%');
-    $base_path = str_replace('%', 'v' . $plugin['major_version'], $base_path);
+    $base_path = variable_get('restful_hook_menu_base_path', 'api');
+    $base_path .= '/v' . $plugin['major_version'];
     $plugin['menu_item'] = $base_path . '/' . $plugin['resource'];
   }
 }
@@ -300,6 +300,7 @@ function restful_get_rate_limit_plugin($plugin_name) {
  * Implements hook_menu().
  */
 function restful_menu() {
+  $base_path = variable_get('restful_hook_menu_base_path', 'api');
   $items = array();
   foreach (restful_get_restful_plugins() as $plugin) {
     if (!$plugin['hook_menu']) {
@@ -322,7 +323,7 @@ function restful_menu() {
   // A special login endpoint, that returns a JSON output along with the Drupal
   // authentication cookie.
   if (variable_get('restful_user_login_menu_item', TRUE)) {
-    $items['api/login'] = array(
+    $items[$base_path . '/login'] = array(
       'title' => 'Login',
       'description' => 'Login using base auth and recieve a JSON response along with an authentication cookie.',
       'access callback' => 'user_is_anonymous',
@@ -336,7 +337,7 @@ function restful_menu() {
   // A special file upload endpoint, that returns a JSON with the newly saved
   // files.
   if (variable_get('restful_file_upload', FALSE)) {
-    $items['api/file-upload'] = array(
+    $items[$base_path . '/file-upload'] = array(
       'title' => 'File upload',
       'access callback' => 'restful_menu_access_callback',
       'access arguments' => array('v1', 'files'),
@@ -347,7 +348,7 @@ function restful_menu() {
     );
   }
 
-  $items['api/session/token'] = array(
+  $items[$base_path . '/session/token'] = array(
     'page callback' => 'restful_csrf_session_token',
     'access callback' => 'user_is_logged_in',
     'delivery callback' => 'restful_unprepared_delivery',
@@ -790,8 +791,11 @@ function restful_page_delivery_callback_alter(&$callback) {
     return;
   }
 
-  if (strpos($_GET['q'], 'api/') !== 0) {
-    // Page doesn't start with "api/"
+  $base_path = variable_get('restful_hook_menu_base_path', 'api');
+
+
+  if (strpos($_GET['q'], $base_path . '/') !== 0) {
+    // Page doesn't start with the base path (e.g. "api/").
     return;
   }
 
@@ -800,13 +804,13 @@ function restful_page_delivery_callback_alter(&$callback) {
     return;
   }
 
-  $callback = 'restful_deliver_404';
+  $callback = 'restful_deliver_menu_not_found';
 }
 
 /**
- * Delivers 404 error.
+ * Delivers a not found (404) error.
  */
-function restful_deliver_404($page_callback_result) {
+function restful_deliver_menu_not_found($page_callback_result) {
   restful_delivery(MENU_NOT_FOUND);
 }
 

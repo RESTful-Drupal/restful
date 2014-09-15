@@ -86,6 +86,5 @@ function restful_token_auth_schema() {
  */
 function restful_token_auth_uninstall() {
   variable_del('restful_token_auth_delete_expired_tokens');
-  variable_del('restful_token_auth_plugin_menu_item');
 }
 
