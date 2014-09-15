@@ -756,18 +756,21 @@ function _restful_get_json_from_menu_status(&$var) {
   switch ($var) {
     case MENU_NOT_FOUND:
       $class_name = 'RestfulNotFoundException';
+      $message = 'Invalid URL path.';
       break;
 
     case MENU_ACCESS_DENIED:
       $class_name = 'RestfulForbiddenException';
+      $message = 'Access denied.';
       break;
 
     case MENU_SITE_OFFLINE:
       $class_name = 'RestfulServiceUnavailable';
+      $message = 'Site is offline.';
       break;
   }
 
-  $e = new $class_name;
+  $e = new $class_name($message);
 
   $var = array(
     'type' => $e->getType(),
