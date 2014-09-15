@@ -214,4 +214,16 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
     $this->assertEqual(array_keys($result[0]['image']['styles']) == array('thumbnail', 'medium', 'large'), 'The selected image styles are present.');
     $this->assertEqual(count(array_filter(array_values($result[0]['image']['styles']))) == 3, 'The image styles are populated.');
   }
+
+  /**
+   * Test the generation of the Vary headers.
+   */
+  public function testVaryHeader() {
+    // When there is no minor version passed in there is no need of Vary.
+    $response = $this->httpRequest('api/v1/articles');
+    $this->assertFalse(preg_match('/X-Restful-Minor-Version/', $response['headers']), 'The Vary header was not added.');
+
+    $response = $this->httpRequest('api/v1/articles', \RestfulInterface::GET, NULL, array('X-Restful-Minor-Version' => 1));
+    $this->assertTrue(preg_match('/X-Restful-Minor-Version/', $response['headers']), 'The Vary header was added.');
+  }
 }
