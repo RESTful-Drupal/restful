@@ -16,6 +16,22 @@ function restful_ctools_plugin_directory($module, $plugin) {
 
 /**
  * Add defaults values to the restful related plugins.
+ */
+function restful_plugin_process(&$plugin, $info) {
+  // Common operations.
+  $plugin += array(
+    'description' => '',
+  );
+
+  // Call the plugin specific process functions.
+  $function = 'restful_plugin_process_' . $info['type'];
+  if (function_exists($function)) {
+    $function($plugin, $info);
+  }
+}
+
+/**
+ * Add defaults values to the restful related plugins.
  *
  * Properties for the "restful" plugin type:
  * - description: The description of the resource. Defaults to empty string.
@@ -97,81 +113,99 @@ function restful_ctools_plugin_directory($module, $plugin) {
  *   empty string.
  * - settings: Array with the settings needed for the plugin. Defaults to empty
  *   array.
+ */
+function restful_plugin_process_restful(&$plugin, $info) {
+  $plugin += array(
+    'major_version' => 1,
+    'minor_version' => 0,
+    'options' => array(),
+    'entity_type' => FALSE,
+    'bundle' => FALSE,
+    'authentication_types' => array(),
+    'authentication_optional' => FALSE,
+    'hook_menu' => TRUE,
+    'cache' => array(),
+    'autocomplete' => array(),
+    'formatter' => variable_get('restful_default_output_formatter', 'hal_json'),
+  );
+
+  $plugin['cache'] += array(
+    'render' => FALSE,
+    'class' => NULL,
+    'bin' => 'cache_restful',
+    'expire' => CACHE_PERMANENT,
+    'simple_invalidate' => TRUE,
+  );
+
+  $plugin['autocomplete'] += array(
+    'enable' => TRUE,
+    'operator' => 'CONTAINS',
+    'range' => 10,
+  );
+
+  if (!empty($plugin['rate_limit'])) {
+    foreach ($plugin['rate_limit'] as $event_name => $rate_limit_info) {
+      $plugin['rate_limit'][$event_name]['limits'] += array('anonymous user' => 0);
+    }
+  }
+
+  // Set the global limit. This limit is always attached, but it can be
+  // disabled by unsetting the variable 'restful_global_rate_limit'. The
+  // global limit can be overridden in the restful plugin definition.
+  if (empty($plugin['rate_limit']['global'])) {
+    $plugin['rate_limit'] = empty($plugin['rate_limit']) ? array() : $plugin['rate_limit'];
+    // Setup the global limits to the variable value.
+    $plugin['rate_limit']['global'] = array(
+      'event' => 'global',
+      'period' => new \DateInterval(variable_get('restful_global_rate_period', 'P1D')),
+      'limits' => array(),
+    );
+  }
+
+  if ($plugin['hook_menu'] && empty($plugin['menu_item'])) {
+    // Set a default menu item.
+    $base_path = variable_get('restful_hook_menu_base_path', 'api/%');
+    $base_path = str_replace('%', 'v' . $plugin['major_version'], $base_path);
+    $plugin['menu_item'] = $base_path . '/' . $plugin['resource'];
+  }
+}
+
+/**
+ * Add defaults values to the restful related plugins.
+ *
+ * Properties for the "authentication" plugin type:
+ * - description: The description of the event. Defaults to an empty string.
+ * - name: The name of the event.
+ * - class: Name of the class implementing RestfulRateLimitInterface.
+ */
+function restful_plugin_process_authentication(&$plugin, $info) {
+  $plugin += array(
+    'settings' => array(),
+  );
+}
+
+/**
+ * Add defaults values to the restful related plugins.
  *
  * Properties for the "rate_limit" plugin type:
  * - description: The description of the event. Defaults to an empty string.
  * - name: The name of the event.
  * - class: Name of the class implementing RestfulRateLimitInterface.
- *
  */
-function restful_plugin_process(&$plugin, $info) {
-  if ($info['type'] == 'restful') {
-    $plugin += array(
-      'description' => '',
-      'major_version' => 1,
-      'minor_version' => 0,
-      'options' => array(),
-      'entity_type' => FALSE,
-      'bundle' => FALSE,
-      'authentication_types' => array(),
-      'authentication_optional' => FALSE,
-      'hook_menu' => TRUE,
-      'cache' => array(),
-      'autocomplete' => array(),
-      'formatter' => variable_get('restful_default_output_formatter', 'hal_json'),
-    );
+function restful_plugin_process_rate_limit(&$plugin, $info) {
+  // Nothing to be done.
+}
 
-    $plugin['cache'] += array(
-      'render' => FALSE,
-      'class' => NULL,
-      'bin' => 'cache_restful',
-      'expire' => CACHE_PERMANENT,
-      'simple_invalidate' => TRUE,
-    );
-
-    $plugin['autocomplete'] += array(
-      'enable' => TRUE,
-      'operator' => 'CONTAINS',
-      'range' => 10,
-    );
-
-    if (!empty($plugin['rate_limit'])) {
-      foreach ($plugin['rate_limit'] as $event_name => $rate_limit_info) {
-        $plugin['rate_limit'][$event_name]['limits'] += array('anonymous user' => 0);
-      }
-    }
-
-    // Set the global limit. This limit is always attached, but it can be
-    // disabled by unsetting the variable 'restful_global_rate_limit'. The
-    // global limit can be overridden in the restful plugin definition.
-    if (empty($plugin['rate_limit']['global'])) {
-      $plugin['rate_limit'] = empty($plugin['rate_limit']) ? array() : $plugin['rate_limit'];
-      // Setup the global limits to the variable value.
-      $plugin['rate_limit']['global'] = array(
-        'event' => 'global',
-        'period' => new \DateInterval(variable_get('restful_global_rate_period', 'P1D')),
-        'limits' => array(),
-      );
-    }
-
-    if ($plugin['hook_menu'] && empty($plugin['menu_item'])) {
-      // Set a default menu item.
-      $base_path = variable_get('restful_hook_menu_base_path', 'api/%');
-      $base_path = str_replace('%', 'v' . $plugin['major_version'], $base_path);
-      $plugin['menu_item'] = $base_path . '/' . $plugin['resource'];
-    }
-  }
-  elseif ($info['type'] == 'authentication') {
-    $plugin += array(
-      'description' => '',
-      'settings' => array(),
-    );
-  }
-  elseif ($info['type'] == 'rate_limit') {
-    $plugin += array(
-      'description' => '',
-    );
-  }
+/**
+ * Add defaults values to the restful related plugins.
+ *
+ * Properties for the "formatter" plugin type:
+ * - description: The description of the formatter. Defaults to an empty string.
+ * - name: The name of the formatter.
+ * - class: Name of the class implementing RestfulFormatterInterface.
+ */
+function restful_plugin_process_formatter(&$plugin, $info) {
+  // Nothing to be done.
 }
 
 /**
