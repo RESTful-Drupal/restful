@@ -8,6 +8,14 @@
 abstract class RestfulBase implements RestfulInterface {
 
   /**
+   * Nested array that provides information about what method to call for each
+   * route pattern.
+   *
+   * @var array $controllers
+   */
+  protected $controllers = array();
+
+  /**
    * The plugin definition.
    *
    * @var array $plugin
@@ -386,6 +394,22 @@ abstract class RestfulBase implements RestfulInterface {
    */
   public function get($path = '', array $request = array()) {
     return $this->process($path, $request, \RestfulInterface::GET);
+  }
+
+  /**
+   * Call resource using the GET http method.
+   *
+   * @param string $path
+   *   (optional) The path.
+   * @param array $request
+   *   (optional) The request.
+   *
+   * @return mixed
+   *   The return value can depend on the controller for the get method.
+   */
+  public function head($path = '', array $request = array()) {
+    $this->process($path, $request, \RestfulInterface::HEAD);
+    return NULL;
   }
 
   /**

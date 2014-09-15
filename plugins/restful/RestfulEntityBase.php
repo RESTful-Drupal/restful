@@ -67,27 +67,6 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
   protected $publicFields = array();
 
   /**
-   * Nested array that provides information about what method to call for each
-   * route pattern.
-   *
-   * @var array $controllers
-   */
-  protected $controllers = array(
-    '' => array(
-      // GET returns a list of entities.
-      \RestfulInterface::GET => 'getList',
-      // POST
-      \RestfulInterface::POST => 'createEntity',
-    ),
-    '^(\d+,)*\d+$' => array(
-      \RestfulInterface::GET => 'viewEntities',
-      \RestfulInterface::PUT => 'putEntity',
-      \RestfulInterface::PATCH => 'patchEntity',
-      \RestfulInterface::DELETE => 'deleteEntity',
-    ),
-  );
-
-  /**
    * Determines the number of items that should be returned when viewing lists.
    *
    * @var int
@@ -145,6 +124,22 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
     parent::__construct($plugin, $auth_manager, $cache_controller);
     $this->entityType = $plugin['entity_type'];
     $this->bundle = $plugin['bundle'];
+    $this->controllers = array(
+      '' => array(
+        // GET returns a list of entities.
+        \RestfulInterface::GET => 'getList',
+        \RestfulInterface::HEAD => 'getList',
+        // POST
+        \RestfulInterface::POST => 'createEntity',
+      ),
+      '^(\d+,)*\d+$' => array(
+        \RestfulInterface::GET => 'viewEntities',
+        \RestfulInterface::HEAD => 'viewEntities',
+        \RestfulInterface::PUT => 'putEntity',
+        \RestfulInterface::PATCH => 'patchEntity',
+        \RestfulInterface::DELETE => 'deleteEntity',
+      ),
+    );
   }
 
   /**
