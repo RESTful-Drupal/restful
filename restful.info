@@ -31,6 +31,7 @@ files[] = exceptions/RestfulBadRequestException.php
 files[] = exceptions/RestfulException.php
 files[] = exceptions/RestfulForbiddenException.php
 files[] = exceptions/RestfulFloodException.php
+files[] = exceptions/RestfulNotFoundException.php
 files[] = exceptions/RestfulGoneException.php
 files[] = exceptions/RestfulServiceUnavailable.php
 files[] = exceptions/RestfulUnauthorizedException.php

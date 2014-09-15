@@ -753,6 +753,10 @@ function restful_unprepared_delivery($var = NULL) {
  */
 function _restful_get_json_from_menu_status(&$var) {
   switch ($var) {
+    case MENU_NOT_FOUND:
+      $class_name = 'RestfulNotFoundException';
+      break;
+
     case MENU_ACCESS_DENIED:
       $class_name = 'RestfulForbiddenException';
       break;
@@ -772,6 +776,40 @@ function _restful_get_json_from_menu_status(&$var) {
     'instance' => $e->getInstance(),
   );
 }
+
+
+/**
+ * Implements hook_page_delivery_callback_alter().
+ *
+ * Hijack api/* to be under RESTful. We make sure that any call to api/* pages
+ * that isn't valid, will still return with a well formatted error, instead of
+ * a 404 HTML page.
+ */
+function restful_page_delivery_callback_alter(&$callback) {
+  if (!variable_get('restful_hijack_api_pages', TRUE)) {
+    return;
+  }
+
+  if (strpos($_GET['q'], 'api/') !== 0) {
+    // Page doesn't start with "api/"
+    return;
+  }
+
+  if (menu_get_item()) {
+    // Path is valid (i.e. not 404).
+    return;
+  }
+
+  $callback = 'restful_deliver_404';
+}
+
+/**
+ * Delivers 404 error.
+ */
+function restful_deliver_404($page_callback_result) {
+  restful_delivery(MENU_NOT_FOUND);
+}
+
 
 /**
  * Implements hook_entity_info().
