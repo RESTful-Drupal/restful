@@ -263,7 +263,7 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     // (e.g. /api/v1/articles/1?filter[label]=foo), as this might be called from
     // a formatter plugin, after RESTful's error handling has finished.
     $query = array('filter' => array('invalid-key' => 'foo'));
-    $result = $this->httpRequest('api/v1/articles/', \RestfulInterface::GET, $query);
+    $result = $this->httpRequest('api/v1/articles/1', \RestfulInterface::GET, $query);
     $this->assertEqual($result['code'], '200', 'Invalid filter key was ignored on non-list query.');
   }
 
