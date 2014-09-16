@@ -24,4 +24,5 @@ interface RestfulEntityInterface extends RestfulInterface {
    * @return array
    */
   public function getPublicFields();
+
 }
