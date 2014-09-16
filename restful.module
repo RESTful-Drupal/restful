@@ -164,8 +164,8 @@ function restful_plugin_process_restful(&$plugin, $info) {
 
   if ($plugin['hook_menu'] && empty($plugin['menu_item'])) {
     // Set a default menu item.
-    $base_path = variable_get('restful_hook_menu_base_path', 'api/%');
-    $base_path = str_replace('%', 'v' . $plugin['major_version'], $base_path);
+    $base_path = variable_get('restful_hook_menu_base_path', 'api');
+    $base_path .= '/v' . $plugin['major_version'];
     $plugin['menu_item'] = $base_path . '/' . $plugin['resource'];
   }
 }
@@ -300,6 +300,7 @@ function restful_get_rate_limit_plugin($plugin_name) {
  * Implements hook_menu().
  */
 function restful_menu() {
+  $base_path = variable_get('restful_hook_menu_base_path', 'api');
   $items = array();
   foreach (restful_get_restful_plugins() as $plugin) {
     if (!$plugin['hook_menu']) {
@@ -322,7 +323,7 @@ function restful_menu() {
   // A special login endpoint, that returns a JSON output along with the Drupal
   // authentication cookie.
   if (variable_get('restful_user_login_menu_item', TRUE)) {
-    $items['api/login'] = array(
+    $items[$base_path . '/login'] = array(
       'title' => 'Login',
       'description' => 'Login using base auth and recieve a JSON response along with an authentication cookie.',
       'access callback' => 'user_is_anonymous',
@@ -336,7 +337,7 @@ function restful_menu() {
   // A special file upload endpoint, that returns a JSON with the newly saved
   // files.
   if (variable_get('restful_file_upload', FALSE)) {
-    $items['api/file-upload'] = array(
+    $items[$base_path . '/file-upload'] = array(
       'title' => 'File upload',
       'access callback' => 'restful_menu_access_callback',
       'access arguments' => array('v1', 'files'),
@@ -347,7 +348,7 @@ function restful_menu() {
     );
   }
 
-  $items['api/session/token'] = array(
+  $items[$base_path . '/session/token'] = array(
     'page callback' => 'restful_csrf_session_token',
     'access callback' => 'user_is_logged_in',
     'delivery callback' => 'restful_unprepared_delivery',
@@ -753,25 +754,76 @@ function restful_unprepared_delivery($var = NULL) {
  */
 function _restful_get_json_from_menu_status(&$var) {
   switch ($var) {
+    case MENU_NOT_FOUND:
+      $class_name = 'RestfulNotFoundException';
+      $message = 'Invalid URL path.';
+      break;
+
     case MENU_ACCESS_DENIED:
       $class_name = 'RestfulForbiddenException';
+      $message = 'Access denied.';
       break;
 
     case MENU_SITE_OFFLINE:
       $class_name = 'RestfulServiceUnavailable';
+      $message = 'Site is offline.';
       break;
   }
 
-  $e = new $class_name;
+  $e = new $class_name($message);
 
   $var = array(
     'type' => $e->getType(),
     'title' => $e->getMessage(),
     'status' => $e->getCode(),
     'detail' => $e->getDescription(),
-    'instance' => $e->getInstance(),
   );
+
+  if ($instance = $e->getInstance()) {
+    $var['instance'] = $instance;
+  }
+
+  if ($errors = $e->getFieldErrors()) {
+    $var['errors'] = $errors;
+  }
 }
+
+
+/**
+ * Implements hook_page_delivery_callback_alter().
+ *
+ * Hijack api/* to be under RESTful. We make sure that any call to api/* pages
+ * that isn't valid, will still return with a well formatted error, instead of
+ * a 404 HTML page.
+ */
+function restful_page_delivery_callback_alter(&$callback) {
+  if (!variable_get('restful_hijack_api_pages', TRUE)) {
+    return;
+  }
+
+  $base_path = variable_get('restful_hook_menu_base_path', 'api');
+
+
+  if (strpos($_GET['q'], $base_path . '/') !== 0 && $_GET['q'] != $base_path) {
+    // Page doesn't start with the base path (e.g. "api" or "api/").
+    return;
+  }
+
+  if (menu_get_item()) {
+    // Path is valid (i.e. not 404).
+    return;
+  }
+
+  $callback = 'restful_deliver_menu_not_found';
+}
+
+/**
+ * Delivers a not found (404) error.
+ */
+function restful_deliver_menu_not_found($page_callback_result) {
+  restful_delivery(MENU_NOT_FOUND);
+}
+
 
 /**
  * Implements hook_entity_info().
