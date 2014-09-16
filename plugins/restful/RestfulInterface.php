@@ -58,22 +58,7 @@ interface RestfulInterface {
   public function process($path = '', array $request = array(), $method = \RestfulInterface::GET, $check_rate_limit = TRUE);
 
 
-  /**
-   * Return the properties that should be public.
-   *
-   * @return array
-   */
-  public function publicFieldsInfo();
 
-  /**
-   * Return the properties that should be public after processing.
-   *
-   * Default values would be assigned to the properties declared in
-   * \RestfulInterface::publicFieldsInfo().
-   *
-   * @return array
-   */
-  public function getPublicFields();
 
   /**
    * Return array keyed by the header property, and the value.
