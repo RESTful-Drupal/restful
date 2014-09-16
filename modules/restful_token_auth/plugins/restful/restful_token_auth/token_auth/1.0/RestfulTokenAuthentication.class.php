@@ -20,16 +20,16 @@ class RestfulTokenAuthentication extends \RestfulEntityBase {
   }
 
   /**
-   * Overrides \RestfulEntityBase::controllers
-   *
-   * @var array
+   * Overrides \RestfulBase::controllersInfo().
    */
-  protected $controllers = array(
-    '' => array(
-      // Get or create a new token.
-      \RestfulInterface::GET => 'getOrCreateToken',
-    ),
-  );
+  public static function controllersInfo() {
+    return array(
+      '' => array(
+        // Get or create a new token.
+        \RestfulInterface::GET => 'getOrCreateToken',
+      ),
+    );
+  }
 
   /**
    * Create a token for a user, and return its value.

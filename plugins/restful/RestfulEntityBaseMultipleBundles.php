@@ -15,12 +15,17 @@ class RestfulEntityBaseMultipleBundles extends RestfulEntityBase {
    */
   protected $bundles = array();
 
-  protected $controllers = array(
-    '' => array(
-      // GET returns a list of entities.
-      \RestfulInterface::GET => 'getList',
-    ),
-  );
+  /**
+   * Overrides \RestfulBase::controllersInfo().
+   */
+  public static function controllersInfo() {
+    return array(
+      '' => array(
+        // GET returns a list of entities.
+        \RestfulInterface::GET => 'getList',
+      ),
+    );
+  }
 
   public function __construct($plugin, \RestfulAuthenticationManager $auth_manager = NULL, \DrupalCacheInterface $cache_controller = NULL) {
     parent::__construct($plugin);

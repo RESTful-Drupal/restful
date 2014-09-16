@@ -141,12 +141,27 @@ abstract class RestfulBase implements RestfulInterface {
   }
 
   /**
+   * Returns the default controllers for the entity.
+   *
+   * @return array
+   *   Nested array that provides information about what method to call for each
+   *   route pattern.
+   */
+  public static function controllersInfo() {
+    return array();
+  }
+
+  /**
    * Get the defined controllers
    *
    * @return array
    *   The defined controllers.
    */
   public function getControllers() {
+    if (!empty($this->controllers)) {
+      return $this->controllers;
+    }
+    $this->controllers = static::controllersInfo();
     return $this->controllers;
   }
 

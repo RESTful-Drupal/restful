@@ -8,13 +8,15 @@
 class RestfulFilesUpload extends \RestfulEntityBase {
 
   /**
-   * Overrides \RestfulEntityBase::controllers.
+   * Overrides \RestfulBase::controllersInfo().
    */
-  protected $controllers = array(
-    '' => array(
-      \RestfulInterface::POST => 'createEntity',
-    ),
-  );
+  public static function controllersInfo() {
+    return array(
+      '' => array(
+        \RestfulInterface::POST => 'createEntity',
+      ),
+    );
+  }
 
   /**
    * Overrides \RestfulEntityBase::__construct()
