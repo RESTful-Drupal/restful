@@ -247,11 +247,22 @@ function restful_get_authentication_plugins() {
  * Include CTools plugins and get all rate_limit plugins.
  *
  * @return array
- *   All plugins for restful authentication.
+ *   All the restful rate_limit plugins.
  */
 function restful_get_rate_limit_plugins() {
   ctools_include('plugins');
   return ctools_get_plugins('restful', 'rate_limit');
+}
+
+/**
+ * Include CTools plugins and get all formatter plugins.
+ *
+ * @return array
+ *   All the restful formatter plugins.
+ */
+function restful_get_formatter_plugins() {
+  ctools_include('plugins');
+  return ctools_get_plugins('restful', 'formatter');
 }
 
 /**
@@ -501,7 +512,11 @@ function restful_get_formatter_handler($formatter_plugin_name, $restful_handler)
  *   The restful handler or NULL.
  */
 function restful_get_restful_handler_for_path($path = NULL) {
+  $handlers = &drupal_static(__FUNCTION__);
   $path = is_null($path) ? $_GET['q'] : $path;
+  if (isset($handlers[$path])) {
+    return $handlers[$path];
+  }
   $router_item = menu_get_item($path);
   // We can only get the information if the current path was processed by
   // restful_menu_process_callback.
@@ -511,7 +526,8 @@ function restful_get_restful_handler_for_path($path = NULL) {
   list($major_version, $resource) = $router_item['page_arguments'];
   $major_version = intval(str_replace('v', '', $major_version));
   $minor_version = !empty($_SERVER['HTTP_X_RESTFUL_MINOR_VERSION']) && is_numeric($_SERVER['HTTP_X_RESTFUL_MINOR_VERSION']) ? $_SERVER['HTTP_X_RESTFUL_MINOR_VERSION'] : 0;
-  return restful_get_restful_handler($resource, $major_version, $minor_version);
+  $handlers[$path] = restful_get_restful_handler($resource, $major_version, $minor_version);
+  return $handlers[$path];
 }
 
 /**
