@@ -765,7 +765,9 @@ function restful_output_format(\RestfulBase $restful_handler = NULL) {
       return restful_get_formatter_handler($formatter_name, $restful_handler);
     }
   }
-  if (!empty($GLOBALS['_SERVER']['HTTP_ACCEPT'])) {
+  // Sometimes we will get a default Accept: */* in that case we want to return
+  // the default content type and not just any.
+  if (!empty($GLOBALS['_SERVER']['HTTP_ACCEPT']) && $GLOBALS['_SERVER']['HTTP_ACCEPT'] != '*/*') {
     foreach (explode(',', $GLOBALS['_SERVER']['HTTP_ACCEPT']) as $accepted_content_type) {
       // Loop through all the formatters and find the first one that matches the
       // Content-Type header.
