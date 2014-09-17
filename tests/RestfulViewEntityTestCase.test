@@ -252,15 +252,13 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
     $response = $this->httpRequest('api/v1/articles/' . $node->nid, \RestfulInterface::GET, NULL, array(
       'Accept' => 'application/hal+json',
     ));
-    $result = drupal_json_decode($response['body']);
-    $this->assertNotNull($result, 'JSON output detected.');
+    $this->assertNotNull(drupal_json_decode($response['body']), 'JSON output detected.');
 
     // Test XML selection.
     $response = $this->httpRequest('api/v1/articles/' . $node->nid, \RestfulInterface::GET, NULL, array(
       'Accept' => 'application/xml',
     ));
-    $result = new SimpleXMLElement($response['body']);
-    $this->assertNotNull($result, 'JSON output detected.');
+    $this->assertNotNull(new SimpleXMLElement($response['body']), 'XML output detected.');
 
     // Test wildcard selection.
     $response = $this->httpRequest('api/v1/articles/' . $node->nid, \RestfulInterface::GET, NULL, array(
