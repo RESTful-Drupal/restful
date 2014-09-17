@@ -126,7 +126,6 @@ function restful_plugin_process_restful(&$plugin, $info) {
     'hook_menu' => TRUE,
     'cache' => array(),
     'autocomplete' => array(),
-    'formatter' => variable_get('restful_default_output_formatter', 'hal_json'),
   );
 
   $plugin['cache'] += array(
@@ -441,11 +440,15 @@ function restful_get_restful_handler($resource_name, $major_version = 1, $minor_
  *
  * @return RestfulInterface | NULL
  *   The handler object if found, or NULL.
+ *
+ * @throws \RestfulException
  */
 function restful_get_restful_handler_by_name($plugin_name) {
   ctools_include('plugins');
   $plugin = ctools_get_plugins('restful', 'restful', $plugin_name);
-  $class = ctools_plugin_load_class('restful', 'restful', $plugin_name, 'class');
+  if (!$class = ctools_plugin_load_class('restful', 'restful', $plugin_name, 'class')) {
+    throw new \RestfulServiceUnavailable('Restful plugin class not found.');
+  }
   $handler = new $class($plugin);
   // If the restful plugin needs authentication load the corresponding
   // authentication plugin.
@@ -478,7 +481,9 @@ function restful_get_restful_handler_by_name($plugin_name) {
  */
 function restful_get_authentication_handler($auth_plugin_name) {
   $auth_plugin = restful_get_authentication_plugin($auth_plugin_name);
-  $auth_class = ctools_plugin_get_class($auth_plugin, 'class');
+  if (!$auth_class = ctools_plugin_get_class($auth_plugin, 'class')) {
+    throw new \RestfulServiceUnavailable('Authentication plugin class not found.');
+  }
   return new $auth_class($auth_plugin);
 }
 
@@ -498,7 +503,9 @@ function restful_get_authentication_handler($auth_plugin_name) {
  */
 function restful_get_formatter_handler($formatter_plugin_name, $restful_handler) {
   $formatter_plugin = restful_get_formatter_plugin($formatter_plugin_name);
-  $formatter_class = ctools_plugin_get_class($formatter_plugin, 'class');
+  if (!$formatter_class = ctools_plugin_get_class($formatter_plugin, 'class')) {
+    throw new \RestfulServiceUnavailable('Formatter plugin class not found.');
+  }
   return new $formatter_class($formatter_plugin, $restful_handler);
 }
 
@@ -521,6 +528,7 @@ function restful_get_restful_handler_for_path($path = NULL) {
   // We can only get the information if the current path was processed by
   // restful_menu_process_callback.
   if ($router_item['page_callback'] != 'restful_menu_process_callback') {
+    $handlers[$path] = NULL;
     return;
   }
   list($major_version, $resource) = $router_item['page_arguments'];
@@ -717,17 +725,21 @@ function restful_delivery($var = NULL, $method = 'format') {
 
   // Get the formatter for the current resource.
   if ($restful_handler = restful_get_restful_handler_for_path()) {
-    $formatter_name = $restful_handler->getPluginInfo('formatter');
     // Allow the handler to change the HTTP headers.
     foreach ($restful_handler->getHttpHeaders() as $key => $value) {
       drupal_add_http_header($key, $value);
     }
   }
-  else {
-    $formatter_name = variable_get('restful_default_output_formatter', 'hal_json');
+  try {
+    $formatter_handler = restful_output_format();
+    $output = $formatter_handler->{$method}($var);
   }
-  $formatter_handler = restful_get_formatter_handler($formatter_name, $restful_handler);
-  $output = $formatter_handler->{$method}($var);
+  catch (\RestfulException $e) {
+    // Handle if the formatter does not exist.
+    drupal_add_http_header('Status', $e->getCode());
+    echo $e->getMessage();
+    return;
+  }
 
   // The content type header is modified after the massaging if there is an
   // error code. Therefore we need to set the content type header after
@@ -735,6 +747,66 @@ function restful_delivery($var = NULL, $method = 'format') {
   drupal_add_http_header('Content-Type', $formatter_handler->getContentTypeHeader());
 
   echo $output;
+}
+
+/**
+ * Helper function to get the default output format from the current request.
+ *
+ * @return \RestfulFormatterBase
+ *   The formatter plugin to use.
+ */
+function restful_output_format() {
+  if ($restful_handler = restful_get_restful_handler_for_path()) {
+    // If the plugin is specifying one particular output format, use that.
+    if ($formatter_name = $restful_handler->getPluginInfo('formatter')) {
+      return restful_get_formatter_handler($formatter_name, $restful_handler);
+    }
+  }
+  if (!empty($GLOBALS['_SERVER']['HTTP_ACCEPT'])) {
+    foreach (explode(',', $GLOBALS['_SERVER']['HTTP_ACCEPT']) as $accepted_content_type) {
+      // Loop through all the formatters and find the first one that matches the
+      // Content-Type header.
+      foreach (restful_get_formatter_plugins() as $formatter_info) {
+        $formatter = restful_get_formatter_handler($formatter_info['name'], $restful_handler);
+        if (restfult_match_content_type($formatter->getContentTypeHeader(), $accepted_content_type)) {
+          return $formatter;
+        }
+      }
+    }
+  }
+  $formatter_name = variable_get('restful_default_output_formatter', 'hal_json');
+  return restful_get_formatter_handler($formatter_name, $restful_handler);
+}
+
+/**
+ * Matches a string with path style wildcards.
+ *
+ * @param string $content_type
+ *   The string to check.
+ * @param string $pattern
+ *   The pattern to check against.
+ *
+ * @return bool
+ *   TRUE if the input matches the pattern.
+ *
+ * @see drupal_match_path().
+ */
+function restfult_match_content_type($content_type, $pattern) {
+  $regexps = &drupal_static(__FUNCTION__);
+
+  if (!isset($regexps[$pattern])) {
+    // Convert path settings to a regular expression.
+    // Therefore replace newlines with a logical or, /* with asterisks and the <front> with the frontpage.
+    $to_replace = array(
+      '/\\\\\*/', // asterisks
+    );
+    $replacements = array(
+      '.*',
+    );
+    $patterns_quoted = preg_quote($pattern, '/');
+    $regexps[$pattern] = '/^(' . preg_replace($to_replace, $replacements, $patterns_quoted) . ')(;.*)?$/i';
+  }
+  return (bool) preg_match($regexps[$pattern], $content_type);
 }
 
 /**

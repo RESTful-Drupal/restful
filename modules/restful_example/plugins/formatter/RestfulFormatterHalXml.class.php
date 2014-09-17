@@ -8,6 +8,13 @@
 class RestfulFormatterHalXml extends \RestfulFormatterHalJson implements \RestfulFormatterInterface {
 
   /**
+   * Content Type
+   *
+   * @var string
+   */
+  protected $contentType = 'application/xml; charset=utf-8';
+
+  /**
    * {@inheritdoc}
    */
   public function render(array $structured_data) {
