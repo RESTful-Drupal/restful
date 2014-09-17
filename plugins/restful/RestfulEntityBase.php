@@ -76,27 +76,6 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
   protected $publicFields = array();
 
   /**
-   * Nested array that provides information about what method to call for each
-   * route pattern.
-   *
-   * @var array $controllers
-   */
-  protected $controllers = array(
-    '' => array(
-      // GET returns a list of entities.
-      \RestfulInterface::GET => 'getList',
-      // POST
-      \RestfulInterface::POST => 'createEntity',
-    ),
-    '^(\d+,)*\d+$' => array(
-      \RestfulInterface::GET => 'viewEntities',
-      \RestfulInterface::PUT => 'putEntity',
-      \RestfulInterface::PATCH => 'patchEntity',
-      \RestfulInterface::DELETE => 'deleteEntity',
-    ),
-  );
-
-  /**
    * Determines the number of items that should be returned when viewing lists.
    *
    * @var int
@@ -138,6 +117,28 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    */
   public function getEntityType() {
     return $this->entityType;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function controllersInfo() {
+    return array(
+      '' => array(
+        // GET returns a list of entities.
+        \RestfulInterface::GET => 'getList',
+        \RestfulInterface::HEAD => 'getList',
+        // POST
+        \RestfulInterface::POST => 'createEntity',
+      ),
+      '^(\d+,)*\d+$' => array(
+        \RestfulInterface::GET => 'viewEntities',
+        \RestfulInterface::HEAD => 'viewEntities',
+        \RestfulInterface::PUT => 'putEntity',
+        \RestfulInterface::PATCH => 'patchEntity',
+        \RestfulInterface::DELETE => 'deleteEntity',
+      ),
+    );
   }
 
   /**
@@ -277,8 +278,12 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
       }
     }
     else {
-      // Sort by default using the entity ID.
-      $sorts['id'] = 'ASC';
+      // Some endpoints like 'token_auth' don't have an id public field. In that
+      // case, skip the default sorting.
+      if (!empty($public_fields['id'])) {
+        // Sort by default using the entity ID.
+        $sorts['id'] = 'ASC';
+      }
     }
 
     foreach ($sorts as $sort => $direction) {

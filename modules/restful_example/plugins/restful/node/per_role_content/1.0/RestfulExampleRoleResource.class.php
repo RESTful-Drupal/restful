@@ -7,13 +7,15 @@
 class RestfulExampleRoleResource extends \RestfulEntityBase implements \RestfulEntityInterface {
 
   /**
-   * Overrides \RestfulEntityBase::controllers.
+   * Overrides \RestfulBase::controllersInfo().
    */
-  protected $controllers = array(
-    '' => array(
-      \RestfulInterface::GET => 'getList',
-    ),
-  );
+  public static function controllersInfo() {
+    return array(
+      '' => array(
+        \RestfulInterface::GET => 'getList',
+      ),
+    );
+  }
 
   /**
    * Overrides \RestfulEntityBase::publicFields().

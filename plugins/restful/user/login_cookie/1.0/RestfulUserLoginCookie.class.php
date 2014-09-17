@@ -8,15 +8,15 @@
 class RestfulUserLoginCookie extends \RestfulEntityBase {
 
   /**
-   * Overrides \RestfulEntityBase::controllers
-   *
-   * @var array
+   * Overrides \RestfulBase::controllersInfo().
    */
-  protected $controllers = array(
-    '' => array(
-      \RestfulInterface::GET => 'loginAndRespondWithCookie',
-    ),
-  );
+  public static function controllersInfo() {
+    return array(
+      '' => array(
+        \RestfulInterface::GET => 'loginAndRespondWithCookie',
+      ),
+    );
+  }
 
   /**
    * Login a user and return a JSON along with the authentication cookie.
