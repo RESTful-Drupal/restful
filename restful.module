@@ -528,7 +528,7 @@ function restful_get_restful_handler_for_path($path = NULL) {
   // We can only get the information if the current path was processed by
   // restful_menu_process_callback.
   if ($router_item['page_callback'] != 'restful_menu_process_callback') {
-    $handlers[$path] = NULL;
+    $handlers[$path] = FALSE;
     return;
   }
   list($major_version, $resource) = $router_item['page_arguments'];
@@ -731,7 +731,7 @@ function restful_delivery($var = NULL, $method = 'format') {
     }
   }
   try {
-    $formatter_handler = restful_output_format();
+    $formatter_handler = restful_output_format($restful_handler);
     $output = $formatter_handler->{$method}($var);
   }
   catch (\RestfulException $e) {
@@ -752,11 +752,14 @@ function restful_delivery($var = NULL, $method = 'format') {
 /**
  * Helper function to get the default output format from the current request.
  *
+ * @param \RestfulBase $restful_handler
+ *   The restful handler for the formatter.
+ *
  * @return \RestfulFormatterBase
  *   The formatter plugin to use.
  */
-function restful_output_format() {
-  if ($restful_handler = restful_get_restful_handler_for_path()) {
+function restful_output_format(\RestfulBase $restful_handler = NULL) {
+  if ($restful_handler || $restful_handler = restful_get_restful_handler_for_path()) {
     // If the plugin is specifying one particular output format, use that.
     if ($formatter_name = $restful_handler->getPluginInfo('formatter')) {
       return restful_get_formatter_handler($formatter_name, $restful_handler);
