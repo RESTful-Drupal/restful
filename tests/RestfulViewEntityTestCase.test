@@ -236,7 +236,7 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
    * Test the generation of the Vary headers.
    */
   public function testHeaders() {
-    $node = $this->drupalCreateNode(array('type' => 'article', 'status' => NODE_PUBLISHED));
+    $node = $this->drupalCreateNode(array('type' => 'article'));
 
     // When there is no minor version passed in there is no need of Vary.
     $response = $this->httpRequest('api/v1/articles');
@@ -265,6 +265,13 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
       'Accept' => 'application/*',
     ));
     $this->assertEqual($response['code'], 200, 'Some output format detected for wildcard Accept.');
+
+    // Test that plugin definition takes precedence.
+    $response = $this->httpRequest('api/v1/articles/' . $node->nid, \RestfulInterface::GET, NULL, array(
+      'X-Restful-Minor-Version' => 6,
+      'Accept' => 'application/hal+json',
+    ));
+    $this->assertNotNull(new SimpleXMLElement($response['body']), 'Plugin definition takes precedence.');
 
     // The following should resolve to the 'invalid' formatter. It should raise
     // an exception.

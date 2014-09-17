@@ -759,11 +759,9 @@ function restful_delivery($var = NULL, $method = 'format') {
  *   The formatter plugin to use.
  */
 function restful_output_format(\RestfulBase $restful_handler = NULL) {
-  if ($restful_handler || $restful_handler = restful_get_restful_handler_for_path()) {
-    // If the plugin is specifying one particular output format, use that.
-    if ($formatter_name = $restful_handler->getPluginInfo('formatter')) {
-      return restful_get_formatter_handler($formatter_name, $restful_handler);
-    }
+  $restful_handler = $restful_handler ? $restful_handler : restful_get_restful_handler_for_path();
+  if ($restful_handler && $formatter_name = $restful_handler->getPluginInfo('formatter')) {
+    return restful_get_formatter_handler($formatter_name, $restful_handler);
   }
   // Sometimes we will get a default Accept: */* in that case we want to return
   // the default content type and not just any.
@@ -809,6 +807,9 @@ function restfult_match_content_type($content_type, $pattern) {
       '.*',
     );
     $patterns_quoted = preg_quote($pattern, '/');
+
+    // This will turn 'application/*' into '/^(application\/.*)(;.*)$/' allowing
+    // us to match 'application/json; charset: utf8'
     $regexps[$pattern] = '/^(' . preg_replace($to_replace, $replacements, $patterns_quoted) . ')(;.*)?$/i';
   }
   return (bool) preg_match($regexps[$pattern], $content_type);
