@@ -235,12 +235,49 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
   /**
    * Test the generation of the Vary headers.
    */
-  public function testVaryHeader() {
+  public function testHeaders() {
+    $node = $this->drupalCreateNode(array('type' => 'article'));
+
     // When there is no minor version passed in there is no need of Vary.
     $response = $this->httpRequest('api/v1/articles');
     $this->assertFalse(preg_match('/X-Restful-Minor-Version/', $response['headers']), 'The Vary header was not added.');
 
     $response = $this->httpRequest('api/v1/articles', \RestfulInterface::GET, NULL, array('X-Restful-Minor-Version' => 1));
     $this->assertTrue(preg_match('/X-Restful-Minor-Version/', $response['headers']), 'The Vary header was added.');
+
+    // Test that if there is no explicit formatter in the plugin definition then
+    // it is selected based on the Accept header.
+    variable_set('restful_default_output_formatter', 'invalid');
+
+    $response = $this->httpRequest('api/v1/articles/' . $node->nid, \RestfulInterface::GET, NULL, array(
+      'Accept' => 'application/hal+json',
+    ));
+    $this->assertNotNull(drupal_json_decode($response['body']), 'JSON output detected.');
+
+    // Test XML selection.
+    $response = $this->httpRequest('api/v1/articles/' . $node->nid, \RestfulInterface::GET, NULL, array(
+      'Accept' => 'application/xml',
+    ));
+    $this->assertNotNull(new SimpleXMLElement($response['body']), 'XML output detected.');
+
+    // Test wildcard selection.
+    $response = $this->httpRequest('api/v1/articles/' . $node->nid, \RestfulInterface::GET, NULL, array(
+      'Accept' => 'application/*',
+    ));
+    $this->assertEqual($response['code'], 200, 'Some output format detected for wildcard Accept.');
+
+    // Test that plugin definition takes precedence.
+    $response = $this->httpRequest('api/v1/articles/' . $node->nid, \RestfulInterface::GET, NULL, array(
+      'X-Restful-Minor-Version' => 6,
+      'Accept' => 'application/hal+json',
+    ));
+    $this->assertNotNull(new SimpleXMLElement($response['body']), 'Plugin definition takes precedence.');
+
+    // The following should resolve to the 'invalid' formatter. It should raise
+    // an exception.
+    $response = $this->httpRequest('api/v1/articles/' . $node->nid, \RestfulInterface::GET, NULL, array(
+      'Accept' => 'non-existing',
+    ));
+    $this->assertEqual($response['code'], 503, 'Error shown for invalid formatter.');
   }
 }

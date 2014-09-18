@@ -9,7 +9,7 @@ abstract class RestfulFormatterBase implements \RestfulFormatterInterface {
   /**
    * The entity handler containing more info about the request.
    *
-   * @var \RestfulEntityBase
+   * @var \RestfulBase
    */
   protected $handler;
 
