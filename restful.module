@@ -799,7 +799,6 @@ function restfult_match_content_type($content_type, $pattern) {
 
   if (!isset($regexps[$pattern])) {
     // Convert path settings to a regular expression.
-    // Therefore replace newlines with a logical or, /* with asterisks and the <front> with the frontpage.
     $to_replace = array(
       '/\\\\\*/', // asterisks
     );
