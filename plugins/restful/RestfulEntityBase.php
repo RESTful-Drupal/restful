@@ -45,8 +45,8 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    *   in queries. For example, the default column for a text field would be
    *   "value". Defaults to the first column returned by field_info_field(),
    *   otherwise FALSE.
-   * - "callback": A callable callback to get a computed value. Defaults To
-   *   FALSE.
+   * - "callback": A callable callback to get a computed value. The wrapped
+   *   entity is passed as argument. Defaults To FALSE.
    *   The callback function receive as first argument the entity
    *   EntityMetadataWrapper object.
    * - "process_callbacks": An array of callbacks to perform on the returned
@@ -580,7 +580,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
       $value = NULL;
 
       if ($info['callback']) {
-        $value = static::executeCallback($info['callback'], array($value));
+        $value = static::executeCallback($info['callback'], array($wrapper));
       }
       else {
         // Exposing an entity field.
