@@ -1420,10 +1420,38 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
     if (empty($image_styles)) {
       return $file_array;
     }
+    // If $file_array is an array of file arrays. Then call recursively for each
+    // item and return the result.
+    if (static::isArrayNumeric($file_array)) {
+      $output = array();
+      foreach ($file_array as $item) {
+        $output[] = $this->getImageUris($item, $image_styles);
+      }
+      return $output;
+    }
     $file_array['image_styles'] = array();
     foreach ($image_styles as $style) {
       $file_array['image_styles'][$style] = image_style_url($style, $file_array['uri']);
     }
     return $file_array;
   }
+
+  /**
+   * Helper method to determine if an array is numeric.
+   *
+   * @param array $input
+   *   The input array.
+   *
+   * @return boolean
+   *   TRUE if the array is numeric, false otherwise.
+   */
+  protected final static function isArrayNumeric(array $input) {
+    foreach (array_keys($input) as $key) {
+      if (!ctype_digit((string) $key)) {
+        return FALSE;
+      }
+    }
+    return TRUE;
+  }
+
 }

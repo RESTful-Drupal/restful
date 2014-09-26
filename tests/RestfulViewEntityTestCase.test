@@ -219,8 +219,25 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
     $this->assertEqual($node->title, $result->__toString(), 'XML parsed correctlty.');
 
     // Test Image variations based on image styles.
+    // Add the multiple images field to the article bundle.
+    $field = array(
+      'field_name' => 'field_images',
+      'type' => 'image',
+      'settings' => array(),
+      'cardinality' => FIELD_CARDINALITY_UNLIMITED,
+    );
+    field_create_field($field);
+
+    $instance = array(
+      'field_name' => 'field_images',
+      'entity_type' => 'node',
+      'label' => 'Image multiple',
+      'bundle' => 'article',
+    );
+    field_create_instance($instance);
+
     $images = $this->drupalGetTestFiles('image');
-    $image = reset($images);
+    $image = array_shift($images);
     $image = file_save((object) $image);
     $article = $this->drupalCreateNode(array(
       'type' => 'article',
@@ -230,6 +247,22 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
     $result = $handler->get($article->nid);
     $this->assertEqual(array_keys($result[0]['image']['styles']) == array('thumbnail', 'medium', 'large'), 'The selected image styles are present.');
     $this->assertEqual(count(array_filter(array_values($result[0]['image']['styles']))) == 3, 'The image styles are populated.');
+
+    // Test multiple Image variations based on image styles.
+    $article = array(
+      'type' => 'article',
+      'field_images' => array(LANGUAGE_NONE => array()),
+    );
+    foreach ($images as $image) {
+      $image = file_save((object) $image);
+      $article['field_images'][LANGUAGE_NONE][] = array('fid' => $image->fid);
+    }
+    $article = $this->drupalCreateNode($article);
+    $handler = restful_get_restful_handler('articles', 1, 5);
+    $result = $handler->get($article->nid);
+    $this->assertEqual(count($result[0]['images']), count($images), 'The number of images is correct.');
+    $this->assertEqual(array_keys($result[0]['images'][0]['styles']) == array('thumbnail', 'medium', 'large'), 'The selected image styles are present.');
+    $this->assertEqual(count(array_filter(array_values($result[0]['images'][0]['styles']))) == 3, 'The image styles are populated.');
   }
 
   /**

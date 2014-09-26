@@ -33,6 +33,18 @@ class RestfulExampleArticlesResource__1_5 extends RestfulEntityBaseNode {
       'image_styles' => array('thumbnail', 'medium', 'large'),
     );
 
+    // By checking that the field exists, we allow re-using this class on
+    // different tests, where different fields exist.
+    if (field_info_field('field_images')) {
+      $public_fields['images'] = array(
+        'property' => 'field_images',
+        'process_callbacks' => array(
+          array($this, 'imageProcess'),
+        ),
+        'image_styles' => array('thumbnail', 'medium', 'large'),
+      );
+    }
+
     return $public_fields;
   }
 
@@ -46,6 +58,13 @@ class RestfulExampleArticlesResource__1_5 extends RestfulEntityBaseNode {
    *   A cleaned image array.
    */
   protected function imageProcess($value) {
+    if (static::isArrayNumeric($value)) {
+      $output = array();
+      foreach ($value as $item) {
+        $output[] = $this->imageProcess($item);
+      }
+      return $output;
+    }
     return array(
       'id' => $value['fid'],
       'self' => file_create_url($value['uri']),
