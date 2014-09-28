@@ -853,6 +853,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
       }
 
       $property_name = $info['property'];
+      $sub_property_name = $info['sub_property'];
       if (!isset($request[$public_field_name])) {
         // No property to set in the request.
         if ($null_missing_fields && $this->checkPropertyAccess($wrapper->{$property_name}, 'edit', $wrapper)) {
@@ -868,7 +869,12 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
 
       $field_value = $this->propertyValuesPreprocess($property_name, $request[$public_field_name], $public_field_name);
 
-      $wrapper->{$property_name}->set($field_value);
+      if ($sub_property_name) {
+          $wrapper->{$property_name}->{$sub_property_name}->set($field_value);
+      }
+      else {
+          $wrapper->{$property_name}->set($field_value);
+      }
       unset($original_request[$public_field_name]);
       $save = TRUE;
     }
