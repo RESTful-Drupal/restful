@@ -2,7 +2,7 @@
 
 // By checking the variable, we allow implementing modules to easily implement
 // their own "users" resource.
-if (variable_get('restful_enable_users_resource')) {
+if (variable_get('restful_enable_users_resource', TRUE)) {
 
   $plugin = array(
     'label' => t('User'),
