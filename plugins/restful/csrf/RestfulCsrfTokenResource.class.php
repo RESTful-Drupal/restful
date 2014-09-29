@@ -26,4 +26,14 @@ class RestfulCsrfTokenResource extends RestfulBase {
   protected function getCsrfToken() {
     return drupal_get_token(\RestfulInterface::TOKEN_VALUE);
   }
+
+  /**
+   * Overrides RestfulBase::access().
+   *
+   * Expose resource only to authenticated users.
+   */
+  public function access() {
+    $account = $this->getAccount();
+    return (bool)$account->uid;
+  }
 }
