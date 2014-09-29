@@ -554,6 +554,24 @@ abstract class RestfulBase implements RestfulInterface {
   /**
    * {@inheritdoc}
    */
+  public function getPublicFields() {
+    if ($this->publicFields) {
+      // Return early.
+      return $this->publicFields;
+    }
+
+    // Get the public fields that were defined by the user.
+    $public_fields = $this->publicFieldsInfo();
+
+    // Cache the processed fields.
+    $this->setPublicFields($public_fields);
+
+    return $public_fields;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function access() {
     return TRUE;
   }
