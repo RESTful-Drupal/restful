@@ -148,7 +148,38 @@ abstract class RestfulBase implements RestfulInterface {
    *   route pattern.
    */
   public static function controllersInfo() {
-    return array();
+    return array(
+      '' => array(
+        // GET returns a the.
+        \RestfulInterface::GET => 'viewNonEntityResourceValue',
+      ),
+    );
+  }
+
+  /**
+   * Return the value of the non-entity resource.
+   *
+   * @return array
+   *   Array with the public fields populated.
+   */
+  protected function viewNonEntityResourceValue() {
+    foreach ($this->getPublicFields() as $public_property => $info) {
+      $value = NULL;
+
+      if ($info['callback']) {
+        $value = static::executeCallback($info['callback']);
+      }
+
+      if ($value && $info['process_callbacks']) {
+        foreach ($info['process_callbacks'] as $process_callback) {
+          $value = static::executeCallback($process_callback, array($value));
+        }
+      }
+
+      $values[$public_property] = $value;
+    }
+
+    return $values;
   }
 
   /**

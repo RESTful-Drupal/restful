@@ -18,6 +18,11 @@ class RestfulCsrfTokenResource extends RestfulBase {
     return $public_fields;
   }
 
+  /**
+   * Value callback; Return the CSRF token.
+   * 
+   * @return array
+   */
   protected function getCsrfToken() {
     return restful_csrf_session_token();
   }
