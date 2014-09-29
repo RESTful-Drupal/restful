@@ -125,9 +125,9 @@ class RestfulFilesUpload extends \RestfulEntityBase {
    * @see file_save_upload()
    */
   protected function fileSaveUpload($source) {
-    global $user;
     static $upload_cache;
 
+    $account = $this->getAccount();
     $options = $this->getPluginInfo('options');
 
     $validators = $options['validators'];
@@ -174,7 +174,7 @@ class RestfulFilesUpload extends \RestfulEntityBase {
 
     // Begin building file object.
     $file = new stdClass();
-    $file->uid      = $user->uid;
+    $file->uid      = $account->uid;
     $file->status   = 0;
     $file->filename = trim(drupal_basename($_FILES['files']['name'][$source]), '.');
     $file->uri      = $_FILES['files']['tmp_name'][$source];
