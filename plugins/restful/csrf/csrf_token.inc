@@ -10,4 +10,6 @@ $plugin = array(
   'class' => 'RestfulCsrfTokenResource',
   'authentication_types' => TRUE,
   'authentication_optional' => TRUE,
+  // We will decalre our own custom menu item.
+  'hook_menu' => FALSE,
 );
