@@ -90,6 +90,10 @@ class RestfulFilesUpload extends \RestfulEntityBase {
 
   /**
    * Overrides RestfulEntityBase::access().
+   *
+   * If "File entity" module exists, determine access by its provided permissions
+   * otherwise, check if variable is set to allow anonymous users to upload.
+   * Defaults to authenticated user.
    */
   public function access() {
     // The getAccount method may return a RestfulUnauthorizedException when an

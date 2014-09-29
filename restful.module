@@ -1025,25 +1025,6 @@ function _restful_invalidate_entity_cache($cid) {
   }
 }
 
-
-/**
- * Access callback; Determine if user can access file uploading.
- *
- * If "File entity" module exists, determine access by its provided permissions
- * otherwise, check if variable is set to allow anonymous users to upload.
- * Defaults to authenticated user.
- *
- * @return bool
- */
-function restful_file_upload_access() {
-  global $user;
-  if (module_exists('file_entity')) {
-    return user_access('bypass file access') || user_access('create files');
-  }
-
-  return variable_get('restful_file_upload_allow_anonymous_user', FALSE) || $user->uid;
-}
-
 /**
  * Page callback: returns a session token for the currently active user.
  */
