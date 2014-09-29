@@ -586,7 +586,17 @@ abstract class RestfulBase implements RestfulInterface {
    * {@inheritdoc}
    */
   public function getPublicFields() {
-    return $this->publicFieldsInfo();
+    $public_fields = $this->publicFieldsInfo();
+    // Set defaults values.
+    foreach (array_keys($public_fields) as $key) {
+      // Set default values.
+      $info = &$public_fields[$key];
+      $info += array(
+        'process_callbacks' => array(),
+        'callback' => FALSE,
+      );
+    }
+    return $public_fields;
   }
 
   /**
