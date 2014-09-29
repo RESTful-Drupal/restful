@@ -40,6 +40,7 @@ class RestfulFilesUpload extends \RestfulEntityBase {
         'file_validate_size' => array(),
       ),
       'scheme' => file_default_scheme(),
+      'replace' => FILE_EXISTS_RENAME,
     );
 
     $this->plugin['options'] = drupal_array_merge_deep($default_values, $options);
@@ -131,6 +132,7 @@ class RestfulFilesUpload extends \RestfulEntityBase {
 
     $validators = $options['validators'];
     $destination = $options['scheme'] . "://";
+    $replace = $options['replace'];
 
     // Return cached objects without processing since the file will have
     // already been processed and the paths in _FILES will be invalid.
@@ -299,6 +301,6 @@ class RestfulFilesUpload extends \RestfulEntityBase {
     }
 
     // Something went wrong, so throw a general exception.
-    throw new \RestfulServiceUnavailable('Unknow error has occurred.');
+    throw new \RestfulServiceUnavailable('Unknown error has occurred.');
   }
 }

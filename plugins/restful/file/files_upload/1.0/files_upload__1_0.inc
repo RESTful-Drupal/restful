@@ -11,7 +11,8 @@ if (variable_get('restful_file_upload', FALSE)) {
     'authentication_optional' => variable_get('restful_file_upload_allow_anonymous_user', FALSE),
     // We will implement hook_menu() with custom settings.
     'hook_menu' => FALSE,
-    // Set the default validators and scheme.
+    // Set the default validators, scheme, and replace as used in
+    // file_save_upload().
     'options' => array(),
   );
 }
