@@ -150,7 +150,7 @@ abstract class RestfulBase implements RestfulInterface {
   public static function controllersInfo() {
     return array(
       '' => array(
-        // GET returns a the.
+        // Return the value from the non-entity resource.
         \RestfulInterface::GET => 'viewNonEntityResourceValue',
       ),
     );
