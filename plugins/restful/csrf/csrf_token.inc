@@ -9,6 +9,7 @@ $plugin = array(
   'description' => t('Export the CSRF token unique for each user.'),
   'class' => 'RestfulCsrfTokenResource',
   'authentication_types' => TRUE,
+  // Csrf token should be exposed also to anonymous users.
   'authentication_optional' => TRUE,
   // We will decalre our own custom menu item.
   'hook_menu' => FALSE,
