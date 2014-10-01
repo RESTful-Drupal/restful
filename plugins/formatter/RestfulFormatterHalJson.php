@@ -27,7 +27,7 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
     $output = array('data' => $data);
 
     if (!empty($this->handler)) {
-      if (method_exists($this->handler, 'isListRequest') && $this->handler->isListRequest()) {
+      if (method_exists($this->handler, 'isListRequest') && !$this->handler->isListRequest()) {
         return $output;
       }
       if (method_exists($this->handler, 'getTotalCount')) {
