@@ -81,4 +81,6 @@ function restful_uninstall() {
 
   variable_del('restful_global_rate_limit');
   variable_del('restful_global_rate_period');
+
+  variable_del('restful_enable_users_resource');
 }

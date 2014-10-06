@@ -32,7 +32,7 @@ class RestfulUserLoginCookie extends \RestfulEntityBase {
     $version = $this->getVersion();
     $handler = restful_get_restful_handler('users', $version['major'], $version['minor']);
 
-    $output = $handler->viewEntity($account->uid);
+    $output = $handler ? $handler->viewEntity($account->uid) : array();
     $output += restful_csrf_session_token();
     return $output;
   }

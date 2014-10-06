@@ -19,6 +19,7 @@ files[] = plugins/restful/RestfulEntityBase.php
 files[] = plugins/restful/RestfulEntityBaseMultipleBundles.php
 files[] = plugins/restful/RestfulEntityBaseNode.php
 files[] = plugins/restful/RestfulEntityBaseTaxonomyTerm.php
+files[] = plugins/restful/RestfulEntityBaseUser.php
 files[] = plugins/restful/RestfulEntityInterface.php
 files[] = plugins/restful/RestfulFilesUpload.php
 files[] = plugins/restful/RestfulInterface.php

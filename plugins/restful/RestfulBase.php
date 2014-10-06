@@ -148,7 +148,38 @@ abstract class RestfulBase implements RestfulInterface {
    *   route pattern.
    */
   public static function controllersInfo() {
-    return array();
+    return array(
+      '' => array(
+        // Return the value from the non-entity resource.
+        \RestfulInterface::GET => 'viewNonEntityResourceValue',
+      ),
+    );
+  }
+
+  /**
+   * Return the value of the non-entity resource.
+   *
+   * @return array
+   *   Array with the public fields populated.
+   */
+  protected function viewNonEntityResourceValue() {
+    foreach ($this->getPublicFields() as $public_property => $info) {
+      $value = NULL;
+
+      if ($info['callback']) {
+        $value = static::executeCallback($info['callback']);
+      }
+
+      if ($value && $info['process_callbacks']) {
+        foreach ($info['process_callbacks'] as $process_callback) {
+          $value = static::executeCallback($process_callback, array($value));
+        }
+      }
+
+      $values[$public_property] = $value;
+    }
+
+    return $values;
   }
 
   /**
@@ -549,6 +580,23 @@ abstract class RestfulBase implements RestfulInterface {
     // Add a generic tags to the query.
     $query->addTag('restful');
     $query->addMetaData('account', $this->getAccount());
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getPublicFields() {
+    $public_fields = $this->publicFieldsInfo();
+    // Set defaults values.
+    foreach (array_keys($public_fields) as $key) {
+      // Set default values.
+      $info = &$public_fields[$key];
+      $info += array(
+        'process_callbacks' => array(),
+        'callback' => FALSE,
+      );
+    }
+    return $public_fields;
   }
 
   /**
