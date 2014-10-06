@@ -169,4 +169,23 @@ class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
       $this->pass('Non-privileged user cannot view entity.');
     }
   }
+
+  public function testEnpointAccessCallback() {
+    $settings = array(
+      'type' => 'article',
+    );
+    $node = $this->drupalCreateNode($settings);
+
+    $handler = restful_get_restful_handler('test_articles', 1, 3);
+    try {
+      $handler->get($node->nid);
+      $this->fail('Custom access callback per endpoint not executed correctly.');
+    }
+    catch (\RestfulForbiddenException $e) {
+      $this->pass('Custom access callback per endpoint executed correctly.');
+    }
+
+    $handler->head($node->nid);
+    $this->pass('Custom access callback per endpoint executed correctly.');
+  }
 }
