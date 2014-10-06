@@ -27,8 +27,13 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
     $output = array('data' => $data);
 
     if (!empty($this->handler)) {
-      // Get the total number of items for the current request without pagination.
-      $output['count'] = $this->handler->getTotalCount();
+      if (method_exists($this->handler, 'isListRequest') && !$this->handler->isListRequest()) {
+        return $output;
+      }
+      if (method_exists($this->handler, 'getTotalCount')) {
+        // Get the total number of items for the current request without pagination.
+        $output['count'] = $this->handler->getTotalCount();
+      }
 
       // Add HATEOAS to the output.
       $this->addHateoas($output);

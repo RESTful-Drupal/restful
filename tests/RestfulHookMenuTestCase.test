@@ -44,8 +44,6 @@ class RestfulHookMenuTestCase extends RestfulCurlBaseTestCase {
         'label' => $node1->title,
         'self' => url('node/' . $node1->nid, array('absolute' => TRUE)),
       )),
-      'count' => 1,
-      '_links' => array(),
     );
 
     $this->assertEqual($result['body'], json_encode($expected_result));
