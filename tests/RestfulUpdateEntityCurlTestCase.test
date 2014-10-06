@@ -37,9 +37,10 @@ class RestfulUpdateEntityCurlTestCase extends RestfulCurlBaseTestCase {
   }
 
   /**
-   * Test update an entity (PUT method).
+   * Test update an entity (PUT & PATCH methods).
    */
-  function testUpdateEntityAsPut() {
+  function testUpdateEntityAsPutPatch() {
+    // Test update an entity (PUT method).
     $label = $this->randomName();
     $new_label = $this->randomName();
 
@@ -75,12 +76,8 @@ class RestfulUpdateEntityCurlTestCase extends RestfulCurlBaseTestCase {
     $request['invalid'] = 'wrong';
     $result = $this->httpRequest("api/v1/test_articles/$id", \RestfulInterface::PUT, $request);
     $this->assertEqual($result['code'], 400, 'User cannot update using PUT method an entity with invalid property name.');
-  }
 
-  /**
-   * Test update an entity (PATCH method).
-   */
-  function testUpdateEntityAsPatch() {
+    // Test update an entity (PATCH method).
     $label = $this->randomName();
     $new_label = $this->randomName();
 

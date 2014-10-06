@@ -11,11 +11,11 @@ class RestfulCsrfTokenResource extends RestfulBase {
    * {@inheritdoc}
    */
   public function publicFieldsInfo() {
-    $public_fields = array();
-    $public_fields['X-CSRF-Token'] = array(
-      'callback' => array($this, 'getCsrfToken'),
+    return array(
+      'X-CSRF-Token' => array(
+        'callback' => 'static::getCsrfToken',
+      ),
     );
-    return $public_fields;
   }
 
   /**
@@ -23,7 +23,7 @@ class RestfulCsrfTokenResource extends RestfulBase {
    *
    * @return array
    */
-  protected function getCsrfToken() {
+  protected static function getCsrfToken() {
     return drupal_get_token(\RestfulInterface::TOKEN_VALUE);
   }
 
@@ -34,6 +34,7 @@ class RestfulCsrfTokenResource extends RestfulBase {
    */
   public function access() {
     $account = $this->getAccount();
-    return (bool)$account->uid;
+    return (bool) $account->uid;
   }
+
 }
