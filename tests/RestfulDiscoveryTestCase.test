@@ -23,7 +23,7 @@ class RestfulDiscoveryTestCase extends DrupalWebTestCase {
    * Test the headers populated in an OPTIONS request.
    */
   function testOptionsMethod() {
-    $handler = restful_get_restful_handler('test_articles', 1, 3);
+    $handler = restful_get_restful_handler('test_articles', 1, 4);
 
     // 1. Assert Access-Control-Allow-Methods.
     $handler->options('');

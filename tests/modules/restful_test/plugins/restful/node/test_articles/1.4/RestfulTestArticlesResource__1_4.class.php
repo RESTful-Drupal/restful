@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains RestfulTestArticlesResource__1_3.
+ * Contains RestfulTestArticlesResource__1_4.
  */
 
-class RestfulTestArticlesResource__1_3 extends RestfulEntityBaseNode {
+class RestfulTestArticlesResource__1_4 extends RestfulEntityBaseNode {
 
   /**
    * Overrides \RestfulEntityBase::controllersInfo().
