@@ -611,6 +611,16 @@ abstract class RestfulBase implements RestfulInterface {
 
       // We found the controller, so we can break.
       $selected_controller = $controllers[$method];
+      if (is_array($selected_controller)) {
+        // If there is a custom access method for this endpoint check it.
+        if (!empty($selected_controller['access callback']) && !static::executeCallback(array($this, $selected_controller['access callback']), array($path))) {
+          throw new \RestfulForbiddenException(format_string('You do not have access to this endpoint: @method - @path', array(
+            '@method' => $method,
+            '@path' => $path,
+          )));
+        }
+        $selected_controller = $selected_controller['callback'];
+      }
       break;
     }
 
