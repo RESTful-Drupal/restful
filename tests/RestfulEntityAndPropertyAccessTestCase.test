@@ -170,6 +170,9 @@ class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
     }
   }
 
+  /**
+   * Tests custom access callbacks at the resource method level.
+   */
   public function testEnpointAccessCallback() {
     $settings = array(
       'type' => 'article',
@@ -179,7 +182,7 @@ class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
     $handler = restful_get_restful_handler('test_articles', 1, 3);
     try {
       $handler->get($node->nid);
-      $this->fail('Custom access callback per endpoint not executed correctly.');
+      $this->fail('Custom access callback per resource\'s method not executed correctly.');
     }
     catch (\RestfulForbiddenException $e) {
       $this->pass('Custom access callback per endpoint executed correctly.');

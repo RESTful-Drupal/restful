@@ -34,7 +34,7 @@ class RestfulTestArticlesResource__1_3 extends RestfulEntityBaseNode {
   }
 
   /**
-   * Custom access callback for the GET method.
+   * Custom access callback for the HEAD method.
    *
    * @return boolean
    *   TRUE for access granted, FALSE otherwise.
