@@ -515,7 +515,9 @@ abstract class RestfulBase implements RestfulInterface {
   /**
    * Call resource using the OPTIONS http method.
    *
-   * This is an special method
+   * This is an special method since it does not return anything in the body, it
+   * only provides information about the selected endpoint. The information is
+   * provided via HTTP headers.
    *
    * @param string $path
    *   (optional) The path.
