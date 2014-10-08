@@ -523,19 +523,17 @@ abstract class RestfulBase implements RestfulInterface {
    *   (optional) The path.
    * @param array $request
    *   (optional) The request.
-   *
-   * @return NULL
-   *   Only HTTP headers are populated.
    */
   public function options($path = '', array $request = array()) {
-    // Make your methods discoverable.
+    // A list of discoverable methods.
     $allowed_methods = array();
     foreach ($this->getControllers() as $pattern => $controllers) {
+      // Find the controllers for the provided path.
       if ($pattern != $path && !($pattern && preg_match('/' . $pattern . '/', $path))) {
         continue;
       }
       $allowed_methods = array_keys($controllers);
-      // We have found the controllers for this path. Break.
+      // We have found the controllers for this path.
       break;
     }
     if (!empty($allowed_methods)) {
@@ -558,7 +556,6 @@ abstract class RestfulBase implements RestfulInterface {
       $this->setHttpHeaders('Accept', implode(',', $accepted_formats));
     }
 
-    return;
   }
 
   /**
@@ -596,6 +593,7 @@ abstract class RestfulBase implements RestfulInterface {
 
     $selected_controller = NULL;
     foreach ($this->getControllers() as $pattern => $controllers) {
+      // Find the controllers for the provided path.
       if ($pattern != $path && !($pattern && preg_match('/' . $pattern . '/', $path))) {
         continue;
       }
@@ -892,7 +890,7 @@ abstract class RestfulBase implements RestfulInterface {
     foreach (restful_get_formatter_plugins() as $formatter_info) {
       $formatter_names[] = $formatter_info['name'];
     }
-    return empty($formatter_names) ? array(variable_get('restful_default_output_formatter', 'hal_json')) : $formatter_names;
+    return $formatter_names;
   }
 
 }

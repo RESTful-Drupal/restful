@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains RestfulDiscoverabilityTestCase
+ * Contains RestfulDiscoveryTestCase
  */
 
 class RestfulDiscoveryTestCase extends DrupalWebTestCase {
