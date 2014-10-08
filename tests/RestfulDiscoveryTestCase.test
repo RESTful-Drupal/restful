@@ -5,12 +5,12 @@
  * Contains RestfulDiscoverabilityTestCase
  */
 
-class RestfulDiscoverabilityTestCase extends DrupalWebTestCase {
+class RestfulDiscoveryTestCase extends DrupalWebTestCase {
 
   public static function getInfo() {
     return array(
-      'name' => 'Discoverability',
-      'description' => 'Test the discoverability features.',
+      'name' => 'Discovery',
+      'description' => 'Test the discovery features.',
       'group' => 'Restful',
     );
   }
