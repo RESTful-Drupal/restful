@@ -513,6 +513,53 @@ abstract class RestfulBase implements RestfulInterface {
   }
 
   /**
+   * Call resource using the OPTIONS http method.
+   *
+   * This is an special method
+   *
+   * @param string $path
+   *   (optional) The path.
+   * @param array $request
+   *   (optional) The request.
+   *
+   * @return NULL
+   *   Only HTTP headers are populated.
+   */
+  public function options($path = '', array $request = array()) {
+    // Make your methods discoverable.
+    $allowed_methods = array();
+    foreach ($this->getControllers() as $pattern => $controllers) {
+      if ($pattern != $path && !($pattern && preg_match('/' . $pattern . '/', $path))) {
+        continue;
+      }
+      $allowed_methods = array_keys($controllers);
+      // We have found the controllers for this path. Break.
+      break;
+    }
+    if (!empty($allowed_methods)) {
+      $this->setHttpHeaders('Access-Control-Allow-Methods', implode(',', $allowed_methods));
+    }
+
+    // TODO: Allow configuring the allowed origins and return them here.
+    $this->setHttpHeaders('Access-Control-Allow-Origin', '*');
+
+    // Make your formatters discoverable.
+    $formatter_names = $this->formatterNames();
+    // Loop through all the formatters and add the Content-Type header to the
+    // array.
+    $accepted_formats = array();
+    foreach ($formatter_names as $formatter_name) {
+      $formatter = restful_get_formatter_handler($formatter_name, $this);
+      $accepted_formats[] = $formatter->getContentTypeHeader();
+    }
+    if (!empty($accepted_formats)) {
+      $this->setHttpHeaders('Accept', implode(',', $accepted_formats));
+    }
+
+    return;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function process($path = '', array $request = array(), $method = \RestfulInterface::GET, $check_rate_limit = TRUE) {
@@ -823,6 +870,27 @@ abstract class RestfulBase implements RestfulInterface {
       }
     }
     $this->getCacheController()->clear($cid, TRUE);
+  }
+
+  /**
+   * Returns the names of the available formatter plugins.
+   *
+   * @return array
+   *   Array of formatter names.
+   */
+  public function formatterNames() {
+    $plugin_info = $this->getPluginInfo();
+    if (!empty($plugin_info['formatter'])) {
+      // If there is formatter info in the plugin definition, return that.
+      return array($plugin_info['formatter']);
+    }
+    // If there is no formatter info in the plugin definition, return a list
+    // of all the formatters available.
+    $formatter_names = array();
+    foreach (restful_get_formatter_plugins() as $formatter_info) {
+      $formatter_names[] = $formatter_info['name'];
+    }
+    return empty($formatter_names) ? array(variable_get('restful_default_output_formatter', 'hal_json')) : $formatter_names;
   }
 
 }
