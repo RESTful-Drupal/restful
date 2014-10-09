@@ -634,17 +634,7 @@ abstract class RestfulBase extends RestfulPluginBase implements RestfulInterface
    * {@inheritdoc}
    */
   public function access() {
-    // Check the referrer header and return false if it does not match the
-    // Access-Control-Allow-Origin
-    $referer = $_SERVER['HTTP_REFERER'];
-    // If there is no allow_origin assume that it is allowed. Also, if there is
-    // no referer then grant access since the request probably was not
-    // originated from a browser.
-    $origin = $this->getPluginInfo('allow_origin');
-    if ($this->isNull('allow_origin') || $origin == '*' || !$referer) {
-      return TRUE;
-    }
-    return strpos($referer, $origin) === 0;
+    return $this->allowOriginAccess();
   }
 
   /**
@@ -885,6 +875,26 @@ abstract class RestfulBase extends RestfulPluginBase implements RestfulInterface
       $formatter_names[] = $formatter_info['name'];
     }
     return $formatter_names;
+  }
+
+  /**
+   * Checks access based on the referer header and the allow_origin setting.
+   *
+   * @return bool
+   *   TRUE if the access is granted. FALSE otherwise.
+   */
+  protected function allowOriginAccess() {
+    // Check the referrer header and return false if it does not match the
+    // Access-Control-Allow-Origin
+    $referer = $_SERVER['HTTP_REFERER'];
+    // If there is no allow_origin assume that it is allowed. Also, if there is
+    // no referer then grant access since the request probably was not
+    // originated from a browser.
+    $origin = $this->getPluginInfo('allow_origin');
+    if ($this->isNull('allow_origin') || $origin == '*' || !$referer) {
+      return TRUE;
+    }
+    return strpos($referer, $origin) === 0;
   }
 
 }
