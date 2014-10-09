@@ -441,7 +441,7 @@ function restful_get_restful_handler($resource_name, $major_version = 1, $minor_
  * @param $plugin_name
  *   The name of the plugin, including version. (e.g. "articles__1_2").
  *
- * @return RestfulInterface | NULL
+ * @return RestfulInterface
  *   The handler object if found, or NULL.
  *
  * @throws \RestfulException
@@ -499,7 +499,7 @@ function restful_get_authentication_handler($auth_plugin_name) {
  * @param \RestfulBase $restful_handler
  *   The resource handler.
  *
- * @return \RestfulAuthenticationInterface
+ * @return \RestfulFormatterInterface
  *   The formatter provider object.
  *
  * @throws \RestfulException if the formatter provider does not exist.
@@ -623,7 +623,10 @@ function restful_menu_process_callback($major_version, $resource_name) {
     // OPTIONS method is a special case that might be sent by the browser
     // before the actual method to check for CORS (known as preflight OPTIONS).
     drupal_add_http_header('Status', 204);
-    drupal_add_http_header('Content-Type', 'application/hal+json; charset=utf-8');
+    $handler->options($path);
+    foreach ($handler->getHttpHeaders() as $header_name => $header_value) {
+      drupal_add_http_header($header_name, $header_value);
+    }
     return;
   }
 

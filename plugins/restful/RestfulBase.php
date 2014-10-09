@@ -490,6 +490,52 @@ abstract class RestfulBase extends RestfulPluginBase implements RestfulInterface
   }
 
   /**
+   * Call resource using the OPTIONS http method.
+   *
+   * This is an special method since it does not return anything in the body, it
+   * only provides information about the selected endpoint. The information is
+   * provided via HTTP headers.
+   *
+   * @param string $path
+   *   (optional) The path.
+   * @param array $request
+   *   (optional) The request.
+   */
+  public function options($path = '', array $request = array()) {
+    // A list of discoverable methods.
+    $allowed_methods = array();
+    foreach ($this->getControllers() as $pattern => $controllers) {
+      // Find the controllers for the provided path.
+      if ($pattern != $path && !($pattern && preg_match('/' . $pattern . '/', $path))) {
+        continue;
+      }
+      $allowed_methods = array_keys($controllers);
+      // We have found the controllers for this path.
+      break;
+    }
+    if (!empty($allowed_methods)) {
+      $this->setHttpHeaders('Access-Control-Allow-Methods', implode(',', $allowed_methods));
+    }
+
+    // TODO: Allow configuring the allowed origins and return them here.
+    $this->setHttpHeaders('Access-Control-Allow-Origin', '*');
+
+    // Make your formatters discoverable.
+    $formatter_names = $this->formatterNames();
+    // Loop through all the formatters and add the Content-Type header to the
+    // array.
+    $accepted_formats = array();
+    foreach ($formatter_names as $formatter_name) {
+      $formatter = restful_get_formatter_handler($formatter_name, $this);
+      $accepted_formats[] = $formatter->getContentTypeHeader();
+    }
+    if (!empty($accepted_formats)) {
+      $this->setHttpHeaders('Accept', implode(',', $accepted_formats));
+    }
+
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function process($path = '', array $request = array(), $method = \RestfulInterface::GET, $check_rate_limit = TRUE) {
@@ -524,6 +570,7 @@ abstract class RestfulBase extends RestfulPluginBase implements RestfulInterface
 
     $selected_controller = NULL;
     foreach ($this->getControllers() as $pattern => $controllers) {
+      // Find the controllers for the provided path.
       if ($pattern != $path && !($pattern && preg_match('/' . $pattern . '/', $path))) {
         continue;
       }
@@ -820,6 +867,27 @@ abstract class RestfulBase extends RestfulPluginBase implements RestfulInterface
       }
     }
     $this->getCacheController()->clear($cid, TRUE);
+  }
+
+  /**
+   * Returns the names of the available formatter plugins.
+   *
+   * @return array
+   *   Array of formatter names.
+   */
+  public function formatterNames() {
+    $plugin_info = $this->getPluginInfo();
+    if (!empty($plugin_info['formatter'])) {
+      // If there is formatter info in the plugin definition, return that.
+      return array($plugin_info['formatter']);
+    }
+    // If there is no formatter info in the plugin definition, return a list
+    // of all the formatters available.
+    $formatter_names = array();
+    foreach (restful_get_formatter_plugins() as $formatter_info) {
+      $formatter_names[] = $formatter_info['name'];
+    }
+    return $formatter_names;
   }
 
 }
