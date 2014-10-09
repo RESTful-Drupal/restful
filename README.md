@@ -19,7 +19,7 @@ client doesn't need to know if an entity is a node or a term, nor will they be p
 with the ``field_`` prefix
 * One of the core features is versioning. While it's debatable if this feature
  is indeed a pure REST, we believe it's a best practice one
-* Only JSON format is supported
+* It has configurable output formats. It ships with JSON and XML as examples. HAL+JSON is the recommended default.
 * Audience is developers and not site builders
 * Provide a key tool for a headless Drupal. See the [AngularJs form](https://github.com/Gizra/restful/blob/7.x-1.x/modules/restful_angular_example/README.md) example module.
 
