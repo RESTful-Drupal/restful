@@ -1217,15 +1217,15 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    *   Defaults to "edit".
    * @param EntityMetadataWrapper $wrapper
    *   The wrapped entity.
-   * @param array $info
+   * @param array $public_field_info
    *   The info array of the property, as retrieved from
    *   \RestfulEntityBase::getPublicFields().
    *
    * @return bool
    *   TRUE if the current user has access to set the property, FALSE otherwise.
    */
-  protected function checkPropertyAccess(EntityMetadataWrapper $property, $op = 'edit', EntityMetadataWrapper $wrapper, $info) {
-    if ($info['access_callback'] && !static::executeCallback($info['access_callback'], array($property, $op, $wrapper))) {
+  protected function checkPropertyAccess(EntityMetadataWrapper $property, $op = 'edit', EntityMetadataWrapper $wrapper, $public_field_info) {
+    if ($public_field_info['access_callback'] && !static::executeCallback($public_field_info['access_callback'], array($property, $op, $wrapper))) {
       return FALSE;
     }
 
@@ -1238,8 +1238,8 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
       }
     }
 
-    $property_info = $property->info();
-    if ($op == 'edit' && empty($property_info['setter callback'])) {
+    $info = $property->info();
+    if ($op == 'edit' && empty($info['setter callback'])) {
       // Property does not allow setting.
       return FALSE;
     }
