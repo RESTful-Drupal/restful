@@ -29,6 +29,11 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    * The public fields that are exposed to the API.
    *
    * Array with the optional values:
+   * - "access_callback": A callable to determine if user has access to the
+   *   property. Note that this callback is on top of the access provided by
+   *   entity API, and is used for convenience, where for example write
+   *   operation on a property should be denied only on cretain request
+   *   conditions.
    * - "property": The entity property (e.g. "title", "nid").
    * - "sub_property": A sub property name of a property to take from it the
    *   content. This can be used for example on a text field with filtered text
@@ -589,7 +594,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
         $sub_wrapper = $info['wrapper_method_on_entity'] ? $wrapper : $wrapper->{$property};
 
         // Check user has access to the property.
-        if ($property && !$this->checkPropertyAccess($sub_wrapper, 'view', $wrapper)) {
+        if ($property && !$this->checkPropertyAccess($sub_wrapper, 'view', $wrapper, $info)) {
           continue;
         }
 
@@ -855,14 +860,14 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
       $property_name = $info['property'];
       if (!isset($request[$public_field_name])) {
         // No property to set in the request.
-        if ($null_missing_fields && $this->checkPropertyAccess($wrapper->{$property_name}, 'edit', $wrapper)) {
+        if ($null_missing_fields && $this->checkPropertyAccess($wrapper->{$property_name}, 'edit', $wrapper, $info)) {
           // We need to set the value to NULL.
           $wrapper->{$property_name}->set(NULL);
         }
         continue;
       }
 
-      if (!$this->checkPropertyAccess($wrapper->{$property_name}, 'edit', $wrapper)) {
+      if (!$this->checkPropertyAccess($wrapper->{$property_name}, 'edit', $wrapper, $info)) {
         throw new RestfulBadRequestException(format_string('Property @name cannot be set.', array('@name' => $public_field_name)));
       }
 
@@ -1212,14 +1217,20 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    *   Defaults to "edit".
    * @param EntityMetadataWrapper $wrapper
    *   The wrapped entity.
+   * @param array $info
+   *   The info array of the property, as retrieved from
+   *   \RestfulEntityBase::getPublicFields().
    *
    * @return bool
    *   TRUE if the current user has access to set the property, FALSE otherwise.
    */
-  protected function checkPropertyAccess(EntityMetadataWrapper $property, $op = 'edit', EntityMetadataWrapper $wrapper) {
+  protected function checkPropertyAccess(EntityMetadataWrapper $property, $op = 'edit', EntityMetadataWrapper $wrapper, $info) {
+    if ($info['access_callback'] && !static::executeCallback($info['access_callback'], array($property, $op, $wrapper))) {
+      return FALSE;
+    }
+
     $account = $this->getAccount();
-    // @todo Hack to check format access for text fields. Should be removed once
-    // this is handled properly on the Entity API level.
+    // Check format access for text fields.
     if ($property->type() == 'text_formatted' && $property->value() && $property->format->value()) {
       $format = (object) array('format' => $property->format->value());
       if (!filter_access($format, $account)) {
@@ -1227,14 +1238,14 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
       }
     }
 
-    $info = $property->info();
-    if ($op == 'edit' && empty($info['setter callback'])) {
+    $property_info = $property->info();
+    if ($op == 'edit' && empty($property_info['setter callback'])) {
       // Property does not allow setting.
-      return;
+      return FALSE;
     }
 
     $access = $property->access($op, $account);
-    return $access === FALSE ? FALSE : TRUE;
+    return $access !== FALSE;
   }
 
   /**
@@ -1342,14 +1353,15 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
       // Set default values.
       $info = &$public_fields[$key];
       $info += array(
+        'access_callback' => FALSE,
+        'callback' => FALSE,
+        'column' => FALSE,
+        'process_callbacks' => array(),
         'property' => FALSE,
+        'resource' => array(),
+        'sub_property' => FALSE,
         'wrapper_method' => 'value',
         'wrapper_method_on_entity' => FALSE,
-        'sub_property' => FALSE,
-        'process_callbacks' => array(),
-        'callback' => FALSE,
-        'resource' => array(),
-        'column' => FALSE,
       );
 
       if ($field = field_info_field($info['property'])) {
