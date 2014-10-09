@@ -34,7 +34,7 @@ class RestfulCsrfTokenResource extends RestfulBase {
    */
   public function access() {
     $account = $this->getAccount();
-    return (bool) $account->uid;
+    return (bool) $account->uid && parent::access();
   }
 
 }

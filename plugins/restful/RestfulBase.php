@@ -5,7 +5,7 @@
  * Contains RestfulBase.
  */
 
-abstract class RestfulBase implements RestfulInterface {
+abstract class RestfulBase extends RestfulPluginBase implements RestfulInterface {
 
   /**
    * Nested array that provides information about what method to call for each
@@ -14,13 +14,6 @@ abstract class RestfulBase implements RestfulInterface {
    * @var array $controllers
    */
   protected $controllers = array();
-
-  /**
-   * The plugin definition.
-   *
-   * @var array $plugin
-   */
-  protected $plugin;
 
   /**
    * Array keyed by the header property, and the value.
@@ -265,8 +258,8 @@ abstract class RestfulBase implements RestfulInterface {
    * @param DrupalCacheInterface $cache_controller
    *   (optional) Injected cache backend.
    */
-  public function __construct($plugin, \RestfulAuthenticationManager $auth_manager = NULL, \DrupalCacheInterface $cache_controller = NULL) {
-    $this->plugin = $plugin;
+  public function __construct(array $plugin, \RestfulAuthenticationManager $auth_manager = NULL, \DrupalCacheInterface $cache_controller = NULL) {
+    parent::__construct($plugin);
     $this->authenticationManager = $auth_manager ? $auth_manager : new \RestfulAuthenticationManager();
     $this->cacheController = $cache_controller ? $cache_controller : $this->newCacheObject();
     if (!empty($plugin['rate_limit'])) {
@@ -331,22 +324,6 @@ abstract class RestfulBase implements RestfulInterface {
   public static function isValidMethod($method, $strict = TRUE) {
     $method = $strict ? $method : strtolower($method);
     return static::isReadMethod($method, $strict) || static::isWriteMethod($method, $strict);
-  }
-
-  /**
-   * Gets information about the restful plugin.
-   *
-   * @param string
-   *   (optional) The name of the key to return.
-   *
-   * @return mixed
-   *   Depends on the requested value.
-   */
-  public function getPluginInfo($key = NULL) {
-    if (isset($key)) {
-      return empty($this->plugin[$key]) ? NULL : $this->plugin[$key];
-    }
-    return $this->plugin;
   }
 
   /**
@@ -613,7 +590,17 @@ abstract class RestfulBase implements RestfulInterface {
    * {@inheritdoc}
    */
   public function access() {
-    return TRUE;
+    // Check the referrer header and return false if it does not match the
+    // Access-Control-Allow-Origin
+    $referer = $_SERVER['HTTP_REFERER'];
+    // If there is no allow_origin assume that it is allowed. Also, if there is
+    // no referer then grant access since the request probably was not
+    // originated from a browser.
+    $origin = $this->getPluginInfo('allow_origin');
+    if ($this->isNull('allow_origin') || $origin == '*' || !$referer) {
+      return TRUE;
+    }
+    return strpos($referer, $origin) === 0;
   }
 
   /**

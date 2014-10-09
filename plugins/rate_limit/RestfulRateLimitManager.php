@@ -4,7 +4,7 @@
  * Contains RestfulRateLimitManager
  */
 
-class RestfulRateLimitManager {
+class RestfulRateLimitManager extends \RestfulPluginBase {
   const UNLIMITED_RATE_LIMIT = -1;
 
   /**
@@ -13,13 +13,6 @@ class RestfulRateLimitManager {
    * The identified user account for the request.
    */
   protected $account;
-
-  /**
-   * @var array
-   *
-   * The plugin info array for the rate limit.
-   */
-  protected $pluginInfo;
 
   /**
    * @var string
@@ -57,15 +50,6 @@ class RestfulRateLimitManager {
   }
 
   /**
-   * Get the plugin info array.
-   *
-   * @return array
-   */
-  public function getPluginInfo() {
-    return $this->pluginInfo;
-  }
-
-  /**
    * Constructor for RestfulRateLimitManager.
    *
    * @param string $resource
@@ -75,7 +59,8 @@ class RestfulRateLimitManager {
    * @param \stdClass $account
    *   The identified user account for the request.
    */
-  public function __construct($resource, $plugin_info, $account = NULL) {
+  public function __construct($resource, array $plugin_info, $account = NULL) {
+    parent::__construct($plugin_info);
     $this->resource = $resource;
     $this->setPluginInfo($plugin_info);
     $this->account = $account ? $account : drupal_anonymous_user();

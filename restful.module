@@ -126,6 +126,7 @@ function restful_plugin_process_restful(&$plugin, $info) {
     'hook_menu' => TRUE,
     'cache' => array(),
     'autocomplete' => array(),
+    'allow_origin' => NULL,
   );
 
   $plugin['cache'] += array(
@@ -562,7 +563,7 @@ function restful_menu_access_callback($major_version, $resource_name) {
     return;
   }
 
-  $minor_version = !empty($_SERVER['HTTP_X_RESTFUL_MINOR_VERSION']) && is_int($_SERVER['HTTP_X_RESTFUL_MINOR_VERSION']) ? $_SERVER['HTTP_X_RESTFUL_MINOR_VERSION'] : 0;
+  $minor_version = !empty($_SERVER['HTTP_X_RESTFUL_MINOR_VERSION']) && ctype_digit($_SERVER['HTTP_X_RESTFUL_MINOR_VERSION']) ? ((int) $_SERVER['HTTP_X_RESTFUL_MINOR_VERSION']) : 0;
   if (!$handler = restful_get_restful_handler($resource_name, $major_version, $minor_version)) {
     return;
   }
