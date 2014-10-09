@@ -113,6 +113,11 @@ function restful_plugin_process(&$plugin, $info) {
  *   empty string.
  * - settings: Array with the settings needed for the plugin. Defaults to empty
  *   array.
+ * - allow_origin: A string containing the allowed origin as in the
+ *   Access-Control-Allow-Origin header. If a request has a referer header and
+ *   it does not match the allow_origin value the access will be denied.
+ *   Typically used to avoid CORS problems. This will also populate the
+ *   Access-Control-Allow-Origin header in the response.
  */
 function restful_plugin_process_restful(&$plugin, $info) {
   $plugin += array(
@@ -607,6 +612,10 @@ function restful_menu_process_callback($major_version, $resource_name) {
     $headers = $handler->getHttpHeaders();
     $vary = empty($headers['Vary']) ? '' : $headers['Vary'];
     $handler->setHttpHeaders('Vary', $vary . ',X-Restful-Minor-Version');
+  }
+  // Always add the allow origin if configured.
+  if (!$handler->isNull('allow_origin')) {
+    $handler->setHttpHeaders('Access-Control-Allow-Origin', $handler->getPluginInfo('allow_origin'));
   }
 
   $path = func_get_args();

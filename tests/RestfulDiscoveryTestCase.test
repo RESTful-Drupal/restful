@@ -45,10 +45,6 @@ class RestfulDiscoveryTestCase extends DrupalWebTestCase {
     }
     $headers = $handler->getHttpHeaders();
     $this->assertEqual($headers['Accept'], implode(',', $accepted_formats), 'Accept header is populated correctly for non configured formatters.');
-
-    // 3. Assert Access-Control-Allow-Origin.
-    // TODO: Update test when this is implemented.
-    $this->assertEqual($headers['Access-Control-Allow-Origin'], '*', 'Access-Control-Allow-Origin header is populated correctly.');
   }
 
 }

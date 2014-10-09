@@ -517,9 +517,6 @@ abstract class RestfulBase extends RestfulPluginBase implements RestfulInterface
       $this->setHttpHeaders('Access-Control-Allow-Methods', implode(',', $allowed_methods));
     }
 
-    // TODO: Allow configuring the allowed origins and return them here.
-    $this->setHttpHeaders('Access-Control-Allow-Origin', '*');
-
     // Make your formatters discoverable.
     $formatter_names = $this->formatterNames();
     // Loop through all the formatters and add the Content-Type header to the
