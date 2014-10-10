@@ -173,7 +173,7 @@ class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
   /**
    * Tests custom access callbacks at the resource method level.
    */
-  public function testEnpointAccessCallback() {
+  public function testEndPointAccessCallback() {
     $settings = array(
       'type' => 'article',
     );
@@ -190,5 +190,45 @@ class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
 
     $handler->head($node->nid);
     $this->pass('Custom access callback per endpoint executed correctly.');
+  }
+
+  /**
+   * Test access callback per public field.
+   */
+  public function testPublicFieldAccess() {
+    $settings = array(
+      'title' => 'no access',
+      'type' => 'article',
+    );
+    $node = $this->drupalCreateNode($settings);
+
+    $handler = restful_get_restful_handler('test_articles');
+
+    $result = $handler->get($node->nid);
+    $this->assertNotNull($result['label'], 'Label exists when there is no access callback.');
+
+    $public_fields = $handler->getPublicFields();
+    $public_fields['label']['access_callback'] = array($this, 'publicFieldAccessFalse');
+    $handler->setPublicFields($public_fields);
+
+    $result = $handler->get($node->nid);
+    $this->assertNull($result['label'], 'Label does not exist when there is an access callback.');
+  }
+
+  /**
+   * An access callback that returns TRUE if title is "access". Otherwise FALSE.
+   *
+   * @param \EntityMetadataWrapper $property_wrapper
+   *   The wrapped property.
+   * @param \EntityMetadataWrapper string $op
+   *   The opeartion to be done on the entity.
+   * @param \EntityMetadataWrapper $wrapper
+   *   The wrapped entity.
+   *
+   * @return bool
+   *   TRUE if user has access to the property.
+   */
+  private function publicFieldAccessFalse(\EntityMetadataWrapper $property_wrapper, $op, \EntityMetadataWrapper $wrapper) {
+    return $wrapper->label() == 'access';
   }
 }
