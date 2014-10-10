@@ -68,7 +68,7 @@ class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
   /**
    * Test access control for updating an entity.
    */
-  function testUpadteAccess() {
+  function testUpdateAccess() {
     $label = $this->randomName();
     $new_label = $this->randomName();
 
@@ -205,14 +205,14 @@ class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
     $handler = restful_get_restful_handler('test_articles');
 
     $result = $handler->get($node->nid);
-    $this->assertNotNull($result['label'], 'Label exists when there is no access callback.');
+    $this->assertTrue($result[0]['label'], 'Label access is allowed without access callback.');
 
     $public_fields = $handler->getPublicFields();
     $public_fields['label']['access_callback'] = array($this, 'publicFieldAccessFalse');
     $handler->setPublicFields($public_fields);
 
     $result = $handler->get($node->nid);
-    $this->assertNull($result['label'], 'Label does not exist when there is an access callback.');
+    $this->assertTrue(empty($result[0]['label']), 'Label access is denied with access callback.');
   }
 
   /**
@@ -228,7 +228,7 @@ class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
    * @return bool
    *   TRUE if user has access to the property.
    */
-  private function publicFieldAccessFalse(\EntityMetadataWrapper $property_wrapper, $op, \EntityMetadataWrapper $wrapper) {
+  public static function publicFieldAccessFalse(\EntityMetadataWrapper $property_wrapper, $op, \EntityMetadataWrapper $wrapper) {
     return $wrapper->label() == 'access';
   }
 }
