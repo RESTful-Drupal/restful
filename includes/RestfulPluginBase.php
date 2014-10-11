@@ -29,7 +29,7 @@ abstract class RestfulPluginBase implements \RestfulPluginInterface {
    */
   public function getPluginInfo($key = NULL) {
     if (isset($key)) {
-      return empty($this->plugin[$key]) ? NULL : $this->plugin[$key];
+      return $this->isEmpty($key) ? NULL : $this->plugin[$key];
     }
     return $this->plugin;
   }

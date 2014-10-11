@@ -634,7 +634,7 @@ abstract class RestfulBase extends RestfulPluginBase implements RestfulInterface
    * {@inheritdoc}
    */
   public function access() {
-    return $this->allowOriginAccess();
+    return $this->accessByAllowOrigin();
   }
 
   /**
@@ -883,10 +883,11 @@ abstract class RestfulBase extends RestfulPluginBase implements RestfulInterface
    * @return bool
    *   TRUE if the access is granted. FALSE otherwise.
    */
-  protected function allowOriginAccess() {
+  protected function accessByAllowOrigin() {
     // Check the referrer header and return false if it does not match the
     // Access-Control-Allow-Origin
-    $referer = $_SERVER['HTTP_REFERER'];
+    $request = $this->getRequest();
+    $referer = $request['__application']['referer'];
     // If there is no allow_origin assume that it is allowed. Also, if there is
     // no referer then grant access since the request probably was not
     // originated from a browser.

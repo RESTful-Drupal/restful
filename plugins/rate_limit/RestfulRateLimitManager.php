@@ -54,15 +54,15 @@ class RestfulRateLimitManager extends \RestfulPluginBase {
    *
    * @param string $resource
    *   Resource name being checked.
-   * @param array $plugin_info
+   * @param array $plugin
    *   The plugin info array for the rate limit.
    * @param \stdClass $account
    *   The identified user account for the request.
    */
-  public function __construct($resource, array $plugin_info, $account = NULL) {
-    parent::__construct($plugin_info);
+  public function __construct($resource, array $plugin, $account = NULL) {
+    parent::__construct($plugin);
     $this->resource = $resource;
-    $this->setPluginInfo($plugin_info);
+    $this->setPluginInfo($plugin);
     $this->account = $account ? $account : drupal_anonymous_user();
   }
 

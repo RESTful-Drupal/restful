@@ -614,8 +614,8 @@ function restful_menu_process_callback($major_version, $resource_name) {
     $handler->setHttpHeaders('Vary', $vary . ',X-Restful-Minor-Version');
   }
   // Always add the allow origin if configured.
-  if (!$handler->isNull('allow_origin')) {
-    $handler->setHttpHeaders('Access-Control-Allow-Origin', $handler->getPluginInfo('allow_origin'));
+  if ($allowed_origin = $handler->getPluginInfo('allow_origin')) {
+    $handler->setHttpHeaders('Access-Control-Allow-Origin', $allowed_origin);
   }
 
   $path = func_get_args();
@@ -704,6 +704,7 @@ function restful_parse_request() {
   $request['__application'] = array(
     'rest_call' => TRUE,
     'csrf_token' => !empty($_SERVER['HTTP_X_CSRF_TOKEN']) ? $_SERVER['HTTP_X_CSRF_TOKEN'] : NULL,
+    'referer' => $_SERVER['HTTP_REFERER'],
   );
 
   // Allow implemeting modules to alter the request.
