@@ -35,12 +35,12 @@ class RestfulEntityBaseTaxonomyTerm extends RestfulEntityBase {
    * have access to update existing terms, as required by the entity metadata
    * wrapper's access check.
    */
-  protected function checkPropertyAccess(EntityMetadataWrapper $property, $op = 'edit', EntityMetadataWrapper $wrapper, $public_field_info) {
+  protected function checkPropertyAccess($public_field_name, $op, EntityMetadataWrapper $property, EntityMetadataWrapper $wrapper) {
     $info = $property->info();
     $term = $wrapper->value();
     if (!empty($info['name']) && $info['name'] == 'name' && empty($term->tid) && $op == 'edit') {
       return TRUE;
     }
-    return parent::checkPropertyAccess($property, $op, $wrapper, $public_field_info);
+    return parent::checkPropertyAccess($public_field_name, $op, $property, $wrapper);
   }
 }
