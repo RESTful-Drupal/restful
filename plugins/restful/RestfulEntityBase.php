@@ -708,7 +708,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
 
 
     if (empty($handlers[$bundle])) {
-      $handlers[$bundle] = restful_get_restful_handler($resource['name'], $resource['major_version'], $resource['minor_version']);
+      $handlers[$bundle] = restful_get_restful_handler($resource[$bundle]['name'], $resource[$bundle]['major_version'], $resource[$bundle]['minor_version']);
     }
     $bundle_handler = $handlers[$bundle];
     return $bundle_handler->viewEntity($id);
