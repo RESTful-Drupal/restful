@@ -63,7 +63,7 @@ function restful_plugin_process(&$plugin, $info) {
  * - hook_menu: Determines if RESTful module should declare the resource in its
  *   pwn hook_menu(). If FALSE, it is up to the implementing module to declare
  *   it. Defaults to TRUE.
- * - cache: Stores the cache settings. An associative array with:
+ * - render_cache: Stores the cache settings. An associative array with:
  *   - render: Set it to FALSE to disable the render cache completely
  *     Defaults to FALSE.
  *   - class: The cache class for this resource. Defaults to NULL, which
@@ -124,11 +124,11 @@ function restful_plugin_process_restful(&$plugin, $info) {
     'authentication_types' => array(),
     'authentication_optional' => FALSE,
     'hook_menu' => TRUE,
-    'cache' => array(),
+    'render_cache' => array(),
     'autocomplete' => array(),
   );
 
-  $plugin['cache'] += array(
+  $plugin['render_cache'] += array(
     'render' => FALSE,
     'class' => NULL,
     'bin' => 'cache_restful',
