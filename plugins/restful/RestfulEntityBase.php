@@ -185,7 +185,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
     $ids = array_keys($result[$entity_type]);
 
     // Pre-load all entities if there is no render cache.
-    $cache_info = $this->getPluginInfo('cache');
+    $cache_info = $this->getPluginInfo('render_cache');
     if (!$cache_info['render']) {
       entity_load($entity_type, $ids);
     }
