@@ -274,20 +274,6 @@ Returns:
 }
 ```
 
-```php
-$handler = restful_get_restful_handler('articles');
-
-// Define the fields.
-$request['fields'] = 'id,label';
-$result = $handler->get(2, $request);
-
-// Output:
-array(
-  'id' => 2,
-  'label' => 'another title',
-);
-```
-
 ## Authentication providers
 
 Restful comes with ``cookie``, ``base_auth`` (user name and password in the HTTP header)
