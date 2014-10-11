@@ -708,8 +708,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
 
 
     if (empty($handlers[$bundle])) {
-      $version = $this->getVersion();
-      $handlers[$bundle] = restful_get_restful_handler($resource[$bundle]['name'], $version['major'], $version['minor']);
+      $handlers[$bundle] = restful_get_restful_handler($resource['name'], $resource['major_version'], $resource['minor_version']);
     }
     $bundle_handler = $handlers[$bundle];
     return $bundle_handler->viewEntity($id);
@@ -986,10 +985,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
 
     // In case we have multiple bundles, we opt for the first one.
     $resource = reset($public_fields[$public_field_name]['resource']);
-    $resource_name = $resource['name'];
-
-    $version = $this->getVersion();
-    $handler = restful_get_restful_handler($resource_name, $version['major'], $version['minor']);
+    $handler = restful_get_restful_handler($resource['name'], $resource['major_version'], $resource['minor_version']);
 
     // Return the entity ID that was created.
     if ($field_info['cardinality'] == 1) {
@@ -1370,7 +1366,16 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
         }
 
         // Set default value.
-        $resource += array('full_view' => TRUE);
+        $resource += array(
+          'full_view' => TRUE,
+        );
+
+        // Set the default value for the version of the referenced resource.
+        if (empty($resource['major_version']) || empty($resource['minor_version'])) {
+          list($major_version, $minor_version) = static::getResourceLastVersion($resource['name']);
+          $resource['major_version'] = $major_version;
+          $resource['minor_version'] = $minor_version;
+        }
       }
     }
 

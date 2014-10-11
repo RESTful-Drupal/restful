@@ -903,4 +903,33 @@ abstract class RestfulBase implements RestfulInterface {
     return $formatter_names;
   }
 
+  /**
+   * Return the last version for a given resource.
+   *
+   * @param string $resource_name
+   *   The name of the resource.
+   *
+   * @return array
+   *   Array containing the major_version and minor_version.
+   */
+  public static function getResourceLastVersion($resource_name) {
+    $resources = array();
+    // Get all the resources corresponding to the resource name.
+    foreach (restful_get_restful_plugins() as $resource) {
+      if (strpos($resource['name'], $resource_name) !== 0) {
+        continue;
+      }
+      $resources[$resource['major_version']][$resource['minor_version']] = $resource;
+    }
+    // Sort based on the major version.
+    ksort($resources, SORT_NUMERIC);
+    // Get a list of resources for the latest major version.
+    $resources = end($resources);
+    // Sort based on the minor version.
+    ksort($resources, SORT_NUMERIC);
+    // Get the latest resource for the minor version.
+    $resource = end($resources);
+    return array($resource['major_version'], $resource['minor_version']);
+  }
+
 }
