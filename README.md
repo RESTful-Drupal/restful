@@ -254,6 +254,40 @@ curl https://example.com/api/v1/articles/1,2 \
   -H "X-Restful-Minor-Version: 1"
 ```
 
+### Filtering fields
+Using the ``?fields`` query string, you can decalre which fields should be
+returned.
+
+```shell
+# Handler v1.1
+curl https://example.com/api/v1/articles/2?fields=id
+```
+
+Returns:
+
+```javascript
+{
+  "data": [{
+    "id": "2",
+    "label": "Foo"
+  }]
+}
+```
+
+```php
+$handler = restful_get_restful_handler('articles');
+
+// Define the fields.
+$request['fields'] = 'id,label';
+$result = $handler->get(2, $request);
+
+// Output:
+array(
+  'id' => 2,
+  'label' => 'another title',
+);
+```
+
 ## Authentication providers
 
 Restful comes with ``cookie``, ``base_auth`` (user name and password in the HTTP header)
