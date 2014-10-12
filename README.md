@@ -24,7 +24,8 @@ with the ``field_`` prefix
 * Provide a key tool for a headless Drupal. See the [AngularJs form](https://github.com/Gizra/restful/blob/7.x-1.x/modules/restful_angular_example/README.md) example module.
 
 ## Module dependencies
-* [Entity API](https://drupal.org/project/entity), with the following patches:
+
+  * [Entity API](https://drupal.org/project/entity), with the following patches:
   * [$wrapper->access() might be wrong for single entity reference field](https://www.drupal.org/node/2264079#comment-8911637)
   * [Prevent notice in entity_metadata_no_hook_node_access() when node is not saved](https://drupal.org/node/2086225#comment-8768373)
 
@@ -126,7 +127,7 @@ array(
 ```
 
 #### Filtering fields
-Using the ``?fields`` query string, you can decalre which fields should be
+Using the ``?fields`` query string, you can declare which fields should be
 returned.
 
 ```php
@@ -255,11 +256,11 @@ curl https://example.com/api/v1/articles/1,2 \
 ```
 
 ### Filtering fields
-Using the ``?fields`` query string, you can decalre which fields should be
+Using the ``?fields`` query string, you can declare which fields should be
 returned.
 
 ```shell
-# Handler v1.1
+# Handler v1.0
 curl https://example.com/api/v1/articles/2?fields=id
 ```
 
@@ -272,6 +273,14 @@ Returns:
     "label": "Foo"
   }]
 }
+```
+
+### Filter
+RESTful allows filtering of a list.
+
+```php
+# Handler v1.0
+curl https://example.com/api/v1/articles/2?filter[label]=abc
 ```
 
 ## Authentication providers
