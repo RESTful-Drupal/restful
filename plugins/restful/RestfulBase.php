@@ -916,7 +916,7 @@ abstract class RestfulBase implements RestfulInterface {
     $resources = array();
     // Get all the resources corresponding to the resource name.
     foreach (restful_get_restful_plugins() as $resource) {
-      if (strpos($resource['name'], $resource_name) !== 0) {
+      if ($resource['resource'] != $resource_name) {
         continue;
       }
       $resources[$resource['major_version']][$resource['minor_version']] = $resource;

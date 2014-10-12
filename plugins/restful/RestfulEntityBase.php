@@ -960,7 +960,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    *
    * @param string $property_name
    *   The property name to set.
-   * @param $value
+   * @param mixed $value
    *   The value passed in the request.
    * @param array $field_info
    *   The field info array.
@@ -986,7 +986,23 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
     // In case we have multiple bundles, we opt for the first one.
     $resource = reset($public_fields[$public_field_name]['resource']);
     $handler = restful_get_restful_handler($resource['name'], $resource['major_version'], $resource['minor_version']);
+    return $this->createOrUpdateSubResourceItems($handler, $value, $field_info);
+  }
 
+  /**
+   * Create, update or return a set of already saved entities.
+   *
+   * @param \RestfulInterface $handler
+   *   The sub resource handler.
+   * @param mixed $value
+   *   The value passed in the request.
+   * @param array $field_info
+   *   The field info array.
+   *
+   * @return mixed
+   *   The value to set using the wrapped property.
+   */
+  protected function createOrUpdateSubResourceItems(\RestfulInterface $handler, $value, $field_info) {
     // Return the entity ID that was created.
     if ($field_info['cardinality'] == 1) {
       // Single value.
@@ -1013,7 +1029,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    * @return int
    *   The saved entity ID.
    */
-  protected function createOrUpdateSubResourceItem($value, $handler) {
+  protected function createOrUpdateSubResourceItem($value, \RestfulInterface $handler) {
     if (!is_array($value)) {
       // Item that was passed is already a reference to an existing entity.
       return $value;
