@@ -280,7 +280,7 @@ RESTful allows filtering of a list.
 
 ```php
 # Handler v1.0
-curl https://example.com/api/v1/articles/2?filter[label]=abc
+curl https://example.com/api/v1/articles?filter[label]=abc
 ```
 
 ## Authentication providers
