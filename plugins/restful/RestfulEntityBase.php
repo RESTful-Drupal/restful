@@ -1213,7 +1213,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
   }
 
   /**
-   * Helper method to check access on a property.
+   * Check access on a property.
    *
    * @param array $public_field_name
    *   The name of the public field.
@@ -1229,14 +1229,9 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    *   TRUE if the current user has access to set the property, FALSE otherwise.
    */
   protected function checkPropertyAccess($public_field_name, $op, EntityMetadataWrapper $property_wrapper, EntityMetadataWrapper $wrapper) {
-    $public_fields = $this->getPublicFields();
-
-    foreach ($public_fields[$public_field_name]['access_callbacks'] as $callback) {
-      $result = static::executeCallback($callback, array($public_field_name, $op, $property_wrapper, $wrapper));
-
-      if ($result == \RestfulInterface::ACCESS_DENY) {
-        return FALSE;
-      }
+    if (!$this->checkPropertyAccessByAccessCallbacks($public_field_name, $op, $property_wrapper, $wrapper)) {
+      // Access callbacks denied access.
+      return;
     }
 
     $account = $this->getAccount();
@@ -1256,6 +1251,38 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
 
     $access = $property_wrapper->access($op, $account);
     return $access !== FALSE;
+  }
+
+  /**
+   * Check access on property by the defined access callbacks.
+   *
+   * @param array $public_field_name
+   *   The name of the public field.
+   * @param $op
+   *   The operation that access should be checked for. Can be "view" or "edit".
+   *   Defaults to "edit".
+   * @param EntityMetadataWrapper $property_wrapper
+   *   The wrapped property.
+   * @param EntityMetadataWrapper $wrapper
+   *   The wrapped entity.
+   *
+   * @return bool
+   *   TRUE if the current user has access to set the property, FALSE otherwise.
+   *   The default implementation assumes that if no callback has explicitly
+   *   denied access, we grant the user permission.
+   */
+  protected function checkPropertyAccessByAccessCallbacks($public_field_name, $op, EntityMetadataWrapper $property_wrapper, EntityMetadataWrapper $wrapper) {
+    $public_fields = $this->getPublicFields();
+
+    foreach ($public_fields[$public_field_name]['access_callbacks'] as $callback) {
+      $result = static::executeCallback($callback, array($public_field_name, $op, $property_wrapper, $wrapper));
+
+      if ($result == \RestfulInterface::ACCESS_DENY) {
+        return FALSE;
+      }
+    }
+
+    return TRUE;
   }
 
   /**
