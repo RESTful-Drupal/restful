@@ -129,7 +129,7 @@ class RestfulRateLimitManager {
           'identifier' => $handler->generateIdentifier($this->account),
         ));
       }
-      // When the new period starts.
+      // When the new rate limit period starts.
       $new_period = new \DateTime();
       $new_period->setTimestamp($rate_limit_entity->expiration);
       if ($rate_limit_entity->isExpired()) {
