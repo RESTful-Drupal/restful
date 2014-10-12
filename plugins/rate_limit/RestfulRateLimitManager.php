@@ -129,6 +129,9 @@ class RestfulRateLimitManager {
           'identifier' => $handler->generateIdentifier($this->account),
         ));
       }
+      // When the new period starts.
+      $new_period = new \DateTime();
+      $new_period->setTimestamp($rate_limit_entity->expiration);
       if ($rate_limit_entity->isExpired()) {
         // If the rate limit has expired renew the timestamps and assume 0
         // hits.
@@ -136,11 +139,13 @@ class RestfulRateLimitManager {
         $rate_limit_entity->expiration = $now->add($period)->format('U');
         $rate_limit_entity->hits = 0;
         if ($limit == 0) {
+          $handler->setHttpHeaders('Retry-After', $new_period->format(\DateTime::RFC822));
           throw new \RestfulFloodException('Rate limit reached');
         }
       }
       else {
         if ($rate_limit_entity->hits >= $limit) {
+          $handler->setHttpHeaders('Retry-After', $new_period->format(\DateTime::RFC822));
           throw new \RestfulFloodException('Rate limit reached');
         }
       }
