@@ -262,7 +262,7 @@ abstract class RestfulBase extends RestfulPluginBase implements RestfulInterface
     parent::__construct($plugin);
     $this->authenticationManager = $auth_manager ? $auth_manager : new \RestfulAuthenticationManager();
     $this->cacheController = $cache_controller ? $cache_controller : $this->newCacheObject();
-    if (!$rate_limit = $this->getPluginKey('rate_limit')) {
+    if ($rate_limit = $this->getPluginKey('rate_limit')) {
       $this->setRateLimitManager(new \RestfulRateLimitManager($this->getPluginKey('resource'), $rate_limit));
     }
   }
