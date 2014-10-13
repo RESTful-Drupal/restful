@@ -733,7 +733,7 @@ abstract class RestfulBase extends RestfulPluginBase implements RestfulInterface
       return $cache_object;
     }
 
-    $cache_info = $this->getPluginKey('cache');
+    $cache_info = $this->getPluginKey('render_cache');
     $class = $cache_info['class'];
     if (empty($class)) {
       $class = variable_get('cache_class_' . $cache_info['bin']);
@@ -758,7 +758,11 @@ abstract class RestfulBase extends RestfulPluginBase implements RestfulInterface
    * @see \RestfulEntityInterface::viewEntity().
    */
   protected function getRenderedCache(array $context = array()) {
+<<<<<<< HEAD
     $cache_info = $this->getPluginKey('cache');
+=======
+    $cache_info = $this->getPluginInfo('render_cache');
+>>>>>>> 7.x-1.x
     if (!$cache_info['render']) {
       return;
     }
@@ -782,7 +786,11 @@ abstract class RestfulBase extends RestfulPluginBase implements RestfulInterface
    * @see \RestfulEntityInterface::viewEntity().
    */
   protected function setRenderedCache($data, array $context = array()) {
+<<<<<<< HEAD
     $cache_info = $this->getPluginKey('cache');
+=======
+    $cache_info = $this->getPluginInfo('render_cache');
+>>>>>>> 7.x-1.x
     if (!$cache_info['render']) {
       return;
     }
@@ -839,7 +847,11 @@ abstract class RestfulBase extends RestfulPluginBase implements RestfulInterface
    *   The wildcard cache id to invalidate.
    */
   public function cacheInvalidate($cid) {
+<<<<<<< HEAD
     $cache_info = $this->getPluginKey('cache');
+=======
+    $cache_info = $this->getPluginInfo('render_cache');
+>>>>>>> 7.x-1.x
     if (!$cache_info['simple_invalidate']) {
       // Simple invalidation is disabled. This means it is up to the
       // implementing module to take care of the invalidation.
