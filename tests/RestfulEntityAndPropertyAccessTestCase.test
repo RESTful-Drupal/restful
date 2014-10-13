@@ -218,17 +218,20 @@ class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
   /**
    * An access callback that returns TRUE if title is "access". Otherwise FALSE.
    *
-   * @param \EntityMetadataWrapper $property_wrapper
+   * @param string $op
+   *   The operation that access should be checked for. Can be "view" or "edit".
+   *   Defaults to "edit".
+   * @param string $public_field_name
+   *   The name of the public field.
+   * @param EntityMetadataWrapper $property_wrapper
    *   The wrapped property.
-   * @param \EntityMetadataWrapper string $op
-   *   The opeartion to be done on the entity.
-   * @param \EntityMetadataWrapper $wrapper
+   * @param EntityMetadataWrapper $wrapper
    *   The wrapped entity.
    *
    * @return bool
    *   TRUE if user has access to the property.
    */
-  public static function publicFieldAccessFalse(\EntityMetadataWrapper $property_wrapper, $op, \EntityMetadataWrapper $wrapper) {
+  public static function publicFieldAccessFalse($op, $public_field_name, \EntityMetadataWrapper $property_wrapper, \EntityMetadataWrapper $wrapper) {
     return $wrapper->label() == 'access';
   }
 }
