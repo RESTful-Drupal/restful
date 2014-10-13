@@ -1229,7 +1229,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    *   TRUE if the current user has access to set the property, FALSE otherwise.
    */
   protected function checkPropertyAccess($op, $public_field_name, EntityMetadataWrapper $property_wrapper, EntityMetadataWrapper $wrapper) {
-    if (!$this->checkPropertyAccessByAccessCallbacks($public_field_name, $op, $property_wrapper, $wrapper)) {
+    if (!$this->checkPropertyAccessByAccessCallbacks($op, $public_field_name, $property_wrapper, $wrapper)) {
       // Access callbacks denied access.
       return;
     }
