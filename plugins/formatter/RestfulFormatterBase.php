@@ -5,20 +5,13 @@
  * Contains RestfulFormatterBase.
  */
 
-abstract class RestfulFormatterBase implements \RestfulFormatterInterface {
+abstract class RestfulFormatterBase extends \RestfulPluginBase implements \RestfulFormatterInterface {
   /**
    * The entity handler containing more info about the request.
    *
    * @var \RestfulBase
    */
   protected $handler;
-
-  /**
-   * The plugin definition array.
-   *
-   * @var array
-   */
-  protected $plugin;
 
   /**
    * Generic constructor.
@@ -29,7 +22,7 @@ abstract class RestfulFormatterBase implements \RestfulFormatterInterface {
    *   The restful handler that will call the output formatter.
    */
   public function __construct(array $plugin, $handler = NULL) {
-    $this->plugin = $plugin;
+    $this->setPlugin($plugin);
     $this->handler = $handler;
   }
 

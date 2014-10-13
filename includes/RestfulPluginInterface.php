@@ -10,34 +10,38 @@ interface RestfulPluginInterface {
   /**
    * Gets information about the restful plugin.
    *
+   * @return array
+   *   The plugin definition.
+   */
+  public function getPlugin();
+
+  /**
+   * Sets information about the restful plugin.
+   *
+   * @param array $plugin
+   *   The plugin definition.
+   */
+  public function setPlugin($plugin);
+
+  /**
+   * Gets information about the restful plugin key.
+   *
    * @param string $key
-   *   (optional) The name of the key to return.
+   *   The name of the key to return.
    *
    * @return mixed
-   *   Depends on the requested value.
+   *   Depends on the requested value. NULL if the key is not found.
    */
-  public function getPluginInfo($key = NULL);
+  public function getPluginKey($key);
 
   /**
-   * Checks if the key is populated in the plugin definition.
+   * Gets information about the restful plugin key.
    *
    * @param string $key
-   *   The plugin property to get. NULL to get all properties.
-   *
-   * @return boolean
-   *   TRUE if the key is populated. FALSE otherwise.
+   *   The name of the key to return.
+   * @param mixed $value
+   *   The value to set.
    */
-  public function isNull($key);
-
-  /**
-   * Checks if the key empty in the plugin definition.
-   *
-   * @param string $key
-   *   The plugin property to get. NULL to get all properties.
-   *
-   * @return boolean
-   *   TRUE if the key is empty. FALSE otherwise.
-   */
-  public function isEmpty($key);
+  public function setPluginKey($key, $value);
 
 }

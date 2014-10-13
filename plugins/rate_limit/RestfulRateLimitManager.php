@@ -84,7 +84,7 @@ class RestfulRateLimitManager extends \RestfulPluginBase {
     $now = new \DateTime();
     $now->setTimestamp(REQUEST_TIME);
     // Check all rate limits configured for this handler.
-    foreach ($this->getPluginInfo() as $event_name => $info) {
+    foreach ($this->getPlugin() as $event_name => $info) {
       // Check if there is a rate_limit plugin for the event.
       // There are no error checks on purpose, let the exceptions bubble up.
       $rate_limit_plugin = restful_get_rate_limit_plugin($info['event']);

@@ -167,7 +167,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    */
   public function getList() {
     $request = $this->getRequest();
-    $autocomplete_options = $this->getPluginInfo('autocomplete');
+    $autocomplete_options = $this->getPluginKey('autocomplete');
     if (!empty($autocomplete_options['enable']) && isset($request['autocomplete']['string'])) {
       // Return autocomplete list.
       return $this->getListForAutocomplete();
@@ -185,7 +185,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
     $ids = array_keys($result[$entity_type]);
 
     // Pre-load all entities if there is no render cache.
-    $cache_info = $this->getPluginInfo('cache');
+    $cache_info = $this->getPluginKey('cache');
     if (!$cache_info['render']) {
       entity_load($entity_type, $ids);
     }
@@ -484,7 +484,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    *   Return a query object, before it is executed.
    */
   protected function getQueryForAutocomplete() {
-    $autocomplete_options = $this->getPluginInfo('autocomplete');
+    $autocomplete_options = $this->getPluginKey('autocomplete');
     $entity_type = $this->getEntityType();
     $entity_info = entity_get_info($entity_type);
     $request = $this->getRequest();
@@ -815,7 +815,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
 
     if ($this->checkEntityAccess('create', $this->entityType, $entity) === FALSE) {
       // User does not have access to create entity.
-      $params = array('@resource' => $this->plugin['label']);
+      $params = array('@resource' => $this->getPluginKey('label'));
       throw new RestfulForbiddenException(format_string('You do not have access to create a new @resource resource.', $params));
     }
 
@@ -1256,7 +1256,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
 
     $params = array(
       '@id' => $entity_id,
-      '@resource' => $this->plugin['label'],
+      '@resource' => $this->getPluginKey('label'),
     );
 
     if (!$entity = entity_load_single($entity_type, $entity_id)) {

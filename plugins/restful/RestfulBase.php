@@ -262,8 +262,8 @@ abstract class RestfulBase extends RestfulPluginBase implements RestfulInterface
     parent::__construct($plugin);
     $this->authenticationManager = $auth_manager ? $auth_manager : new \RestfulAuthenticationManager();
     $this->cacheController = $cache_controller ? $cache_controller : $this->newCacheObject();
-    if (!empty($plugin['rate_limit'])) {
-      $this->setRateLimitManager(new \RestfulRateLimitManager($plugin['resource'], $plugin['rate_limit']));
+    if (!$rate_limit = $this->getPluginKey('rate_limit')) {
+      $this->setRateLimitManager(new \RestfulRateLimitManager($this->getPluginKey('resource'), $rate_limit));
     }
   }
 
@@ -382,7 +382,7 @@ abstract class RestfulBase extends RestfulPluginBase implements RestfulInterface
    *   Gets the name of the resource.
    */
   public function getResourceName() {
-    return $this->getPluginInfo('resource');
+    return $this->getPluginKey('resource');
   }
 
   /**
@@ -394,8 +394,8 @@ abstract class RestfulBase extends RestfulPluginBase implements RestfulInterface
    */
   public function getVersion() {
     return array(
-      'major' => $this->plugin['major_version'],
-      'minor' => $this->plugin['minor_version'],
+      'major' => $this->getPluginKey('major_version'),
+      'minor' => $this->getPluginKey('minor_version'),
     );
   }
 
@@ -708,7 +708,7 @@ abstract class RestfulBase extends RestfulPluginBase implements RestfulInterface
       $options['query'] += $request;
     }
 
-    return url($this->getPluginInfo('menu_item'), $options);
+    return url($this->getPluginKey('menu_item'), $options);
   }
 
   /**
@@ -733,7 +733,7 @@ abstract class RestfulBase extends RestfulPluginBase implements RestfulInterface
       return $cache_object;
     }
 
-    $cache_info = $this->getPluginInfo('cache');
+    $cache_info = $this->getPluginKey('cache');
     $class = $cache_info['class'];
     if (empty($class)) {
       $class = variable_get('cache_class_' . $cache_info['bin']);
@@ -758,7 +758,7 @@ abstract class RestfulBase extends RestfulPluginBase implements RestfulInterface
    * @see \RestfulEntityInterface::viewEntity().
    */
   protected function getRenderedCache(array $context = array()) {
-    $cache_info = $this->getPluginInfo('cache');
+    $cache_info = $this->getPluginKey('cache');
     if (!$cache_info['render']) {
       return;
     }
@@ -782,7 +782,7 @@ abstract class RestfulBase extends RestfulPluginBase implements RestfulInterface
    * @see \RestfulEntityInterface::viewEntity().
    */
   protected function setRenderedCache($data, array $context = array()) {
-    $cache_info = $this->getPluginInfo('cache');
+    $cache_info = $this->getPluginKey('cache');
     if (!$cache_info['render']) {
       return;
     }
@@ -839,7 +839,7 @@ abstract class RestfulBase extends RestfulPluginBase implements RestfulInterface
    *   The wildcard cache id to invalidate.
    */
   public function cacheInvalidate($cid) {
-    $cache_info = $this->getPluginInfo('cache');
+    $cache_info = $this->getPluginKey('cache');
     if (!$cache_info['simple_invalidate']) {
       // Simple invalidation is disabled. This means it is up to the
       // implementing module to take care of the invalidation.
@@ -863,7 +863,7 @@ abstract class RestfulBase extends RestfulPluginBase implements RestfulInterface
    *   Array of formatter names.
    */
   public function formatterNames() {
-    $plugin_info = $this->getPluginInfo();
+    $plugin_info = $this->getPlugin();
     if (!empty($plugin_info['formatter'])) {
       // If there is formatter info in the plugin definition, return that.
       return array($plugin_info['formatter']);
@@ -891,8 +891,8 @@ abstract class RestfulBase extends RestfulPluginBase implements RestfulInterface
     // If there is no allow_origin assume that it is allowed. Also, if there is
     // no referer then grant access since the request probably was not
     // originated from a browser.
-    $origin = $this->getPluginInfo('allow_origin');
-    if ($this->isNull('allow_origin') || $origin == '*' || !$referer) {
+    $origin = $this->getPluginKey('allow_origin');
+    if (empty($origin) || $origin == '*' || !$referer) {
       return TRUE;
     }
     return strpos($referer, $origin) === 0;

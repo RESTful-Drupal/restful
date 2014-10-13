@@ -614,7 +614,7 @@ function restful_menu_process_callback($major_version, $resource_name) {
     $handler->setHttpHeaders('Vary', $vary . ',X-Restful-Minor-Version');
   }
   // Always add the allow origin if configured.
-  if ($allowed_origin = $handler->getPluginInfo('allow_origin')) {
+  if ($allowed_origin = $handler->getPluginKey('allow_origin')) {
     $handler->setHttpHeaders('Access-Control-Allow-Origin', $allowed_origin);
   }
 
@@ -776,7 +776,7 @@ function restful_delivery($var = NULL, $method = 'format') {
  */
 function restful_output_format(\RestfulBase $restful_handler = NULL) {
   $restful_handler = $restful_handler ? $restful_handler : restful_get_restful_handler_for_path();
-  if ($restful_handler && $formatter_name = $restful_handler->getPluginInfo('formatter')) {
+  if ($restful_handler && $formatter_name = $restful_handler->getPluginKey('formatter')) {
     return restful_get_formatter_handler($formatter_name, $restful_handler);
   }
   // Sometimes we will get a default Accept: */* in that case we want to return
