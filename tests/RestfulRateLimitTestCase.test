@@ -117,6 +117,9 @@ class RestfulRateLimitTestCase extends DrupalWebTestCase {
     }
     catch (\RestfulFloodException $e) {
       $this->pass('The rate limit did not authorize the request.');
+      $headers = $e->getHeaders();
+      $this->assertTrue(in_array('Retry-After', array_keys($headers)), 'Retry-After header found after rate limit exception.');
+      $this->assertTrue(new \DateTime($headers['Retry-After']) > new \DateTime(), 'Retry-After is set to a time in the future.');
     }
   }
 
