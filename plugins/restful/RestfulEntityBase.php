@@ -872,7 +872,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
         continue;
       }
 
-      if (!$this->checkPropertyAccess($public_field_name, 'edit', $wrapper->{$property_name}, $wrapper)) {
+      if (!$this->checkPropertyAccess('edit', $public_field_name, $wrapper->{$property_name}, $wrapper)) {
         throw new RestfulBadRequestException(format_string('Property @name cannot be set.', array('@name' => $public_field_name)));
       }
 
