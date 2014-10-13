@@ -139,14 +139,16 @@ class RestfulRateLimitManager {
         $rate_limit_entity->expiration = $now->add($period)->format('U');
         $rate_limit_entity->hits = 0;
         if ($limit == 0) {
-          $handler->setHttpHeaders('Retry-After', $new_period->format(\DateTime::RFC822));
-          throw new \RestfulFloodException('Rate limit reached');
+          $exception = new \RestfulFloodException('Rate limit reached');
+          $exception->setHeader('Retry-After', $new_period->format(\DateTime::RFC822));
+          throw $exception;
         }
       }
       else {
         if ($rate_limit_entity->hits >= $limit) {
-          $handler->setHttpHeaders('Retry-After', $new_period->format(\DateTime::RFC822));
-          throw new \RestfulFloodException('Rate limit reached');
+          $exception = new \RestfulFloodException('Rate limit reached');
+          $exception->setHeader('Retry-After', $new_period->format(\DateTime::RFC822));
+          throw $exception;
         }
       }
       // Save a new hit after generating the exception to mitigate DoS attacks.

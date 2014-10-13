@@ -22,6 +22,13 @@ class RestfulException extends Exception {
   protected $fieldErrors = array();
 
   /**
+   * Array of extra headers to set when throwing an exception.
+   *
+   * @var array
+   */
+  protected $headers = array();
+
+  /**
    * Gets the description of the exception.
    *
    * @return string
@@ -119,4 +126,26 @@ class RestfulException extends Exception {
   public function addFieldError($field_name, $error_message) {
     $this->fieldErrors[$field_name][] = $error_message;
   }
+
+  /**
+   * Get the associative array of headers.
+   *
+   * @return array
+   */
+  public function getHeaders() {
+    return $this->headers;
+  }
+
+  /**
+   * Set a header.
+   *
+   * @param string $key
+   *   The header name.
+   * @param string $value
+   *   The header value.
+   */
+  public function setHeader($key, $value) {
+    $this->headers[$key] = $value;
+  }
+
 }
