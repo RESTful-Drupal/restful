@@ -708,7 +708,6 @@ function restful_parse_request() {
   $request['__application'] = array(
     'rest_call' => TRUE,
     'csrf_token' => !empty($_SERVER['HTTP_X_CSRF_TOKEN']) ? $_SERVER['HTTP_X_CSRF_TOKEN'] : NULL,
-    'referer' => $_SERVER['HTTP_REFERER'],
   );
 
   // Allow implemeting modules to alter the request.
