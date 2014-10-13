@@ -228,10 +228,10 @@ class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
    * @param EntityMetadataWrapper $wrapper
    *   The wrapped entity.
    *
-   * @return bool
-   *   TRUE if user has access to the property.
+   * @return string
+   *   "Allow" or "Deny" if user has access to the property.
    */
   public static function publicFieldAccessFalse($op, $public_field_name, \EntityMetadataWrapper $property_wrapper, \EntityMetadataWrapper $wrapper) {
-    return $wrapper->label() == 'access';
+    return $wrapper->label() == 'access' ? \RestfulInterface::ACCESS_ALLOW : \RestfulInterface::ACCESS_DENY;
   }
 }
