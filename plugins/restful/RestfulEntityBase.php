@@ -34,9 +34,9 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    *   entity API, and is used for convenience, where for example write
    *   operation on a property should be denied only on certain request
    *   conditions. The Passed arguments are:
-   *   - public_field_name: The name of the public field.
    *   - op: The operation that access should be checked for. Can be "view" or
    *     "edit".
+   *   - public_field_name: The name of the public field.
    *   - property_wrapper: The wrapped property.
    *   - wrapper: The wrapped entity.
    * - "property": The entity property (e.g. "title", "nid").
@@ -1215,11 +1215,11 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
   /**
    * Check access on a property.
    *
-   * @param array $public_field_name
-   *   The name of the public field.
-   * @param $op
+   * @param string $op
    *   The operation that access should be checked for. Can be "view" or "edit".
    *   Defaults to "edit".
+   * @param string $public_field_name
+   *   The name of the public field.
    * @param EntityMetadataWrapper $property_wrapper
    *   The wrapped property.
    * @param EntityMetadataWrapper $wrapper
@@ -1228,7 +1228,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    * @return bool
    *   TRUE if the current user has access to set the property, FALSE otherwise.
    */
-  protected function checkPropertyAccess($public_field_name, $op, EntityMetadataWrapper $property_wrapper, EntityMetadataWrapper $wrapper) {
+  protected function checkPropertyAccess($op, $public_field_name, EntityMetadataWrapper $property_wrapper, EntityMetadataWrapper $wrapper) {
     if (!$this->checkPropertyAccessByAccessCallbacks($public_field_name, $op, $property_wrapper, $wrapper)) {
       // Access callbacks denied access.
       return;
@@ -1256,11 +1256,11 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
   /**
    * Check access on property by the defined access callbacks.
    *
-   * @param array $public_field_name
-   *   The name of the public field.
-   * @param $op
+   * @param string $op
    *   The operation that access should be checked for. Can be "view" or "edit".
    *   Defaults to "edit".
+   * @param string $public_field_name
+   *   The name of the public field.
    * @param EntityMetadataWrapper $property_wrapper
    *   The wrapped property.
    * @param EntityMetadataWrapper $wrapper
@@ -1271,11 +1271,11 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    *   The default implementation assumes that if no callback has explicitly
    *   denied access, we grant the user permission.
    */
-  protected function checkPropertyAccessByAccessCallbacks($public_field_name, $op, EntityMetadataWrapper $property_wrapper, EntityMetadataWrapper $wrapper) {
+  protected function checkPropertyAccessByAccessCallbacks($op, $public_field_name, EntityMetadataWrapper $property_wrapper, EntityMetadataWrapper $wrapper) {
     $public_fields = $this->getPublicFields();
 
     foreach ($public_fields[$public_field_name]['access_callbacks'] as $callback) {
-      $result = static::executeCallback($callback, array($public_field_name, $op, $property_wrapper, $wrapper));
+      $result = static::executeCallback($callback, array($op, $public_field_name, $property_wrapper, $wrapper));
 
       if ($result == \RestfulInterface::ACCESS_DENY) {
         return FALSE;
