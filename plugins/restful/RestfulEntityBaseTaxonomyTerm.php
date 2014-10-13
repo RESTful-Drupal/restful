@@ -41,6 +41,6 @@ class RestfulEntityBaseTaxonomyTerm extends RestfulEntityBase {
     if (!empty($info['name']) && $info['name'] == 'name' && empty($term->tid) && $op == 'edit') {
       return TRUE;
     }
-    return parent::checkPropertyAccess($op, $public_field_name, $op, $property, $wrapper);
+    return parent::checkPropertyAccess($op, $public_field_name, $property, $wrapper);
   }
 }
