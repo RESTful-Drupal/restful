@@ -24,7 +24,11 @@ class RestfulTestArticlesResource__1_2 extends RestfulEntityBaseNode {
       $public_fields['entity_reference_single'] = array(
         'property' => 'entity_reference_single',
         'resource' => array(
-          'article' => 'test_articles',
+          'article' => array(
+            'name' => 'test_articles',
+            'major_version' => 1,
+            'minor_version' => 2,
+          ),
         ),
       );
     }
@@ -33,7 +37,11 @@ class RestfulTestArticlesResource__1_2 extends RestfulEntityBaseNode {
       $public_fields['entity_reference_multiple'] = array(
         'property' => 'entity_reference_multiple',
         'resource' => array(
-          'article' => 'test_articles',
+          'article' => array(
+            'name' => 'test_articles',
+            'major_version' => 1,
+            'minor_version' => 2,
+          ),
         ),
       );
     }

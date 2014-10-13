@@ -708,8 +708,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
 
 
     if (empty($handlers[$bundle])) {
-      $version = $this->getVersion();
-      $handlers[$bundle] = restful_get_restful_handler($resource[$bundle]['name'], $version['major'], $version['minor']);
+      $handlers[$bundle] = restful_get_restful_handler($resource[$bundle]['name'], $resource[$bundle]['major_version'], $resource[$bundle]['minor_version']);
     }
     $bundle_handler = $handlers[$bundle];
     return $bundle_handler->viewEntity($id);
@@ -961,7 +960,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    *
    * @param string $property_name
    *   The property name to set.
-   * @param $value
+   * @param mixed $value
    *   The value passed in the request.
    * @param array $field_info
    *   The field info array.
@@ -986,11 +985,24 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
 
     // In case we have multiple bundles, we opt for the first one.
     $resource = reset($public_fields[$public_field_name]['resource']);
-    $resource_name = $resource['name'];
+    $handler = restful_get_restful_handler($resource['name'], $resource['major_version'], $resource['minor_version']);
+    return $this->createOrUpdateSubResourceItems($handler, $value, $field_info);
+  }
 
-    $version = $this->getVersion();
-    $handler = restful_get_restful_handler($resource_name, $version['major'], $version['minor']);
-
+  /**
+   * Create, update or return a set of already saved entities.
+   *
+   * @param \RestfulInterface $handler
+   *   The sub resource handler.
+   * @param mixed $value
+   *   The value passed in the request.
+   * @param array $field_info
+   *   The field info array.
+   *
+   * @return mixed
+   *   The value to set using the wrapped property.
+   */
+  protected function createOrUpdateSubResourceItems(\RestfulInterface $handler, $value, $field_info) {
     // Return the entity ID that was created.
     if ($field_info['cardinality'] == 1) {
       // Single value.
@@ -1017,7 +1029,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    * @return int
    *   The saved entity ID.
    */
-  protected function createOrUpdateSubResourceItem($value, $handler) {
+  protected function createOrUpdateSubResourceItem($value, \RestfulInterface $handler) {
     if (!is_array($value)) {
       // Item that was passed is already a reference to an existing entity.
       return $value;
@@ -1370,7 +1382,16 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
         }
 
         // Set default value.
-        $resource += array('full_view' => TRUE);
+        $resource += array(
+          'full_view' => TRUE,
+        );
+
+        // Set the default value for the version of the referenced resource.
+        if (empty($resource['major_version']) || empty($resource['minor_version'])) {
+          list($major_version, $minor_version) = static::getResourceLastVersion($resource['name']);
+          $resource['major_version'] = $major_version;
+          $resource['minor_version'] = $minor_version;
+        }
       }
     }
 

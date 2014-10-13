@@ -114,6 +114,9 @@ class RestfulRateLimitManager extends \RestfulPluginBase {
           'identifier' => $handler->generateIdentifier($this->account),
         ));
       }
+      // When the new rate limit period starts.
+      $new_period = new \DateTime();
+      $new_period->setTimestamp($rate_limit_entity->expiration);
       if ($rate_limit_entity->isExpired()) {
         // If the rate limit has expired renew the timestamps and assume 0
         // hits.
@@ -121,12 +124,16 @@ class RestfulRateLimitManager extends \RestfulPluginBase {
         $rate_limit_entity->expiration = $now->add($period)->format('U');
         $rate_limit_entity->hits = 0;
         if ($limit == 0) {
-          throw new \RestfulFloodException('Rate limit reached');
+          $exception = new \RestfulFloodException('Rate limit reached');
+          $exception->setHeader('Retry-After', $new_period->format(\DateTime::RFC822));
+          throw $exception;
         }
       }
       else {
         if ($rate_limit_entity->hits >= $limit) {
-          throw new \RestfulFloodException('Rate limit reached');
+          $exception = new \RestfulFloodException('Rate limit reached');
+          $exception->setHeader('Retry-After', $new_period->format(\DateTime::RFC822));
+          throw $exception;
         }
       }
       // Save a new hit after generating the exception to mitigate DoS attacks.

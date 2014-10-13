@@ -155,6 +155,11 @@ class RestfulSubResourcesCreateEntityTestCase extends DrupalWebTestCase {
     );
 
     $this->processRequests($method, $node1->nid, $request);
+
+    // Test the version of the sub-resource.
+    $public_fields = $this->handler->getPublicFields();
+    $this->assertEqual($public_fields['entity_reference_multiple']['resource']['article']['major_version'], 1, 'Sub resource major version is correct.');
+    $this->assertEqual($public_fields['entity_reference_multiple']['resource']['article']['minor_version'], 2, 'Sub resource minor version is correct.');
   }
 
   /**

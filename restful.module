@@ -660,6 +660,10 @@ function restful_menu_process_callback($major_version, $resource_name) {
     if ($errors = $e->getFieldErrors()) {
       $result['errors'] = $errors;
     }
+
+    foreach ($e->getHeaders() as $header_name => $header_value) {
+      drupal_add_http_header($header_name, $header_value);
+    }
   }
   catch (Exception $e) {
     $result = array(
