@@ -611,7 +611,7 @@ function restful_menu_process_callback($major_version, $resource_name) {
   if ($minor_version) {
     $headers = $handler->getHttpHeaders();
     $vary = empty($headers['Vary']) ? '' : $headers['Vary'];
-    $handler->setHttpHeaders('Vary', $vary . ',X-Restful-Minor-Version');
+    $handler->setHttpHeaders('Vary', implode(',', array($vary, 'X-Restful-Minor-Version')));
   }
   // Always add the allow origin if configured.
   if ($allowed_origin = $handler->getPluginKey('allow_origin')) {

@@ -427,7 +427,7 @@ abstract class RestfulBase extends RestfulPluginBase implements RestfulInterface
    */
   public function head($path = '', array $request = array()) {
     $this->process($path, $request, \RestfulInterface::HEAD);
-    return NULL;
+    return array();
   }
 
   /**
