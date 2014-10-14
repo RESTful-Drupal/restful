@@ -5,7 +5,7 @@
  * Contains RestfulBase.
  */
 
-abstract class RestfulBase implements RestfulInterface {
+abstract class RestfulBase implements \RestfulInterface {
 
   /**
    * Nested array that provides information about what method to call for each
@@ -59,6 +59,32 @@ abstract class RestfulBase implements RestfulInterface {
    * @var string
    */
   protected $method = \RestfulInterface::GET;
+
+  /**
+   * Determines the number of items that should be returned when viewing lists.
+   *
+   * @var int
+   */
+  protected $range = 50;
+
+  /**
+   * Set the pager range.
+   *
+   * @param int $range
+   */
+  public function setRange($range) {
+    $this->range = $range;
+  }
+
+  /**
+   * Get the pager range.
+   *
+   * @return int
+   *  The range.
+   */
+  public function getRange() {
+    return $this->range;
+  }
 
   /**
    * Get the HTTP method used for the request.
@@ -581,11 +607,14 @@ abstract class RestfulBase implements RestfulInterface {
   /**
    * Return the controller from a given path.
    *
+   * @throws RestfulBadRequestException
+   * @throws RestfulException
+   * @throws RestfulForbiddenException
+   * @throws RestfulGoneException
+   *
    * @return string
    *   The appropriate method to call.
    *
-   * @throws RestfulBadRequestException
-   * @throws RestfulGoneException
    */
   public function getControllerFromPath() {
     $path = $this->getPath();

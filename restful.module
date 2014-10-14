@@ -601,6 +601,10 @@ function restful_menu_process_callback($major_version, $resource_name) {
   $major_version = intval(str_replace('v', '', $major_version));
   $minor_version = !empty($_SERVER['HTTP_X_RESTFUL_MINOR_VERSION']) && is_numeric($_SERVER['HTTP_X_RESTFUL_MINOR_VERSION']) ? $_SERVER['HTTP_X_RESTFUL_MINOR_VERSION'] : 0;
   $handler = restful_get_restful_handler($resource_name, $major_version, $minor_version);
+  if (!$handler instanceof \RestfulDataProviderInterface) {
+    throw new \RestfulServiceUnavailable('The selected plugin does not implement \RestfulDataProviderInterface.');
+  }
+
   // If there is a minor version we need to Vary the response.
   if ($minor_version) {
     $headers = $handler->getHttpHeaders();
