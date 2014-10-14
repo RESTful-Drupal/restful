@@ -6,6 +6,9 @@
  */
 
 abstract class RestfulBase implements \RestfulInterface {
+  // The \RestfulDataProviderInterface is not declared as implemented on purpose
+  // so the classes that extend from RestfulBase, don't eval TRUE to instanceof
+  // in restful_menu_process_callback, without explicit implementation.
 
   /**
    * Nested array that provides information about what method to call for each
@@ -951,6 +954,65 @@ abstract class RestfulBase implements \RestfulInterface {
     // Get the latest resource for the minor version.
     $resource = end($resources);
     return array($resource['major_version'], $resource['minor_version']);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function index() {
+    $this->missingCrudOperation(__FUNCTION__);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function view($id) {
+    $this->missingCrudOperation(__FUNCTION__);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function viewMultiple(array $ids) {
+    $output = array();
+    foreach ($ids as $id) {
+      $output[] = $this->view($id);
+    }
+    return $output;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function create() {
+    $this->missingCrudOperation(__FUNCTION__);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function update($ids, $full_replace = FALSE) {
+    $this->missingCrudOperation(__FUNCTION__);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function remove($id) {
+    $this->missingCrudOperation(__FUNCTION__);
+  }
+
+  /**
+   * Helper method with the code to run for non implemented CRUD operations.
+   *
+   * @param string $operation
+   *   The crud operation.
+   *
+   * @throws \RestfulNotImplementedException
+   */
+  protected static function missingCrudOperation($operation) {
+    // The default behavior is to not support the crud action.
+    throw new \RestfulNotImplementedException(format_string('The "@method" method is not implemented.', array('@method' => $operation)));
   }
 
 }

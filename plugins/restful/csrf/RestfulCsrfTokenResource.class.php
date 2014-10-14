@@ -60,39 +60,4 @@ class RestfulCsrfTokenResource extends RestfulBase implements \RestfulDataProvid
     return $values;
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  public function view($id) {
-    throw new \RestfulNotImplementedException(format_string('The "@method" method is not implemented.', array('@method' => __FUNCTION__)));
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function viewMultiple(array $ids) {
-    throw new \RestfulNotImplementedException(format_string('The "@method" method is not implemented.', array('@method' => __FUNCTION__)));
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function create() {
-    throw new \RestfulNotImplementedException(format_string('The "@method" method is not implemented.', array('@method' => __FUNCTION__)));
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function update($ids, $full_replace = FALSE) {
-    throw new \RestfulNotImplementedException(format_string('The "@method" method is not implemented.', array('@method' => __FUNCTION__)));
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function remove($id) {
-    throw new \RestfulNotImplementedException(format_string('The "@method" method is not implemented.', array('@method' => __FUNCTION__)));
-  }
-
 }
