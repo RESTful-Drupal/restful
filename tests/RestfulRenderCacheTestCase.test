@@ -38,7 +38,7 @@ class RestfulRenderCacheTestCase extends DrupalWebTestCase {
     $handler->setAccount($account);
     $cache = $handler->getCacheController();
     // Make sure the cache is activated.
-    $cache_info = $handler->getPluginInfo('render_cache');
+    $cache_info = $handler->getPluginKey('render_cache');
     $this->assertTrue($cache_info['render'], 'Cache render is activated');
 
     // Empty the cache.

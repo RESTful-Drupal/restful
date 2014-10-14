@@ -5,7 +5,7 @@
  * Contains RestfulBase.
  */
 
-abstract class RestfulBase implements \RestfulInterface {
+abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterface {
   // The \RestfulDataProviderInterface is not declared as implemented on purpose
   // so the classes that extend from RestfulBase, don't eval TRUE to instanceof
   // in restful_menu_process_callback, without explicit implementation.
@@ -17,13 +17,6 @@ abstract class RestfulBase implements \RestfulInterface {
    * @var array $controllers
    */
   protected $controllers = array();
-
-  /**
-   * The plugin definition.
-   *
-   * @var array $plugin
-   */
-  protected $plugin;
 
   /**
    * Array keyed by the header property, and the value.
@@ -283,12 +276,12 @@ abstract class RestfulBase implements \RestfulInterface {
    * @param DrupalCacheInterface $cache_controller
    *   (optional) Injected cache backend.
    */
-  public function __construct($plugin, \RestfulAuthenticationManager $auth_manager = NULL, \DrupalCacheInterface $cache_controller = NULL) {
-    $this->plugin = $plugin;
+  public function __construct(array $plugin, \RestfulAuthenticationManager $auth_manager = NULL, \DrupalCacheInterface $cache_controller = NULL) {
+    parent::__construct($plugin);
     $this->authenticationManager = $auth_manager ? $auth_manager : new \RestfulAuthenticationManager();
     $this->cacheController = $cache_controller ? $cache_controller : $this->newCacheObject();
-    if (!empty($plugin['rate_limit'])) {
-      $this->setRateLimitManager(new \RestfulRateLimitManager($plugin['resource'], $plugin['rate_limit']));
+    if ($rate_limit = $this->getPluginKey('rate_limit')) {
+      $this->setRateLimitManager(new \RestfulRateLimitManager($this->getPluginKey('resource'), $rate_limit));
     }
   }
 
@@ -352,22 +345,6 @@ abstract class RestfulBase implements \RestfulInterface {
   }
 
   /**
-   * Gets information about the restful plugin.
-   *
-   * @param string
-   *   (optional) The name of the key to return.
-   *
-   * @return mixed
-   *   Depends on the requested value.
-   */
-  public function getPluginInfo($key = NULL) {
-    if (isset($key)) {
-      return empty($this->plugin[$key]) ? NULL : $this->plugin[$key];
-    }
-    return $this->plugin;
-  }
-
-  /**
    * Call the output format on the given data.
    *
    * @param array $data
@@ -423,7 +400,7 @@ abstract class RestfulBase implements \RestfulInterface {
    *   Gets the name of the resource.
    */
   public function getResourceName() {
-    return $this->getPluginInfo('resource');
+    return $this->getPluginKey('resource');
   }
 
   /**
@@ -435,8 +412,8 @@ abstract class RestfulBase implements \RestfulInterface {
    */
   public function getVersion() {
     return array(
-      'major' => $this->plugin['major_version'],
-      'minor' => $this->plugin['minor_version'],
+      'major' => $this->getPluginKey('major_version'),
+      'minor' => $this->getPluginKey('minor_version'),
     );
   }
 
@@ -468,7 +445,7 @@ abstract class RestfulBase implements \RestfulInterface {
    */
   public function head($path = '', array $request = array()) {
     $this->process($path, $request, \RestfulInterface::HEAD);
-    return NULL;
+    return array();
   }
 
   /**
@@ -557,9 +534,6 @@ abstract class RestfulBase implements \RestfulInterface {
     if (!empty($allowed_methods)) {
       $this->setHttpHeaders('Access-Control-Allow-Methods', implode(',', $allowed_methods));
     }
-
-    // TODO: Allow configuring the allowed origins and return them here.
-    $this->setHttpHeaders('Access-Control-Allow-Origin', '*');
 
     // Make your formatters discoverable.
     $formatter_names = $this->formatterNames();
@@ -681,7 +655,7 @@ abstract class RestfulBase implements \RestfulInterface {
    * {@inheritdoc}
    */
   public function access() {
-    return TRUE;
+    return $this->accessByAllowOrigin();
   }
 
   /**
@@ -755,7 +729,7 @@ abstract class RestfulBase implements \RestfulInterface {
       $options['query'] += $request;
     }
 
-    return url($this->getPluginInfo('menu_item'), $options);
+    return url($this->getPluginKey('menu_item'), $options);
   }
 
   /**
@@ -780,7 +754,7 @@ abstract class RestfulBase implements \RestfulInterface {
       return $cache_object;
     }
 
-    $cache_info = $this->getPluginInfo('render_cache');
+    $cache_info = $this->getPluginKey('render_cache');
     $class = $cache_info['class'];
     if (empty($class)) {
       $class = variable_get('cache_class_' . $cache_info['bin']);
@@ -805,7 +779,7 @@ abstract class RestfulBase implements \RestfulInterface {
    * @see \RestfulEntityInterface::viewEntity().
    */
   protected function getRenderedCache(array $context = array()) {
-    $cache_info = $this->getPluginInfo('render_cache');
+    $cache_info = $this->getPluginKey('render_cache');
     if (!$cache_info['render']) {
       return;
     }
@@ -829,7 +803,7 @@ abstract class RestfulBase implements \RestfulInterface {
    * @see \RestfulEntityInterface::viewEntity().
    */
   protected function setRenderedCache($data, array $context = array()) {
-    $cache_info = $this->getPluginInfo('render_cache');
+    $cache_info = $this->getPluginKey('render_cache');
     if (!$cache_info['render']) {
       return;
     }
@@ -886,7 +860,7 @@ abstract class RestfulBase implements \RestfulInterface {
    *   The wildcard cache id to invalidate.
    */
   public function cacheInvalidate($cid) {
-    $cache_info = $this->getPluginInfo('render_cache');
+    $cache_info = $this->getPluginKey('render_cache');
     if (!$cache_info['simple_invalidate']) {
       // Simple invalidation is disabled. This means it is up to the
       // implementing module to take care of the invalidation.
@@ -910,7 +884,7 @@ abstract class RestfulBase implements \RestfulInterface {
    *   Array of formatter names.
    */
   public function formatterNames() {
-    $plugin_info = $this->getPluginInfo();
+    $plugin_info = $this->getPlugin();
     if (!empty($plugin_info['formatter'])) {
       // If there is formatter info in the plugin definition, return that.
       return array($plugin_info['formatter']);
@@ -922,6 +896,26 @@ abstract class RestfulBase implements \RestfulInterface {
       $formatter_names[] = $formatter_info['name'];
     }
     return $formatter_names;
+  }
+
+  /**
+   * Checks access based on the referer header and the allow_origin setting.
+   *
+   * @return bool
+   *   TRUE if the access is granted. FALSE otherwise.
+   */
+  protected function accessByAllowOrigin() {
+    // Check the referrer header and return false if it does not match the
+    // Access-Control-Allow-Origin
+    $referer = empty($_SERVER['HTTP_REFERER']) ? '' : $_SERVER['HTTP_REFERER'];
+    // If there is no allow_origin assume that it is allowed. Also, if there is
+    // no referer then grant access since the request probably was not
+    // originated from a browser.
+    $origin = $this->getPluginKey('allow_origin');
+    if (empty($origin) || $origin == '*' || !$referer) {
+      return TRUE;
+    }
+    return strpos($referer, $origin) === 0;
   }
 
   /**

@@ -36,7 +36,7 @@ interface RestfulInterface {
    * @param DrupalCacheInterface $cache_controller
    *   Injected cache controller.
    */
-  public function __construct($plugin, \RestfulAuthenticationManager $auth_manager = NULL, \DrupalCacheInterface $cache_controller = NULL);
+  public function __construct(array $plugin, \RestfulAuthenticationManager $auth_manager = NULL, \DrupalCacheInterface $cache_controller = NULL);
 
   /**
    * Entry point to process a request.

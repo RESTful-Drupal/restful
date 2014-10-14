@@ -5,7 +5,7 @@
  * Contains RestfulAuthenticationBase.
  */
 
-abstract class RestfulAuthenticationBase implements RestfulAuthenticationInterface {
+abstract class RestfulAuthenticationBase extends \RestfulPluginBase implements \RestfulAuthenticationInterface {
 
   /**
    * Settings from the plugin definition.
@@ -15,18 +15,11 @@ abstract class RestfulAuthenticationBase implements RestfulAuthenticationInterfa
   protected $settings;
 
   /**
-   * The plugin definition.
-   *
-   * @var array
-   */
-  protected $plugin;
-
-  /**
    * Constructor.
    */
   public function __construct($plugin) {
-    $this->settings = $plugin['settings'];
-    $this->plugin = $plugin;
+    $this->setPlugin($plugin);
+    $this->settings = $this->getPluginKey('settings');
   }
 
   /**
@@ -41,7 +34,7 @@ abstract class RestfulAuthenticationBase implements RestfulAuthenticationInterfa
    * {@inheritdoc}
    */
   public function getName() {
-    return $this->plugin['name'];
+    return $this->getPluginKey('name');
   }
 
 }
