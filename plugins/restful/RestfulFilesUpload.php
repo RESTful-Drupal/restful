@@ -27,10 +27,10 @@ class RestfulFilesUpload extends \RestfulEntityBase {
    *   file size.
    * - "scheme": By default the default scheme (e.g. public, private) is used.
    */
-  public function __construct($plugin, \RestfulAuthenticationManager $auth_manager = NULL, \DrupalCacheInterface $cache_controller = NULL) {
+  public function __construct(array $plugin, \RestfulAuthenticationManager $auth_manager = NULL, \DrupalCacheInterface $cache_controller = NULL) {
     parent::__construct($plugin, $auth_manager, $cache_controller);
 
-    if (!$options = $this->getPluginInfo('options')) {
+    if (!$options = $this->getPluginKey('options')) {
       $options = array();
     }
 
@@ -43,7 +43,7 @@ class RestfulFilesUpload extends \RestfulEntityBase {
       'replace' => FILE_EXISTS_RENAME,
     );
 
-    $this->plugin['options'] = drupal_array_merge_deep($default_values, $options);
+    $this->setPluginKey('options', drupal_array_merge_deep($default_values, $options));
   }
 
   /**
@@ -111,7 +111,7 @@ class RestfulFilesUpload extends \RestfulEntityBase {
       return user_access('bypass file access', $account) || user_access('create files', $account);
     }
 
-    return variable_get('restful_file_upload_allow_anonymous_user', FALSE) || $account->uid;
+    return (variable_get('restful_file_upload_allow_anonymous_user', FALSE) || $account->uid) && parent::access();
   }
 
   /**
@@ -132,7 +132,7 @@ class RestfulFilesUpload extends \RestfulEntityBase {
     static $upload_cache;
 
     $account = $this->getAccount();
-    $options = $this->getPluginInfo('options');
+    $options = $this->getPluginKey('options');
 
     $validators = $options['validators'];
     $destination = $options['scheme'] . "://";

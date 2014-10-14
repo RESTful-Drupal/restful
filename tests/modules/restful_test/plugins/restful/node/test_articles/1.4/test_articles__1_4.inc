@@ -9,5 +9,6 @@ $plugin = array(
   'description' => t('Export the article content type.'),
   'class' => 'RestfulTestArticlesResource__1_4',
   'minor_version' => 4,
+  'allow_origin' => '*',
   'formatter' => 'hal_xml',
 );

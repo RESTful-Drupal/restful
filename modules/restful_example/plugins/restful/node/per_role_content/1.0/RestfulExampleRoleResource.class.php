@@ -41,7 +41,9 @@ class RestfulExampleRoleResource extends \RestfulEntityBase implements \RestfulE
   public function getQueryForList() {
     $query = parent::getQueryForList();
     // Get the configured roles.
-    $options = $this->getPluginInfo('options');
+    if (!$options = $this->getPluginKey('options')) {
+      return $query;
+    }
 
     // Get a list of role ids for the configured roles.
     $roles_list = user_roles();

@@ -4,7 +4,7 @@
  * Contains RestfulRateLimitManager
  */
 
-class RestfulRateLimitManager {
+class RestfulRateLimitManager extends \RestfulPluginBase {
   const UNLIMITED_RATE_LIMIT = -1;
 
   /**
@@ -13,13 +13,6 @@ class RestfulRateLimitManager {
    * The identified user account for the request.
    */
   protected $account;
-
-  /**
-   * @var array
-   *
-   * The plugin info array for the rate limit.
-   */
-  protected $pluginInfo;
 
   /**
    * @var string
@@ -57,27 +50,19 @@ class RestfulRateLimitManager {
   }
 
   /**
-   * Get the plugin info array.
-   *
-   * @return array
-   */
-  public function getPluginInfo() {
-    return $this->pluginInfo;
-  }
-
-  /**
    * Constructor for RestfulRateLimitManager.
    *
    * @param string $resource
    *   Resource name being checked.
-   * @param array $plugin_info
+   * @param array $plugin
    *   The plugin info array for the rate limit.
    * @param \stdClass $account
    *   The identified user account for the request.
    */
-  public function __construct($resource, $plugin_info, $account = NULL) {
+  public function __construct($resource, array $plugin, $account = NULL) {
+    parent::__construct($plugin);
     $this->resource = $resource;
-    $this->setPluginInfo($plugin_info);
+    $this->setPluginInfo($plugin);
     $this->account = $account ? $account : drupal_anonymous_user();
   }
 
@@ -99,7 +84,7 @@ class RestfulRateLimitManager {
     $now = new \DateTime();
     $now->setTimestamp(REQUEST_TIME);
     // Check all rate limits configured for this handler.
-    foreach ($this->getPluginInfo() as $event_name => $info) {
+    foreach ($this->getPlugin() as $event_name => $info) {
       // Check if there is a rate_limit plugin for the event.
       // There are no error checks on purpose, let the exceptions bubble up.
       $rate_limit_plugin = restful_get_rate_limit_plugin($info['event']);

@@ -113,6 +113,11 @@ function restful_plugin_process(&$plugin, $info) {
  *   empty string.
  * - settings: Array with the settings needed for the plugin. Defaults to empty
  *   array.
+ * - allow_origin: A string containing the allowed origin as in the
+ *   Access-Control-Allow-Origin header. If a request has a referer header and
+ *   it does not match the allow_origin value the access will be denied.
+ *   Typically used to avoid CORS problems. This will also populate the
+ *   Access-Control-Allow-Origin header in the response.
  */
 function restful_plugin_process_restful(&$plugin, $info) {
   $plugin += array(
@@ -126,6 +131,7 @@ function restful_plugin_process_restful(&$plugin, $info) {
     'hook_menu' => TRUE,
     'render_cache' => array(),
     'autocomplete' => array(),
+    'allow_origin' => NULL,
   );
 
   $plugin['render_cache'] += array(
@@ -562,7 +568,7 @@ function restful_menu_access_callback($major_version, $resource_name) {
     return;
   }
 
-  $minor_version = !empty($_SERVER['HTTP_X_RESTFUL_MINOR_VERSION']) && is_int($_SERVER['HTTP_X_RESTFUL_MINOR_VERSION']) ? $_SERVER['HTTP_X_RESTFUL_MINOR_VERSION'] : 0;
+  $minor_version = !empty($_SERVER['HTTP_X_RESTFUL_MINOR_VERSION']) && ctype_digit($_SERVER['HTTP_X_RESTFUL_MINOR_VERSION']) ? ((int) $_SERVER['HTTP_X_RESTFUL_MINOR_VERSION']) : 0;
   if (!$handler = restful_get_restful_handler($resource_name, $major_version, $minor_version)) {
     return;
   }
@@ -605,7 +611,11 @@ function restful_menu_process_callback($major_version, $resource_name) {
   if ($minor_version) {
     $headers = $handler->getHttpHeaders();
     $vary = empty($headers['Vary']) ? '' : $headers['Vary'];
-    $handler->setHttpHeaders('Vary', $vary . ',X-Restful-Minor-Version');
+    $handler->setHttpHeaders('Vary', implode(',', array($vary, 'X-Restful-Minor-Version')));
+  }
+  // Always add the allow origin if configured.
+  if ($allowed_origin = $handler->getPluginKey('allow_origin')) {
+    $handler->setHttpHeaders('Access-Control-Allow-Origin', $allowed_origin);
   }
 
   $path = func_get_args();
@@ -769,7 +779,7 @@ function restful_delivery($var = NULL, $method = 'format') {
  */
 function restful_output_format(\RestfulBase $restful_handler = NULL) {
   $restful_handler = $restful_handler ? $restful_handler : restful_get_restful_handler_for_path();
-  if ($restful_handler && $formatter_name = $restful_handler->getPluginInfo('formatter')) {
+  if ($restful_handler && $formatter_name = $restful_handler->getPluginKey('formatter')) {
     return restful_get_formatter_handler($formatter_name, $restful_handler);
   }
   // Sometimes we will get a default Accept: */* in that case we want to return
