@@ -174,38 +174,27 @@ abstract class RestfulBase implements \RestfulInterface {
    *   route pattern.
    */
   public static function controllersInfo() {
+    // Provide sensible defaults for the HTTP methods. These methods (index,
+    // create, view, update and delete) are not implemented in this layer but
+    // they are guaranteed to exist because we are enforcing that all restful
+    // resources are an instance of \RestfulDataProviderInterface.
     return array(
       '' => array(
-        // Return the value from the non-entity resource.
-        \RestfulInterface::GET => 'viewNonEntityResourceValue',
+        // GET returns a list of entities.
+        \RestfulInterface::GET => 'index',
+        \RestfulInterface::HEAD => 'index',
+        // POST
+        \RestfulInterface::POST => 'create',
+      ),
+      // We don't know what the ID looks like, assume that everything is the ID.
+      '^.*$' => array(
+        \RestfulInterface::GET => 'view',
+        \RestfulInterface::HEAD => 'view',
+        \RestfulInterface::PUT => array('update', array(TRUE)),
+        \RestfulInterface::PATCH => array('update', array(FALSE)),
+        \RestfulInterface::DELETE => 'delete',
       ),
     );
-  }
-
-  /**
-   * Return the value of the non-entity resource.
-   *
-   * @return array
-   *   Array with the public fields populated.
-   */
-  protected function viewNonEntityResourceValue() {
-    foreach ($this->getPublicFields() as $public_property => $info) {
-      $value = NULL;
-
-      if ($info['callback']) {
-        $value = static::executeCallback($info['callback']);
-      }
-
-      if ($value && $info['process_callbacks']) {
-        foreach ($info['process_callbacks'] as $process_callback) {
-          $value = static::executeCallback($process_callback, array($value));
-        }
-      }
-
-      $values[$public_property] = $value;
-    }
-
-    return $values;
   }
 
   /**
