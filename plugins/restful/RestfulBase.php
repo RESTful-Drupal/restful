@@ -186,9 +186,9 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
       '^.*$' => array(
         \RestfulInterface::GET => 'view',
         \RestfulInterface::HEAD => 'view',
-        \RestfulInterface::PUT => array('update', array(TRUE)),
-        \RestfulInterface::PATCH => array('update', array(FALSE)),
-        \RestfulInterface::DELETE => 'delete',
+        \RestfulInterface::PUT => 'replace',
+        \RestfulInterface::PATCH => 'update',
+        \RestfulInterface::DELETE => 'remove',
       ),
     );
   }
@@ -623,6 +623,20 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
   }
 
   /**
+   * Helper method to know if the current request is for a list of entities.
+   *
+   * @return boolean
+   *   TRUE if the request is for a list. FALSE otherwise.
+   */
+  public function isListRequest() {
+    if ($this->getMethod() != \RestfulInterface::GET) {
+      return FALSE;
+    }
+    $path = $this->getPath();
+    return empty($path) || strpos($path, ',') !== FALSE;
+  }
+
+  /**
    * Adds query tags and metadata to the EntityFieldQuery.
    *
    * @param \EntityFieldQuery $query
@@ -632,6 +646,55 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
     // Add a generic tags to the query.
     $query->addTag('restful');
     $query->addMetaData('account', $this->getAccount());
+  }
+
+  /**
+   * Parses the request to get the sorting options.
+   *
+   * @return array
+   *   With the different sorting options.
+   *
+   * @throws \RestfulBadRequestException
+   */
+  protected function parseRequestForListSort() {
+    $request = $this->getRequest();
+    $public_fields = $this->getPublicFields();
+
+    $sorts = array();
+    if (!empty($request['sort'])) {
+      foreach (explode(',', $request['sort']) as $sort) {
+        $direction = $sort[0] == '-' ? 'DESC' : 'ASC';
+        $sort = str_replace('-', '', $sort);
+        // Check the sort is on a legal key.
+        if (empty($public_fields[$sort])) {
+          throw new RestfulBadRequestException(format_string('The sort @sort is not allowed for this path.', array('@sort' => $sort)));
+        }
+
+        $sorts[$sort] = $direction;
+      }
+    }
+    return $sorts;
+  }
+
+  /**
+   * Parses the request object to get the pagination options.
+   *
+   * @return array
+   *   A numeric array with the offset and length options.
+   *
+   * @throws \RestfulBadRequestException
+   */
+  protected function parseRequestForListPagination() {
+    $request = $this->getRequest();
+    $page = isset($request['page']) ? $request['page'] : 1;
+
+    if (!ctype_digit((string) $page) || $page < 1) {
+      throw new \RestfulBadRequestException('"Page" property should be numeric and equal or higher than 1.');
+    }
+
+    $range = $this->getRange();
+    $offset = ($page - 1) * $range;
+    return array($offset, $range);
   }
 
   /**

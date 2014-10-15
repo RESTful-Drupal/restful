@@ -1090,20 +1090,6 @@ abstract class RestfulEntityBase extends \RestfulEFQ implements \RestfulEntityIn
   }
 
   /**
-   * Helper method to know if the current request is for a list of entities.
-   *
-   * @return boolean
-   *   TRUE if the request is for a list. FALSE otherwise.
-   */
-  public function isListRequest() {
-    if ($this->getMethod() != \RestfulInterface::GET) {
-      return FALSE;
-    }
-    $path = $this->getPath();
-    return empty($path) || strpos($path, ',') !== FALSE;
-  }
-
-  /**
    * Get the image URLs based on the configured image styles.
    *
    * @param array $file_array

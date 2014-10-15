@@ -93,23 +93,9 @@ abstract class RestfulEFQ extends \RestfulBase implements \RestfulEFQInterface, 
    * @see \RestfulEntityBase::getQueryForList
    */
   protected function queryForListSort(\EntityFieldQuery $query) {
-    $request = $this->getRequest();
     $public_fields = $this->getPublicFields();
-
-    $sorts = array();
-    if (!empty($request['sort'])) {
-      foreach (explode(',', $request['sort']) as $sort) {
-        $direction = $sort[0] == '-' ? 'DESC' : 'ASC';
-        $sort = str_replace('-', '', $sort);
-        // Check the sort is on a legal key.
-        if (empty($public_fields[$sort])) {
-          throw new RestfulBadRequestException(format_string('The sort @sort is not allowed for this path.', array('@sort' => $sort)));
-        }
-
-        $sorts[$sort] = $direction;
-      }
-    }
-    else {
+    $sorts = $this->parseRequestForListSort();
+    if (empty($sorts)) {
       // Some endpoints like 'token_auth' don't have an id public field. In that
       // case, skip the default sorting.
       if (!empty($public_fields['id'])) {
@@ -193,15 +179,7 @@ abstract class RestfulEFQ extends \RestfulBase implements \RestfulEFQInterface, 
    * @see \RestfulEntityBase::getQueryForList
    */
   protected function queryForListPagination(\EntityFieldQuery $query) {
-    $request = $this->getRequest();
-    $page = isset($request['page']) ? $request['page'] : 1;
-
-    if (!ctype_digit((string)$page) || $page < 1) {
-      throw new \RestfulBadRequestException('"Page" property should be numeric and equal or higher than 1.');
-    }
-
-    $range = $this->getRange();
-    $offset = ($page - 1) * $range;
+    list($offset, $range) = $this->parseRequestForListPagination();
     $query->range($offset, $range);
   }
 
