@@ -68,7 +68,7 @@ class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
   /**
    * Test access control for updating an entity.
    */
-  function testUpadteAccess() {
+  function testUpdateAccess() {
     $label = $this->randomName();
     $new_label = $this->randomName();
 
@@ -173,7 +173,7 @@ class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
   /**
    * Tests custom access callbacks at the resource method level.
    */
-  public function testEnpointAccessCallback() {
+  public function testEndPointAccessCallback() {
     $settings = array(
       'type' => 'article',
     );
@@ -190,5 +190,48 @@ class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
 
     $handler->head($node->nid);
     $this->pass('Custom access callback per endpoint executed correctly.');
+  }
+
+  /**
+   * Test access callback per public field.
+   */
+  public function testPublicFieldAccess() {
+    $settings = array(
+      'title' => 'no access',
+      'type' => 'article',
+    );
+    $node = $this->drupalCreateNode($settings);
+
+    $handler = restful_get_restful_handler('test_articles');
+
+    $result = $handler->get($node->nid);
+    $this->assertTrue($result[0]['label'], 'Label access is allowed without access callback.');
+
+    $public_fields = $handler->getPublicFields();
+    $public_fields['label']['access_callbacks'][] = array($this, 'publicFieldAccessFalse');
+    $handler->setPublicFields($public_fields);
+
+    $result = $handler->get($node->nid);
+    $this->assertTrue(empty($result[0]['label']), 'Label access is denied with access callback.');
+  }
+
+  /**
+   * An access callback that returns TRUE if title is "access". Otherwise FALSE.
+   *
+   * @param string $op
+   *   The operation that access should be checked for. Can be "view" or "edit".
+   *   Defaults to "edit".
+   * @param string $public_field_name
+   *   The name of the public field.
+   * @param EntityMetadataWrapper $property_wrapper
+   *   The wrapped property.
+   * @param EntityMetadataWrapper $wrapper
+   *   The wrapped entity.
+   *
+   * @return string
+   *   "Allow" or "Deny" if user has access to the property.
+   */
+  public static function publicFieldAccessFalse($op, $public_field_name, \EntityMetadataWrapper $property_wrapper, \EntityMetadataWrapper $wrapper) {
+    return $wrapper->label() == 'access' ? \RestfulInterface::ACCESS_ALLOW : \RestfulInterface::ACCESS_DENY;
   }
 }

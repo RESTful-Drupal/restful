@@ -29,6 +29,16 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    * The public fields that are exposed to the API.
    *
    * Array with the optional values:
+   * - "access_callbacks": An array of callbacks to determine if user has access
+   *   to the property. Note that this callback is on top of the access provided by
+   *   entity API, and is used for convenience, where for example write
+   *   operation on a property should be denied only on certain request
+   *   conditions. The Passed arguments are:
+   *   - op: The operation that access should be checked for. Can be "view" or
+   *     "edit".
+   *   - public_field_name: The name of the public field.
+   *   - property_wrapper: The wrapped property.
+   *   - wrapper: The wrapped entity.
    * - "property": The entity property (e.g. "title", "nid").
    * - "sub_property": A sub property name of a property to take from it the
    *   content. This can be used for example on a text field with filtered text
@@ -571,8 +581,8 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
 
     $limit_fields = !empty($request['fields']) ? explode(',', $request['fields']) : array();
 
-    foreach ($this->getPublicFields() as $public_property => $info) {
-      if ($limit_fields && !in_array($public_property, $limit_fields)) {
+    foreach ($this->getPublicFields() as $public_field_name => $info) {
+      if ($limit_fields && !in_array($public_field_name, $limit_fields)) {
         // Limit fields doesn't include this property.
         continue;
       }
@@ -589,7 +599,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
         $sub_wrapper = $info['wrapper_method_on_entity'] ? $wrapper : $wrapper->{$property};
 
         // Check user has access to the property.
-        if ($property && !$this->checkPropertyAccess($sub_wrapper, 'view', $wrapper)) {
+        if ($property && !$this->checkPropertyAccess('view', $public_field_name, $sub_wrapper, $wrapper)) {
           continue;
         }
 
@@ -636,7 +646,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
         }
       }
 
-      $values[$public_property] = $value;
+      $values[$public_field_name] = $value;
     }
 
     $this->setRenderedCache($values, array(
@@ -854,14 +864,14 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
       $property_name = $info['property'];
       if (!isset($request[$public_field_name])) {
         // No property to set in the request.
-        if ($null_missing_fields && $this->checkPropertyAccess($wrapper->{$property_name}, 'edit', $wrapper)) {
+        if ($null_missing_fields && $this->checkPropertyAccess('edit', $public_field_name, $wrapper->{$property_name}, $wrapper)) {
           // We need to set the value to NULL.
           $wrapper->{$property_name}->set(NULL);
         }
         continue;
       }
 
-      if (!$this->checkPropertyAccess($wrapper->{$property_name}, 'edit', $wrapper)) {
+      if (!$this->checkPropertyAccess('edit', $public_field_name, $wrapper->{$property_name}, $wrapper)) {
         throw new RestfulBadRequestException(format_string('Property @name cannot be set.', array('@name' => $public_field_name)));
       }
 
@@ -1215,38 +1225,76 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
   }
 
   /**
-   * Helper method to check access on a property.
+   * Check access on a property.
    *
-   * @param EntityMetadataWrapper $property
-   *   The wrapped property.
-   * @param $op
+   * @param string $op
    *   The operation that access should be checked for. Can be "view" or "edit".
    *   Defaults to "edit".
+   * @param string $public_field_name
+   *   The name of the public field.
+   * @param EntityMetadataWrapper $property_wrapper
+   *   The wrapped property.
    * @param EntityMetadataWrapper $wrapper
    *   The wrapped entity.
    *
    * @return bool
    *   TRUE if the current user has access to set the property, FALSE otherwise.
    */
-  protected function checkPropertyAccess(EntityMetadataWrapper $property, $op = 'edit', EntityMetadataWrapper $wrapper) {
+  protected function checkPropertyAccess($op, $public_field_name, EntityMetadataWrapper $property_wrapper, EntityMetadataWrapper $wrapper) {
+    if (!$this->checkPropertyAccessByAccessCallbacks($op, $public_field_name, $property_wrapper, $wrapper)) {
+      // Access callbacks denied access.
+      return;
+    }
+
     $account = $this->getAccount();
-    // @todo Hack to check format access for text fields. Should be removed once
-    // this is handled properly on the Entity API level.
-    if ($property->type() == 'text_formatted' && $property->value() && $property->format->value()) {
-      $format = (object) array('format' => $property->format->value());
+    // Check format access for text fields.
+    if ($property_wrapper->type() == 'text_formatted' && $property_wrapper->value() && $property_wrapper->format->value()) {
+      $format = (object) array('format' => $property_wrapper->format->value());
       if (!filter_access($format, $account)) {
         return FALSE;
       }
     }
 
-    $info = $property->info();
+    $info = $property_wrapper->info();
     if ($op == 'edit' && empty($info['setter callback'])) {
       // Property does not allow setting.
-      return;
+      return FALSE;
     }
 
-    $access = $property->access($op, $account);
-    return $access === FALSE ? FALSE : TRUE;
+    $access = $property_wrapper->access($op, $account);
+    return $access !== FALSE;
+  }
+
+  /**
+   * Check access on property by the defined access callbacks.
+   *
+   * @param string $op
+   *   The operation that access should be checked for. Can be "view" or "edit".
+   *   Defaults to "edit".
+   * @param string $public_field_name
+   *   The name of the public field.
+   * @param EntityMetadataWrapper $property_wrapper
+   *   The wrapped property.
+   * @param EntityMetadataWrapper $wrapper
+   *   The wrapped entity.
+   *
+   * @return bool
+   *   TRUE if the current user has access to set the property, FALSE otherwise.
+   *   The default implementation assumes that if no callback has explicitly
+   *   denied access, we grant the user permission.
+   */
+  protected function checkPropertyAccessByAccessCallbacks($op, $public_field_name, EntityMetadataWrapper $property_wrapper, EntityMetadataWrapper $wrapper) {
+    $public_fields = $this->getPublicFields();
+
+    foreach ($public_fields[$public_field_name]['access_callbacks'] as $callback) {
+      $result = static::executeCallback($callback, array($op, $public_field_name, $property_wrapper, $wrapper));
+
+      if ($result == \RestfulInterface::ACCESS_DENY) {
+        return FALSE;
+      }
+    }
+
+    return TRUE;
   }
 
   /**
@@ -1354,14 +1402,15 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
       // Set default values.
       $info = &$public_fields[$key];
       $info += array(
+        'access_callbacks' => array(),
+        'callback' => FALSE,
+        'column' => FALSE,
+        'process_callbacks' => array(),
         'property' => FALSE,
+        'resource' => array(),
+        'sub_property' => FALSE,
         'wrapper_method' => 'value',
         'wrapper_method_on_entity' => FALSE,
-        'sub_property' => FALSE,
-        'process_callbacks' => array(),
-        'callback' => FALSE,
-        'resource' => array(),
-        'column' => FALSE,
       );
 
       if ($field = field_info_field($info['property'])) {
