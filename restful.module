@@ -699,9 +699,14 @@ function restful_parse_request() {
   if (!$request && $query_string = file_get_contents('php://input')) {
     // When trying to POST using curl on simpleTest it doesn't reach
     // $_POST, so we try to re-grab it here.
-    parse_str($query_string, $request);
+    // Also, sometimes the client might send the input still encoded.
+    if ($decoded_json = drupal_json_decode($query_string)) {
+      $request = $decoded_json;
+    }
+    else {
+      parse_str($query_string, $request);
+    }
   }
-
 
   // This flag is used to identify if the request is done "via Drupal" or "via
   // CURL";
