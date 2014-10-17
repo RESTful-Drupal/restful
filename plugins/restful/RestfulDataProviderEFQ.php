@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains \RestfulEFQ
+ * Contains \RestfulDataProviderEFQ
  */
 
-abstract class RestfulEFQ extends \RestfulBase implements \RestfulEFQInterface, \RestfulDataProviderInterface {
+abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDataProviderEFQInterface, \RestfulDataProviderInterface {
 
   /**
    * The entity type.
@@ -40,7 +40,7 @@ abstract class RestfulEFQ extends \RestfulBase implements \RestfulEFQInterface, 
   }
 
   /**
-   * Constructs a RestfulEFQ object.
+   * Constructs a RestfulDataProviderEFQ object.
    *
    * @param array $plugin
    *   Plugin definition.

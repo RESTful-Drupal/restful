@@ -5,10 +5,14 @@
  * Contains RestfulBase.
  */
 
+/**
+ * Class \RestfulBase
+ *
+ * The \RestfulDataProviderInterface is not declared as implemented on purpose
+ * so the classes that extend from RestfulBase, don't eval TRUE to instanceof
+ * in restful_menu_process_callback, without explicit implementation.
+ */
 abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterface {
-  // The \RestfulDataProviderInterface is not declared as implemented on purpose
-  // so the classes that extend from RestfulBase, don't eval TRUE to instanceof
-  // in restful_menu_process_callback, without explicit implementation.
 
   /**
    * Nested array that provides information about what method to call for each
@@ -556,7 +560,6 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
   public function process($path = '', array $request = array(), $method = \RestfulInterface::GET, $check_rate_limit = TRUE) {
     $this->setMethod($method);
     $this->setPath($path);
-    $this->setRequest($request);
 
     if (!$method_name = $this->getControllerFromPath()) {
       throw new RestfulBadRequestException('Path does not exist');
@@ -566,6 +569,17 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
       // This will throw the appropriate exception if needed.
       $this->getRateLimitManager()->checkRateLimit($request);
     }
+
+    // If it is an update method, then clean the request.
+    if ($method == \RestfulInterface::PUT || $method == \RestfulInterface::PATCH) {
+      static::cleanRequest($request);
+    }
+    // If it's a delete method we will want a 204 response code.
+    elseif ($method == \RestfulInterface::DELETE) {
+      // Set the HTTP headers.
+      $this->setHttpHeaders('Status', 204);
+    }
+    $this->setRequest($request);
 
     return $this->{$method_name}($path);
   }
@@ -623,7 +637,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
   }
 
   /**
-   * Helper method to know if the current request is for a list of entities.
+   * Helper method to know if the current request is for a list.
    *
    * @return boolean
    *   TRUE if the request is for a list. FALSE otherwise.
@@ -661,17 +675,18 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
     $public_fields = $this->getPublicFields();
 
     $sorts = array();
-    if (!empty($request['sort'])) {
-      foreach (explode(',', $request['sort']) as $sort) {
-        $direction = $sort[0] == '-' ? 'DESC' : 'ASC';
-        $sort = str_replace('-', '', $sort);
-        // Check the sort is on a legal key.
-        if (empty($public_fields[$sort])) {
-          throw new RestfulBadRequestException(format_string('The sort @sort is not allowed for this path.', array('@sort' => $sort)));
-        }
-
-        $sorts[$sort] = $direction;
+    if (empty($request['sort'])) {
+      return array();
+    }
+    foreach (explode(',', $request['sort']) as $sort) {
+      $direction = $sort[0] == '-' ? 'DESC' : 'ASC';
+      $sort = str_replace('-', '', $sort);
+      // Check the sort is on a legal key.
+      if (empty($public_fields[$sort])) {
+        throw new RestfulBadRequestException(format_string('The sort @sort is not allowed for this path.', array('@sort' => $sort)));
       }
+
+      $sorts[$sort] = $direction;
     }
     return $sorts;
   }
@@ -1017,14 +1032,14 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
    * {@inheritdoc}
    */
   public function index() {
-    $this->missingCrudOperation(__FUNCTION__);
+    $this->notImplementedCrudOperation(__FUNCTION__);
   }
 
   /**
    * {@inheritdoc}
    */
   public function view($id) {
-    $this->missingCrudOperation(__FUNCTION__);
+    $this->notImplementedCrudOperation(__FUNCTION__);
   }
 
   /**
@@ -1042,21 +1057,21 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
    * {@inheritdoc}
    */
   public function create() {
-    $this->missingCrudOperation(__FUNCTION__);
+    $this->notImplementedCrudOperation(__FUNCTION__);
   }
 
   /**
    * {@inheritdoc}
    */
   public function update($ids, $full_replace = FALSE) {
-    $this->missingCrudOperation(__FUNCTION__);
+    $this->notImplementedCrudOperation(__FUNCTION__);
   }
 
   /**
    * {@inheritdoc}
    */
   public function remove($id) {
-    $this->missingCrudOperation(__FUNCTION__);
+    $this->notImplementedCrudOperation(__FUNCTION__);
   }
 
   /**
@@ -1067,9 +1082,9 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
    *
    * @throws \RestfulNotImplementedException
    */
-  protected static function missingCrudOperation($operation) {
+  protected static function notImplementedCrudOperation($operation) {
     // The default behavior is to not support the crud action.
-    throw new \RestfulNotImplementedException(format_string('The "@method" method is not implemented.', array('@method' => $operation)));
+    throw new \RestfulNotImplementedException(format_string('The "@method" method is not implemented in class @class.', array('@method' => $operation, '@class' => __CLASS__)));
   }
 
 }

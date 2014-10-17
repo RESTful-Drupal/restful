@@ -15,9 +15,11 @@ files[] = plugins/rate_limit/RestfulRateLimitBase.php
 files[] = plugins/rate_limit/RestfulRateLimitInterface.php
 files[] = plugins/rate_limit/RestfulRateLimitManager.php
 files[] = plugins/restful/RestfulBase.php
+files[] = plugins/restful/RestfulDataProviderDbQuery.php
+files[] = plugins/restful/RestfulDataProviderDbQueryInterface.php
+files[] = plugins/restful/RestfulDataProviderEFQ.php
+files[] = plugins/restful/RestfulDataProviderEFQInterface.php
 files[] = plugins/restful/RestfulDataProviderInterface.php
-files[] = plugins/restful/RestfulEFQ.php
-files[] = plugins/restful/RestfulEFQInterface.php
 files[] = plugins/restful/RestfulEntityBase.php
 files[] = plugins/restful/RestfulEntityBaseMultipleBundles.php
 files[] = plugins/restful/RestfulEntityBaseNode.php
@@ -26,8 +28,6 @@ files[] = plugins/restful/RestfulEntityBaseUser.php
 files[] = plugins/restful/RestfulEntityInterface.php
 files[] = plugins/restful/RestfulFilesUpload.php
 files[] = plugins/restful/RestfulInterface.php
-files[] = plugins/restful/RestfulQuery.php
-files[] = plugins/restful/RestfulQueryInterface.php
 
 ; Includes
 files[] = includes/RestfulPluginBase.php

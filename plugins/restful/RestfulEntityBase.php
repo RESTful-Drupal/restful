@@ -9,7 +9,7 @@
 /**
  * An abstract implementation of RestfulEntityInterface.
  */
-abstract class RestfulEntityBase extends \RestfulEFQ implements \RestfulEntityInterface {
+abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \RestfulEntityInterface {
 
   /**
    * The public fields that are exposed to the API.
@@ -62,7 +62,7 @@ abstract class RestfulEntityBase extends \RestfulEFQ implements \RestfulEntityIn
   protected $publicFields = array();
 
   /**
-   * Overrides \RestfulEFQ::controllersInfo().
+   * Overrides \RestfulDataProviderEFQ::controllersInfo().
    */
   public static function controllersInfo() {
     return array(

@@ -5,7 +5,7 @@
  * Contains \RestfulQueryVariable
  */
 
-class RestfulQueryVariable extends \RestfulQuery implements \RestfulQueryInterface, \RestfulDataProviderInterface {
+class RestfulQueryVariable extends \RestfulDataProviderDbQuery implements \RestfulDataProviderDbQueryInterface, \RestfulDataProviderInterface {
 
   /**
    * {@inheritdoc}
@@ -17,9 +17,6 @@ class RestfulQueryVariable extends \RestfulQuery implements \RestfulQueryInterfa
       ),
       'value' => array(
         'property' => 'value',
-//        'process_callbacks' => array(
-//          '\RestfulQuery::unserializeData',
-//        ),
       ),
     );
   }

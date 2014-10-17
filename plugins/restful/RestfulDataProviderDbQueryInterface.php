@@ -2,24 +2,24 @@
 
 /**
  * @file
- * Contains \RestfulEFQInterface
+ * Contains \RestfulDataProviderDbQueryInterface
  */
 
-interface RestfulEFQInterface {
+interface RestfulDataProviderDbQueryInterface {
 
   /**
    * Prepare a query for RestfulEntityBase::getList().
    *
-   * @return EntityFieldQuery
-   *   The EntityFieldQuery object.
+   * @return \SelectQuery
+   *   The query object.
    */
   public function getQueryForList();
 
   /**
    * Prepare a query for RestfulEntityBase::getTotalCount().
    *
-   * @return EntityFieldQuery
-   *   The EntityFieldQuery object.
+   * @return \SelectQuery
+   *   The query object.
    *
    * @throws RestfulBadRequestException
    */
@@ -33,4 +33,15 @@ interface RestfulEFQInterface {
    *   The total number of results without including pagination.
    */
   public function getTotalCount();
+
+  /**
+   * Prepares the output array from the database row object.
+   *
+   * @param object $row
+   *   The database row object.
+   *
+   * @return array
+   *   The structured array ready to be formatted.
+   */
+  public function mapDbRowToPublicFields($row);
 }

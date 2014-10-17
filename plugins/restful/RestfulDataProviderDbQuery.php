@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains \RestfulQuery
+ * Contains \RestfulDataProviderDbQuery
  */
 
-abstract class RestfulQuery extends \RestfulBase implements \RestfulQueryInterface, \RestfulDataProviderInterface {
+abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \RestfulDataProviderDbQueryInterface, \RestfulDataProviderInterface {
 
   /**
    * The name of the table to query.
@@ -34,11 +34,11 @@ abstract class RestfulQuery extends \RestfulBase implements \RestfulQueryInterfa
   /**
    * Set the name of the column in the table to be used as the unique key.
    *
-   * @param string $idColumn
+   * @param string $id_column
    *   The name of the column in the table to be used as the unique key.
    */
-  public function setIdColumn($idColumn) {
-    $this->idColumn = $idColumn;
+  public function setIdColumn($id_column) {
+    $this->idColumn = $id_column;
   }
 
   /**
@@ -54,15 +54,15 @@ abstract class RestfulQuery extends \RestfulBase implements \RestfulQueryInterfa
   /**
    * Set the name of the table to query.
    *
-   * @param string $tableName
+   * @param string $table_name
    *   The name of the table to query.
    */
-  public function setTableName($tableName) {
-    $this->tableName = $tableName;
+  public function setTableName($table_name) {
+    $this->tableName = $table_name;
   }
 
   /**
-   * Constructs a RestfulQuery object.
+   * Constructs a RestfulDataProviderDbQuery object.
    *
    * @param array $plugin
    *   Plugin definition.
@@ -303,7 +303,6 @@ abstract class RestfulQuery extends \RestfulBase implements \RestfulQueryInterfa
 
     // Build the update array.
     $request = $this->getRequest();
-    static::cleanRequest($request);
     $public_fields = $this->getPublicFields();
     $fields = array();
     foreach ($public_fields as $public_property => $info) {
@@ -366,21 +365,18 @@ abstract class RestfulQuery extends \RestfulBase implements \RestfulQueryInterfa
     db_delete($this->getTableName())
       ->condition($this->getIdColumn(), $id)
       ->execute();
-
-    // Set the HTTP headers.
-    $this->setHttpHeaders('Status', 204);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function map($row) {
+  public function mapDbRowToPublicFields($row) {
     $output = &drupal_static(__CLASS__ . '::' . __FUNCTION__ . '::' . $this->getUniqueId($row));
     if (isset($output)) {
       return $output;
     }
     // Loop over all the defined public fields.
-    foreach ($this->getPublicFields() as $public_property_name => $info) {
+    foreach ($this->getPublicFields() as $public_field_name => $info) {
       $value = NULL;
       // If there is a callback defined execute it instead of a direct mapping.
       if ($info['callback']) {
@@ -390,9 +386,6 @@ abstract class RestfulQuery extends \RestfulBase implements \RestfulQueryInterfa
       elseif ($info['property']) {
         $value = $row->{$info['property']};
       }
-      else {
-        continue;
-      }
 
       // Execute the process callbacks.
       if ($value && $info['process_callbacks']) {
@@ -401,7 +394,7 @@ abstract class RestfulQuery extends \RestfulBase implements \RestfulQueryInterfa
         }
       }
 
-      $output[$public_property_name] = $value;
+      $output[$public_field_name] = $value;
     }
 
     return $output;
@@ -418,19 +411,6 @@ abstract class RestfulQuery extends \RestfulBase implements \RestfulQueryInterfa
    */
   public function getUniqueId($row) {
     return $this->getTableName() . '::' . $row->{$this->getIdColumn()};
-  }
-
-  /**
-   * Helper method to unserialize an object.
-   *
-   * @param string $data
-   *   The serialized data.
-   *
-   * @return mixed
-   *   The unserialized data.
-   */
-  public static function unserializeData($data) {
-    return unserialize($data);
   }
 
 }
