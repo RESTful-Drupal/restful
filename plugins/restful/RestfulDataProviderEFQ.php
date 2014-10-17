@@ -250,7 +250,7 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
   /**
    * {@inheritdoc}
    */
-  public function view($id) {
+  public function view($id, $reset = FALSE) {
     // Defer the actual implementation to \RestfulEntityBase.
     return $this->viewEntity($id);
   }

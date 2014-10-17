@@ -39,9 +39,11 @@ interface RestfulDataProviderDbQueryInterface {
    *
    * @param object $row
    *   The database row object.
+   * @param boolean $reset
+   *   Boolean indicating if the static cache should be reset.
    *
    * @return array
    *   The structured array ready to be formatted.
    */
-  public function mapDbRowToPublicFields($row);
+  public function mapDbRowToPublicFields($row, $reset = FALSE);
 }

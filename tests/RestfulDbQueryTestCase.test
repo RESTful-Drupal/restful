@@ -1,0 +1,107 @@
+<?php
+
+/**
+ * @file
+ * Contains RestfulDbQueryTestCase.
+ */
+
+class RestfulDbQueryTestCase extends RestfulCurlBaseTestCase {
+
+  /**
+   * The name of the test table.
+   *
+   * @var string
+   */
+  protected $tableName = 'restful_test_db_query';
+
+  /**
+   * Provides information about the test class.
+   */
+  public static function getInfo() {
+    return array(
+      'name' => 'DB Query',
+      'description' => 'Test the DB Query data provider.',
+      'group' => 'Restful',
+    );
+  }
+
+  /**
+   * Operations before the testing begins.
+   */
+  function setUp() {
+    parent::setUp('restful_test');
+
+    // Create the table to pupulate / query.
+    $schema = _restful_test_schema();
+    db_create_table($this->tableName, $schema[$this->tableName]);
+  }
+
+  /**
+   * Test authenticating a user.
+   */
+  function testCrudOperations() {
+    // Populate the table with some values.
+    $mock_data = array(
+      'str_field' => $this->randomName(),
+      'int_field' => intval(mt_rand(1, 100)),
+    );
+    $mock_data['serialized_field'] = serialize($mock_data);
+    $id = db_insert($this->tableName)
+      ->fields($mock_data)
+      ->execute();
+    $id = intval($id);
+
+    $this->assertTrue(!empty($id), 'The manual record could be inserted');
+
+    // Get the handler.
+    $handler = restful_get_restful_handler('db_query_test');
+
+    // Testing cRud
+    $result = $handler->get($id);
+    $result = $result[0];
+    $this->assertEqual($result['string'], $mock_data['str_field'], 'The record was retrieved successfully.');
+    $this->assertEqual($result['integer'], $mock_data['int_field'], 'The record was retrieved successfully.');
+    $this->assertEqual($result['serialized'], $mock_data['serialized_field'], 'The record was retrieved successfully.');
+
+    // Testing crUd
+    $mock_data2 = array(
+      'integer' => $mock_data['int_field'],
+      'string' => $this->randomName(),
+    );
+    $handler->put($id, $mock_data2);
+    $result = $handler->get($id);
+    // Remove nullified fields.
+    $result = array_filter($result[0]);
+    $this->assertEqual($result, $mock_data2, 'The record was updated with PUT successfully.');
+
+    $mock_data3 = $mock_data2;
+    $mock_data3['string'] = $this->randomName();
+    unset($mock_data3['integer']);
+    $handler->patch($id, $mock_data3);
+    $result = $handler->get($id);
+    $result = array_filter($result[0]);
+    $this->assertEqual($result, array_merge($mock_data2, $mock_data3), 'The record was updated with PATCH successfully.');
+
+    // Testing cruD
+    $handler->delete($id);
+    $count = db_select($this->tableName)
+      ->countQuery()
+      ->execute()
+      ->fetchField();
+    $this->assertEqual($count, 0, 'The record was deleted successfully.');
+
+    // Testing Crud
+    $mock_data4 = $mock_data2;
+    $mock_data4['serialized'] = serialize($mock_data4);
+    $handler->post('', $mock_data4);
+    $count = db_select($this->tableName)
+      ->countQuery()
+      ->execute()
+      ->fetchField();
+    $this->assertEqual($count, 1, 'The record was created.');
+
+    // Testing list.
+    $result = $handler->get();
+    $this->assertEqual($result, array($mock_data4), 'All the content listed successfully.');
+  }
+}

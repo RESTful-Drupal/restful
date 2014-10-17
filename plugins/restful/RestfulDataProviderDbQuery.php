@@ -22,6 +22,13 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
   protected $idColumn;
 
   /**
+   * Holds the primary field.
+   *
+   * @var string
+   */
+  protected $primary;
+
+  /**
    * Get ID column
    *
    * @return string
@@ -75,6 +82,9 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
     parent::__construct($plugin, $auth_manager, $cache_controller);
     $this->tableName = $plugin['table_name'];
     $this->idColumn = $plugin['id_column'];
+    if (!empty($plugin['primary'])) {
+      $this->primary = $plugin['primary'];
+    }
   }
 
   /**
@@ -108,7 +118,8 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
     // Get the sorting options from the request object.
     $sorts = $this->parseRequestForListSort();
     if (empty($sorts)) {
-      $sorts[$this->getIdColumn()] = 'ASC';
+      $query->orderBy($this->getIdColumn(), 'ASC');
+      return;
     }
 
     foreach ($sorts as $sort => $direction) {
@@ -234,7 +245,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
     $return = array();
 
     foreach ($results as $result) {
-      $return[] = $this->map($result);
+      $return[] = $this->mapDbRowToPublicFields($result);
     }
 
     return $return;
@@ -257,7 +268,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
     $return = array();
 
     foreach ($results as $result) {
-      $return[] = $this->map($result);
+      $return[] = $this->mapDbRowToPublicFields($result);
     }
 
     return $return;
@@ -267,7 +278,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
   /**
    * {@inheritdoc}
    */
-  public function view($id) {
+  public function view($id, $reset = FALSE) {
     $table = $this->getTableName();
     $query = db_select($table)
       ->fields($table);
@@ -281,7 +292,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
     $return = array();
 
     foreach ($results as $result) {
-      $return[] = $this->map($result);
+      $return[] = $this->mapDbRowToPublicFields($result, $reset);
     }
 
     return $return;
@@ -299,13 +310,17 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
    */
   public function update($id, $full_replace = FALSE) {
     $query = db_update($this->getTableName());
-    $query->condition($this->getTableName() . '.' . $this->getIdColumn(), $id);
+    $query->condition($this->getIdColumn(), $id);
 
     // Build the update array.
     $request = $this->getRequest();
     $public_fields = $this->getPublicFields();
     $fields = array();
     foreach ($public_fields as $public_property => $info) {
+      // If this is the primary field, skip.
+      if ($this->isPrimaryField($info['property'])) {
+        continue;
+      }
       // Check if the public property is set in the payload.
       if (!isset($request[$public_property])) {
         if ($full_replace) {
@@ -322,7 +337,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
 
     // Once the update array is built, execute the query.
     $query->fields($fields)->execute();
-    return $this->view($id);
+    return $this->view($id, TRUE);
   }
 
   /**
@@ -349,7 +364,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
 
     // Once the update array is built, execute the query.
     if ($id = $query->fields($fields)->execute()) {
-      return $this->view($id);
+      return $this->view($id, TRUE);
     }
     // Some times db_insert does not know how to get the ID.
     if ($passed_id) {
@@ -370,7 +385,10 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
   /**
    * {@inheritdoc}
    */
-  public function mapDbRowToPublicFields($row) {
+  public function mapDbRowToPublicFields($row, $reset = FALSE) {
+    if ($reset) {
+      drupal_static_reset(__CLASS__ . '::' . __FUNCTION__ . '::' . $this->getUniqueId($row));
+    }
     $output = &drupal_static(__CLASS__ . '::' . __FUNCTION__ . '::' . $this->getUniqueId($row));
     if (isset($output)) {
       return $output;
@@ -413,4 +431,16 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
     return $this->getTableName() . '::' . $row->{$this->getIdColumn()};
   }
 
+  /**
+   * Checks if the current field is the primary field.
+   *
+   * @param string $field
+   *   The column name to check.
+   *
+   * @return boolean
+   *   TRUE if it is the primary field, FALSE otherwise.
+   */
+  function isPrimaryField($field) {
+    return $this->primary == $field;
+  }
 }

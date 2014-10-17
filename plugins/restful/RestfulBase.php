@@ -1038,7 +1038,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
   /**
    * {@inheritdoc}
    */
-  public function view($id) {
+  public function view($id, $reset = FALSE) {
     $this->notImplementedCrudOperation(__FUNCTION__);
   }
 
