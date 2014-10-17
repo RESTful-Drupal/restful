@@ -215,7 +215,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
    * @param \SelectQuery $query
    *   The query to enhance.
    */
-  protected function addExtraInfoToQuery(\SelectQuery $query) {
+  protected function addExtraInfoToQuery($query) {
     $query->addTag('restful');
     $query->addMetaData('account', $this->getAccount());
     $query->addMetaData('restful_handler', $this);

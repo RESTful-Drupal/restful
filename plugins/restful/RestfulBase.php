@@ -653,10 +653,10 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
   /**
    * Adds query tags and metadata to the EntityFieldQuery.
    *
-   * @param \EntityFieldQuery $query
+   * @param \EntityFieldQuery|\SelectQuery $query
    *   The query to enhance.
    */
-  protected function addExtraInfoToQuery(\EntityFieldQuery $query) {
+  protected function addExtraInfoToQuery($query) {
     // Add a generic tags to the query.
     $query->addTag('restful');
     $query->addMetaData('account', $this->getAccount());

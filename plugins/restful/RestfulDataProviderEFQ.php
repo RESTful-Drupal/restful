@@ -223,7 +223,7 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
    * @param \EntityFieldQuery $query
    *   The query to enhance.
    */
-  protected function addExtraInfoToQuery(\EntityFieldQuery $query) {
+  protected function addExtraInfoToQuery($query) {
     parent::addExtraInfoToQuery($query);
     $entity_type = $this->getEntityType();
     // Add a generic entity access tag to the query.
