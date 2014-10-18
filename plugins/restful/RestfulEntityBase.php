@@ -1375,7 +1375,9 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
         'wrapper_method' => 'label',
         'wrapper_method_on_entity' => TRUE,
       ),
-      'self' => array('property' => 'url'),
+      'self' => array(
+        'callback' => array($this, 'getEntitySelf'),
+      ),
     );
 
     if (!empty($entity_info['entity keys']['label'])) {
@@ -1472,6 +1474,17 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
     }
     $path = $this->getPath();
     return empty($path) || strpos($path, ',') !== FALSE;
+  }
+
+  /**
+   * Get the "self" url.
+   *
+   * @param \EntityMetadataWrapper $wrapper
+   *   The wrapped entity.
+   */
+  protected function getEntitySelf(\EntityMetadataWrapper $wrapper) {
+    $id = $wrapper->getIdentifier();
+    return url($this->getPluginKey('menu_item') . '/' . $id, array('absolute' => TRUE));
   }
 
   /**
