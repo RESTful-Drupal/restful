@@ -5,7 +5,7 @@
  * Contains RestfulDbQueryTestCase.
  */
 
-class RestfulDbQueryTestCase extends RestfulCurlBaseTestCase {
+class RestfulDbQueryTestCase extends DrupalWebTestCase {
 
   /**
    * The name of the test table.
