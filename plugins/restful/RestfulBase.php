@@ -500,8 +500,12 @@ abstract class RestfulBase extends RestfulPluginBase implements RestfulInterface
    *   (optional) The path.
    * @param array $request
    *   (optional) The request.
+   *
+   * @return array
+   *   Information about the fields in the current resource.
    */
   public function options($path = '', array $request = array()) {
+    $this->setMethod(\RestfulInterface::OPTIONS);
     // A list of discoverable methods.
     $allowed_methods = array();
     foreach ($this->getControllers() as $pattern => $controllers) {
@@ -529,6 +533,36 @@ abstract class RestfulBase extends RestfulPluginBase implements RestfulInterface
     if (!empty($accepted_formats)) {
       $this->setHttpHeaders('Accept', implode(',', $accepted_formats));
     }
+
+    $output = array();
+    // Default options for the discovery information.
+    // TODO: get this info using Entity API if it's an entity.
+    $discovery_defaults = array(
+      'info' => array(
+        'name' => '',
+        'description' => '',
+      ),
+      // Describe the data.
+      'data' => array(
+        'type' => NULL,
+        'read_only' => FALSE,
+        'cardinality' => 1,
+      ),
+      // Information about the form element.
+      'form' => array(
+        'type' => NULL,
+        'default_value' => '',
+        'placeholder' => '',
+        'size' => NULL,
+      ),
+    );
+    foreach ($this->getPublicFields() as $public_field => $field_info) {
+      if (empty($field_info['discovery'])) {
+        continue;
+      }
+      $output[$public_field] = drupal_array_merge_deep($discovery_defaults, $field_info['discovery']);
+    }
+    return $output;
 
   }
 

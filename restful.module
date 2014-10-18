@@ -628,17 +628,6 @@ function restful_menu_process_callback($major_version, $resource_name) {
     $method = strtoupper($_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE']);
   }
 
-  if ($method == \RestfulInterface::OPTIONS) {
-    // OPTIONS method is a special case that might be sent by the browser
-    // before the actual method to check for CORS (known as preflight OPTIONS).
-    drupal_add_http_header('Status', 204);
-    $handler->options($path);
-    foreach ($handler->getHttpHeaders() as $header_name => $header_value) {
-      drupal_add_http_header($header_name, $header_value);
-    }
-    return;
-  }
-
   $method = strtolower($method);
   $request = restful_parse_request();
 
@@ -750,6 +739,10 @@ function restful_delivery($var = NULL, $method = 'format') {
     }
   }
   try {
+    // If we are returning from an OPTIONS call, always use render.
+    if ($restful_handler->getMethod() == \RestfulInterface::OPTIONS) {
+      $method = 'render';
+    }
     $formatter_handler = restful_output_format($restful_handler);
     $output = $formatter_handler->{$method}($var);
   }

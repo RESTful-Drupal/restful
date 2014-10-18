@@ -1370,10 +1370,37 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
         'wrapper_method' => 'getIdentifier',
         'wrapper_method_on_entity' => TRUE,
         'property' => $id_key,
+        'discovery' => array(
+          // Information about the field for human consumption.
+          'info' => array(
+            'name' => t('ID'),
+            'description' => t('Base ID for the entity.'),
+          ),
+          // Describe the data.
+          'data' => array(
+            'type' => 'int',
+            'read_only' => TRUE,
+          ),
+        ),
       ),
       'label' => array(
         'wrapper_method' => 'label',
         'wrapper_method_on_entity' => TRUE,
+        'discovery' => array(
+          // Information about the field for human consumption.
+          'info' => array(
+            'name' => t('Label'),
+            'description' => t('The entity label.'),
+          ),
+          // Describe the data.
+          'data' => array(
+            'type' => 'string',
+          ),
+          // Information about the form element.
+          'form' => array(
+            'type' => 'texfield',
+          ),
+        ),
       ),
       'self' => array('property' => 'url'),
     );
