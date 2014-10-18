@@ -96,7 +96,7 @@ class RestfulCsrfTokenTestCase extends RestfulCurlBaseTestCase {
       $params['@method'] = $method;
 
       // No CSRF token.
-      $result = $this->httpRequest($this->getPath($method), $method, $request, array(), NULL, FALSE);
+      $result = $this->httpRequest($this->getPath($method), $method, $request, array(), FALSE);
       if ($csrf_required) {
         $params['@code'] = 400;
         $this->assertEqual($result['code'], $params['@code'], format_string('@code on @method without CSRF token for @role user.', $params));

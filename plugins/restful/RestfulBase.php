@@ -5,7 +5,14 @@
  * Contains RestfulBase.
  */
 
-abstract class RestfulBase extends RestfulPluginBase implements RestfulInterface {
+/**
+ * Class \RestfulBase
+ *
+ * The \RestfulDataProviderInterface is not declared as implemented on purpose
+ * so the classes that extend from RestfulBase, don't eval TRUE to instanceof
+ * in restful_menu_process_callback, without explicit implementation.
+ */
+abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterface {
 
   /**
    * Nested array that provides information about what method to call for each
@@ -52,6 +59,32 @@ abstract class RestfulBase extends RestfulPluginBase implements RestfulInterface
    * @var string
    */
   protected $method = \RestfulInterface::GET;
+
+  /**
+   * Determines the number of items that should be returned when viewing lists.
+   *
+   * @var int
+   */
+  protected $range = 50;
+
+  /**
+   * Set the pager range.
+   *
+   * @param int $range
+   */
+  public function setRange($range) {
+    $this->range = $range;
+  }
+
+  /**
+   * Get the pager range.
+   *
+   * @return int
+   *  The range.
+   */
+  public function getRange() {
+    return $this->range;
+  }
 
   /**
    * Get the HTTP method used for the request.
@@ -141,38 +174,27 @@ abstract class RestfulBase extends RestfulPluginBase implements RestfulInterface
    *   route pattern.
    */
   public static function controllersInfo() {
+    // Provide sensible defaults for the HTTP methods. These methods (index,
+    // create, view, update and delete) are not implemented in this layer but
+    // they are guaranteed to exist because we are enforcing that all restful
+    // resources are an instance of \RestfulDataProviderInterface.
     return array(
       '' => array(
-        // Return the value from the non-entity resource.
-        \RestfulInterface::GET => 'viewNonEntityResourceValue',
+        // GET returns a list of entities.
+        \RestfulInterface::GET => 'index',
+        \RestfulInterface::HEAD => 'index',
+        // POST
+        \RestfulInterface::POST => 'create',
+      ),
+      // We don't know what the ID looks like, assume that everything is the ID.
+      '^.*$' => array(
+        \RestfulInterface::GET => 'view',
+        \RestfulInterface::HEAD => 'view',
+        \RestfulInterface::PUT => 'replace',
+        \RestfulInterface::PATCH => 'update',
+        \RestfulInterface::DELETE => 'remove',
       ),
     );
-  }
-
-  /**
-   * Return the value of the non-entity resource.
-   *
-   * @return array
-   *   Array with the public fields populated.
-   */
-  protected function viewNonEntityResourceValue() {
-    foreach ($this->getPublicFields() as $public_property => $info) {
-      $value = NULL;
-
-      if ($info['callback']) {
-        $value = static::executeCallback($info['callback']);
-      }
-
-      if ($value && $info['process_callbacks']) {
-        foreach ($info['process_callbacks'] as $process_callback) {
-          $value = static::executeCallback($process_callback, array($value));
-        }
-      }
-
-      $values[$public_property] = $value;
-    }
-
-    return $values;
   }
 
   /**
@@ -555,11 +577,14 @@ abstract class RestfulBase extends RestfulPluginBase implements RestfulInterface
   /**
    * Return the controller from a given path.
    *
+   * @throws RestfulBadRequestException
+   * @throws RestfulException
+   * @throws RestfulForbiddenException
+   * @throws RestfulGoneException
+   *
    * @return string
    *   The appropriate method to call.
    *
-   * @throws RestfulBadRequestException
-   * @throws RestfulGoneException
    */
   public function getControllerFromPath() {
     $path = $this->getPath();
@@ -602,15 +627,127 @@ abstract class RestfulBase extends RestfulPluginBase implements RestfulInterface
   }
 
   /**
+   * Helper method to know if the current request is for a list.
+   *
+   * @return boolean
+   *   TRUE if the request is for a list. FALSE otherwise.
+   */
+  public function isListRequest() {
+    if ($this->getMethod() != \RestfulInterface::GET) {
+      return FALSE;
+    }
+    $path = $this->getPath();
+    return empty($path) || strpos($path, ',') !== FALSE;
+  }
+
+  /**
    * Adds query tags and metadata to the EntityFieldQuery.
    *
-   * @param \EntityFieldQuery $query
+   * @param \EntityFieldQuery|\SelectQuery $query
    *   The query to enhance.
    */
-  protected function addExtraInfoToQuery(\EntityFieldQuery $query) {
+  protected function addExtraInfoToQuery($query) {
     // Add a generic tags to the query.
     $query->addTag('restful');
     $query->addMetaData('account', $this->getAccount());
+  }
+
+  /**
+   * Parses the request to get the sorting options.
+   *
+   * @return array
+   *   With the different sorting options.
+   *
+   * @throws \RestfulBadRequestException
+   */
+  protected function parseRequestForListSort() {
+    $request = $this->getRequest();
+    $public_fields = $this->getPublicFields();
+
+    $sorts = array();
+    if (empty($request['sort'])) {
+      return array();
+    }
+    foreach (explode(',', $request['sort']) as $sort) {
+      $direction = $sort[0] == '-' ? 'DESC' : 'ASC';
+      $sort = str_replace('-', '', $sort);
+      // Check the sort is on a legal key.
+      if (empty($public_fields[$sort])) {
+        throw new RestfulBadRequestException(format_string('The sort @sort is not allowed for this path.', array('@sort' => $sort)));
+      }
+
+      $sorts[$sort] = $direction;
+    }
+    return $sorts;
+  }
+
+  /**
+   * Parses the request object to get the pagination options.
+   *
+   * @return array
+   *   A numeric array with the offset and length options.
+   *
+   * @throws \RestfulBadRequestException
+   */
+  protected function parseRequestForListPagination() {
+    $request = $this->getRequest();
+    $page = isset($request['page']) ? $request['page'] : 1;
+
+    if (!ctype_digit((string) $page) || $page < 1) {
+      throw new \RestfulBadRequestException('"Page" property should be numeric and equal or higher than 1.');
+    }
+
+    $range = $this->getRange();
+    $offset = ($page - 1) * $range;
+    return array($offset, $range);
+  }
+
+  /**
+   * Filter the query for list.
+   *
+   * @throws \RestfulBadRequestException
+   *
+   * @returns array
+   *   An array of filters to apply.
+   *
+   * @see \RestfulEntityBase::getQueryForList
+   */
+  protected function parseRequestForListFilter() {
+    if (!$this->isListRequest()) {
+      // Not a list request, so we don't need to filter.
+      // We explicitly check this, as this function might be called from a
+      // formatter plugin, after RESTful's error handling has finished, and an
+      // invalid key might be passed.
+      return array();
+    }
+    $request = $this->getRequest();
+    if (empty($request['filter'])) {
+      // No filtering is needed.
+      return array();
+    }
+
+    $filters = array();
+    $public_fields = $this->getPublicFields();
+
+    foreach ($request['filter'] as $public_field => $value) {
+      if (empty($public_fields[$public_field])) {
+        throw new RestfulBadRequestException(format_string('The filter @filter is not allowed for this path.', array('@filter' => $public_field)));
+      }
+
+      if (!is_array($value)) {
+        // Request uses the shorthand form for filter. For example
+        // filter[foo]=bar would be converted to filter[foo][value] = bar.
+        $value = array('value' => $value);
+      }
+      // Add the property
+      $value['public_field'] = $public_field;
+      // Set default operator.
+      $value += array('operator' => '=');
+
+      $filters[] = $value;
+    }
+
+    return $filters;
   }
 
   /**
@@ -927,6 +1064,65 @@ abstract class RestfulBase extends RestfulPluginBase implements RestfulInterface
     // Get the latest resource for the minor version.
     $resource = end($resources);
     return array($resource['major_version'], $resource['minor_version']);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function index() {
+    $this->notImplementedCrudOperation(__FUNCTION__);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function view($id) {
+    $this->notImplementedCrudOperation(__FUNCTION__);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function viewMultiple(array $ids) {
+    $output = array();
+    foreach ($ids as $id) {
+      $output[] = $this->view($id);
+    }
+    return $output;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function create() {
+    $this->notImplementedCrudOperation(__FUNCTION__);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function update($ids, $full_replace = FALSE) {
+    $this->notImplementedCrudOperation(__FUNCTION__);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function remove($id) {
+    $this->notImplementedCrudOperation(__FUNCTION__);
+  }
+
+  /**
+   * Helper method with the code to run for non implemented CRUD operations.
+   *
+   * @param string $operation
+   *   The crud operation.
+   *
+   * @throws \RestfulNotImplementedException
+   */
+  protected static function notImplementedCrudOperation($operation) {
+    // The default behavior is to not support the crud action.
+    throw new \RestfulNotImplementedException(format_string('The "@method" method is not implemented in class @class.', array('@method' => $operation, '@class' => __CLASS__)));
   }
 
 }

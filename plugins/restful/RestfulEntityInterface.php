@@ -3,7 +3,7 @@
 
 /**
  * @file
- * Contains RestfulEntityInterface.
+ * Contains \RestfulEntityInterface.
  */
 
 interface RestfulEntityInterface extends RestfulInterface {
