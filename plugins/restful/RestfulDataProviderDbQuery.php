@@ -285,6 +285,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
 
     // Build the update array.
     $request = $this->getRequest();
+    static::cleanRequest($request);
     $public_fields = $this->getPublicFields();
     $fields = array();
     foreach ($public_fields as $public_property => $info) {
@@ -348,6 +349,10 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
    * {@inheritdoc}
    */
   public function remove($id) {
+    // If it's a delete method we will want a 204 response code.
+    // Set the HTTP headers.
+    $this->setHttpHeaders('Status', 204);
+
     db_delete($this->getTableName())
       ->condition($this->getIdColumn(), $id)
       ->execute();

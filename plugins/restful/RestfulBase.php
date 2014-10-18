@@ -560,6 +560,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
   public function process($path = '', array $request = array(), $method = \RestfulInterface::GET, $check_rate_limit = TRUE) {
     $this->setMethod($method);
     $this->setPath($path);
+    $this->setRequest($request);
 
     if (!$method_name = $this->getControllerFromPath()) {
       throw new RestfulBadRequestException('Path does not exist');
@@ -569,17 +570,6 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
       // This will throw the appropriate exception if needed.
       $this->getRateLimitManager()->checkRateLimit($request);
     }
-
-    // If it is an update method, then clean the request.
-    if ($this->isWriteMethod($this->getMethod())) {
-      static::cleanRequest($request);
-    }
-    // If it's a delete method we will want a 204 response code.
-    elseif ($method == \RestfulInterface::DELETE) {
-      // Set the HTTP headers.
-      $this->setHttpHeaders('Status', 204);
-    }
-    $this->setRequest($request);
 
     return $this->{$method_name}($path);
   }
