@@ -37,13 +37,11 @@ interface RestfulDataProviderInterface {
    *
    * @param mixed $id
    *   The unique ID for the item.
-   * @param boolean $reset
-   *   Boolean indicating if the static cache should be reset.
    *
    * @return array
    *   The structured array ready to be rendered for the current item.
    */
-  public function view($id, $reset);
+  public function view($id);
 
   /**
    * Update an item based on the request object.

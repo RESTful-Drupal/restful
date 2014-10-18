@@ -82,9 +82,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
     parent::__construct($plugin, $auth_manager, $cache_controller);
     $this->tableName = $plugin['table_name'];
     $this->idColumn = $plugin['id_column'];
-    if (!empty($plugin['primary'])) {
-      $this->primary = $plugin['primary'];
-    }
+    $this->primary = empty($plugin['primary']) ? NULL : $this->primary = $plugin['primary'];
   }
 
   /**
@@ -138,36 +136,9 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
    * @see \RestfulEntityBase::getQueryForList
    */
   protected function queryForListFilter(\SelectQuery $query) {
-    if (!$this->isListRequest()) {
-      // Not a list request, so we don't need to filter.
-      // We explicitly check this, as this function might be called from a
-      // formatter plugin, after RESTful's error handling has finished, and an
-      // invalid key might be passed.
-      return;
-    }
-    $request = $this->getRequest();
-    if (empty($request['filter'])) {
-      // No filtering is needed.
-      return;
-    }
-
     $public_fields = $this->getPublicFields();
-
-    foreach ($request['filter'] as $property => $value) {
-      if (empty($public_fields[$property])) {
-        throw new RestfulBadRequestException(format_string('The filter @filter is not allowed for this path.', array('@filter' => $property)));
-      }
-
-      if (!is_array($value)) {
-        // Request uses the shorthand form for filter. For example
-        // filter[foo]=bar would be converted to filter[foo][value] = bar.
-        $value = array('value' => $value);
-      }
-
-      // Set default operator.
-      $value += array('operator' => '=');
-
-      $query->condition($public_fields[$property]['property'], $value['value'], $value['operator']);
+    foreach ($this->parseRequestForListFilter() as $filter) {
+      $query->condition($public_fields[$filter['public_field']]['property'], $filter['value'], $filter['operator']);
     }
   }
 
@@ -278,7 +249,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
   /**
    * {@inheritdoc}
    */
-  public function view($id, $reset = FALSE) {
+  public function view($id) {
     $table = $this->getTableName();
     $query = db_select($table)
       ->fields($table);
@@ -292,7 +263,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
     $return = array();
 
     foreach ($results as $result) {
-      $return[] = $this->mapDbRowToPublicFields($result, $reset);
+      $return[] = $this->mapDbRowToPublicFields($result);
     }
 
     return $return;
@@ -385,13 +356,17 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
   /**
    * {@inheritdoc}
    */
-  public function mapDbRowToPublicFields($row, $reset = FALSE) {
-    if ($reset) {
-      drupal_static_reset(__CLASS__ . '::' . __FUNCTION__ . '::' . $this->getUniqueId($row));
+  public function mapDbRowToPublicFields($row) {
+    if ($this->getMethod() == \RestfulInterface::GET) {
+      // For read operations cache the result.
+      $output = &drupal_static(__CLASS__ . '::' . __FUNCTION__ . '::' . $this->getUniqueId($row));
+      if (isset($output)) {
+        return $output;
+      }
     }
-    $output = &drupal_static(__CLASS__ . '::' . __FUNCTION__ . '::' . $this->getUniqueId($row));
-    if (isset($output)) {
-      return $output;
+    else {
+      // Clear the cache if the request is not GET.
+      drupal_static_reset(__CLASS__ . '::' . __FUNCTION__ . '::' . $this->getUniqueId($row));
     }
     // Loop over all the defined public fields.
     foreach ($this->getPublicFields() as $public_field_name => $info) {

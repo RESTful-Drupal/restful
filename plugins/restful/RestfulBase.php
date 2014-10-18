@@ -571,7 +571,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
     }
 
     // If it is an update method, then clean the request.
-    if ($method == \RestfulInterface::PUT || $method == \RestfulInterface::PATCH) {
+    if ($this->isWriteMethod($this->getMethod())) {
       static::cleanRequest($request);
     }
     // If it's a delete method we will want a 204 response code.
@@ -710,6 +710,54 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
     $range = $this->getRange();
     $offset = ($page - 1) * $range;
     return array($offset, $range);
+  }
+
+  /**
+   * Filter the query for list.
+   *
+   * @throws \RestfulBadRequestException
+   *
+   * @returns array
+   *   An array of filters to apply.
+   *
+   * @see \RestfulEntityBase::getQueryForList
+   */
+  protected function parseRequestForListFilter() {
+    if (!$this->isListRequest()) {
+      // Not a list request, so we don't need to filter.
+      // We explicitly check this, as this function might be called from a
+      // formatter plugin, after RESTful's error handling has finished, and an
+      // invalid key might be passed.
+      return array();
+    }
+    $request = $this->getRequest();
+    if (empty($request['filter'])) {
+      // No filtering is needed.
+      return array();
+    }
+
+    $filters = array();
+    $public_fields = $this->getPublicFields();
+
+    foreach ($request['filter'] as $public_field => $value) {
+      if (empty($public_fields[$public_field])) {
+        throw new RestfulBadRequestException(format_string('The filter @filter is not allowed for this path.', array('@filter' => $public_field)));
+      }
+
+      if (!is_array($value)) {
+        // Request uses the shorthand form for filter. For example
+        // filter[foo]=bar would be converted to filter[foo][value] = bar.
+        $value = array('value' => $value);
+      }
+      // Add the property
+      $value['public_field'] = $public_field;
+      // Set default operator.
+      $value += array('operator' => '=');
+
+      $filters[] = $value;
+    }
+
+    return $filters;
   }
 
   /**
@@ -1038,7 +1086,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
   /**
    * {@inheritdoc}
    */
-  public function view($id, $reset = FALSE) {
+  public function view($id) {
     $this->notImplementedCrudOperation(__FUNCTION__);
   }
 

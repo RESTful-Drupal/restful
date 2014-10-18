@@ -126,41 +126,14 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
    * @see \RestfulEntityBase::getQueryForList
    */
   protected function queryForListFilter(\EntityFieldQuery $query) {
-    if (!$this->isListRequest()) {
-      // Not a list request, so we don't need to filter.
-      // We explicitly check this, as this function might be called from a
-      // formatter plugin, after RESTful's error handling has finished, and an
-      // invalid key might be passed.
-      return;
-    }
-    $request = $this->getRequest();
-    if (empty($request['filter'])) {
-      // No filtering is needed.
-      return;
-    }
-
     $public_fields = $this->getPublicFields();
-
-    foreach ($request['filter'] as $property => $value) {
-      if (empty($public_fields[$property])) {
-        throw new RestfulBadRequestException(format_string('The filter @filter is not allowed for this path.', array('@filter' => $property)));
-      }
-
-      if (!is_array($value)) {
-        // Request uses the shorthand form for filter. For example
-        // filter[foo]=bar would be converted to filter[foo][value] = bar.
-        $value = array('value' => $value);
-      }
-
-      // Set default operator.
-      $value += array('operator' => '=');
-
+    foreach ($this->parseRequestForListFilter() as $filter) {
       // Determine if sorting is by field or property.
-      if (empty($public_fields[$property]['column'])) {
-        $query->propertyCondition($public_fields[$property]['property'], $value['value'], $value['operator']);
+      if (empty($public_fields[$filter['public_field']]['column'])) {
+        $query->propertyCondition($public_fields[$filter['public_field']]['property'], $filter['value'], $filter['operator']);
       }
       else {
-        $query->fieldCondition($public_fields[$property]['property'], $public_fields[$property]['column'], $value['value'], $value['operator']);
+        $query->fieldCondition($public_fields[$filter['public_field']]['property'], $public_fields[$filter['public_field']]['column'], $filter['value'], $filter['operator']);
       }
     }
   }
@@ -250,7 +223,7 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
   /**
    * {@inheritdoc}
    */
-  public function view($id, $reset = FALSE) {
+  public function view($id) {
     // Defer the actual implementation to \RestfulEntityBase.
     return $this->viewEntity($id);
   }
