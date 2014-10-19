@@ -568,7 +568,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
         'type' => NULL,
         'read_only' => FALSE,
         'cardinality' => 1,
-        'required' => 0,
+        'required' => FALSE,
       ),
       // Information about the form element.
       'form_element' => array(
