@@ -558,10 +558,9 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
 
     $output = array();
     // Default options for the discovery information.
-    // TODO: get this info using Entity API if it's an entity.
     $discovery_defaults = array(
       'info' => array(
-        'name' => '',
+        'label' => '',
         'description' => '',
       ),
       // Describe the data.
@@ -569,6 +568,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
         'type' => NULL,
         'read_only' => FALSE,
         'cardinality' => 1,
+        'required' => FALSE,
       ),
       // Information about the form element.
       'form_element' => array(
@@ -579,6 +579,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
         'allowed_values' => NULL,
       ),
     );
+
     foreach ($this->getPublicFields() as $public_field => $field_info) {
       if (empty($field_info['discovery'])) {
         continue;
