@@ -22,35 +22,35 @@ class RestfulDiscoveryTestCase extends RestfulCurlBaseTestCase {
   /**
    * Test the headers populated in an OPTIONS request.
    */
-//  function testOptionsMethod() {
-//    $handler = restful_get_restful_handler('test_articles', 1, 4);
-//
-//    // 1. Assert Access-Control-Allow-Methods.
-//    $handler->options('');
-//    $headers = $handler->getHttpHeaders();
-//    $this->assertEqual($headers['Access-Control-Allow-Methods'], \RestfulInterface::HEAD, 'Access-Control-Allow-Methods header is populated correctly.');
-//    // Make sure it returns the appropriate headers for every path.
-//    $handler->options('1');
-//    $headers = $handler->getHttpHeaders();
-//    $this->assertEqual($headers['Access-Control-Allow-Methods'], \RestfulInterface::PATCH . ',' . \RestfulInterface::DELETE, 'Access-Control-Allow-Methods header is populated correctly for different paths.');
-//
-//    // 2. Assert Accept.
-//    $this->assertEqual($headers['Accept'], 'application/xml; charset=utf-8', 'Accept header is populated correctly for configured formatter.');
-//    $handler = restful_get_restful_handler('test_articles', 1, 2);
-//    $handler->options('');
-//    $accepted_formats = array();
-//    foreach ($handler->formatterNames() as $formatter_name) {
-//      $formatter = restful_get_formatter_handler($formatter_name, $handler);
-//      $accepted_formats[] = $formatter->getContentTypeHeader();
-//    }
-//    $headers = $handler->getHttpHeaders();
-//    $this->assertEqual($headers['Accept'], implode(',', $accepted_formats), 'Accept header is populated correctly for non configured formatters.');
-//
-//    // 3. Assert Access-Control-Allow-Origin.
-//    $response = $this->httpRequest('api/v1/test_articles', \RestfulInterface::HEAD, NULL, array('X-Restful-Minor-Version' => 4));
-//    $headers = explode("\n", $response['headers']);
-//    $this->assertTrue(in_array('*', $headers), 'Access-Control-Allow-Origin header is populated correctly.');
-//  }
+  function testOptionsMethod() {
+    $handler = restful_get_restful_handler('test_articles', 1, 4);
+
+    // 1. Assert Access-Control-Allow-Methods.
+    $handler->options('');
+    $headers = $handler->getHttpHeaders();
+    $this->assertEqual($headers['Access-Control-Allow-Methods'], \RestfulInterface::HEAD, 'Access-Control-Allow-Methods header is populated correctly.');
+    // Make sure it returns the appropriate headers for every path.
+    $handler->options('1');
+    $headers = $handler->getHttpHeaders();
+    $this->assertEqual($headers['Access-Control-Allow-Methods'], \RestfulInterface::PATCH . ',' . \RestfulInterface::DELETE, 'Access-Control-Allow-Methods header is populated correctly for different paths.');
+
+    // 2. Assert Accept.
+    $this->assertEqual($headers['Accept'], 'application/xml; charset=utf-8', 'Accept header is populated correctly for configured formatter.');
+    $handler = restful_get_restful_handler('test_articles', 1, 2);
+    $handler->options('');
+    $accepted_formats = array();
+    foreach ($handler->formatterNames() as $formatter_name) {
+      $formatter = restful_get_formatter_handler($formatter_name, $handler);
+      $accepted_formats[] = $formatter->getContentTypeHeader();
+    }
+    $headers = $handler->getHttpHeaders();
+    $this->assertEqual($headers['Accept'], implode(',', $accepted_formats), 'Accept header is populated correctly for non configured formatters.');
+
+    // 3. Assert Access-Control-Allow-Origin.
+    $response = $this->httpRequest('api/v1/test_articles', \RestfulInterface::HEAD, NULL, array('X-Restful-Minor-Version' => 4));
+    $headers = explode("\n", $response['headers']);
+    $this->assertTrue(in_array('*', $headers), 'Access-Control-Allow-Origin header is populated correctly.');
+  }
 
   /**
    * Field discovery.
@@ -113,21 +113,21 @@ class RestfulDiscoveryTestCase extends RestfulCurlBaseTestCase {
     );
 
     foreach ($expected as $public_field => $discovery_info) {
-      $r_data = $result[$public_field]['data'];
-      $e_data = $expected[$public_field]['data'];
-      ksort($r_data);
-      ksort($e_data);
-      $this->assertEqual($r_data, $e_data, format_string('The "data" information is properly described for @field.', array('@field' => $public_field)));
-      $r_form = $result[$public_field]['form'];
-      $e_form = $expected[$public_field]['form'];
-      ksort($r_form);
-      ksort($e_form);
-      $this->assertEqual($r_form, $e_form, format_string('The "form" information is properly described for @field.', array('@field' => $public_field)));
-      $r_info = $result[$public_field]['info'];
-      $e_info = $expected[$public_field]['info'];
-      ksort($r_info);
-      ksort($e_info);
-      $this->assertEqual($r_info, $e_info, format_string('The "info" information is properly described for @field.', array('@field' => $public_field)));
+      $result_data = $result[$public_field]['data'];
+      $expected_data = $expected[$public_field]['data'];
+      ksort($result_data);
+      ksort($expected_data);
+      $this->assertEqual($result_data, $expected_data, format_string('The "data" information is properly described for @field.', array('@field' => $public_field)));
+      $result_form = $result[$public_field]['form'];
+      $expected_form = $expected[$public_field]['form'];
+      ksort($result_form);
+      ksort($expected_form);
+      $this->assertEqual($result_form, $expected_form, format_string('The "form" information is properly described for @field.', array('@field' => $public_field)));
+      $result_info = $result[$public_field]['info'];
+      $expected_info = $expected[$public_field]['info'];
+      ksort($result_info);
+      ksort($expected_info);
+      $this->assertEqual($result_info, $expected_info, format_string('The "info" information is properly described for @field.', array('@field' => $public_field)));
     }
   }
 
