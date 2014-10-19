@@ -28,7 +28,7 @@ class RestfulTestMainResource__1_1 extends RestfulTestMainResource {
           'type' => 'string',
           'cardinality' => FIELD_CARDINALITY_UNLIMITED,
         ),
-        'form' => array(
+        'form_element' => array(
           'type' => 'textfield',
           'size' => 255,
           'placeholder' => t('This is helpful.'),

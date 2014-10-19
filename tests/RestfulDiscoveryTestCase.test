@@ -66,6 +66,7 @@ class RestfulDiscoveryTestCase extends RestfulCurlBaseTestCase {
           'type' => 'int',
         ),
         'form_element' => array(
+          'allowed_values' => NULL,
           'default_value' => '',
           'placeholder' => '',
           'size' => NULL,
@@ -83,13 +84,14 @@ class RestfulDiscoveryTestCase extends RestfulCurlBaseTestCase {
           'type' => 'string',
         ),
         'form_element' => array (
+          'allowed_values' => NULL,
           'type' => 'texfield',
           'default_value' => '',
           'placeholder' => '',
-          'size' => NULL,
+          'size' => 255,
         ),
         'info' => array(
-          'description' => t('The entity label.'),
+          'description' => t('The label of the resource.'),
           'name' => t('Label'),
         ),
       ),
@@ -100,6 +102,7 @@ class RestfulDiscoveryTestCase extends RestfulCurlBaseTestCase {
           'type' => 'string',
         ),
         'form_element' => array(
+          'allowed_values' => NULL,
           'default_value' => '',
           'placeholder' => t('This is helpful.'),
           'size' => 255,
