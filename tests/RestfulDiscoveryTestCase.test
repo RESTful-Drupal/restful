@@ -65,7 +65,7 @@ class RestfulDiscoveryTestCase extends RestfulCurlBaseTestCase {
           'read_only' => TRUE,
           'type' => 'int',
         ),
-        'form' => array(
+        'form_element' => array(
           'default_value' => '',
           'placeholder' => '',
           'size' => NULL,
@@ -82,7 +82,7 @@ class RestfulDiscoveryTestCase extends RestfulCurlBaseTestCase {
           'read_only' => FALSE,
           'type' => 'string',
         ),
-        'form' => array (
+        'form_element' => array (
           'type' => 'texfield',
           'default_value' => '',
           'placeholder' => '',
@@ -99,7 +99,7 @@ class RestfulDiscoveryTestCase extends RestfulCurlBaseTestCase {
           'read_only' => FALSE,
           'type' => 'string',
         ),
-        'form' => array(
+        'form_element' => array(
           'default_value' => '',
           'placeholder' => t('This is helpful.'),
           'size' => 255,
@@ -118,11 +118,11 @@ class RestfulDiscoveryTestCase extends RestfulCurlBaseTestCase {
       ksort($result_data);
       ksort($expected_data);
       $this->assertEqual($result_data, $expected_data, format_string('The "data" information is properly described for @field.', array('@field' => $public_field)));
-      $result_form = $result[$public_field]['form'];
-      $expected_form = $expected[$public_field]['form'];
-      ksort($result_form);
-      ksort($expected_form);
-      $this->assertEqual($result_form, $expected_form, format_string('The "form" information is properly described for @field.', array('@field' => $public_field)));
+      $result_form_element = $result[$public_field]['form_element'];
+      $expected_form_element = $expected[$public_field]['form_element'];
+      ksort($result_form_element);
+      ksort($expected_form_element);
+      $this->assertEqual($result_form_element, $expected_form_element, format_string('The "form_element" information is properly described for @field.', array('@field' => $public_field)));
       $result_info = $result[$public_field]['info'];
       $expected_info = $expected[$public_field]['info'];
       ksort($result_info);

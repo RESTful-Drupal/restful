@@ -1068,15 +1068,16 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
           // Information about the field for human consumption.
           'info' => array(
             'name' => t('Label'),
-            'description' => t('The entity label.'),
+            'description' => t('The label of the resource.'),
           ),
           // Describe the data.
           'data' => array(
             'type' => 'string',
           ),
           // Information about the form element.
-          'form' => array(
+          'form_element' => array(
             'type' => 'texfield',
+            'size' => 255,
           ),
         ),
       ),

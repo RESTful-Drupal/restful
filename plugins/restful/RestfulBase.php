@@ -571,11 +571,12 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
         'cardinality' => 1,
       ),
       // Information about the form element.
-      'form' => array(
+      'form_element' => array(
         'type' => NULL,
         'default_value' => '',
         'placeholder' => '',
         'size' => NULL,
+        'allowed_values' => NULL,
       ),
     );
     foreach ($this->getPublicFields() as $public_field => $field_info) {
