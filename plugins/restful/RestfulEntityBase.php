@@ -9,21 +9,7 @@
 /**
  * An abstract implementation of RestfulEntityInterface.
  */
-abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInterface {
-
-  /**
-   * The entity type.
-   *
-   * @var string
-   */
-  protected $entityType;
-
-  /**
-   * The bundle.
-   *
-   * @var string
-   */
-  protected $bundle;
+abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \RestfulEntityInterface {
 
   /**
    * The public fields that are exposed to the API.
@@ -86,51 +72,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
   protected $publicFields = array();
 
   /**
-   * Determines the number of items that should be returned when viewing lists.
-   *
-   * @var int
-   */
-  protected $range = 50;
-
-  /**
-   * Set the pager range.
-   *
-   * @param int $range
-   */
-  public function setRange($range) {
-    $this->range = $range;
-  }
-
-  /**
-   * Get the pager range.
-   *
-   * @return int
-   *  The range.
-   */
-  public function getRange() {
-    return $this->range;
-  }
-
-  /**
-   * Getter for $bundle.
-   *
-   * @return string
-   */
-  public function getBundle() {
-    return $this->bundle;
-  }
-
-  /**
-   * Getter for $entityType.
-   *
-   * @return string
-   */
-  public function getEntityType() {
-    return $this->entityType;
-  }
-
-  /**
-   * {@inheritdoc}
+   * Overrides \RestfulDataProviderEFQ::controllersInfo().
    */
   public static function controllersInfo() {
     return array(
@@ -149,22 +91,6 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
         \RestfulInterface::DELETE => 'deleteEntity',
       ),
     );
-  }
-
-  /**
-   * Constructs a RestfulEntityBase object.
-   *
-   * @param array $plugin
-   *   Plugin definition.
-   * @param RestfulAuthenticationManager $auth_manager
-   *   (optional) Injected authentication manager.
-   * @param DrupalCacheInterface $cache_controller
-   *   (optional) Injected cache backend.
-   */
-  public function __construct(array $plugin, \RestfulAuthenticationManager $auth_manager = NULL, \DrupalCacheInterface $cache_controller = NULL) {
-    parent::__construct($plugin, $auth_manager, $cache_controller);
-    $this->entityType = $plugin['entity_type'];
-    $this->bundle = $plugin['bundle'];
   }
 
   /**
@@ -210,15 +136,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
   }
 
   /**
-   * Get a list of entities based on a list of IDs.
-   *
-   * @param string $entity_ids_string
-   *   Coma separated list of entities.
-   *
-   * @return array
-   *   Array of entities, as passed to RestfulEntityBase::viewEntity().
-   *
-   * @throws RestfulBadRequestException
+   * {@inheritdoc}
    */
   public function viewEntities($entity_ids_string) {
     $entity_ids = array_unique(array_filter(explode(',', $entity_ids_string)));
@@ -228,216 +146,6 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
       $output[] = $this->viewEntity($entity_id);
     }
     return $output;
-  }
-
-  /**
-   * Prepare a query for RestfulEntityBase::getList().
-   *
-   * @return EntityFieldQuery
-   *   The EntityFieldQuery object.
-   */
-  public function getQueryForList() {
-    $entity_type = $this->getEntityType();
-    $entity_info = entity_get_info($entity_type);
-    $query = new EntityFieldQuery();
-    $query->entityCondition('entity_type', $this->getEntityType());
-
-    if ($this->bundle && $entity_info['entity keys']['bundle']) {
-      $query->entityCondition('bundle', $this->getBundle());
-    }
-    if ($path = $this->getPath()) {
-      $ids = explode(',', $path);
-      if (!empty($ids)) {
-        $query->entityCondition('entity_id', $ids, 'IN');
-      }
-    }
-
-    $this->queryForListSort($query);
-    $this->queryForListFilter($query);
-    $this->queryForListPagination($query);
-    $this->addExtraInfoToQuery($query);
-
-    return $query;
-  }
-
-  /**
-   * Sort the query for list.
-   *
-   * @param \EntityFieldQuery $query
-   *   The query object.
-   *
-   * @throws \RestfulBadRequestException
-   *
-   * @see \RestfulEntityBase::getQueryForList
-   */
-  protected function queryForListSort(\EntityFieldQuery $query) {
-    $request = $this->getRequest();
-    $public_fields = $this->getPublicFields();
-
-    $sorts = array();
-    if (!empty($request['sort'])) {
-      foreach (explode(',', $request['sort']) as $sort) {
-        $direction = $sort[0] == '-' ? 'DESC' : 'ASC';
-        $sort = str_replace('-', '', $sort);
-        // Check the sort is on a legal key.
-        if (empty($public_fields[$sort])) {
-          throw new RestfulBadRequestException(format_string('The sort @sort is not allowed for this path.', array('@sort' => $sort)));
-        }
-
-        $sorts[$sort] = $direction;
-      }
-    }
-    else {
-      // Some endpoints like 'token_auth' don't have an id public field. In that
-      // case, skip the default sorting.
-      if (!empty($public_fields['id'])) {
-        // Sort by default using the entity ID.
-        $sorts['id'] = 'ASC';
-      }
-    }
-
-    foreach ($sorts as $sort => $direction) {
-      // Determine if sorting is by field or property.
-      if (empty($public_fields[$sort]['column'])) {
-        $query->propertyOrderBy($public_fields[$sort]['property'], $direction);
-      }
-      else {
-        $query->fieldOrderBy($public_fields[$sort]['property'], $public_fields[$sort]['column'], $direction);
-      }
-    }
-  }
-
-  /**
-   * Filter the query for list.
-   *
-   * @param \EntityFieldQuery $query
-   *   The query object.
-   *
-   * @throws \RestfulBadRequestException
-   *
-   * @see \RestfulEntityBase::getQueryForList
-   */
-  protected function queryForListFilter(\EntityFieldQuery $query) {
-    if (!$this->isListRequest()) {
-      // Not a list request, so we don't need to filter.
-      // We explicitly check this, as this function might be called from a
-      // formatter plugin, after RESTful's error handling has finished, and an
-      // invalid key might be passed.
-      return;
-    }
-    $request = $this->getRequest();
-    if (empty($request['filter'])) {
-      // No filtering is needed.
-      return;
-    }
-
-    $public_fields = $this->getPublicFields();
-
-    foreach ($request['filter'] as $property => $value) {
-      if (empty($public_fields[$property])) {
-        throw new RestfulBadRequestException(format_string('The filter @filter is not allowed for this path.', array('@filter' => $property)));
-      }
-
-      if (!is_array($value)) {
-        // Request uses the shorthand form for filter. For example
-        // filter[foo]=bar would be converted to filter[foo][value] = bar.
-        $value = array('value' => $value);
-      }
-
-      // Set default operator.
-      $value += array('operator' => '=');
-
-      // Determine if sorting is by field or property.
-      if (empty($public_fields[$property]['column'])) {
-        $query->propertyCondition($public_fields[$property]['property'], $value['value'], $value['operator']);
-      }
-      else {
-        $query->fieldCondition($public_fields[$property]['property'], $public_fields[$property]['column'], $value['value'], $value['operator']);
-      }
-    }
-  }
-
-  /**
-   * Set correct page (i.e. range) for the query for list.
-   *
-   * Determine the page that should be seen. Page 1, is actually offset 0 in the
-   * query range.
-   *
-   * @param \EntityFieldQuery $query
-   *   The query object.
-   *
-   * @throws \RestfulBadRequestException
-   *
-   * @see \RestfulEntityBase::getQueryForList
-   */
-  protected function queryForListPagination(\EntityFieldQuery $query) {
-    $request = $this->getRequest();
-    $page = isset($request['page']) ? $request['page'] : 1;
-
-    if (!ctype_digit((string)$page) || $page < 1) {
-      throw new \RestfulBadRequestException('"Page" property should be numeric and equal or higher than 1.');
-    }
-
-    $range = $this->getRange();
-    $offset = ($page - 1) * $range;
-    $query->range($offset, $range);
-  }
-
-  /**
-   * Prepare a query for RestfulEntityBase::getTotalCount().
-   *
-   * @return EntityFieldQuery
-   *   The EntityFieldQuery object.
-   *
-   * @throws RestfulBadRequestException
-   */
-  public function getQueryCount() {
-    $entity_type = $this->getEntityType();
-    $entity_info = entity_get_info($entity_type);
-    $query = new EntityFieldQuery();
-    $query->entityCondition('entity_type', $this->getEntityType());
-
-    if ($this->bundle && $entity_info['entity keys']['bundle']) {
-      $query->entityCondition('bundle', $this->getBundle());
-    }
-    if ($path = $this->getPath()) {
-      $ids = explode(',', $path);
-      $query->entityCondition('entity_id', $ids, 'IN');
-    }
-
-    $this->addExtraInfoToQuery($query);
-    $query->addTag('restful_count');
-
-    $this->queryForListFilter($query);
-
-    return $query->count();
-  }
-
-  /**
-   * Helper method to get the total count of entities that match certain
-   * request.
-   *
-   * @return int
-   *   The total number of results without including pagination.
-   */
-  public function getTotalCount() {
-    return intval($this
-      ->getQueryCount()
-      ->execute());
-  }
-
-  /**
-   * Adds query tags and metadata to the EntityFieldQuery.
-   *
-   * @param \EntityFieldQuery $query
-   *   The query to enhance.
-   */
-  protected function addExtraInfoToQuery(\EntityFieldQuery $query) {
-    parent::addExtraInfoToQuery($query);
-    $entity_type = $this->getEntityType();
-    // Add a generic entity access tag to the query.
-    $query->addTag($entity_type . '_access');
-    $query->addMetaData('restful_handler', $this);
   }
 
   /**
@@ -553,15 +261,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
   }
 
   /**
-   * View an entity.
-   *
-   * @param int $entity_id
-   *   The entity ID.
-   *
-   * @return array
-   *   Array with the public fields populated.
-   *
-   * @throws Exception
+   * {@inheritdoc}
    */
   public function viewEntity($entity_id) {
     $request = $this->getRequest();
@@ -757,12 +457,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
   }
 
   /**
-   * Delete an entity using DELETE.
-   *
-   * No result is returned, just the HTTP header is set to 204.
-   *
-   * @param $entity_id
-   *   The entity ID.
+   * {@inheritdoc}
    */
   public function deleteEntity($entity_id) {
     $this->isValidEntity('update', $entity_id);
@@ -775,18 +470,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
   }
 
   /**
-   * Update an entity.
-   *
-   * @param $entity_id
-   *   The entity ID.
-   * @param bool $null_missing_fields
-   *   Determine if properties that are missing form the request array should
-   *   be treated as NULL, or should be skipped. Defaults to FALSE, which will
-   *   skip missing the fields to NULL.
-   *
-   * @return array
-   *   Array with the output of the new entity, passed to
-   *   RestfulEntityInterface::viewEntity().
+   * {@inheritdoc}
    */
   protected function updateEntity($entity_id, $null_missing_fields = FALSE) {
     $this->isValidEntity('update', $entity_id);
@@ -807,13 +491,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
 
 
   /**
-   * Create a new entity.
-   *
-   * @return array
-   *   Array with the output of the new entity, passed to
-   *   RestfulEntityInterface::viewEntity().
-   *
-   * @throws RestfulForbiddenException
+   * {@inheritdoc}
    */
   public function createEntity() {
     $entity_info = entity_get_info($this->entityType);
@@ -1390,7 +1068,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
           // Information about the field for human consumption.
           'info' => array(
             'name' => t('Label'),
-            'description' => t('The entity label.'),
+            'description' => t('The label of the resource.'),
           ),
           // Describe the data.
           'data' => array(
@@ -1399,6 +1077,7 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
           // Information about the form element.
           'form_element' => array(
             'type' => 'texfield',
+            'size' => 255,
           ),
         ),
       ),
@@ -1520,20 +1199,6 @@ abstract class RestfulEntityBase extends RestfulBase implements RestfulEntityInt
    */
   public function setPublicFields(array $public_fields = array()) {
     $this->publicFields = $public_fields;
-  }
-
-  /**
-   * Helper method to know if the current request is for a list of entities.
-   *
-   * @return boolean
-   *   TRUE if the request is for a list. FALSE otherwise.
-   */
-  public function isListRequest() {
-    if ($this->getMethod() != \RestfulInterface::GET) {
-      return FALSE;
-    }
-    $path = $this->getPath();
-    return empty($path) || strpos($path, ',') !== FALSE;
   }
 
   /**
