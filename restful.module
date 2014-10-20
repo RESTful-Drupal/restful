@@ -35,6 +35,8 @@ function restful_plugin_process(&$plugin, $info) {
  *
  * Properties for the "restful" plugin type:
  * - description: The description of the resource. Defaults to empty string.
+ * - discoverable: Determines if the resource should be discoverable by the
+ *   "discovery" resource. Defaults to TRUE.
  * - major_version: The major version of the resource. This will change the URL
  *   of the resource endpoint. For example setting major version to 2 for the
  *   "articles" resource will result with "api/v2/articles" as the URL. Defaults
@@ -132,6 +134,7 @@ function restful_plugin_process_restful(&$plugin, $info) {
     'render_cache' => array(),
     'autocomplete' => array(),
     'allow_origin' => NULL,
+    'discoverable' => TRUE,
   );
 
   $plugin['render_cache'] += array(

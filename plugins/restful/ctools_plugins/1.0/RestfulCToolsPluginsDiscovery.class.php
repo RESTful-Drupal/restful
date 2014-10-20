@@ -28,7 +28,11 @@ class RestfulCToolsPluginsDiscovery extends \RestfulDataProviderCToolsPlugins {
         'property' => 'minor_version',
       ),
       'self' => array(
-        'callback' => array($this, 'getSelf'),
+        'property' => 'menu_item',
+        'process_callbacks' => array(
+          array($this, 'getSelf'),
+        ),
+
       ),
     );
   }
@@ -41,16 +45,16 @@ class RestfulCToolsPluginsDiscovery extends \RestfulDataProviderCToolsPlugins {
   public function getPlugins() {
     $plugins = parent::getPlugins();
 
-    foreach (array_keys($plugins) as $plugin_name) {
-      if (strpos($plugin_name, 'discovery__') === 0) {
+    foreach ($plugins as $plugin_name => $plugin) {
+      if (!$plugin['discoverable']) {
         unset($plugins[$plugin_name]);
       }
     }
     return $plugins;
   }
 
-  protected function getSelf($plugin) {
-    return $this->getUrl(array(), $plugin['name']);
+  protected function getSelf($url) {
+    return url($url, array('absolute' => TRUE));
   }
 
 }

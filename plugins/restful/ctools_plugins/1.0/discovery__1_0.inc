@@ -12,5 +12,7 @@ if (variable_get('restful_enable_discovery_resource', TRUE)) {
     ),
     'authentication_types' => TRUE,
     'authentication_optional' => TRUE,
+    // We don't want the discovery resource itself to be discoverable.
+    'discoverable' => FALSE,
   );
 }
