@@ -243,7 +243,6 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
     }
 
     return $return;
-
   }
 
   /**
