@@ -135,6 +135,7 @@ function restful_plugin_process_restful(&$plugin, $info) {
     'autocomplete' => array(),
     'allow_origin' => NULL,
     'discoverable' => TRUE,
+    'menu_item' => FALSE,
   );
 
   $plugin['render_cache'] += array(

@@ -81,12 +81,12 @@ abstract class RestfulDataProviderCToolsPlugins extends \RestfulBase implements 
       }
     }
 
-    foreach ($this->parseRequestForListSort() as $sort) {
-      // @todo
+
+    if ($this->parseRequestForListSort()) {
+      uasort($plugins, array($this, 'sortMultiCompare'));
     }
 
     return $plugins;
-
   }
 
   /**
@@ -131,6 +131,32 @@ abstract class RestfulDataProviderCToolsPlugins extends \RestfulBase implements 
         // The passed second value is an array.
         return $value1 >= $value2[0] && $value1 >= $value2[1];
     }
+  }
+
+  /**
+   * Sort plugins by multiple criteria.
+   *
+   * @param $value1
+   *   The first value.
+   * @param $value2
+   *   The second value.
+   *
+   * @return int
+   *   The values expected by uasort() function.
+   *
+   * @link http://stackoverflow.com/a/13673568/750039
+   */
+  protected function sortMultiCompare($value1,$value2) {
+    $sorts = $this->parseRequestForListSort();
+    foreach ($sorts as $key => $order){
+      if ($value1[$key] == $value2[$key]) {
+        continue;
+      }
+      
+      return ($order == 'DESC' ? -1 : 1) * strcmp($value1[$key], $value2[$key]);
+    }
+
+    return 0;
   }
 
   /**
