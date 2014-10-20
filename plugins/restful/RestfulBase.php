@@ -744,6 +744,10 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
       // Set default operator.
       $value += array('operator' => '=');
 
+      // Clean the operator in case it came from the URL.
+      // e.g. filter[minor_version][operator]=">="
+      $value['operator'] = str_replace(array('"', "'"), '', $value['operator']);
+
       $filters[] = $value;
     }
 

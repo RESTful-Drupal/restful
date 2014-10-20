@@ -74,8 +74,6 @@ abstract class RestfulDataProviderCToolsPlugins extends \RestfulBase implements 
           unset($plugins[$plugin_name]);
         }
 
-        dpm($filter);
-
         if (!$this->evaluateExpression($filter['value'], $plugin[$property], $filter['operator'])) {
           // Property doesn't match the filter.
           unset($plugins[$plugin_name]);
