@@ -748,10 +748,37 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
       // e.g. filter[minor_version][operator]=">="
       $value['operator'] = str_replace(array('"', "'"), '', $value['operator']);
 
+      $this->isValidOperatorForFilter($value['operator']);
+
       $filters[] = $value;
     }
 
     return $filters;
+  }
+
+  /**
+   * Check if an operator is valid for filtering.
+   *
+   * @param string $operator
+   *   The operator.
+   *
+   * @throws RestfulBadRequestException
+   */
+  protected function isValidOperatorForFilter($operator) {
+    $allowed_operators = array(
+      '=',
+      '>',
+      '<',
+      '>=',
+      '<=',
+      '<>',
+      'IN',
+      'BETWEEN',
+    );
+
+    if (!in_array($operator, $allowed_operators)) {
+      throw new \RestfulBadRequestException('Operator @operator is not allowed for filtering on this resource.', array('@operator' => $operator));
+    }
   }
 
   /**

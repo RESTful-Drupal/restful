@@ -124,14 +124,13 @@ abstract class RestfulDataProviderCToolsPlugins extends \RestfulBase implements 
       case '<>':
         return $value1 != $value2;
 
+      case 'IN':
+        return in_array($value1, $value2);
+
       case 'BETWEEN':
         // The passed second value is an array.
         return $value1 >= $value2[0] && $value1 >= $value2[1];
-
-      throw new \RestfulBadRequestException('Operator @operator is not allowed for filtering on this resource.', array('@operator' => $operator));
     }
-
-
   }
 
   /**
