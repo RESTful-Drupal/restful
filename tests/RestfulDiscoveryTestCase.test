@@ -52,4 +52,17 @@ class RestfulDiscoveryTestCase extends RestfulCurlBaseTestCase {
     $this->assertTrue(in_array('*', $headers), 'Access-Control-Allow-Origin header is populated correctly.');
   }
 
+  /**
+   * Resource discovery callback.
+   */
+  public function testResourceDiscovery() {
+    // Create a user with the appropriate access.
+    $account = $this->drupalCreateUser(array('access discovery information'));
+    $handler = restful_get_restful_handler('discovery');
+    $handler->setAccount($account);
+    $result = $handler->get();
+    // Check the presence of a random resource.
+    $this->assertTrue(isset($result['resources']['main__1_1']), 'Resources are described.');
+  }
+
 }

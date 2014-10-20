@@ -373,7 +373,28 @@ function restful_menu() {
     'type' => MENU_CALLBACK,
   );
 
+  $items[$base_path . '/discovery'] = array(
+    'page callback' => 'restful_menu_process_callback',
+    'page arguments' => array('1', 'discovery'),
+    'access callback' => 'restful_menu_access_callback',
+    'access arguments' => array('v1', 'discovery'),
+    'delivery callback' => 'restful_unprepared_delivery',
+    'type' => MENU_CALLBACK,
+  );
+
   return $items;
+}
+
+/**
+ *  Implements hook_permission().
+ */
+function restful_permission() {
+  return array(
+    'access discovery information' => array(
+      'title' => t('Access discovery informantion'),
+      'description' => t('Access the discovery information about the resources.'),
+    ),
+  );
 }
 
 /**
