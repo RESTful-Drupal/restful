@@ -21,9 +21,16 @@ abstract class RestfulDataProviderCToolsPlugins extends \RestfulBase implements 
    */
   protected $type;
 
+  /**
+   * The loaded plugins.
+   *
+   * @var array
+   */
   protected $plugins = array();
 
   /**
+   * Get the module name.
+   *
    * @return string
    */
   public function getModule() {
@@ -31,6 +38,8 @@ abstract class RestfulDataProviderCToolsPlugins extends \RestfulBase implements 
   }
 
   /**
+   * Get the plugin type.
+   *
    * @return string
    */
   public function getType() {
@@ -38,6 +47,8 @@ abstract class RestfulDataProviderCToolsPlugins extends \RestfulBase implements 
   }
 
   /**
+   * Return the plugins.
+   *
    * @return array
    */
   public function getPlugins() {
@@ -45,12 +56,66 @@ abstract class RestfulDataProviderCToolsPlugins extends \RestfulBase implements 
       return $this->plugins;
     }
 
-    ctools_include('plugins');
     $this->plugins = ctools_get_plugins($this->getModule(), $this->getType());
     return $this->plugins;
   }
 
+  public function getPluginsSortedAndFiltered() {
+    $sorts = $this->parseRequestForListSort();
+    $plugins = $this->getPlugins();
+    $public_fields = $this->getPublicFields();
 
+    foreach ($this->parseRequestForListFilter() as $filter) {
+      foreach ($plugins as $plugin_name => $plugin) {
+        $property = $public_fields[$filter['public_field']]['property'];
+
+        if (empty($plugin[$property])) {
+          // Property doesn't exist on the plugin, so filter it out.
+          unset($plugins[$plugin_name]);
+        }
+
+        if (!$this->evaluateExpression($filter['value'], $plugin[$property], $filter['operator'])) {
+          // Property doesn't match the filter.
+          unset($plugins[$plugin_name]);
+        }
+      }
+    }
+
+    foreach ($this->parseRequestForListSort() as $sort) {
+      // @todo
+    }
+
+    return $plugins;
+
+  }
+
+  protected function evaluateExpression($value1, $value2, $operator) {
+    switch($operator) {
+      case '=':
+        return $value1 == $value2;
+
+      case '<':
+        return $value1 < $value2;
+
+      case '>':
+        return $value1 > $value2;
+
+      case '>=':
+        return $value1 >= $value2;
+
+      case '<=':
+        return $value1 <= $value2;
+
+      case '<>':
+        return $value1 != $value2;
+
+      case 'BETWEEN':
+        // The passed second value is an array.
+        return $value1 >= $value2[0] && $value1 >= $value2[1];
+    }
+
+
+  }
 
   /**
    * Constructs a RestfulDataProviderEFQ object.
@@ -69,13 +134,14 @@ abstract class RestfulDataProviderCToolsPlugins extends \RestfulBase implements 
 
     $this->module = $options['module'];
     $this->type = $options['type'];
+
+    ctools_include('plugins');
   }
 
   /**
    * {@inheritdoc}
    */
   public function getTotalCount() {
-    ctools_include('plugins');
     return count($this->getPlugins());
   }
 
@@ -94,7 +160,6 @@ abstract class RestfulDataProviderCToolsPlugins extends \RestfulBase implements 
    * {@inheritdoc}
    */
   public function view($id) {
-    ctools_include('plugins');
     $plugin = ctools_get_plugins($this->getModule(), $this->getType(), $id);
 
     // Loop over all the defined public fields.
@@ -121,5 +186,4 @@ abstract class RestfulDataProviderCToolsPlugins extends \RestfulBase implements 
 
     return $output;
   }
-
 }
