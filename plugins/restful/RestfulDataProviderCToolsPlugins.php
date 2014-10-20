@@ -79,6 +79,17 @@ abstract class RestfulDataProviderCToolsPlugins extends \RestfulBase implements 
     return count($this->getPlugins());
   }
 
+  public function index() {
+    // TODO: Right now render cache only works for Entity based resources.
+    $return = array();
+
+    foreach (array_keys($this->getPlugins()) as $plugin_name) {
+      $return[] = $this->view($plugin_name);
+    }
+
+    return $return;
+  }
+
   /**
    * {@inheritdoc}
    */
