@@ -152,7 +152,7 @@ abstract class RestfulDataProviderCToolsPlugins extends \RestfulBase implements 
       if ($value1[$key] == $value2[$key]) {
         continue;
       }
-      
+
       return ($order == 'DESC' ? -1 : 1) * strcmp($value1[$key], $value2[$key]);
     }
 
@@ -200,6 +200,8 @@ abstract class RestfulDataProviderCToolsPlugins extends \RestfulBase implements 
 
   /**
    * {@inheritdoc}
+   *
+   * @todo: We should generalize this, as it's repeated often.
    */
   public function view($id) {
     $plugin = ctools_get_plugins($this->getModule(), $this->getType(), $id);
