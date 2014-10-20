@@ -74,6 +74,8 @@ abstract class RestfulDataProviderCToolsPlugins extends \RestfulBase implements 
           unset($plugins[$plugin_name]);
         }
 
+        dpm($filter);
+
         if (!$this->evaluateExpression($filter['value'], $plugin[$property], $filter['operator'])) {
           // Property doesn't match the filter.
           unset($plugins[$plugin_name]);
@@ -89,6 +91,21 @@ abstract class RestfulDataProviderCToolsPlugins extends \RestfulBase implements 
 
   }
 
+  /**
+   * Evaluate a simple expression.
+   *
+   * @param $value1
+   *   The first value.
+   * @param $value2
+   *   The second value.
+   * @param $operator
+   *   The operator.
+   *
+   * @return bool
+   *   TRUE or FALSE based on the evaluated expression.
+   *
+   * @throws RestfulBadRequestException
+   */
   protected function evaluateExpression($value1, $value2, $operator) {
     switch($operator) {
       case '=':
@@ -112,6 +129,8 @@ abstract class RestfulDataProviderCToolsPlugins extends \RestfulBase implements 
       case 'BETWEEN':
         // The passed second value is an array.
         return $value1 >= $value2[0] && $value1 >= $value2[1];
+
+      throw new \RestfulBadRequestException('Operator @operator is not allowed for filtering on this resource.', array('@operator' => $operator));
     }
 
 
