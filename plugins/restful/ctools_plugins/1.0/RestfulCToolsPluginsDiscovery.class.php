@@ -27,6 +27,9 @@ class RestfulCToolsPluginsDiscovery extends \RestfulDataProviderCToolsPlugins {
       'minor_version' => array(
         'property' => 'minor_version',
       ),
+      'self' => array(
+        'callback' => array($this, 'getSelf'),
+      ),
     );
   }
 
@@ -44,6 +47,10 @@ class RestfulCToolsPluginsDiscovery extends \RestfulDataProviderCToolsPlugins {
       }
     }
     return $plugins;
+  }
+
+  protected function getSelf($plugin) {
+    return $this->getUrl(array(), $plugin['name']);
   }
 
 }

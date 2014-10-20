@@ -848,8 +848,10 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
    *
    * By default the URL is absolute.
    *
-   * @param $request
+   * @param array $request
    *   The request array.
+   * @param string $path
+   *   (Optional) The path to append to the base API url.
    * @param $options
    *   Array with options passed to url().
    * @param $keep_query
@@ -860,14 +862,14 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
    * @return string
    *   The URL address.
    */
-  public function getUrl($request = NULL, $options = array(), $keep_query = TRUE) {
+  public function getUrl($request = NULL, $path = NULL, $options = array(), $keep_query = TRUE) {
     // By default set URL to be absolute.
     $options += array(
       'absolute' => TRUE,
       'query' => array(),
     );
 
-    if ($keep_query) {
+    if ($keep_query && $request) {
       // Remove special params.
       unset($request['q']);
       static::cleanRequest($request);
@@ -876,7 +878,9 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
       $options['query'] += $request;
     }
 
-    return url($this->getPluginKey('menu_item'), $options);
+    $menu_item = !$path ? $this->getPluginKey('menu_item') : $this->getPluginKey('menu_item') . '/' . $path;
+
+    return url($menu_item, $options);
   }
 
   /**
