@@ -30,4 +30,20 @@ class RestfulCToolsPluginsDiscovery extends \RestfulDataProviderCToolsPlugins {
     );
   }
 
+  /**
+   * Overrides \RestfulDataProviderCToolsPlugins::getPlugins().
+   *
+   * Remove the discovery plugin(s) from the list.
+   */
+  public function getPlugins() {
+    $plugins = parent::getPlugins();
+
+    foreach (array_keys($plugins) as $plugin_name) {
+      if (strpos($plugin_name, 'discovery__') === 0) {
+        unset($plugins[$plugin_name]);
+      }
+    }
+    return $plugins;
+  }
+
 }
