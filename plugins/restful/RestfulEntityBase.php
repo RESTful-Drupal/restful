@@ -1067,7 +1067,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
         'discovery' => array(
           // Information about the field for human consumption.
           'info' => array(
-            'name' => t('Label'),
+            'label' => t('Label'),
             'description' => t('The label of the resource.'),
           ),
           // Describe the data.
