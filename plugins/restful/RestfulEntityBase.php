@@ -1048,10 +1048,38 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
         'wrapper_method' => 'getIdentifier',
         'wrapper_method_on_entity' => TRUE,
         'property' => $id_key,
+        'discovery' => array(
+          // Information about the field for human consumption.
+          'info' => array(
+            'label' => t('ID'),
+            'description' => t('Base ID for the entity.'),
+          ),
+          // Describe the data.
+          'data' => array(
+            'type' => 'int',
+            'read_only' => TRUE,
+          ),
+        ),
       ),
       'label' => array(
         'wrapper_method' => 'label',
         'wrapper_method_on_entity' => TRUE,
+        'discovery' => array(
+          // Information about the field for human consumption.
+          'info' => array(
+            'label' => t('Label'),
+            'description' => t('The label of the resource.'),
+          ),
+          // Describe the data.
+          'data' => array(
+            'type' => 'string',
+          ),
+          // Information about the form element.
+          'form_element' => array(
+            'type' => 'texfield',
+            'size' => 255,
+          ),
+        ),
       ),
       'self' => array('property' => 'url'),
     );
@@ -1100,6 +1128,10 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
           // Set the column name.
           $info['column'] = key($field['columns']);
         }
+
+        if ($this->getMethod() == \RestfulInterface::OPTIONS) {
+          $info += $this->getFieldInfoAndFormSchema($field);
+        }
       }
 
       foreach ($info['resource'] as &$resource) {
@@ -1126,6 +1158,37 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     $this->setPublicFields($public_fields);
 
     return $public_fields;
+  }
+
+  /**
+   * Get the field info, data and form element
+   *
+   * @param string $field_info
+   *   The field info.
+   *
+   *
+   * @return array
+   *   Array with the 'info', 'data' and 'form_element' keys.
+   */
+  protected function getFieldInfoAndFormSchema($field_info) {
+    $discovery_info = array();
+    $instance_info = field_info_instance($this->getEntityType(), $field_info['field_name'], $this->getBundle());
+
+    $discovery_info['info']['label'] = $instance_info['label'];
+    $discovery_info['info']['description'] = $instance_info['description'];
+
+    $discovery_info['data']['type'] = $field_info['type'];
+    $discovery_info['data']['required'] = $instance_info['required'];
+
+    $discovery_info['form_element']['default_value'] = $instance_info['default_value'];
+
+    switch($field_info['type']) {
+      case 'list_text':
+        $discovery_info['form_element']['allowed_values'] = $field_info['settings']['allowed_values'];
+        break;
+    }
+
+    return array('discovery' => $discovery_info);
   }
 
   /**

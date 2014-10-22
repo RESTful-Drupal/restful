@@ -19,6 +19,21 @@ class RestfulTestMainResource__1_1 extends RestfulTestMainResource {
 
     $public_fields['text_multiple'] = array(
       'property' => 'text_multiple',
+      'discovery' => array(
+        'info' => array(
+          'label' => t('Text multiple'),
+          'description' => t('This field holds different text inputs.'),
+        ),
+        'data' => array(
+          'type' => 'string',
+          'cardinality' => FIELD_CARDINALITY_UNLIMITED,
+        ),
+        'form_element' => array(
+          'type' => 'textfield',
+          'size' => 255,
+          'placeholder' => t('This is helpful.'),
+        ),
+      ),
     );
 
     $public_fields['text_single_processing'] = array(
