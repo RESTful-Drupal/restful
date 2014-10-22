@@ -1067,7 +1067,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
         'discovery' => array(
           // Information about the field for human consumption.
           'info' => array(
-            'name' => t('Label'),
+            'label' => t('Label'),
             'description' => t('The label of the resource.'),
           ),
           // Describe the data.
@@ -1137,7 +1137,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       foreach ($info['resource'] as &$resource) {
         // Expand array to be verbose.
         if (!is_array($resource)) {
-          $resource = array('label' => $resource);
+          $resource = array('name' => $resource);
         }
 
         // Set default value.

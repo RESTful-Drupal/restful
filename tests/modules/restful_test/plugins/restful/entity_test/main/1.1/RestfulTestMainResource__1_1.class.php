@@ -21,7 +21,7 @@ class RestfulTestMainResource__1_1 extends RestfulTestMainResource {
       'property' => 'text_multiple',
       'discovery' => array(
         'info' => array(
-          'name' => t('Text multiple'),
+          'label' => t('Text multiple'),
           'description' => t('This field holds different text inputs.'),
         ),
         'data' => array(

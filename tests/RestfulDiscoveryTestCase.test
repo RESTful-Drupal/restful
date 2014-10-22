@@ -64,6 +64,7 @@ class RestfulDiscoveryTestCase extends RestfulCurlBaseTestCase {
           'cardinality' => 1,
           'read_only' => TRUE,
           'type' => 'int',
+          'required' => FALSE,
         ),
         'form_element' => array(
           'allowed_values' => NULL,
@@ -74,7 +75,7 @@ class RestfulDiscoveryTestCase extends RestfulCurlBaseTestCase {
         ),
         'info' => array(
           'description' => t('Base ID for the entity.'),
-          'name' => t('ID'),
+          'label' => t('ID'),
         ),
       ),
       'label' => array(
@@ -82,6 +83,7 @@ class RestfulDiscoveryTestCase extends RestfulCurlBaseTestCase {
           'cardinality' => 1,
           'read_only' => FALSE,
           'type' => 'string',
+          'required' => FALSE,
         ),
         'form_element' => array (
           'allowed_values' => NULL,
@@ -92,7 +94,7 @@ class RestfulDiscoveryTestCase extends RestfulCurlBaseTestCase {
         ),
         'info' => array(
           'description' => t('The label of the resource.'),
-          'name' => t('Label'),
+          'label' => t('Label'),
         ),
       ),
       'text_multiple' => array(
@@ -100,6 +102,7 @@ class RestfulDiscoveryTestCase extends RestfulCurlBaseTestCase {
           'cardinality' => FIELD_CARDINALITY_UNLIMITED,
           'read_only' => FALSE,
           'type' => 'string',
+          'required' => FALSE,
         ),
         'form_element' => array(
           'allowed_values' => NULL,
@@ -110,7 +113,7 @@ class RestfulDiscoveryTestCase extends RestfulCurlBaseTestCase {
         ),
         'info' => array(
           'description' => t('This field holds different text inputs.'),
-          'name' => t('Text multiple'),
+          'label' => t('Text multiple'),
         ),
       ),
     );
