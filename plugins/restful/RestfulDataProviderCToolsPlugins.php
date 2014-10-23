@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \RestfulDataProviderEFQ
+ * Contains \RestfulDataProviderCToolsPlugins
  */
 
 abstract class RestfulDataProviderCToolsPlugins extends \RestfulBase implements \RestfulDataProviderCToolsPluginsInterface {
@@ -60,8 +60,13 @@ abstract class RestfulDataProviderCToolsPlugins extends \RestfulBase implements 
     return $this->plugins;
   }
 
+  /**
+   * Gets the plugins filtered and sorted by the request.
+   *
+   * @return array
+   *   Array of plugins.
+   */
   public function getPluginsSortedAndFiltered() {
-    $sorts = $this->parseRequestForListSort();
     $plugins = $this->getPlugins();
     $public_fields = $this->getPublicFields();
 
@@ -128,7 +133,6 @@ abstract class RestfulDataProviderCToolsPlugins extends \RestfulBase implements 
         return in_array($value1, $value2);
 
       case 'BETWEEN':
-        // The passed second value is an array.
         return $value1 >= $value2[0] && $value1 >= $value2[1];
     }
   }
@@ -146,7 +150,7 @@ abstract class RestfulDataProviderCToolsPlugins extends \RestfulBase implements 
    *
    * @link http://stackoverflow.com/a/13673568/750039
    */
-  protected function sortMultiCompare($value1,$value2) {
+  protected function sortMultiCompare($value1, $value2) {
     $sorts = $this->parseRequestForListSort();
     foreach ($sorts as $key => $order){
       if ($value1[$key] == $value2[$key]) {
@@ -160,7 +164,7 @@ abstract class RestfulDataProviderCToolsPlugins extends \RestfulBase implements 
   }
 
   /**
-   * Constructs a RestfulDataProviderEFQ object.
+   * Constructs a RestfulDataProviderCToolsPlugins object.
    *
    * @param array $plugin
    *   Plugin definition.

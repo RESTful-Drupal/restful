@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \RestfulQueryVariable
+ * Contains \RestfulCToolsPluginsDiscovery
  */
 
 class RestfulCToolsPluginsDiscovery extends \RestfulDataProviderCToolsPlugins {
