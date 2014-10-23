@@ -12,11 +12,14 @@ class RestfulCToolsPluginsDiscovery extends \RestfulDataProviderCToolsPlugins {
    */
   public function publicFieldsInfo() {
     return array(
-      'name' => array(
-        'property' => 'name',
+      'label' => array(
+        'property' => 'label',
       ),
       'description' => array(
         'property' => 'description',
+      ),
+      'name' => array(
+        'property' => 'name',
       ),
       'resource' => array(
         'property' => 'resource',

@@ -57,6 +57,7 @@ files[] = tests/RestfulCreateNodeTestCase.test
 files[] = tests/RestfulCreateTaxonomyTermTestCase.test
 files[] = tests/RestfulCsrfTokenTestCase.test
 files[] = tests/RestfulCurlBaseTestCase.test
+files[] = tests/RestfulDataProviderCToolsPluginsTestCase.test
 files[] = tests/RestfulDbQueryTestCase.test
 files[] = tests/RestfulDiscoveryTestCase.test
 files[] = tests/RestfulEntityAndPropertyAccessTestCase.test
