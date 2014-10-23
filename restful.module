@@ -167,12 +167,6 @@ function restful_plugin_process_restful(&$plugin, $info) {
     );
   }
 
-  if ($plugin['hook_menu'] && empty($plugin['menu_item'])) {
-    // Set a default menu item.
-    $base_path = variable_get('restful_hook_menu_base_path', 'api');
-    $base_path .= '/v' . $plugin['major_version'];
-    $plugin['menu_item'] = $base_path . '/' . $plugin['resource'];
-  }
 }
 
 /**
@@ -324,16 +318,28 @@ function restful_menu() {
       // for it.
       continue;
     }
-
-    $items[$plugin['menu_item']] = array(
+    $item = array(
       'title' => $plugin['name'],
       'access callback' => 'restful_menu_access_callback',
-      'access arguments' => array(1, 2),
+      'access arguments' => array(2, 1),
       'page callback' => 'restful_menu_process_callback',
-      'page arguments' => array(1, 2),
+      'page arguments' => array(2, 1),
       'delivery callback' => 'restful_formatted_delivery',
       'type' => MENU_CALLBACK,
     );
+    // If there is no specific menu item allow the different version variations.
+    if ($plugin['hook_menu'] && empty($plugin['menu_item'])) {
+      // Ex: api/v1.2/articles
+      $items[$base_path . '/v' . $plugin['major_version'] . '.' . $plugin['minor_version'] . '/' . $plugin['resource']] = $item;
+      // Ex: api/v1/articles will use the latest minor version.
+      $items[$base_path . '/v' . $plugin['major_version'] . '/' . $plugin['resource']] = $item;
+      // Ex: api/articles will use the header or the latest version.
+      $item['access arguments'] = $item['page arguments'] = array(1);
+      $items[$base_path . '/' . $plugin['resource']] = $item;
+    }
+    else {
+      $items[$plugin['menu_item']] = $item;
+    }
   }
 
   // A special login endpoint, that returns a JSON output along with the Drupal
@@ -344,7 +350,7 @@ function restful_menu() {
       'description' => 'Login using base auth and recieve a JSON response along with an authentication cookie.',
       'access callback' => 'user_is_anonymous',
       'page callback' => 'restful_menu_process_callback',
-      'page arguments' => array('1', 'login_cookie'),
+      'page arguments' => array('login_cookie'),
       'delivery callback' => 'restful_formatted_delivery',
       'type' => MENU_CALLBACK,
     );
@@ -356,9 +362,9 @@ function restful_menu() {
     $items[$base_path . '/file-upload'] = array(
       'title' => 'File upload',
       'access callback' => 'restful_menu_access_callback',
-      'access arguments' => array('v1', 'files'),
+      'access arguments' => array('files'),
       'page callback' => 'restful_menu_process_callback',
-      'page arguments' => array('1', 'files'),
+      'page arguments' => array('files'),
       'delivery callback' => 'restful_formatted_delivery',
       'type' => MENU_CALLBACK,
     );
@@ -366,9 +372,9 @@ function restful_menu() {
 
   $items[$base_path . '/session/token'] = array(
     'page callback' => 'restful_menu_process_callback',
-    'page arguments' => array('1', 'csrf_token'),
+    'page arguments' => array('csrf_token'),
     'access callback' => 'restful_menu_access_callback',
-    'access arguments' => array('v1', 'csrf_token'),
+    'access arguments' => array('csrf_token'),
     'delivery callback' => 'restful_unprepared_delivery',
     'type' => MENU_CALLBACK,
   );
@@ -532,16 +538,16 @@ function restful_get_restful_handler_for_path($path = NULL) {
   if (isset($handlers[$path])) {
     return $handlers[$path];
   }
-  $router_item = menu_get_item($path);
+  $router_item = \RestfulBase::getMenuItem($path);
   // We can only get the information if the current path was processed by
   // restful_menu_process_callback.
   if ($router_item['page_callback'] != 'restful_menu_process_callback') {
     $handlers[$path] = FALSE;
     return;
   }
-  list($major_version, $resource) = $router_item['page_arguments'];
-  $major_version = intval(str_replace('v', '', $major_version));
-  $minor_version = !empty($_SERVER['HTTP_X_RESTFUL_MINOR_VERSION']) && is_numeric($_SERVER['HTTP_X_RESTFUL_MINOR_VERSION']) ? $_SERVER['HTTP_X_RESTFUL_MINOR_VERSION'] : 0;
+  list($resource,) = $router_item['page_arguments'];
+  list($major_version, $minor_version) = \RestfulBase::getVersionFromRequest();
+
   $handlers[$path] = restful_get_restful_handler($resource, $major_version, $minor_version);
   return $handlers[$path];
 }
@@ -549,27 +555,21 @@ function restful_get_restful_handler_for_path($path = NULL) {
 /**
  * Access callback; Determine access for an API call.
  *
- * @param $major_version
- *   The major version, prefixed with v (e.g. v1, v2).
+ * @param $version
+ *   The version, prefixed with v (e.g. v1, v2.2).
  * @param $resource_name
  *   The name of the resource (e.g. "articles").
  *
  * @return bool
  *   TRUE if user is allowed to access resource.
  */
-function restful_menu_access_callback($major_version, $resource_name) {
-  if ($major_version[0] != 'v') {
-    // Major version not prefixed with "v".
+function restful_menu_access_callback($resource_name, $version = NULL) {
+  if (!$versions = \RestfulBase::getVersionFromRequest()) {
+    // No version could be found.
     return;
   }
 
-  if (!$major_version = intval(str_replace('v', '', $major_version))) {
-    // Major version is not an integer.
-    return;
-  }
-
-  $minor_version = !empty($_SERVER['HTTP_X_RESTFUL_MINOR_VERSION']) && ctype_digit($_SERVER['HTTP_X_RESTFUL_MINOR_VERSION']) ? ((int) $_SERVER['HTTP_X_RESTFUL_MINOR_VERSION']) : 0;
-  if (!$handler = restful_get_restful_handler($resource_name, $major_version, $minor_version)) {
+  if (!$handler = restful_get_restful_handler($resource_name, $versions[0], $versions[1])) {
     return;
   }
 
@@ -593,37 +593,40 @@ function restful_menu_access_callback($major_version, $resource_name) {
 /**
  * Page callback; Return the response for an API call.
  *
- * @param $major_version
- *   The major version, prefixed with v (e.g. v1, v2).
  * @param $resource_name
  *   The name of the resource (e.g. "articles").
+ * @param $version
+ *   The version, prefixed with v (e.g. v1, v2.2).
+ *
+ * @throws RestfulServiceUnavailable
  *
  * @return string
  *   JSON output with the result of the API call.
  *
  * @see http://tools.ietf.org/html/draft-nottingham-http-problem-06
  */
-function restful_menu_process_callback($major_version, $resource_name) {
-  $major_version = intval(str_replace('v', '', $major_version));
-  $minor_version = !empty($_SERVER['HTTP_X_RESTFUL_MINOR_VERSION']) && is_numeric($_SERVER['HTTP_X_RESTFUL_MINOR_VERSION']) ? $_SERVER['HTTP_X_RESTFUL_MINOR_VERSION'] : 0;
+function restful_menu_process_callback($resource_name, $version) {
+  $path = func_get_args();
+  array_shift($path);
+  if ($version[0] == 'v') {
+    array_shift($path);
+  }
+  list($major_version, $minor_version) = \RestfulBase::getVersionFromRequest();
   $handler = restful_get_restful_handler($resource_name, $major_version, $minor_version);
   if (!$handler instanceof \RestfulDataProviderInterface) {
     throw new \RestfulServiceUnavailable(format_string('The selected plugin (@plugin) does not implement \RestfulDataProviderInterface.', array('@plugin' => $resource_name . ' v' . $major_version . '.' . $minor_version)));
   }
 
-  // If there is a minor version we need to Vary the response.
-  if ($minor_version) {
-    $headers = $handler->getHttpHeaders();
-    $vary = empty($headers['Vary']) ? '' : $headers['Vary'];
-    $handler->setHttpHeaders('Vary', implode(',', array($vary, 'X-Restful-Minor-Version')));
-  }
+  // Vary the response with the presence of the X-Restful-Version header.
+  $headers = $handler->getHttpHeaders();
+  $vary = empty($headers['Vary']) ? '' : $headers['Vary'];
+  $handler->setHttpHeaders('Vary', implode(',', array($vary, 'X-Restful-Version')));
+
   // Always add the allow origin if configured.
   if ($allowed_origin = $handler->getPluginKey('allow_origin')) {
     $handler->setHttpHeaders('Access-Control-Allow-Origin', $allowed_origin);
   }
 
-  $path = func_get_args();
-  unset($path[0], $path[1]);
   $path = implode('/', $path);
 
   $method = strtoupper($_SERVER['REQUEST_METHOD']);

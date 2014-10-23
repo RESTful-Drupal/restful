@@ -1103,6 +1103,104 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
   }
 
   /**
+   * Gets the major and minor version for the current request.
+   */
+  public static function getVersionFromRequest() {
+    $version = &drupal_static(__CLASS__ . '::' . __FUNCTION__);
+    if (isset($version)) {
+      return $version;
+    }
+    $router_item = static::getMenuItem();
+    list($resource_name, $version) = $router_item['page_arguments'];
+    if ($version[0] == 'v') {
+      $version = static::parseVersionString($version, $resource_name);
+      return $version;
+    }
+    // If there is no version in the URL check the header.
+    if (!empty($_SERVER['HTTP_X_RESTFUL_VERSION'])) {
+      $version =  static::parseVersionString($_SERVER['HTTP_X_RESTFUL_VERSION'], $resource_name);
+      return $version;
+    }
+    // If there is no version negotiation information return the latest version.
+    $version =  static::getResourceLastVersion($resource_name);
+    return $version;
+  }
+
+  /**
+   * Get the non translated menu item.
+   *
+   * @param null $path
+   *   The path to match the router item. Leave it empty to use the current one.
+   * @return array
+   *   The page arguments.
+   *
+   * @see menu_get_item().
+   */
+  public static function getMenuItem($path = NULL) {
+    $router_items = &drupal_static(__CLASS__ . '::' . __FUNCTION__);
+    if (!isset($path)) {
+      $path = $_GET['q'];
+    }
+    if (!isset($router_items[$path])) {
+      $original_map = arg(NULL, $path);
+
+      $parts = array_slice($original_map, 0, MENU_MAX_PARTS);
+      $ancestors = menu_get_ancestors($parts);
+      $router_item = db_query_range('SELECT * FROM {menu_router} WHERE path IN (:ancestors) ORDER BY fit DESC', 0, 1, array(':ancestors' => $ancestors))->fetchAssoc();
+
+      if ($router_item) {
+        // Allow modules to alter the router item before it is translated and
+        // checked for access.
+        drupal_alter('menu_get_item', $router_item, $path, $original_map);
+
+        $router_item['original_map'] = $original_map;
+        if ($original_map === FALSE) {
+          $router_items[$path] = FALSE;
+          return FALSE;
+        }
+        $router_item['map'] = $original_map;
+        $router_item['page_arguments'] = array_merge(menu_unserialize($router_item['page_arguments'], $original_map), array_slice($original_map, $router_item['number_parts']));
+        $router_item['theme_arguments'] = array_merge(menu_unserialize($router_item['theme_arguments'], $original_map), array_slice($original_map, $router_item['number_parts']));
+      }
+      $router_items[$path] = $router_item;
+    }
+    return $router_items[$path];
+  }
+
+  /**
+   * Parses the version string.
+   *
+   * @param string $version
+   *   The string containing the version information.
+   * @param string $resource_name
+   *   (optional) Name of the resource to get the latest minor version.
+   *
+   * @return array
+   *   Numeric array with major and minor version.
+   */
+  public static function parseVersionString($version, $resource_name = NULL) {
+    if ($version[0] == 'v') {
+      // Remove the leading 'v'.
+      $version = substr($version, 1);
+    }
+    $output = explode('.', $version);
+    if (count($output) == 1) {
+      $major_version = $output[0];
+      // Abort if the version is not numeric.
+      if (!$resource_name || !ctype_digit((string) $major_version)) {
+        return;
+      }
+      // Get the latest version for the resource.
+      return static::getResourceLastVersion($resource_name, $major_version);
+    }
+    // Abort if any of the versions is not numeric.
+    if (!ctype_digit((string) $output[0]) || !ctype_digit((string) $output[1])) {
+      return;
+    }
+    return $output;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function index() {
