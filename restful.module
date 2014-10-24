@@ -545,7 +545,7 @@ function restful_get_restful_handler_for_path($path = NULL) {
     $handlers[$path] = FALSE;
     return;
   }
-  list($resource,) = $router_item['page_arguments'];
+  list($resource,) = \RestfulBase::getPageArguments($path);
   list($major_version, $minor_version) = \RestfulBase::getVersionFromRequest();
 
   $handlers[$path] = restful_get_restful_handler($resource, $major_version, $minor_version);
@@ -605,10 +605,10 @@ function restful_menu_access_callback($resource_name, $version = NULL) {
  *
  * @see http://tools.ietf.org/html/draft-nottingham-http-problem-06
  */
-function restful_menu_process_callback($resource_name, $version) {
+function restful_menu_process_callback($resource_name, $version = NULL) {
   $path = func_get_args();
   array_shift($path);
-  if ($version[0] == 'v') {
+  if (preg_match('/^v\d+(\.\d+)?$/', $version)) {
     array_shift($path);
   }
   list($major_version, $minor_version) = \RestfulBase::getVersionFromRequest();
@@ -618,9 +618,11 @@ function restful_menu_process_callback($resource_name, $version) {
   }
 
   // Vary the response with the presence of the X-Restful-Version header.
-  $headers = $handler->getHttpHeaders();
-  $vary = empty($headers['Vary']) ? '' : $headers['Vary'];
-  $handler->setHttpHeaders('Vary', implode(',', array($vary, 'X-Restful-Version')));
+  if (!empty($_SERVER['HTTP_X_RESTFUL_VERSION'])) {
+    $headers = $handler->getHttpHeaders();
+    $vary = empty($headers['Vary']) ? '' : $headers['Vary'];
+    $handler->setHttpHeaders('Vary', implode(',', array($vary, 'X-Restful-Version')));
+  }
 
   // Always add the allow origin if configured.
   if ($allowed_origin = $handler->getPluginKey('allow_origin')) {

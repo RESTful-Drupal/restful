@@ -37,7 +37,7 @@ class RestfulHookMenuTestCase extends RestfulCurlBaseTestCase {
     $node1 = $this->drupalCreateNode($settings);
 
     // Test version 1.0
-    $result = $this->httpRequest('api/v1/articles/' . $node1->nid);
+    $result = $this->httpRequest('api/v1.0/articles/' . $node1->nid);
     $expected_result = array(
       'data' => array(array(
         'id' => $node1->nid,
@@ -49,8 +49,7 @@ class RestfulHookMenuTestCase extends RestfulCurlBaseTestCase {
     $this->assertEqual($result['body'], json_encode($expected_result));
 
     // Test version 1.1
-    $headers = array('X-Restful-Minor-Version' => '1');
-    $result = $this->httpRequest('api/v1/articles/' . $node1->nid, \RestfulInterface::GET, NULL, $headers);
+    $result = $this->httpRequest('api/v1.1/articles/' . $node1->nid, \RestfulInterface::GET);
     unset($expected_result['data'][0]['self']);
     $this->assertEqual($result['body'], json_encode($expected_result));
 
@@ -59,7 +58,7 @@ class RestfulHookMenuTestCase extends RestfulCurlBaseTestCase {
     $body = array(
       'label' => 'new title',
     );
-    $this->httpRequest('api/v1/articles/' . $node1->nid, \RestfulInterface::POST, $body, $headers);
+    $this->httpRequest('api/v1.0/articles/' . $node1->nid, \RestfulInterface::POST, $body, $headers);
 
     $node1 = node_load($node1->nid);
     $this->assertEqual($node1->title, 'new title', 'HTTP method was overriden.');
@@ -72,11 +71,11 @@ class RestfulHookMenuTestCase extends RestfulCurlBaseTestCase {
    */
   function testHttpHeadersAndStatus() {
     // Valid request (eventough it's empty).
-    $result = $this->httpRequest('api/v1/articles/', \RestfulInterface::GET);
+    $result = $this->httpRequest('api/v1.0/articles/', \RestfulInterface::GET);
     $this->assertTrue(strpos($result['headers'], 'application/hal+json;'), '"application/hal+json" found in valid request.');
 
     // Invalid request.
-    $result = $this->httpRequest('api/v1/articles/', \RestfulInterface::GET, array('sort' => 'invalid_key'));
+    $result = $this->httpRequest('api/v1.0/articles/', \RestfulInterface::GET, array('sort' => 'invalid_key'));
     $this->assertTrue(strpos($result['headers'], 'application/problem+json;'), '"application/problem+json" found in valid request.');
 
     // Switch site to offline mode.

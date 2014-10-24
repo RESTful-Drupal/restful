@@ -1095,6 +1095,9 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
     ksort($resources, SORT_NUMERIC);
     // Get a list of resources for the latest major version.
     $resources = end($resources);
+    if (empty($resources)) {
+      return;
+    }
     // Sort based on the minor version.
     ksort($resources, SORT_NUMERIC);
     // Get the latest resource for the minor version.
@@ -1110,9 +1113,8 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
     if (isset($version)) {
       return $version;
     }
-    $router_item = static::getMenuItem();
-    list($resource_name, $version) = $router_item['page_arguments'];
-    if ($version[0] == 'v') {
+    list($resource_name, $version) = static::getPageArguments();
+    if (preg_match('/^v\d+(\.\d+)?$/', $version)) {
       $version = static::parseVersionString($version, $resource_name);
       return $version;
     }
@@ -1129,8 +1131,9 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
   /**
    * Get the non translated menu item.
    *
-   * @param null $path
+   * @param string $path
    *   The path to match the router item. Leave it empty to use the current one.
+   *
    * @return array
    *   The page arguments.
    *
@@ -1168,6 +1171,34 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
   }
 
   /**
+   * Get the resource name and version from the page arguments in the router.
+   *
+   * @param string $path
+   *   The path to match the router item. Leave it empty to use the current one.
+   *
+   * @return array
+   *   An array of 2 elements with the page arguments.
+   */
+  public static function getPageArguments($path = NULL) {
+    $router_item = static::getMenuItem($path);
+    $output = array(NULL, NULL);
+    if (empty($router_item['page_arguments'])) {
+      return $output;
+    }
+    $page_arguments = $router_item['page_arguments'];
+
+    $index = 0;
+    foreach ($page_arguments as $page_argument) {
+      $output[$index] = $page_argument;
+      $index++;
+      if ($index >= 2) {
+        break;
+      }
+    }
+
+    return $output;
+  }
+  /**
    * Parses the version string.
    *
    * @param string $version
@@ -1179,7 +1210,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
    *   Numeric array with major and minor version.
    */
   public static function parseVersionString($version, $resource_name = NULL) {
-    if ($version[0] == 'v') {
+    if (preg_match('/^v\d+(\.\d+)?$/', $version)) {
       // Remove the leading 'v'.
       $version = substr($version, 1);
     }
