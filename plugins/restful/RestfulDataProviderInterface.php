@@ -74,12 +74,4 @@ interface RestfulDataProviderInterface {
    */
   public function remove($id);
 
-  /**
-   * Process the plugin and add default values per data provider.
-   *
-   * @param array $plugin
-   *   The plugin array.
-   */
-  public static function processPlugin(&$plugin);
-
 }
