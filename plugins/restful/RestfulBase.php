@@ -290,6 +290,38 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
   }
 
   /**
+   * Process plugin options by validation keys exists, and set default values.
+   *
+   * @param array $required_keys
+   *   Array of required keys.
+   * @param array $default_values
+   *   Array of default values to populate in the
+   *   $plugin['data_provider_options'].
+   *
+   * @return array
+   *   Array with data provider options populated with default values.
+   *
+   * @throws \RestfulServiceUnavailable
+   */
+  protected function processDataProviderOptions($required_keys = array(), $default_values = array()) {
+    $options = $this->getPluginKey('data_provider_options');
+    $params = array('@class' => get_class($this));
+    // Check required keys exist.
+    foreach ($required_keys as $key) {
+      if (empty($options[$key])) {
+        $params['@key'] = $key;
+        throw new \RestfulServiceUnavailable(format_string('@class is missing "@key" property in the "data_provider_options" key of the $plugin', $params));
+      }
+    }
+
+    // Add default values.
+    $options += $default_values;
+    $this->setPluginKey('data_provider_options', $options);
+
+    return $options;
+  }
+
+  /**
    * Determines if the HTTP method represents a write operation.
    *
    * @param string $method

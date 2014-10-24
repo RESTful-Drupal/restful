@@ -37,6 +37,9 @@ function restful_plugin_process(&$plugin, $info) {
  * - description: The description of the resource. Defaults to empty string.
  * - discoverable: Determines if the resource should be discoverable by the
  *   "discovery" resource. Defaults to TRUE.
+ * - data_provider_options: An array of options specific to the data provider.
+ *   For example the DB query data provider requires the table name in order to
+ *   know which table to act upon. Defaults to an empty array.
  * - major_version: The major version of the resource. This will change the URL
  *   of the resource endpoint. For example setting major version to 2 for the
  *   "articles" resource will result with "api/v2/articles" as the URL. Defaults
@@ -135,6 +138,7 @@ function restful_plugin_process_restful(&$plugin, $info) {
     'autocomplete' => array(),
     'allow_origin' => NULL,
     'discoverable' => TRUE,
+    'data_provider_options' => array(),
     'menu_item' => FALSE,
   );
 

@@ -80,8 +80,16 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
    */
   public function __construct(array $plugin, \RestfulAuthenticationManager $auth_manager = NULL, \DrupalCacheInterface $cache_controller = NULL) {
     parent::__construct($plugin, $auth_manager, $cache_controller);
-    $this->tableName = $plugin['table_name'];
-    $this->idColumn = $plugin['id_column'];
+
+    // Validate keys exist in the plugin's "data provider options".
+    $required_keys = array(
+      'table_name',
+      'id_column',
+    );
+    $options = $this->processDataProviderOptions($required_keys);
+
+    $this->tableName = $options['table_name'];
+    $this->idColumn = $options['id_column'];
     $this->primary = empty($plugin['primary']) ? NULL : $this->primary = $plugin['primary'];
   }
 

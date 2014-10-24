@@ -176,7 +176,12 @@ abstract class RestfulDataProviderCToolsPlugins extends \RestfulBase implements 
   public function __construct(array $plugin, \RestfulAuthenticationManager $auth_manager = NULL, \DrupalCacheInterface $cache_controller = NULL) {
     parent::__construct($plugin, $auth_manager, $cache_controller);
 
-    $options = $this->getPluginKey('data_provider_options');
+    // Validate keys exist in the plugin's "data provider options".
+    $required_keys = array(
+      'module',
+      'type',
+    );
+    $options = $this->processDataProviderOptions($required_keys);
 
     $this->module = $options['module'];
     $this->type = $options['type'];
