@@ -1,15 +1,17 @@
 <?php
 
-$plugin = array(
-  'label' => t('Login'),
-  'description' => t('Login a user and return a JSON along with the authentication cookie..'),
-  'resource' => 'login_cookie',
-  'class' => 'RestfulUserLoginCookie',
-  'entity_type' => 'user',
-  'bundle' => 'user',
-  'authentication_types' => array(
-    'basic_auth',
-  ),
-  // We will implement hook_menu() with custom settings.
-  'hook_menu' => FALSE,
-);
+if (variable_get('restful_user_login_menu_item', TRUE)) {
+  $plugin = array(
+    'label' => t('Login'),
+    'description' => t('Login a user and return a JSON along with the authentication cookie..'),
+    'resource' => 'login_cookie',
+    'class' => 'RestfulUserLoginCookie',
+    'entity_type' => 'user',
+    'bundle' => 'user',
+    'authentication_types' => array(
+      'basic_auth',
+    ),
+    // We will implement hook_menu() with custom settings.
+    'menu_item' => variable_get('restful_hook_menu_base_path', 'api') . '/login',
+  );
+}
