@@ -1214,7 +1214,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    */
   protected function getEntitySelf(\EntityMetadataWrapper $wrapper) {
     $plugin = $this->getPlugin();
-    if ($plugin['menu_item']) {
+    if (!empty($plugin['menu_item'])) {
       return url($plugin['menu_item'], array('absolute' => TRUE));
     }
 
