@@ -232,14 +232,13 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
       return array();
     }
     $query->condition($this->getTableName() . '.' . $this->getIdColumn(), $ids, 'IN');
-    $results = $query->execute();
+    $result = $query->execute();
 
     // TODO: Right now render cache only works for Entity based resources.
-
     $return = array();
 
-    foreach ($results as $result) {
-      $return[] = $this->mapDbRowToPublicFields($result);
+    foreach ($result as $row) {
+      $return[] = $this->mapDbRowToPublicFields($row);
     }
 
     return $return;
@@ -259,7 +258,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
     $result = $query
       ->execute()
       // We expect a single value.
-      ->fetchAssoc();
+      ->fetchObject();
 
     if (!$result) {
       $params = array(
@@ -270,14 +269,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
     }
 
     // TODO: Right now render cache only works for Entity based resources.
-
-    $return = array();
-
-    foreach ($result as $row) {
-      $return[] = $this->mapDbRowToPublicFields($row);
-    }
-
-    return $return;
+    return $this->mapDbRowToPublicFields($result);
   }
 
   /**
