@@ -756,24 +756,26 @@ function restful_delivery($var = NULL, $method = 'format') {
       drupal_add_http_header($key, $value);
     }
 
-    try {
-      // If we are returning from an OPTIONS call, always use render.
-      if ($restful_handler->getMethod() == \RestfulInterface::OPTIONS) {
-        $method = 'render';
-      }
-      $formatter_handler = restful_output_format($restful_handler);
-      $output = $formatter_handler->{$method}($var);
-
-      // The content type header is modified after the massaging if there is an
-      // error code. Therefore we need to set the content type header after
-      // formatting the output.
-      drupal_add_http_header('Content-Type', $formatter_handler->getContentTypeHeader());
-
+    // If we are returning from an OPTIONS call, always use render.
+    if ($restful_handler->getMethod() == \RestfulInterface::OPTIONS) {
+      $method = 'render';
     }
-    catch (\RestfulException $e) {
-      // Handle if the formatter does not exist.
-      drupal_add_http_header('Status', $e->getCode());
-      $output = $e->getMessage();
+
+    if ($formatter_handler = restful_output_format($restful_handler)) {
+
+      try {
+        $output = $formatter_handler->{$method}($var);
+        // The content type header is modified after the massaging if there is
+        // an error code. Therefore we need to set the content type header after
+        // formatting the output.
+        drupal_add_http_header('Content-Type', $formatter_handler->getContentTypeHeader());
+
+      }
+      catch (\RestfulException $e) {
+        // Handle if the formatter throws an exception.
+        drupal_add_http_header('Status', $e->getCode());
+        $output = $e->getMessage();
+      }
     }
   }
 
