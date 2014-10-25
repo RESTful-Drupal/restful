@@ -7,22 +7,13 @@
 
 
 /**
- * Implements hook_menu().
+ *  Implements hook_menu_alter().
  */
-function restful_token_auth_menu() {
+function restful_token_auth_menu_alter(&$items) {
   $base_path = variable_get('restful_hook_menu_base_path', 'api');
-
-
-  $items[$base_path . '/login-token'] = array(
-    'title' => 'Login',
-    'description' => 'Login with an access token response.',
-    'access callback' => 'user_is_anonymous',
-    'page callback' => 'restful_menu_process_callback',
-    'page arguments' => array('1', 'token_auth'),
-    'delivery callback' => 'restful_unprepared_delivery',
-  );
-
-  return $items;
+  if (!empty($items[$base_path . '/login-token'])) {
+    $items[$base_path . '/login-token']['delivery callback'] = 'restful_unprepared_delivery';
+  }
 }
 
 /**

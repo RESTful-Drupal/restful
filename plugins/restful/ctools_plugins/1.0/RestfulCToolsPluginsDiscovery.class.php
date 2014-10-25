@@ -31,10 +31,7 @@ class RestfulCToolsPluginsDiscovery extends \RestfulDataProviderCToolsPlugins {
         'property' => 'minor_version',
       ),
       'self' => array(
-        'property' => 'menu_item',
-        'process_callbacks' => array(
-          array($this, 'getSelf'),
-        ),
+        'callback' => array($this, 'getSelf'),
 
       ),
     );
@@ -56,8 +53,22 @@ class RestfulCToolsPluginsDiscovery extends \RestfulDataProviderCToolsPlugins {
     return $plugins;
   }
 
-  protected function getSelf($url) {
-    return url($url, array('absolute' => TRUE));
+  /**
+   * Returns the URL to the endpoint result.
+   *
+   * @param array $plugin
+   *   The unprocessed plugin definition.
+   *
+   * @return string
+   *   The RESTful endpoint.
+   */
+  protected function getSelf(array $plugin) {
+    if ($plugin['menu_item']) {
+      return url($plugin['menu_item'], array('absolute' => TRUE));
+    }
+
+    $base_path = variable_get('restful_hook_menu_base_path', 'api');
+    return url($base_path . '/v' . $plugin['major_version'] . '.' . $plugin['minor_version'] . '/' . $plugin['resource'], array('absolute' => TRUE));
   }
 
 }

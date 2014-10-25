@@ -1197,7 +1197,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
       return $version;
     }
     // If there is no version negotiation information return the latest version.
-    $version =  static::getResourceLastVersion($resource_name);
+    $version = static::getResourceLastVersion($resource_name);
     return $version;
   }
 

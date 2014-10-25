@@ -329,9 +329,9 @@ function restful_menu() {
     $item = array(
       'title' => $plugin['name'],
       'access callback' => 'restful_menu_access_callback',
-      'access arguments' => array(2, 1),
+      'access arguments' => array($plugin['resource'], 1),
       'page callback' => 'restful_menu_process_callback',
-      'page arguments' => array(2, 1),
+      'page arguments' => array($plugin['resource'], 1),
       'delivery callback' => 'restful_formatted_delivery',
       'type' => MENU_CALLBACK,
     );
@@ -350,42 +350,10 @@ function restful_menu() {
     }
   }
 
-  // A special login endpoint, that returns a JSON output along with the Drupal
-  // authentication cookie.
-  if (variable_get('restful_user_login_menu_item', TRUE)) {
-    $items[$base_path . '/login'] = array(
-      'title' => 'Login',
-      'description' => 'Login using base auth and recieve a JSON response along with an authentication cookie.',
-      'access callback' => 'user_is_anonymous',
-      'page callback' => 'restful_menu_process_callback',
-      'page arguments' => array('login_cookie'),
-      'delivery callback' => 'restful_formatted_delivery',
-      'type' => MENU_CALLBACK,
-    );
+  // Make sure the CRSF token endpoint is not HAL.
+  if (!empty($items[$base_path . '/session/token'])) {
+    $items[$base_path . '/session/token']['delivery callback'] = 'restful_unprepared_delivery';
   }
-
-  // A special file upload endpoint, that returns a JSON with the newly saved
-  // files.
-  if (variable_get('restful_file_upload', FALSE)) {
-    $items[$base_path . '/file-upload'] = array(
-      'title' => 'File upload',
-      'access callback' => 'restful_menu_access_callback',
-      'access arguments' => array('files'),
-      'page callback' => 'restful_menu_process_callback',
-      'page arguments' => array('files'),
-      'delivery callback' => 'restful_formatted_delivery',
-      'type' => MENU_CALLBACK,
-    );
-  }
-
-  $items[$base_path . '/session/token'] = array(
-    'page callback' => 'restful_menu_process_callback',
-    'page arguments' => array('csrf_token'),
-    'access callback' => 'restful_menu_access_callback',
-    'access arguments' => array('csrf_token'),
-    'delivery callback' => 'restful_unprepared_delivery',
-    'type' => MENU_CALLBACK,
-  );
 
   return $items;
 }
