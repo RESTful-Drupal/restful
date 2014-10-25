@@ -1219,7 +1219,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     }
 
     $base_path = variable_get('restful_hook_menu_base_path', 'api');
-    return url($base_path . '/v' . $plugin['major_version'] . '.' . $plugin['minor_version'] . '/' . $plugin['resource'], array('absolute' => TRUE));
+    return url($base_path . '/v' . $plugin['major_version'] . '.' . $plugin['minor_version'] . '/' . $plugin['resource'] . '/' . $wrapper->getIdentifier(), array('absolute' => TRUE));
   }
 
   /**
