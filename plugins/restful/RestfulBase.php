@@ -804,12 +804,16 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
       '>=',
       '<=',
       '<>',
+      '!=',
       'IN',
       'BETWEEN',
     );
 
     if (!in_array($operator, $allowed_operators)) {
-      throw new \RestfulBadRequestException('Operator @operator is not allowed for filtering on this resource.', array('@operator' => $operator));
+      throw new \RestfulBadRequestException(format_string('Operator "@operator" is not allowed for filtering on this resource. Allowed operators are: !allowed', array(
+        '@operator' => $operator,
+        '!allowed' => implode(', ', $allowed_operators),
+      )));
     }
   }
 

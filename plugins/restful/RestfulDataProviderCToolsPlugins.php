@@ -127,6 +127,7 @@ abstract class RestfulDataProviderCToolsPlugins extends \RestfulBase implements 
         return $value1 <= $value2;
 
       case '<>':
+      case '!=':
         return $value1 != $value2;
 
       case 'IN':
