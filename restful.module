@@ -758,8 +758,8 @@ function restful_delivery($var = NULL, $method = 'format') {
     }
   }
 
-  $formatter_handler = restful_output_format($restful_handler);
   try {
+    $formatter_handler = restful_output_format($restful_handler);
     $output = $formatter_handler->{$method}($var);
     // The content type header is modified after the massaging if there is
     // an error code. Therefore we need to set the content type header after
