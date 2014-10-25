@@ -1081,7 +1081,9 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
           ),
         ),
       ),
-      'self' => array('property' => 'url'),
+      'self' => array(
+        'callback' => array($this, 'getEntitySelf'),
+      ),
     );
 
     if (!empty($entity_info['entity keys']['label'])) {
@@ -1199,6 +1201,17 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    */
   public function setPublicFields(array $public_fields = array()) {
     $this->publicFields = $public_fields;
+  }
+
+  /**
+   * Get the "self" url.
+   *
+   * @param \EntityMetadataWrapper $wrapper
+   *   The wrapped entity.
+   */
+  protected function getEntitySelf(\EntityMetadataWrapper $wrapper) {
+    $id = $wrapper->getIdentifier();
+    return url($this->getPluginKey('menu_item') . '/' . $id, array('absolute' => TRUE));
   }
 
   /**
