@@ -743,14 +743,10 @@ function restful_delivery($var = NULL, $method = 'format') {
     // Adhere to the API Problem draft proposal.
     drupal_add_http_header('Status', $var['status']);
     drupal_add_http_header('Content-Type', 'application/problem+json; charset=utf-8');
-
-    $output = drupal_json_encode($var);
   }
 
   // Get the formatter for the current resource.
-  $restful_handler = restful_get_restful_handler_for_path();
-
-  if ($restful_handler) {
+  if ($restful_handler = restful_get_restful_handler_for_path()) {
     // Allow the handler to change the HTTP headers.
     foreach ($restful_handler->getHttpHeaders() as $key => $value) {
       drupal_add_http_header($key, $value);
@@ -760,23 +756,21 @@ function restful_delivery($var = NULL, $method = 'format') {
     if ($restful_handler->getMethod() == \RestfulInterface::OPTIONS) {
       $method = 'render';
     }
+  }
 
-    if ($formatter_handler = restful_output_format($restful_handler)) {
+  $formatter_handler = restful_output_format($restful_handler);
+  try {
+    $output = $formatter_handler->{$method}($var);
+    // The content type header is modified after the massaging if there is
+    // an error code. Therefore we need to set the content type header after
+    // formatting the output.
+    drupal_add_http_header('Content-Type', $formatter_handler->getContentTypeHeader());
 
-      try {
-        $output = $formatter_handler->{$method}($var);
-        // The content type header is modified after the massaging if there is
-        // an error code. Therefore we need to set the content type header after
-        // formatting the output.
-        drupal_add_http_header('Content-Type', $formatter_handler->getContentTypeHeader());
-
-      }
-      catch (\RestfulException $e) {
-        // Handle if the formatter throws an exception.
-        drupal_add_http_header('Status', $e->getCode());
-        $output = $e->getMessage();
-      }
-    }
+  }
+  catch (\RestfulException $e) {
+    // Handle if the formatter throws an exception.
+    drupal_add_http_header('Status', $e->getCode());
+    $output = $e->getMessage();
   }
 
   echo $output;
