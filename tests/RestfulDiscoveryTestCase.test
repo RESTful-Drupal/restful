@@ -47,7 +47,7 @@ class RestfulDiscoveryTestCase extends RestfulCurlBaseTestCase {
     $this->assertEqual($headers['Accept'], implode(',', $accepted_formats), 'Accept header is populated correctly for non configured formatters.');
 
     // 3. Assert Access-Control-Allow-Origin.
-    $response = $this->httpRequest('api/v1/test_articles', \RestfulInterface::HEAD, NULL, array('X-Restful-Minor-Version' => 4));
+    $response = $this->httpRequest('api/v1.4/test_articles', \RestfulInterface::HEAD);
     $headers = explode("\n", $response['headers']);
     $this->assertTrue(in_array('*', $headers), 'Access-Control-Allow-Origin header is populated correctly.');
   }

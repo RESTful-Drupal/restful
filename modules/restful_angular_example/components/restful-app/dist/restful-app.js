@@ -1,7 +1,7 @@
 /**
  * restful-app
  * @version v0.0.1 - 2014-07-24
- * @link 
+ * @link
  * @author  <>
  * @license MIT License, http://www.opensource.org/licenses/MIT
  */
@@ -183,11 +183,10 @@ angular.module('restfulApp')
           "X-CSRF-Token": DrupalSettings.getCsrfToken(),
           // Call the correct resource version (v1.5) that has the "body" and
           // "image" fields exposed.
-          "X-Restful-Minor-Version": 5
         }
       };
 
-      return $http.post(DrupalSettings.getBasePath() + 'api/v1/articles', data, config);
+      return $http.post(DrupalSettings.getBasePath() + 'api/v1.5/articles', data, config);
     }
   });
 
