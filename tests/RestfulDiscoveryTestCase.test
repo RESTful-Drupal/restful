@@ -47,9 +47,95 @@ class RestfulDiscoveryTestCase extends RestfulCurlBaseTestCase {
     $this->assertEqual($headers['Accept'], implode(',', $accepted_formats), 'Accept header is populated correctly for non configured formatters.');
 
     // 3. Assert Access-Control-Allow-Origin.
-    $response = $this->httpRequest('api/v1/test_articles', \RestfulInterface::HEAD, NULL, array('X-Restful-Minor-Version' => 4));
+    $response = $this->httpRequest('api/v1.4/test_articles', \RestfulInterface::HEAD);
     $headers = explode("\n", $response['headers']);
     $this->assertTrue(in_array('*', $headers), 'Access-Control-Allow-Origin header is populated correctly.');
   }
+
+  /**
+   * Field discovery.
+   */
+  public function testFieldDiscovery() {
+    $handler = restful_get_restful_handler('main', 1, 1);
+    $result = $handler->options();
+    $expected = array(
+      'id' => array(
+        'data' => array(
+          'cardinality' => 1,
+          'read_only' => TRUE,
+          'type' => 'int',
+          'required' => FALSE,
+        ),
+        'form_element' => array(
+          'allowed_values' => NULL,
+          'default_value' => '',
+          'placeholder' => '',
+          'size' => NULL,
+          'type' => NULL,
+        ),
+        'info' => array(
+          'description' => t('Base ID for the entity.'),
+          'label' => t('ID'),
+        ),
+      ),
+      'label' => array(
+        'data' => array(
+          'cardinality' => 1,
+          'read_only' => FALSE,
+          'type' => 'string',
+          'required' => FALSE,
+        ),
+        'form_element' => array (
+          'allowed_values' => NULL,
+          'type' => 'texfield',
+          'default_value' => '',
+          'placeholder' => '',
+          'size' => 255,
+        ),
+        'info' => array(
+          'description' => t('The label of the resource.'),
+          'label' => t('Label'),
+        ),
+      ),
+      'text_multiple' => array(
+        'data' => array(
+          'cardinality' => FIELD_CARDINALITY_UNLIMITED,
+          'read_only' => FALSE,
+          'type' => 'string',
+          'required' => FALSE,
+        ),
+        'form_element' => array(
+          'allowed_values' => NULL,
+          'default_value' => '',
+          'placeholder' => t('This is helpful.'),
+          'size' => 255,
+          'type' => 'textfield',
+        ),
+        'info' => array(
+          'description' => t('This field holds different text inputs.'),
+          'label' => t('Text multiple'),
+        ),
+      ),
+    );
+
+    foreach ($expected as $public_field => $discovery_info) {
+      $result_data = $result[$public_field]['data'];
+      $expected_data = $expected[$public_field]['data'];
+      ksort($result_data);
+      ksort($expected_data);
+      $this->assertEqual($result_data, $expected_data, format_string('The "data" information is properly described for @field.', array('@field' => $public_field)));
+      $result_form_element = $result[$public_field]['form_element'];
+      $expected_form_element = $expected[$public_field]['form_element'];
+      ksort($result_form_element);
+      ksort($expected_form_element);
+      $this->assertEqual($result_form_element, $expected_form_element, format_string('The "form_element" information is properly described for @field.', array('@field' => $public_field)));
+      $result_info = $result[$public_field]['info'];
+      $expected_info = $expected[$public_field]['info'];
+      ksort($result_info);
+      ksort($expected_info);
+      $this->assertEqual($result_info, $expected_info, format_string('The "info" information is properly described for @field.', array('@field' => $public_field)));
+    }
+  }
+
 
 }

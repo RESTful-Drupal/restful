@@ -134,13 +134,13 @@ class RestfulCsrfTokenTestCase extends RestfulCurlBaseTestCase {
    */
   protected function getPath($method) {
     if ($method == \RestfulInterface::POST) {
-      return 'api/v1/articles';
+      return 'api/v1.0/articles';
     }
     $settings = array(
       'type' => 'article',
       'title' => $this->randomString(),
     );
     $node = $this->drupalCreateNode($settings);
-    return 'api/v1/articles/' . $node->nid;
+    return 'api/v1.0/articles/' . $node->nid;
   }
 }
