@@ -768,7 +768,7 @@ function restful_delivery($var = NULL, $method = 'format') {
 
   }
   catch (\RestfulException $e) {
-    // Handle if the formatter throws an exception.
+    // Handle if the formatter does not exist.
     drupal_add_http_header('Status', $e->getCode());
     $output = $e->getMessage();
   }
