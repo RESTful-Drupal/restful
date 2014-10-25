@@ -1107,13 +1107,19 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
 
   /**
    * Gets the major and minor version for the current request.
+   *
+   * @param string $path
+   *   The router path.
+   *
+   * @return array
+   *   The array with the version.
    */
-  public static function getVersionFromRequest() {
+  public static function getVersionFromRequest($path = NULL) {
     $version = &drupal_static(__CLASS__ . '::' . __FUNCTION__);
     if (isset($version)) {
       return $version;
     }
-    list($resource_name, $version) = static::getPageArguments();
+    list($resource_name, $version) = static::getPageArguments($path);
     if (preg_match('/^v\d+(\.\d+)?$/', $version)) {
       $version = static::parseVersionString($version, $resource_name);
       return $version;

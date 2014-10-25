@@ -107,4 +107,47 @@ class RestfulHookMenuTestCase extends RestfulCurlBaseTestCase {
     $this->assertEqual($result['code'], '404', format_string('404 status code sent for @url url.', array('@url' => $url)));
     $this->assertFalse(strpos($result['headers'], 'application/problem+json;'), 'Only correct URL is hijacked.');
   }
+
+  /**
+   * Test the version negotiation.
+   */
+  function testVersionNegotiation() {
+    // Fake the HTTP header.
+    $original_header = empty($_SERVER['HTTP_X_RESTFUL_VERSION']) ? NULL : $_SERVER['HTTP_X_RESTFUL_VERSION'];
+
+    // 1. my-api/v1.1/articles yields version 1.1
+    $handler = restful_get_restful_handler_for_path('api/v1.1/articles');
+    $this->assertEqual($handler->getVersion(), array('major' => 1, 'minor' => 1), 'api/v1.1/articles resolves 1.1');
+
+    // 2. my-api/v1/articles yields version 1.6 (update to last 1.x version)
+    drupal_static_reset('RestfulBase::getVersionFromRequest');
+    $handler = restful_get_restful_handler_for_path('api/v1/articles');
+    $this->assertEqual($handler->getVersion(), array('major' => 1, 'minor' => 6), 'api/v1.6/articles resolves 1.6');
+
+    // 3. my-api/articles with header X-Restful-Version: v1.1 yields 1.1
+    // Fake the HTTP header.
+    $_SERVER['HTTP_X_RESTFUL_VERSION'] = 'v1.1';
+    drupal_static_reset('RestfulBase::getVersionFromRequest');
+    $handler = restful_get_restful_handler_for_path('api/articles');
+    $this->assertEqual($handler->getVersion(), array('major' => 1, 'minor' => 1), 'api/articles resolves 1.1');
+
+    // 4. my-api/articles with header X-Restful-Version: v1 yields 1.6
+    // Fake the HTTP header.
+    $_SERVER['HTTP_X_RESTFUL_VERSION'] = 'v1';
+    drupal_static_reset('RestfulBase::getVersionFromRequest');
+    drupal_static_reset('restful_get_restful_handler_for_path');
+    $handler = restful_get_restful_handler_for_path('api/articles');
+    $this->assertEqual($handler->getVersion(), array('major' => 1, 'minor' => 6), 'api/articles resolves 1.6');
+
+    // 5. my-api/articles without header X-Restful-Version yields 2.0
+    drupal_static_reset('RestfulBase::getVersionFromRequest');
+    drupal_static_reset('restful_get_restful_handler_for_path');
+    unset($_SERVER['HTTP_X_RESTFUL_VERSION']);
+    $handler = restful_get_restful_handler_for_path('api/articles');
+    $this->assertEqual($handler->getVersion(), array('major' => 2, 'minor' => 0), 'api/articles resolves 2.0');
+
+    // Restore the original header.
+    $_SERVER['HTTP_X_RESTFUL_VERSION'] = $original_header;
+  }
+
 }

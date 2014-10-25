@@ -546,7 +546,7 @@ function restful_get_restful_handler_for_path($path = NULL) {
     return;
   }
   list($resource,) = \RestfulBase::getPageArguments($path);
-  list($major_version, $minor_version) = \RestfulBase::getVersionFromRequest();
+  list($major_version, $minor_version) = \RestfulBase::getVersionFromRequest($path);
 
   $handlers[$path] = restful_get_restful_handler($resource, $major_version, $minor_version);
   return $handlers[$path];
