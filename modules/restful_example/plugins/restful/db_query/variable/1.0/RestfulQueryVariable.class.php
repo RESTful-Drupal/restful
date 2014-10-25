@@ -17,8 +17,19 @@ class RestfulQueryVariable extends \RestfulDataProviderDbQuery implements \Restf
       ),
       'value' => array(
         'property' => 'value',
+        'process_callbacks' => array(
+          'unserialize',
+        ),
       ),
     );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function access() {
+    $account = $this->getAccount();
+    return user_access('adminsiter site configuration', $account);
   }
 
 }
