@@ -14,5 +14,6 @@ if (variable_get('restful_enable_discovery_resource', TRUE)) {
     'authentication_optional' => TRUE,
     // We don't want the discovery resource itself to be discoverable.
     'discoverable' => FALSE,
+    'menu_item' => variable_get('restful_hook_menu_base_path', 'api'),
   );
 }

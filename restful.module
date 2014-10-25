@@ -338,7 +338,8 @@ function restful_menu() {
     // If there is no specific menu item allow the different version variations.
     if ($plugin['hook_menu'] && empty($plugin['menu_item'])) {
       // Add the version string to the arguments.
-      $item['access arguments'] = $item['page arguments'][] = 1;
+      $item['access arguments'][] = 1;
+      $item['page arguments'][] = 1;
         // Ex: api/v1.2/articles
       $items[$base_path . '/v' . $plugin['major_version'] . '.' . $plugin['minor_version'] . '/' . $plugin['resource']] = $item;
       // Ex: api/v1/articles will use the latest minor version.

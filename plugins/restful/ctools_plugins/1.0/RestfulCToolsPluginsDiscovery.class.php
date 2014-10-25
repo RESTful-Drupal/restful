@@ -62,7 +62,7 @@ class RestfulCToolsPluginsDiscovery extends \RestfulDataProviderCToolsPlugins {
    * @return string
    *   The RESTful endpoint.
    */
-  protected function getSelf(array $plugin) {
+  protected function getSelf($plugin) {
     if ($plugin['menu_item']) {
       return url($plugin['menu_item'], array('absolute' => TRUE));
     }
