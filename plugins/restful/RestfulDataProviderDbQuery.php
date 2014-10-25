@@ -256,14 +256,25 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
     $query->condition($this->getTableName() . '.' . $this->getIdColumn(), $id);
 
     $this->addExtraInfoToQuery($query);
-    $results = $query->execute();
+    $result = $query
+      ->execute()
+      // We expect a single value.
+      ->fetchAssoc();
+
+    if (!$result) {
+      $params = array(
+        '@id' => $id,
+        '@resource' => $this->getPluginKey('label'),
+      );
+      throw new RestfulUnprocessableEntityException(format_string('The ID @id for @resource does not exist.', $params));
+    }
 
     // TODO: Right now render cache only works for Entity based resources.
 
     $return = array();
 
-    foreach ($results as $result) {
-      $return[] = $this->mapDbRowToPublicFields($result);
+    foreach ($result as $row) {
+      $return[] = $this->mapDbRowToPublicFields($row);
     }
 
     return $return;
