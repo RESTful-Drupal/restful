@@ -50,6 +50,19 @@ class RestfulCToolsPluginsDiscovery extends \RestfulDataProviderCToolsPlugins {
         unset($plugins[$plugin_name]);
       }
     }
+
+    $request = $this->getRequest();
+    if (empty($request['all'])) {
+      // Return only the last version of each resource.
+      foreach ($plugins as $plugin_name => $plugin) {
+        list($major_version, $minor_version) = static::getResourceLastVersion($plugin['resource']);
+
+        if ($plugin['major_version'] != $major_version || $plugin['minor_version'] != $minor_version) {
+          unset($plugins[$plugin_name]);
+        }
+      }
+    }
+
     return $plugins;
   }
 
