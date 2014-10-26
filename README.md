@@ -560,14 +560,12 @@ methods on them, since those will be accessed directly on the aforementioned
 endpoint. This information aims to describe what the accessed resource
 represents.
 
-To access this information just use the `discovery` resource:
+To access this information just use the `discovery` resource at the api
+homepage:
 
 ```shell
 # List resources
-curl -u user:password https://example.org/v1/discovery
-
-# Get information about a resource
-curl -u user:password https://example.org/v1/discovery/{resource-name}
+curl -u user:password https://example.org/api
 ```
 
 ### Documenting your fields.
@@ -618,7 +616,7 @@ $public_fields['text_multiple'] = array(
 This is the default set of information provided by RESTful. You can add your own
 information to the `'discovery'` property and it will be exposed as well.
 
-To access the information about an specific enpoint just make an `OPTIONS` call
+To access the information about an specific endpoint just make an `OPTIONS` call
 to it. You will get the field information in the body, the information about the
 available output formats and the permitted HTTP methods will be contained in the
 corresponding headers.
