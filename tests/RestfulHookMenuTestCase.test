@@ -42,7 +42,7 @@ class RestfulHookMenuTestCase extends RestfulCurlBaseTestCase {
       'data' => array(array(
         'id' => $node1->nid,
         'label' => $node1->title,
-        'self' => url('node/' . $node1->nid, array('absolute' => TRUE)),
+        'self' => url('api/v1.0/articles/' . $node1->nid, array('absolute' => TRUE)),
       )),
     );
 
@@ -91,15 +91,16 @@ class RestfulHookMenuTestCase extends RestfulCurlBaseTestCase {
   function testNotFoundDelivery() {
     // Invalid URLs.
     $urls = array(
-      'api',
-      'api/',
       'api/invalid',
     );
 
     foreach ($urls as $url) {
       $result = $this->httpRequest($url);
+
+      $body = drupal_json_decode($result['body']);
       $this->assertEqual($result['code'], '404', format_string('404 status code sent for @url url.', array('@url' => $url)));
       $this->assertTrue(strpos($result['headers'], 'application/problem+json;'), '"application/problem+json" found in invalid request.');
+      $this->assertEqual($body['title'], 'Invalid URL path.', 'Correct error message.');
     }
 
     // Non-related url.

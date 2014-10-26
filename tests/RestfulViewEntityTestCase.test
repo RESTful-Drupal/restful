@@ -60,11 +60,11 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
     $base_expected_result = array(
       'id' => $id,
       'label' => 'Main test type',
-      'self' => url('custom/' . $id, array('absolute' => TRUE)),
     );
 
     // v1.0 - Simple entity view (id, label, self).
     $handler = restful_get_restful_handler('main', 1, 0);
+    $base_expected_result['self'] = $handler->versionedUrl($id);
     $expected_result = $base_expected_result;
 
     $response = $handler->get($id);
@@ -73,6 +73,7 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
 
     // v1.1 - Text and entity reference field.
     $handler = restful_get_restful_handler('main', 1, 1);
+    $base_expected_result['self'] = $handler->versionedUrl($id);
     $response = $handler->get($id);
     $result = $response[0];
 
@@ -159,6 +160,7 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
 
     // v1.2 - "callback" and "process callback".
     $handler = restful_get_restful_handler('main', 1, 2);
+    $base_expected_result['self'] = $handler->versionedUrl($id);
     $response = $handler->get($id);
     $result = $response[0];
     $expected_result = $base_expected_result;
