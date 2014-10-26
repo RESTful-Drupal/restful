@@ -1213,13 +1213,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    *   The self URL.
    */
   protected function getEntitySelf(\EntityMetadataWrapper $wrapper) {
-    $plugin = $this->getPlugin();
-    if (!empty($plugin['menu_item'])) {
-      return url($plugin['menu_item'], array('absolute' => TRUE));
-    }
-
-    $base_path = variable_get('restful_hook_menu_base_path', 'api');
-    return url($base_path . '/v' . $plugin['major_version'] . '.' . $plugin['minor_version'] . '/' . $plugin['resource'] . '/' . $wrapper->getIdentifier(), array('absolute' => TRUE));
+    return $this->versionedUrl($wrapper->getIdentifier());
   }
 
   /**

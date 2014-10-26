@@ -65,7 +65,7 @@ class RestfulEntityUserAccessTestCase extends DrupalWebTestCase {
     $expected_result = array(
       'id' => $user1->uid,
       'label' => $user1->name,
-      'self' => url('user/' . $user1->uid, array('absolute' => TRUE)),
+      'self' => $handler->versionedUrl($user1->uid),
     );
 
     $this->assertEqual($result, $expected_result, "Privileged user can access another user's resource.");

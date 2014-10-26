@@ -1202,6 +1202,27 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
   }
 
   /**
+   * Gets a resource URL based on the current version.
+   *
+   * @param string $path
+   *   The path for the resource
+   *
+   * @return string
+   *   The fully qualified URL.
+   */
+  public function versionedUrl($path = '') {
+    $plugin = $this->getPlugin();
+    if (!empty($plugin['menu_item'])) {
+      $url = $plugin['menu_item'] . '/' . $path;
+      return url(rtrim($url, '/'), array('absolute' => TRUE));
+    }
+
+    $base_path = variable_get('restful_hook_menu_base_path', 'api');
+    $url = $base_path . '/v' . $plugin['major_version'] . '.' . $plugin['minor_version'] . '/' . $plugin['resource'] . '/' . $path;
+    return url(rtrim($url, '/'), array('absolute' => TRUE));
+  }
+
+  /**
    * Get the non translated menu item.
    *
    * @param string $path
