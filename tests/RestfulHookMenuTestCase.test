@@ -42,7 +42,7 @@ class RestfulHookMenuTestCase extends RestfulCurlBaseTestCase {
       'data' => array(array(
         'id' => $node1->nid,
         'label' => $node1->title,
-        'self' => url('node/' . $node1->nid, array('absolute' => TRUE)),
+        'self' => url('api/v1.0/articles/' . $node1->nid, array('absolute' => TRUE)),
       )),
     );
 
@@ -91,8 +91,6 @@ class RestfulHookMenuTestCase extends RestfulCurlBaseTestCase {
   function testNotFoundDelivery() {
     // Invalid URLs.
     $urls = array(
-      'api',
-      'api/',
       'api/invalid',
     );
 

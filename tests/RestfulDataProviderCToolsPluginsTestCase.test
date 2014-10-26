@@ -1,0 +1,43 @@
+<?php
+
+/**
+ * @file
+ * Contains \RestfulDataProviderCToolsPluginsTestCase.
+ */
+
+class RestfulDataProviderCToolsPluginsTestCase extends DrupalWebTestCase {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'CTools plugins',
+      'description' => 'Test the CTools plugins data provider.',
+      'group' => 'Restful',
+    );
+  }
+
+  function setUp() {
+    parent::setUp('restful_example');
+  }
+
+  /**
+   * Test the data provider.
+   */
+  function testDataProvider() {
+    $handler = restful_get_restful_handler('discovery');
+
+    // Assert sorting and filtering works as expected.
+    $request = array(
+      'sort' => '-name',
+      'filter' => array(
+        'minor_version' => array(
+          'value' => '4',
+          'operator' => '>=',
+        ),
+      ),
+    );
+    $result = $handler->get('', $request);
+
+    $this->assertEqual(count($result), 3, 'Discovery filtered resources correctly.');
+    $this->assertTrue($result[0]['name'] = 'articles_1_6' && $result[1]['name'] = 'articles_1_5' && $result[2]['name'] = 'articles_1_4', 'Discovery sorted resources correctly.');
+  }
+}

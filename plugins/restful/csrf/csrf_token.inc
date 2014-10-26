@@ -12,5 +12,5 @@ $plugin = array(
   // Csrf token should be exposed also to anonymous users.
   'authentication_optional' => TRUE,
   // We will decalre our own custom menu item.
-  'hook_menu' => FALSE,
+  'menu_item' => variable_get('restful_hook_menu_base_path', 'api') . '/session/token',
 );

@@ -44,7 +44,7 @@ class RestfulUpdateEntityTestCase extends DrupalWebTestCase {
     $expected_result = array(array(
       'id' => $id,
       'label' => $new_label,
-      'self' => url('node/' . $id, array('absolute' => TRUE)),
+      'self' => $handler->versionedUrl($id),
       'body' => NULL,
     ));
 
@@ -86,7 +86,7 @@ class RestfulUpdateEntityTestCase extends DrupalWebTestCase {
     $expected_result = array(array(
       'id' => $id,
       'label' => $new_label,
-      'self' => url('node/' . $id, array('absolute' => TRUE)),
+      'self' => $handler->versionedUrl($id),
       'body' => $text,
     ));
 

@@ -290,6 +290,38 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
   }
 
   /**
+   * Process plugin options by validation keys exists, and set default values.
+   *
+   * @param array $required_keys
+   *   Array of required keys.
+   * @param array $default_values
+   *   Array of default values to populate in the
+   *   $plugin['data_provider_options'].
+   *
+   * @return array
+   *   Array with data provider options populated with default values.
+   *
+   * @throws \RestfulServiceUnavailable
+   */
+  protected function processDataProviderOptions($required_keys = array(), $default_values = array()) {
+    $options = $this->getPluginKey('data_provider_options');
+    $params = array('@class' => get_class($this));
+    // Check required keys exist.
+    foreach ($required_keys as $key) {
+      if (empty($options[$key])) {
+        $params['@key'] = $key;
+        throw new \RestfulServiceUnavailable(format_string('@class is missing "@key" property in the "data_provider_options" key of the $plugin', $params));
+      }
+    }
+
+    // Add default values.
+    $options += $default_values;
+    $this->setPluginKey('data_provider_options', $options);
+
+    return $options;
+  }
+
+  /**
    * Determines if the HTTP method represents a write operation.
    *
    * @param string $method
@@ -780,10 +812,45 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
       // Set default operator.
       $value += array('operator' => '=');
 
+      // Clean the operator in case it came from the URL.
+      // e.g. filter[minor_version][operator]=">="
+      $value['operator'] = str_replace(array('"', "'"), '', $value['operator']);
+
+      $this->isValidOperatorForFilter($value['operator']);
+
       $filters[] = $value;
     }
 
     return $filters;
+  }
+
+  /**
+   * Check if an operator is valid for filtering.
+   *
+   * @param string $operator
+   *   The operator.
+   *
+   * @throws RestfulBadRequestException
+   */
+  protected function isValidOperatorForFilter($operator) {
+    $allowed_operators = array(
+      '=',
+      '>',
+      '<',
+      '>=',
+      '<=',
+      '<>',
+      '!=',
+      'IN',
+      'BETWEEN',
+    );
+
+    if (!in_array($operator, $allowed_operators)) {
+      throw new \RestfulBadRequestException(format_string('Operator "@operator" is not allowed for filtering on this resource. Allowed operators are: !allowed', array(
+        '@operator' => $operator,
+        '!allowed' => implode(', ', $allowed_operators),
+      )));
+    }
   }
 
   /**
@@ -1130,8 +1197,29 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
       return $version;
     }
     // If there is no version negotiation information return the latest version.
-    $version =  static::getResourceLastVersion($resource_name);
+    $version = static::getResourceLastVersion($resource_name);
     return $version;
+  }
+
+  /**
+   * Gets a resource URL based on the current version.
+   *
+   * @param string $path
+   *   The path for the resource
+   *
+   * @return string
+   *   The fully qualified URL.
+   */
+  public function versionedUrl($path = '') {
+    $plugin = $this->getPlugin();
+    if (!empty($plugin['menu_item'])) {
+      $url = $plugin['menu_item'] . '/' . $path;
+      return url(rtrim($url, '/'), array('absolute' => TRUE));
+    }
+
+    $base_path = variable_get('restful_hook_menu_base_path', 'api');
+    $url = $base_path . '/v' . $plugin['major_version'] . '.' . $plugin['minor_version'] . '/' . $plugin['resource'] . '/' . $path;
+    return url(rtrim($url, '/'), array('absolute' => TRUE));
   }
 
   /**
