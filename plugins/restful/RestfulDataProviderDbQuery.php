@@ -69,6 +69,20 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
   }
 
   /**
+   * @return string
+   */
+  public function getPrimary() {
+    return $this->primary;
+  }
+
+  /**
+   * @param string $primary
+   */
+  public function setPrimary($primary) {
+    $this->primary = $primary;
+  }
+
+  /**
    * Constructs a RestfulDataProviderDbQuery object.
    *
    * @param array $plugin
@@ -90,7 +104,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
 
     $this->tableName = $options['table_name'];
     $this->idColumn = $options['id_column'];
-    $this->primary = empty($plugin['primary']) ? NULL : $this->primary = $plugin['primary'];
+    $this->primary = !empty($options['primary']) ? $options['primary'] : $options['id_column'];
   }
 
   /**
@@ -272,7 +286,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
         '@id' => $id,
         '@resource' => $this->getPluginKey('label'),
       );
-      throw new RestfulUnprocessableEntityException(format_string('The ID @id for @resource does not exist.', $params));
+      throw new \RestfulUnprocessableEntityException(format_string('The ID @id for @resource does not exist.', $params));
     }
 
     // TODO: Right now render cache only works for Entity based resources.
@@ -290,9 +304,6 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
    * {@inheritdoc}
    */
   public function update($id, $full_replace = FALSE) {
-    $query = db_update($this->getTableName());
-    $query->condition($this->getIdColumn(), $id);
-
     // Build the update array.
     $request = $this->getRequest();
     static::cleanRequest($request);
@@ -314,11 +325,15 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
       }
     }
     if (empty($fields)) {
-      return $this->view($id);
+      throw new \RestfulBadRequestException('No values were changed.');
     }
 
-    // Once the update array is built, execute the query.
-    $query->fields($fields)->execute();
+    // Set the ID field.
+    $fields[$this->getIdColumn()] = $id;
+
+    if (!drupal_write_record($this->getTableName(), $fields, $this->getPrimary())) {
+      throw new \RestfulServiceUnavailable('Record could not be updated to the database.');
+    }
     return $this->view($id);
   }
 
