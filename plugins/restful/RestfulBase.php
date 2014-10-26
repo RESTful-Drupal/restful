@@ -948,7 +948,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
       $options['query'] += $request;
     }
 
-    return url($this->getPluginKey('menu_item'), $options);
+    return $this->versionedUrl('', $options);
   }
 
   /**
@@ -1206,20 +1206,26 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
    *
    * @param string $path
    *   The path for the resource
+   * @param array $options
+   *   Array of options as in url().
    *
    * @return string
    *   The fully qualified URL.
+   *
+   * @see url().
    */
-  public function versionedUrl($path = '') {
+  public function versionedUrl($path = '', $options = array()) {
+    // Make the URL absolute by default.
+    $options += array('absolute' => TRUE);
     $plugin = $this->getPlugin();
     if (!empty($plugin['menu_item'])) {
       $url = $plugin['menu_item'] . '/' . $path;
-      return url(rtrim($url, '/'), array('absolute' => TRUE));
+      return url(rtrim($url, '/'), $options);
     }
 
     $base_path = variable_get('restful_hook_menu_base_path', 'api');
     $url = $base_path . '/v' . $plugin['major_version'] . '.' . $plugin['minor_version'] . '/' . $plugin['resource'] . '/' . $path;
-    return url(rtrim($url, '/'), array('absolute' => TRUE));
+    return url(rtrim($url, '/'), $options);
   }
 
   /**
