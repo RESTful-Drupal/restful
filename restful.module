@@ -359,6 +359,11 @@ function restful_menu() {
     $items[$base_path . '/session/token']['delivery callback'] = 'restful_unprepared_delivery';
   }
 
+  // Make sure the Login endpoint has the correct access callback.
+  if (!empty($items[$base_path . '/login'])) {
+    $items[$base_path . '/login']['access callback'] = 'user_is_anonymous';
+  }
+
   return $items;
 }
 
