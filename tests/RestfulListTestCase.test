@@ -294,7 +294,7 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     $result = $handler->get('', array('page' => 2));
     $output = drupal_json_decode($handler->format($result));
     $this->assertTrue($output['_links']['next'], '"Next" link exists on the middle page.');
-    $this->assertEqual($output['_links']['previous'], $handler->versionedUrl('', array(
+    $this->assertEqual($output['_links']['next'], $handler->versionedUrl('', array(
       'query' => array('page' => 3),
     )));
     $this->assertTrue($output['_links']['previous'], '"Previous" link exists on the middle page.');
