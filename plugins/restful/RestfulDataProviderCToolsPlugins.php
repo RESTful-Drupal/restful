@@ -214,7 +214,12 @@ abstract class RestfulDataProviderCToolsPlugins extends \RestfulBase implements 
    * @todo: We should generalize this, as it's repeated often.
    */
   public function view($id) {
-    $plugin = ctools_get_plugins($this->getModule(), $this->getType(), $id);
+    if (!$plugin = ctools_get_plugins($this->getModule(), $this->getType(), $id)) {
+      // Since the discovery resource sits under 'api/' it will pick up all
+      // invalid paths like 'api/invalid'. If it is not a valid plugin then
+      // return a 404.
+      throw new \RestfulNotFoundException('Invalid URL path.');
+    }
 
     // Loop over all the defined public fields.
     foreach ($this->getPublicFields() as $public_field_name => $info) {
