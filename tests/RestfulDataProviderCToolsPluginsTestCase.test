@@ -69,10 +69,10 @@ class RestfulDataProviderCToolsPluginsTestCase extends DrupalWebTestCase {
     );
     $result = $handler->get('', $request);
 
-    $this->assertEqual(count($result), 1, 'Latest resource shown by default.');
+    $this->assertEqual(count($result), 1, 'Latest resources shown by default.');
 
     $request['filter']['all'] = TRUE;
     $result = $handler->get('', $request);
-    $this->assertTrue(count($result) > 1, 'All resource shown by passing the "all" query string.');
+    $this->assertTrue(count($result) > 1, 'All resources shown by passing the "all" query string.');
   }
 }
