@@ -36,19 +36,19 @@ class RestfulListEntityMultipleBundlesTestCase extends DrupalWebTestCase {
     $handler = restful_get_restful_handler('entity_tests');
     $expected_result = array(
       array(
-        'id' => (int)$entity1->pid,
+        'id' => $entity1->pid,
         'label' => 'Main test type',
-        'self' => $handler->versionedUrl($entity1->pid),
+        'self' => url('api/v1.0/main/' . $entity1->pid, array('absolute' => TRUE)),
       ),
       array(
-        'id' => (int)$entity2->pid,
+        'id' => $entity2->pid,
         'label' => 'Main test type',
-        'self' => $handler->versionedUrl($entity2->pid),
+        'self' => url('api/v1.0/main/' . $entity2->pid, array('absolute' => TRUE)),
       ),
       array(
-        'id' => (int)$entity3->pid,
+        'id' => $entity3->pid,
         'label' => 'label',
-        'self' => $handler->versionedUrl($entity3->pid),
+        'self' => url('api/v1.0/tests/' . $entity3->pid, array('absolute' => TRUE)),
         // The "test" bundle also exposes the "type" property.
         'type' => 'test',
       ),
