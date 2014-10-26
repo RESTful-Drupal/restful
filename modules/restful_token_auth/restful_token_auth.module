@@ -7,7 +7,7 @@
 
 
 /**
- *  Implements hook_menu_alter().
+ * Implements hook_menu_alter().
  */
 function restful_token_auth_menu_alter(&$items) {
   $base_path = variable_get('restful_hook_menu_base_path', 'api');
