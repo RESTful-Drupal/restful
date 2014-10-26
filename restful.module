@@ -35,6 +35,11 @@ function restful_plugin_process(&$plugin, $info) {
  *
  * Properties for the "restful" plugin type:
  * - description: The description of the resource. Defaults to empty string.
+ * - discoverable: Determines if the resource should be discoverable by the
+ *   "discovery" resource. Defaults to TRUE.
+ * - data_provider_options: An array of options specific to the data provider.
+ *   For example the DB query data provider requires the table name in order to
+ *   know which table to act upon. Defaults to an empty array.
  * - major_version: The major version of the resource. This will change the URL
  *   of the resource endpoint. For example setting major version to 2 for the
  *   "articles" resource will result with "api/v2/articles" as the URL. Defaults
@@ -132,6 +137,9 @@ function restful_plugin_process_restful(&$plugin, $info) {
     'render_cache' => array(),
     'autocomplete' => array(),
     'allow_origin' => NULL,
+    'discoverable' => TRUE,
+    'data_provider_options' => array(),
+    'menu_item' => FALSE,
   );
 
   $plugin['render_cache'] += array(
@@ -321,19 +329,23 @@ function restful_menu() {
     $item = array(
       'title' => $plugin['name'],
       'access callback' => 'restful_menu_access_callback',
-      'access arguments' => array(2, 1),
+      'access arguments' => array($plugin['resource']),
       'page callback' => 'restful_menu_process_callback',
-      'page arguments' => array(2, 1),
+      'page arguments' => array($plugin['resource']),
       'delivery callback' => 'restful_formatted_delivery',
       'type' => MENU_CALLBACK,
     );
     // If there is no specific menu item allow the different version variations.
     if ($plugin['hook_menu'] && empty($plugin['menu_item'])) {
-      // Ex: api/v1.2/articles
+      // Add the version string to the arguments.
+      $item['access arguments'][] = 1;
+      $item['page arguments'][] = 1;
+        // Ex: api/v1.2/articles
       $items[$base_path . '/v' . $plugin['major_version'] . '.' . $plugin['minor_version'] . '/' . $plugin['resource']] = $item;
       // Ex: api/v1/articles will use the latest minor version.
       $items[$base_path . '/v' . $plugin['major_version'] . '/' . $plugin['resource']] = $item;
       // Ex: api/articles will use the header or the latest version.
+      // Do not add the version string to the arguments.
       $item['access arguments'] = $item['page arguments'] = array(1);
       $items[$base_path . '/' . $plugin['resource']] = $item;
     }
@@ -342,42 +354,15 @@ function restful_menu() {
     }
   }
 
-  // A special login endpoint, that returns a JSON output along with the Drupal
-  // authentication cookie.
-  if (variable_get('restful_user_login_menu_item', TRUE)) {
-    $items[$base_path . '/login'] = array(
-      'title' => 'Login',
-      'description' => 'Login using base auth and recieve a JSON response along with an authentication cookie.',
-      'access callback' => 'user_is_anonymous',
-      'page callback' => 'restful_menu_process_callback',
-      'page arguments' => array('login_cookie'),
-      'delivery callback' => 'restful_formatted_delivery',
-      'type' => MENU_CALLBACK,
-    );
+  // Make sure the CRSF token endpoint is not HAL.
+  if (!empty($items[$base_path . '/session/token'])) {
+    $items[$base_path . '/session/token']['delivery callback'] = 'restful_unprepared_delivery';
   }
 
-  // A special file upload endpoint, that returns a JSON with the newly saved
-  // files.
-  if (variable_get('restful_file_upload', FALSE)) {
-    $items[$base_path . '/file-upload'] = array(
-      'title' => 'File upload',
-      'access callback' => 'restful_menu_access_callback',
-      'access arguments' => array('files'),
-      'page callback' => 'restful_menu_process_callback',
-      'page arguments' => array('files'),
-      'delivery callback' => 'restful_formatted_delivery',
-      'type' => MENU_CALLBACK,
-    );
+  // Make sure the Login endpoint has the correct access callback.
+  if (!empty($items[$base_path . '/login'])) {
+    $items[$base_path . '/login']['access callback'] = 'user_is_anonymous';
   }
-
-  $items[$base_path . '/session/token'] = array(
-    'page callback' => 'restful_menu_process_callback',
-    'page arguments' => array('csrf_token'),
-    'access callback' => 'restful_menu_access_callback',
-    'access arguments' => array('csrf_token'),
-    'delivery callback' => 'restful_unprepared_delivery',
-    'type' => MENU_CALLBACK,
-  );
 
   return $items;
 }
@@ -751,7 +736,6 @@ function restful_delivery($var = NULL, $method = 'format') {
     foreach ($restful_handler->getHttpHeaders() as $key => $value) {
       drupal_add_http_header($key, $value);
     }
-
     // If we are returning from an OPTIONS call, always use render.
     if ($restful_handler->getMethod() == \RestfulInterface::OPTIONS) {
       $method = 'render';
@@ -765,7 +749,6 @@ function restful_delivery($var = NULL, $method = 'format') {
     // an error code. Therefore we need to set the content type header after
     // formatting the output.
     drupal_add_http_header('Content-Type', $formatter_handler->getContentTypeHeader());
-
   }
   catch (\RestfulException $e) {
     // Handle if the formatter does not exist.
