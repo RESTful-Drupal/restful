@@ -319,7 +319,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
 
     // Once the update array is built, execute the query.
     $query->fields($fields)->execute();
-    return $this->view($id, TRUE);
+    return $this->view($id);
   }
 
   /**
@@ -346,7 +346,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
 
     // Once the update array is built, execute the query.
     if ($id = $query->fields($fields)->execute()) {
-      return $this->view($id, TRUE);
+      return $this->view($id);
     }
     // Some times db_insert does not know how to get the ID.
     if ($passed_id) {
