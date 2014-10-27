@@ -602,11 +602,11 @@ function restful_menu_process_callback($resource_name, $version = NULL) {
     throw new \RestfulServiceUnavailable(format_string('The selected plugin (@plugin) does not implement \RestfulDataProviderInterface.', array('@plugin' => $resource_name . ' v' . $major_version . '.' . $minor_version)));
   }
 
-  // Vary the response with the presence of the X-Restful-Version header.
-  if (!empty($_SERVER['HTTP_X_RESTFUL_VERSION'])) {
+  // Vary the response with the presence of the X-API-Version header.
+  if (!empty($_SERVER['HTTP_X_API_VERSION'])) {
     $headers = $handler->getHttpHeaders();
     $vary = empty($headers['Vary']) ? '' : $headers['Vary'];
-    $handler->setHttpHeaders('Vary', implode(',', array($vary, 'X-Restful-Version')));
+    $handler->setHttpHeaders('Vary', implode(',', array($vary, 'X-API-Version')));
   }
 
   // Always add the allow origin if configured.

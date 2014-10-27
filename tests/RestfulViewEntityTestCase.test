@@ -274,10 +274,16 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
 
     // When there is no header version passed in there is no need of Vary.
     $response = $this->httpRequest('api/v1.1/articles');
-    $this->assertFalse(preg_match('/X-Restful-Version/', $response['headers']), 'The Vary header was not added.');
+    $this->assertFalse(preg_match('/X-API-Version/', $response['headers']), 'The Vary header was not added.');
 
-    $response = $this->httpRequest('api/articles', \RestfulInterface::GET, NULL, array('X-Restful-Version' => 'v1.1'));
-    $this->assertTrue(preg_match('/X-Restful-Version/', $response['headers']), 'The Vary header was added.');
+    // Make sure that the version header is present in the response.
+    $this->assertTrue(preg_match('/v1\.1/', $response['headers']), 'The Vary header was added.');
+
+    $response = $this->httpRequest('api/articles', \RestfulInterface::GET, NULL, array('X-API-Version' => 'v1.1'));
+    $this->assertTrue(preg_match('/X-API-Version/', $response['headers']), 'The Vary header was added.');
+
+    // Make sure that the version header is present in the response.
+    $this->assertTrue(preg_match('/v1\.1/', $response['headers']), 'The Vary header was added.');
 
     // Test that if there is no explicit formatter in the plugin definition then
     // it is selected based on the Accept header.

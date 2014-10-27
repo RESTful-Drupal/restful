@@ -629,6 +629,8 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
     $this->setMethod($method);
     $this->setPath($path);
     $this->setRequest($request);
+    $version = $this->getVersion();
+    $this->setHttpHeaders('X-API-Version', 'v' . $version['major']  . '.' . $version['minor']);
 
     if (!$method_name = $this->getControllerFromPath()) {
       throw new RestfulBadRequestException('Path does not exist');
@@ -1192,8 +1194,8 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
       return $version;
     }
     // If there is no version in the URL check the header.
-    if (!empty($_SERVER['HTTP_X_RESTFUL_VERSION'])) {
-      $version =  static::parseVersionString($_SERVER['HTTP_X_RESTFUL_VERSION'], $resource_name);
+    if (!empty($_SERVER['HTTP_X_API_VERSION'])) {
+      $version =  static::parseVersionString($_SERVER['HTTP_X_API_VERSION'], $resource_name);
       return $version;
     }
     // If there is no version negotiation information return the latest version.
