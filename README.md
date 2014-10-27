@@ -241,13 +241,13 @@ $handler->get('', $request);
 ```shell
 # Handler v1.0
 curl https://example.com/api/articles/1 \
-  -H "X-Restful-Version: v1.0"
+  -H "X-API-Version: v1.0"
 # or
 curl https://example.com/api/v1.0/articles/1
 
 # Handler v1.1
 curl https://example.com/api/articles/1 \
-  -H "X-Restful-Version: v1.1"
+  -H "X-API-Version: v1.1"
 # or
 curl https://example.com/api/v1.1/articles/1
 ```
@@ -257,7 +257,7 @@ curl https://example.com/api/v1.1/articles/1
 ```shell
 # Handler v1.1
 curl https://example.com/api/articles/1,2 \
-  -H "X-Restful-Version: v1.1"
+  -H "X-API-Version: v1.1"
 ```
 
 ### Filtering fields
