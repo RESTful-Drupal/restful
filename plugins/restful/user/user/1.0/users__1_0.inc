@@ -8,7 +8,7 @@ if (variable_get('restful_enable_users_resource', TRUE)) {
     'label' => t('User'),
     'description' => t('Export the "User" entity.'),
     'resource' => 'users',
-    'class' => 'RestfulEntityBaseUser',
+    'class' => 'RestfulEntityUser__1_0',
     'entity_type' => 'user',
     'bundle' => 'user',
     // Try to authenticate users with all available authentication types.
