@@ -155,8 +155,8 @@ angular.module('restfulApp')
       for (var i = 0; i < $files.length; i++) {
         var file = $files[i];
         FileUpload.upload(file).then(function(data) {
-          $scope.data.image = data.data.list[0].id;
-          $scope.serverSide.image = data.data.list[0];
+          $scope.data.image = data.data.data[0].id;
+          $scope.serverSide.image = data.data.data[0];
         });
       }
     };
