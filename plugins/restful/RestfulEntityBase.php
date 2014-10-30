@@ -1193,6 +1193,60 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     return array('discovery' => $discovery_info);
   }
 
+  protected function getFormSchemaAllowedValues($field_info, &$discovery_info) {
+    $field_types = module_exists('list') ? array_keys(list_field_info()) : array();
+
+    if (in_array($field_info['type'], $field_types)) {
+      $discovery_info['form_element']['allowed_values'] = $field_info['settings']['allowed_values'];
+      return;
+    }
+
+    $field_types = array('entityreference', 'taxonomy_term_reference');
+
+    if (!in_array($field_info['type'], $field_types)) {
+      // Not a reference field.
+      return;
+    }
+
+    if (!module_exists('options')) {
+      return;
+    }
+
+    $entity_type = $this->getEntityType();
+    $bundle = $this->getBundle();
+
+    $instance_info = field_info_instance($entity_type, $field_info['field_name'], $bundle);
+    $widget_types = array(
+      'taxonomy_autocomplete',
+      'entityreference_autocomplete',
+      'entityreference_autocomplete_tags',
+    );
+
+    if (in_array($instance_info['widget']['type'], $widget_types)) {
+      // Widget is autocomplete, so for performance reasons we do not try to
+      // grab all the referenced entities.
+      return;
+    }
+
+    // Use Field API's widget to get the allowed values.
+    $type = str_replace('options_', '', $instance_info['widget']['type']);
+    $multiple = $field_info['cardinality'] > 1 || $field_info['cardinality'] == FIELD_CARDINALITY_UNLIMITED;
+    $required = $instance_info['required'];
+    $properties = _options_properties($type, $multiple, $required, FALSE);
+
+    // Mock an entity.
+    $values = array();
+    $entity_info = entity_get_info($entity_type);
+    if (!empty($entity_info['entity keys']['bundle'])) {
+      $values[$entity_info['entity keys']['bundle']] = $bundle;
+    }
+
+    $entity = entity_create($entity_type, $values);
+
+    $options = _options_get_options($field_info, $instance_info, $properties, $this->getEntityType(), $entity)
+    $discovery_info['form_element']['allowed_values'] = $options;
+  }
+
   /**
    * Set the public fields.
    *
