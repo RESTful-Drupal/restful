@@ -2,7 +2,7 @@
 
 # RESTful best practices for Drupal
 
-This module achieves a practical RESTful for Drupal following the best practices.
+This module achieves a practical RESTful for Drupal following best practices.
 
 ## Concept
 The following also describes the difference between other modules such as RestWs and Services Entity.
