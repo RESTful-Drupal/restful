@@ -1182,25 +1182,56 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     $discovery_info['data']['type'] = $field_info['type'];
     $discovery_info['data']['required'] = $instance_info['required'];
 
-    $discovery_info['form_element']['default_value'] = $instance_info['default_value'];
+    $discovery_info['form_element']['default_value'] = isset($instance_info['default_value']) ? $instance_info['default_value'] : NULL;
 
-    switch($field_info['type']) {
-      case 'list_text':
-        $discovery_info['form_element']['allowed_values'] = $field_info['settings']['allowed_values'];
-        break;
-    }
+    $this->getFormSchemaAllowedValues($field_info, $discovery_info);
+
 
     return array('discovery' => $discovery_info);
   }
 
+  /**
+   * Get allowed values for the form schema.
+   *
+   * @param array $field_info
+   *   The field info array.
+   * @param array $discovery_info
+   *   The discovery info array, passed by reference.
+   */
   protected function getFormSchemaAllowedValues($field_info, &$discovery_info) {
+    $this->getFormSchemaAllowedValuesList($field_info, $discovery_info);
+    $this->getFormSchemaAllowedValuesReference($field_info, $discovery_info);
+  }
+
+  /**
+   * Get allowed values from list fields.
+   *
+   * @param array $field_info
+   *   The field info array.
+   * @param array $discovery_info
+   *   The discovery info array, passed by reference.
+   *
+   * @see \RestfulEntityBase::getFormSchemaAllowedValues()
+   */
+  protected function getFormSchemaAllowedValuesList($field_info, &$discovery_info) {
     $field_types = module_exists('list') ? array_keys(list_field_info()) : array();
 
     if (in_array($field_info['type'], $field_types)) {
       $discovery_info['form_element']['allowed_values'] = $field_info['settings']['allowed_values'];
-      return;
     }
+  }
 
+  /**
+   * Get allowed values from entity reference and taxonomy reference fields.
+   *
+   * @param array $field_info
+   *   The field info array.
+   * @param array $discovery_info
+   *   The discovery info array, passed by reference.
+   *
+   * @see \RestfulEntityBase::getFormSchemaAllowedValues()
+   */
+  protected function getFormSchemaAllowedValuesReference($field_info, &$discovery_info) {
     $field_types = array('entityreference', 'taxonomy_term_reference');
 
     if (!in_array($field_info['type'], $field_types)) {
@@ -1243,7 +1274,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
 
     $entity = entity_create($entity_type, $values);
 
-    $options = _options_get_options($field_info, $instance_info, $properties, $this->getEntityType(), $entity)
+    $options = _options_get_options($field_info, $instance_info, $properties, $this->getEntityType(), $entity);
     $discovery_info['form_element']['allowed_values'] = $options;
   }
 
