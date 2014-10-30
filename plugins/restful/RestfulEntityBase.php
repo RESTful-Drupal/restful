@@ -1262,8 +1262,11 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     // Use Field API's widget to get the allowed values.
     $type = str_replace('options_', '', $instance_info['widget']['type']);
     $multiple = $field_info['cardinality'] > 1 || $field_info['cardinality'] == FIELD_CARDINALITY_UNLIMITED;
-    $required = $instance_info['required'];
-    $properties = _options_properties($type, $multiple, $required, FALSE);
+    // Always pass TRUE for "required" and "has_value", as we don't want to get
+    // the "none" option.
+    $required = TRUE;
+    $has_value = TRUE;
+    $properties = _options_properties($type, $multiple, $required, $has_value);
 
     // Mock an entity.
     $values = array();
