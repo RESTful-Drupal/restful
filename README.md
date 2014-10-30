@@ -2,8 +2,7 @@
 
 # RESTful best practices for Drupal
 
-This module follows [this post](http://www.vinaysahni.com/best-practices-for-a-pragmatic-restful-api) to achieve a _practical_ RESTful for Drupal.
-The aim of the module, is to allow exposing an API, without Drupal's data structure leaking to it.
+This module achieves a practical RESTful for Drupal following best practices.
 
 ## Concept
 The following also describes the difference between other modules such as RestWs and Services Entity.
