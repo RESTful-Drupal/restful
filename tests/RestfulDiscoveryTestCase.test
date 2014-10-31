@@ -160,6 +160,7 @@ class RestfulDiscoveryTestCase extends RestfulCurlBaseTestCase {
       $node_type2 => $name_type2,
     );
 
+    $expected_result = array();
     foreach ($types as $type => $name) {
       foreach (array(1, 2, 3) as $id) {
         $title = $type . '/' . $id;
@@ -169,7 +170,7 @@ class RestfulDiscoveryTestCase extends RestfulCurlBaseTestCase {
 
         );
         $node = $this->drupalCreateNode($settings);
-        $nodes[$name][$node->nid] = $title;
+        $expected_result[$name][$node->nid] = $title;
       }
     }
 
@@ -199,7 +200,7 @@ class RestfulDiscoveryTestCase extends RestfulCurlBaseTestCase {
     // Text - multiple, with text processing.
     $field = array(
       'field_name' => 'list_text',
-      'type' => 'text_long',
+      'type' => 'list_text',
       'entity_types' => array('node'),
       'cardinality' => FIELD_CARDINALITY_UNLIMITED,
     );
