@@ -137,5 +137,91 @@ class RestfulDiscoveryTestCase extends RestfulCurlBaseTestCase {
     }
   }
 
+  /**
+   * Field discovery allowed values.
+   */
+  public function testFieldDiscoveryAllowedValues() {
+    $handler = restful_get_restful_handler('test_articles', 1, 2);
+
+    $node_type1 = $this->drupalCreateContentType();
+    $name_type1 = $node_type1->name;
+    $node_type1 = $node_type1->type;
+
+    $node_type2 = $this->drupalCreateContentType();
+    $name_type2 = $node_type2->name;
+    $node_type2 = $node_type2->type;
+
+    // Add entity reference and taxonomy term reference.
+    $vocabulary_id = restful_test_add_fields('node', $node_type1);
+
+    // Create 3 nodes in each node type.
+    $types = array(
+      $node_type1 => $name_type1,
+      $node_type2 => $name_type2,
+    );
+
+    foreach ($types as $type => $name) {
+      foreach (array(1, 2, 3) as $id) {
+        $title = $type . '/' . $id;
+        $settings = array(
+          'title' => $title,
+          'type' => $type,
+
+        );
+        $node = $this->drupalCreateNode($settings);
+        $nodes[$name][$node->nid] = $title;
+      }
+    }
+
+    // Set widget to select list.
+    $instance = field_info_instance('node', 'entity_reference_single', $node_type1);
+    $instance['widget']['type'] = 'options_select';
+    field_update_instance($instance);
+
+
+    $result = $handler->options();
+    $expected_result = array(
+      'allowed_values' => $nodes,
+    );
+
+    $this->assertEqual($result['entity_reference_single']['form_element']['allowed_values'], $expected_result);
+
+    // Switch to autocomplete.
+    $instance['widget']['type'] = 'entityreference_autocomplete';
+    field_update_instance($instance);
+    $this->assertTrue(empty($result['entity_reference_single']['form_element']['allowed_values']));
+
+    // Change the last term created via restful_test_add_fields() to be under
+    // the second term.
+    $tree = taxonomy_get_tree($vocabulary_id);
+
+    // Add a select list with allowed values.
+    // Text - multiple, with text processing.
+    $field = array(
+      'field_name' => 'list_text',
+      'type' => 'text_long',
+      'entity_types' => array('node'),
+      'cardinality' => FIELD_CARDINALITY_UNLIMITED,
+    );
+    field_create_field($field);
+
+    $list = array(
+      'one' => 'One',
+      'two' => 'Two',
+      $this->randomName() => $this->randomString(),
+    );
+
+    $instance = array(
+      'field_name' => 'list_text',
+      'bundle' => $node_type1,
+      'entity_type' => 'node',
+      'label' => t('List text'),
+      'settings' => array(
+        'allowed_values' => $list,
+      ),
+    );
+    field_create_instance($instance);
+  }
+
 
 }

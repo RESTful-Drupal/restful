@@ -46,6 +46,12 @@ class RestfulTestArticlesResource__1_2 extends RestfulEntityBaseNode {
       );
     }
 
+    if (field_info_field('term_reference_single')) {
+      $public_fields['term_reference_single'] = array(
+        'property' => 'term_reference_single',
+      );
+    }
+
     if (field_info_field('integer_single')) {
       $public_fields['integer_single'] = array(
         'property' => 'integer_single',

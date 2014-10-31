@@ -45,22 +45,30 @@ function restful_test_field_access($op, $field, $entity_type, $entity, $account)
 }
 
 /**
- * Helper function to add common fields to the entity test's "main" bundle.
+ * Helper function to add common fields.
+ *
+ * @param string $entity_type
+ *   The entity type. Defautls to "entity_test".
+ * @param string $bundle.
+ *   The bundle name. Defaults to "main".
+ *
+ * @return int
+ *   The vocabulary ID created.
  */
-function restful_test_add_fields() {
+function restful_test_add_fields($entity_type = 'entity_test', $bundle = 'main') {
   // Text - single.
   $field = array(
     'field_name' => 'text_single',
     'type' => 'text_long',
-    'entity_types' => array('entity_test'),
+    'entity_types' => array($entity_type),
     'cardinality' => 1,
   );
   field_create_field($field);
 
   $instance = array(
     'field_name' => 'text_single',
-    'bundle' => 'main',
-    'entity_type' => 'entity_test',
+    'bundle' => $bundle,
+    'entity_type' => $entity_type,
     'label' => t('Text single'),
     'settings' => array(
       // No text processing
@@ -73,15 +81,15 @@ function restful_test_add_fields() {
   $field = array(
     'field_name' => 'text_single_processing',
     'type' => 'text_long',
-    'entity_types' => array('entity_test'),
+    'entity_types' => array($entity_type),
     'cardinality' => 1,
   );
   field_create_field($field);
 
   $instance = array(
     'field_name' => 'text_single_processing',
-    'bundle' => 'main',
-    'entity_type' => 'entity_test',
+    'bundle' => $bundle,
+    'entity_type' => $entity_type,
     'label' => t('Text single with text processing'),
     'settings' => array(
       'text_processing' => 1,
@@ -93,15 +101,15 @@ function restful_test_add_fields() {
   $field = array(
     'field_name' => 'text_multiple',
     'type' => 'text_long',
-    'entity_types' => array('entity_test'),
+    'entity_types' => array($entity_type),
     'cardinality' => FIELD_CARDINALITY_UNLIMITED,
   );
   field_create_field($field);
 
   $instance = array(
     'field_name' => 'text_multiple',
-    'bundle' => 'main',
-    'entity_type' => 'entity_test',
+    'bundle' => $bundle,
+    'entity_type' => $entity_type,
     'label' => t('Text multiple'),
     'settings' => array(
       'text_processing' => 0,
@@ -113,15 +121,15 @@ function restful_test_add_fields() {
   $field = array(
     'field_name' => 'text_multiple_processing',
     'type' => 'text_long',
-    'entity_types' => array('entity_test'),
+    'entity_types' => array($entity_type),
     'cardinality' => FIELD_CARDINALITY_UNLIMITED,
   );
   field_create_field($field);
 
   $instance = array(
     'field_name' => 'text_multiple_processing',
-    'bundle' => 'main',
-    'entity_type' => 'entity_test',
+    'bundle' => $bundle,
+    'entity_type' => $entity_type,
     'label' => t('Text multiple with text processing'),
     'settings' => array(
       'text_processing' => 1,
@@ -131,10 +139,10 @@ function restful_test_add_fields() {
 
   // Entity reference - single.
   $field = array(
-    'entity_types' => array('entity_test'),
+    'entity_types' => array($entity_type),
     'settings' => array(
       'handler' => 'base',
-      'target_type' => 'entity_test',
+      'target_type' => $entity_type,
       'handler_settings' => array(
       ),
     ),
@@ -145,9 +153,9 @@ function restful_test_add_fields() {
   field_create_field($field);
 
   $instance = array(
-    'entity_type' => 'entity_test',
+    'entity_type' => $entity_type,
     'field_name' => 'entity_reference_single',
-    'bundle' => 'main',
+    'bundle' => $bundle,
     'label' => t('Entity reference single'),
   );
 
@@ -155,10 +163,10 @@ function restful_test_add_fields() {
 
   // Entity reference - multiple.
   $field = array(
-    'entity_types' => array('entity_test'),
+    'entity_types' => array($entity_type),
     'settings' => array(
       'handler' => 'base',
-      'target_type' => 'entity_test',
+      'target_type' => $entity_type,
       'handler_settings' => array(
       ),
     ),
@@ -169,9 +177,9 @@ function restful_test_add_fields() {
   field_create_field($field);
 
   $instance = array(
-    'entity_type' => 'entity_test',
+    'entity_type' => $entity_type,
     'field_name' => 'entity_reference_multiple',
-    'bundle' => 'main',
+    'bundle' => $bundle,
     'label' => t('Entity reference multiple'),
   );
 
@@ -183,15 +191,15 @@ function restful_test_add_fields() {
   $field = array(
     'field_name' => 'term_single',
     'type' => 'taxonomy_term_reference',
-    'entity_types' => array('entity_test'),
+    'entity_types' => array($entity_type),
     'cardinality' => 1,
   );
   field_create_field($field);
 
   $instance = array(
     'field_name' => 'term_single',
-    'bundle' => 'main',
-    'entity_type' => 'entity_test',
+    'bundle' => $bundle,
+    'entity_type' => $entity_type,
     'label' => t('Term reference single'),
     'settings' => array(
       'settings' => array(
@@ -209,15 +217,15 @@ function restful_test_add_fields() {
   $field = array(
     'field_name' => 'term_multiple',
     'type' => 'taxonomy_term_reference',
-    'entity_types' => array('entity_test'),
+    'entity_types' => array($entity_type),
     'cardinality' => FIELD_CARDINALITY_UNLIMITED,
   );
   field_create_field($field);
 
   $instance = array(
     'field_name' => 'term_multiple',
-    'bundle' => 'main',
-    'entity_type' => 'entity_test',
+    'bundle' => $bundle,
+    'entity_type' => $entity_type,
     'label' => t('Term reference multiple'),
     'settings' => array(
       'settings' => array(
@@ -242,9 +250,9 @@ function restful_test_add_fields() {
 
   $instance = array(
     'field_name' => 'file_single',
-    'entity_type' => 'entity_test',
+    'entity_type' => $entity_type,
     'label' => 'File single',
-    'bundle' => 'main',
+    'bundle' => $bundle,
   );
   field_create_instance($instance);
 
@@ -259,9 +267,9 @@ function restful_test_add_fields() {
 
   $instance = array(
     'field_name' => 'file_multiple',
-    'entity_type' => 'entity_test',
+    'entity_type' => $entity_type,
     'label' => 'File multiple',
-    'bundle' => 'main',
+    'bundle' => $bundle,
   );
   field_create_instance($instance);
 
@@ -276,9 +284,9 @@ function restful_test_add_fields() {
 
   $instance = array(
     'field_name' => 'image_single',
-    'entity_type' => 'entity_test',
+    'entity_type' => $entity_type,
     'label' => 'Image single',
-    'bundle' => 'main',
+    'bundle' => $bundle,
   );
   field_create_instance($instance);
 
@@ -293,11 +301,13 @@ function restful_test_add_fields() {
 
   $instance = array(
     'field_name' => 'image_multiple',
-    'entity_type' => 'entity_test',
+    'entity_type' => $entity_type,
     'label' => 'Image multiple',
-    'bundle' => 'main',
+    'bundle' => $bundle,
   );
   field_create_instance($instance);
+
+  return $vocabulary_id;
 }
 
 
