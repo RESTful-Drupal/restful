@@ -1165,26 +1165,26 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
   /**
    * Get the field info, data and form element
    *
-   * @param string $field_info
+   * @param string $field
    *   The field info.
    *
    *
    * @return array
    *   Array with the 'info', 'data' and 'form_element' keys.
    */
-  protected function getFieldInfoAndFormSchema($field_info) {
+  protected function getFieldInfoAndFormSchema($field) {
     $discovery_info = array();
-    $instance_info = field_info_instance($this->getEntityType(), $field_info['field_name'], $this->getBundle());
+    $instance_info = field_info_instance($this->getEntityType(), $field['field_name'], $this->getBundle());
 
     $discovery_info['info']['label'] = $instance_info['label'];
     $discovery_info['info']['description'] = $instance_info['description'];
 
-    $discovery_info['data']['type'] = $field_info['type'];
+    $discovery_info['data']['type'] = $field['type'];
     $discovery_info['data']['required'] = $instance_info['required'];
 
     $discovery_info['form_element']['default_value'] = isset($instance_info['default_value']) ? $instance_info['default_value'] : NULL;
 
-    $discovery_info['form_element']['allowed_values'] = $this->getFormSchemaAllowedValues($field_info);
+    $discovery_info['form_element']['allowed_values'] = $this->getFormSchemaAllowedValues($field);
 
     return array('discovery' => $discovery_info);
   }
@@ -1192,24 +1192,66 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
   /**
    * Get allowed values for the form schema.
    *
-   * @param array $field_info
+   * Using Field API's "Options" module to get the allowed values.
+   *
+   * @param array $field
    *   The field info array.
-   * @param array $discovery_info
-   *   The discovery info array, passed by reference.
    *
    * @return mix | NULL
    *   The allowed values or NULL if none found.
    */
-  protected function getFormSchemaAllowedValues($field_info, &$discovery_info) {
+  protected function getFormSchemaAllowedValues($field) {
     if (!module_exists('options')) {
       return;
     }
 
     $entity_type = $this->getEntityType();
     $bundle = $this->getBundle();
+    $instance = field_info_instance($entity_type, $field['field_name'], $bundle);
 
-    $instance_info = field_info_instance($entity_type, $field_info['field_name'], $bundle);
+    if (!$this->formSchemaHasAllowedValues($field, $instance)) {
+      // Field doesn't have allowed values.
+      return;
+    }
 
+    // Use Field API's widget to get the allowed values.
+    $type = str_replace('options_', '', $instance['widget']['type']);
+    $multiple = $field['cardinality'] > 1 || $field['cardinality'] == FIELD_CARDINALITY_UNLIMITED;
+    // Always pass TRUE for "required" and "has_value", as we don't want to get
+    // the "none" option.
+    $required = TRUE;
+    $has_value = TRUE;
+    $properties = _options_properties($type, $multiple, $required, $has_value);
+
+    // Mock an entity.
+    $values = array();
+    $entity_info = entity_get_info($entity_type);
+
+    if (!empty($entity_info['entity keys']['bundle'])) {
+      // Set the bundle of the entity.
+      $values[$entity_info['entity keys']['bundle']] = $bundle;
+    }
+
+    $entity = entity_create($entity_type, $values);
+
+    return _options_get_options($field, $instance, $properties, $this->getEntityType(), $entity);
+  }
+
+  /**
+   * Determines if a field has allowed values.
+   *
+   * If Field is reference, and widget is autocomplete, so for performance
+   * reasons we do not try to grab all the referenced entities.
+   *
+   * @param array $field
+   *   The field info array.
+   * @param array $instance
+   *   The instance info array.
+   *
+   * @return bool
+   *   TRUE if a field should be populated with the allowed values.
+   */
+  protected function formSchemaHasAllowedValues($field, $instance) {
     $field_types = array(
       'entityreference',
       'taxonomy_term_reference',
@@ -1221,31 +1263,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       'entityreference_autocomplete_tags',
     );
 
-    if (in_array($field_info['type'], $field_types) && in_array($instance_info['widget']['type'], $widget_types)) {
-      // Field is reference, and widget is autocomplete, so for performance
-      // reasons we do not try to grab all the referenced entities.
-      return;
-    }
-
-    // Use Field API's widget to get the allowed values.
-    $type = str_replace('options_', '', $instance_info['widget']['type']);
-    $multiple = $field_info['cardinality'] > 1 || $field_info['cardinality'] == FIELD_CARDINALITY_UNLIMITED;
-    // Always pass TRUE for "required" and "has_value", as we don't want to get
-    // the "none" option.
-    $required = TRUE;
-    $has_value = TRUE;
-    $properties = _options_properties($type, $multiple, $required, $has_value);
-
-    // Mock an entity.
-    $values = array();
-    $entity_info = entity_get_info($entity_type);
-    if (!empty($entity_info['entity keys']['bundle'])) {
-      $values[$entity_info['entity keys']['bundle']] = $bundle;
-    }
-
-    $entity = entity_create($entity_type, $values);
-
-    return _options_get_options($field_info, $instance_info, $properties, $this->getEntityType(), $entity);
+    return in_array($field['type'], $field_types) && in_array($instance['widget']['type'], $widget_types);
   }
 
   /**
