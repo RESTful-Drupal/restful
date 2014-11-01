@@ -1263,7 +1263,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       'entityreference_autocomplete_tags',
     );
 
-    return in_array($field['type'], $field_types) && in_array($instance['widget']['type'], $widget_types);
+    return !in_array($field['type'], $field_types) || !in_array($instance['widget']['type'], $widget_types);
   }
 
   /**
