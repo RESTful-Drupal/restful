@@ -1192,8 +1192,6 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
   /**
    * Get allowed values for the form schema.
    *
-   * Use Field API's widget to get the allowed values.
-   *
    * @param array $field_info
    *   The field info array.
    * @param array $discovery_info
@@ -1211,6 +1209,23 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     $bundle = $this->getBundle();
 
     $instance_info = field_info_instance($entity_type, $field_info['field_name'], $bundle);
+
+    $field_types = array(
+      'entityreference',
+      'taxonomy_term_reference',
+    );
+
+    $widget_types = array(
+      'taxonomy_autocomplete',
+      'entityreference_autocomplete',
+      'entityreference_autocomplete_tags',
+    );
+
+    if (in_array($field_info['type'], $field_types) && in_array($instance_info['widget']['type'], $widget_types)) {
+      // Field is reference, and widget is autocomplete, so for performance
+      // reasons we do not try to grab all the referenced entities.
+      return;
+    }
 
     // Use Field API's widget to get the allowed values.
     $type = str_replace('options_', '', $instance_info['widget']['type']);
