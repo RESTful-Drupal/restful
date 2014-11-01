@@ -143,19 +143,16 @@ class RestfulDiscoveryTestCase extends RestfulCurlBaseTestCase {
   public function testFieldDiscoveryAllowedValues() {
     $handler = restful_get_restful_handler('test_articles', 1, 2);
 
-    $node_type = $this->drupalCreateContentType();
-    $node_type = $node_type->type;
-
-    // Add entity reference and taxonomy term reference.
-    restful_test_add_fields('node', $node_type);
+    // Add entity reference fields.
+    restful_test_add_fields('node', 'article');
 
     // Create 3 nodes.
     $expected_result = array();
     foreach (array(1, 2, 3) as $id) {
-      $title = $node_type . '/' . $id;
+      $title = 'article' . '/' . $id;
       $settings = array(
         'title' => $title,
-        'type' => $node_type,
+        'type' => 'article',
 
       );
       $node = $this->drupalCreateNode($settings);
@@ -163,16 +160,21 @@ class RestfulDiscoveryTestCase extends RestfulCurlBaseTestCase {
     }
 
     // Set widget to select list.
-    $instance = field_info_instance('node', 'entity_reference_single', $node_type);
+    $instance = field_info_instance('node', 'entity_reference_single', 'article');
     $instance['widget']['type'] = 'options_select';
     field_update_instance($instance);
 
     $result = $handler->options();
     $this->assertEqual($result['entity_reference_single']['form_element']['allowed_values'], $expected_result);
 
-    // Switch to autocomplete.
+    // Set widget to autocomplete.
     $instance['widget']['type'] = 'entityreference_autocomplete';
     field_update_instance($instance);
+
+    // Invalidate public fields cache.
+    $handler->setPublicFields(array());
+
+    $result = $handler->options();
     $this->assertNull($result['entity_reference_single']['form_element']['allowed_values']);
   }
 
