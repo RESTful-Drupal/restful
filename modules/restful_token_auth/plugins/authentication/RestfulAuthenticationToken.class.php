@@ -45,6 +45,12 @@ class RestfulAuthenticationToken extends \RestfulAuthenticationBase {
 
     if (!empty($auth_token->expire) && $auth_token->expire < REQUEST_TIME) {
       // Token is expired.
+
+      if (variable_get('restful_token_auth_delete_expired_tokens', TRUE)) {
+        // Token has expired, so we can delete this token.
+        $auth_token->delete();
+      }
+
       return;
     }
 
