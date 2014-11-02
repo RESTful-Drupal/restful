@@ -43,7 +43,7 @@ class RestfulAuthenticationToken extends \RestfulAuthenticationBase {
     $id = key($result['restful_token_auth']);
     $auth_token = entity_load_single('restful_token_auth', $id);
 
-    if (!empty($auth_token->expire) && $auth_token->expire > REQUEST_TIME) {
+    if (!empty($auth_token->expire) && $auth_token->expire < REQUEST_TIME) {
       // Token is expired.
       return;
     }
