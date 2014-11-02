@@ -1,13 +1,13 @@
 <?php
 
 $plugin = array(
-  'label' => t('Token authentication'),
-  'resource' => 'token_auth',
-  'name' => 'token_auth__1_0',
+  'label' => t('Access token authentication'),
+  'resource' => 'access_token',
+  'name' => 'access_token__1_0',
   'entity_type' => 'restful_token_auth',
-  'bundle' => 'restful_token_auth',
-  'description' => t('Export the token authentication resource.'),
-  'class' => 'RestfulTokenAuthentication',
+  'bundle' => 'access_token',
+  'description' => t('Export the access token authentication resource.'),
+  'class' => 'RestfulAccessTokenAuthentication',
   'authentication_types' => array(
     'cookie',
     'basic_auth',
