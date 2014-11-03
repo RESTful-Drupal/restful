@@ -1,0 +1,48 @@
+<?php
+
+/**
+ * @file
+ * Contains RestfulReferenceTestCase.
+ */
+
+class RestfulReferenceTestCase extends RestfulCurlBaseTestCase {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Referenced properties',
+      'description' => 'Test defining a public field as a resource for base properties (e.g. the UID on the node entity).s',
+      'group' => 'Restful',
+    );
+  }
+
+  function setUp() {
+    parent::setUp('restful_test');
+  }
+
+  /**
+   * Test reference.
+   */
+  function testReference() {
+    $user1 = $this->drupalCreateUser();
+
+    $settings = array(
+      'type' => 'article',
+      'uid' => $user1->uid,
+    );
+    $node1 = $this->drupalCreateNode($settings);
+    $node2 = $this->drupalCreateNode($settings);
+
+    $handler = restful_get_restful_handler('test_articles', 1, 2);
+    variable_set('restful_property_reference_simple', TRUE);
+
+    $result = $handler->get($node1->nid);
+    $this->assertEqual($result[0]['user']->uid, $user1->uid, 'Property is not defined as resource, thus the referenced entity appears as the entity.');
+
+    variable_set('restful_property_reference_advanced', TRUE);
+    // Clear public fields cache.
+    $handler->setPublicFields(array());
+
+    $result = $handler->get($node2->nid);
+    $this->assertEqual($result[0]['user']['id'], $user1->uid, 'Property is not defined as resource, thus the referenced entity appears as the rendered resource.');
+  }
+}
