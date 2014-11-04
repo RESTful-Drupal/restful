@@ -10,19 +10,19 @@ class RestfulReferenceTestCase extends RestfulCurlBaseTestCase {
   public static function getInfo() {
     return array(
       'name' => 'Referenced properties',
-      'description' => 'Test defining a public field as a resource for base properties (e.g. the UID on the node entity).s',
+      'description' => 'Test defining a public field as a resource for base properties (e.g. the UID on the node entity) and fields.',
       'group' => 'Restful',
     );
   }
 
   function setUp() {
-    parent::setUp('restful_test');
+    parent::setUp('restful_test', 'restful_example');
   }
 
   /**
-   * Test reference.
+   * Test property reference.
    */
-  function testReference() {
+  function testPropertyReference() {
     $user1 = $this->drupalCreateUser();
 
     $settings = array(
@@ -43,6 +43,30 @@ class RestfulReferenceTestCase extends RestfulCurlBaseTestCase {
     $handler->setPublicFields(array());
 
     $result = $handler->get($node2->nid);
-    $this->assertEqual($result[0]['user']['id'], $user1->uid, 'Property is not defined as resource, thus the referenced entity appears as the rendered resource.');
+    $this->assertEqual($result[0]['user']['id'], $user1->uid, 'Property is defined as resource, thus the referenced entity appears as the rendered resource.');
+  }
+
+  /**
+   * Test field reference.
+   */
+  function testEntityReference() {
+    restful_test_create_vocabulary_and_terms();
+
+    $settings = array(
+      'type' => 'article',
+    );
+    $node1 = $this->drupalCreateNode($settings);
+
+    $term = taxonomy_get_term_by_name('term 1');
+    $term = reset($term);
+
+    $wrapper = entity_metadata_wrapper('node', $node1);
+    $wrapper->field_tags->set($term);
+    $wrapper->save();
+
+    $handler = restful_get_restful_handler('articles', 1, 5);
+    $result = $handler->get($node1->nid);
+
+    $this->assertEqual($result[0]['tags']['id'], $term->tid, 'Field is defined as resource, thus the referenced entity appears as the rendered resource.');
   }
 }
