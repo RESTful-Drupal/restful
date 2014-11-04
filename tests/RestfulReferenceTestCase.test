@@ -9,7 +9,7 @@ class RestfulReferenceTestCase extends RestfulCurlBaseTestCase {
 
   public static function getInfo() {
     return array(
-      'name' => 'Referenced properties',
+      'name' => 'Referenced resources',
       'description' => 'Test defining a public field as a resource for base properties (e.g. the UID on the node entity) and fields.',
       'group' => 'Restful',
     );
@@ -65,7 +65,7 @@ class RestfulReferenceTestCase extends RestfulCurlBaseTestCase {
     $public_fields['entity_reference_single_resource']['resource']['article'] = $public_fields['entity_reference_single_resource']['resource']['main'];
     $public_fields['entity_reference_single_resource']['resource']['article']['name'] = 'test_articles';
 
-    $public_fields['entity_reference_multiple_resource']['article'] = $public_fields['entity_reference_single_resource']['resource']['article'];
+    $public_fields['entity_reference_multiple_resource']['resource']['article'] = $public_fields['entity_reference_single_resource']['resource']['article'];
 
     unset($public_fields['entity_reference_single_resource']['main']);
     unset($public_fields['entity_reference_multiple_resource']['main']);
@@ -93,13 +93,14 @@ class RestfulReferenceTestCase extends RestfulCurlBaseTestCase {
     $response1 = $node_handler->get($node1->nid);
     $response2 = $node_handler->get($node2->nid);
     $expected_result = $response1[0];
-    $this->assertEqual($result[0]['entity_reference_single_resource'], $expected_result);
+    $this->assertEqual($result[0]['entity_reference_single_resource'], $expected_result, 'Single reference with resource of another entity has correct response.');
 
     $expected_result = array(
       $response1[0],
       $response2[0],
     );
-    $this->assertEqual($result[0]['entity_reference_multiple_resource'], $expected_result);
+
+    $this->assertEqual($result[0]['entity_reference_multiple_resource'], $expected_result, 'Multiple reference with resource of another entity has correct response.');
 
     // Test the "full_view" property on a referenced entity.
     // We change the definition via the handler instead of creating another
