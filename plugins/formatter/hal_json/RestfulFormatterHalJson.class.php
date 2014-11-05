@@ -151,7 +151,11 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
       $curies_resource = variable_get('restful_hal_curies_name', 'hal') . ':' . $resource_name;
 
       $output += array('_embedded' => array());
-      $output['_embedded'][$curies_resource][] = $row[$name];
+
+      foreach ($row[$name] as $resource_row) {
+        $resource_row = $this->prepareRow($resource_row, $output);
+        $output['_embedded'][$curies_resource][] = $resource_row;
+      }
 
       // Remove the original reference.
       unset($row[$name]);
@@ -167,9 +171,8 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
    *   A single row array, passed by reference.
    */
   protected function addHateoasRow(array &$row) {
-    $row += array('_links' => array());
-
-    if ($row['self']) {
+    if (!empty($row['self'])) {
+      $row += array('_links' => array());
       $row['_links']['self']['href'] = $row['self'];
       unset($row['self']);
     }
