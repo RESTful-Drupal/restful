@@ -19,19 +19,6 @@ interface RestfulFormatterInterface {
   public function prepare(array $data);
 
   /**
-   * Massages a single resource to pass to the renderer.
-   *
-   * @param array $row
-   *   The raw data to return.
-   * @param array $output
-   *   The wrapping output array passed by reference.
-   *
-   * @return array
-   *   The data prepared to be rendered.
-   */
-  public function prepareRow(array $row, array &$output);
-
-  /**
    * Renders an array in the selected format.
    *
    * @param array $structured_data
