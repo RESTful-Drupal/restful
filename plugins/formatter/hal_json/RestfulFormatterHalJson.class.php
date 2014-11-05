@@ -25,13 +25,14 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
     }
     // Here we get the data after calling the backend storage for the resources.
 
+    $curies_resource = variable_get('restful_hal_curies_name', 'hal') . ':' . $this->handler->getResourceName();
+    $output = array();
+
     foreach ($data as &$row) {
-      $row = $this->prepareRow($row);
+      $row = $this->prepareRow($row, $output);
     }
 
-    $curies_resource = variable_get('restful_hal_curies_name', 'hal') . ':' . $this->handler->getResourceName();
-
-    $output = array($curies_resource => $data);
+    $output[$curies_resource] = $data;
 
     if (!empty($this->handler)) {
       if (method_exists($this->handler, 'isListRequest') && !$this->handler->isListRequest()) {
@@ -60,6 +61,7 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
       return;
     }
     $request = $this->handler->getRequest();
+    $curies_resource = variable_get('restful_hal_curies_name', 'hal') . ':' . $this->handler->getResourceName();
 
     $data['_links'] = array();
 
@@ -78,7 +80,7 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
     // previous pages.
     $items_per_page = $this->handler->getRange();
     $previous_items = ($page - 1) * $items_per_page;
-    if ($data['count'] > count($data['data']) + $previous_items) {
+    if ($data['count'] > count($data[$curies_resource]) + $previous_items) {
       $request['page'] = $page + 1;
       $data['_links']['next']['href'] = $this->handler->getUrl($request);
     }
@@ -95,8 +97,52 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
   /**
    * {@inheritdoc}
    */
-  public function prepareRow(array $row) {
+  public function prepareRow(array $row, array &$output) {
     $this->addHateoasRow($row);
+
+    foreach ($this->handler->getPublicFields() as $name => $public_field) {
+      if (empty($public_field['resource'])) {
+        // Not a resource.
+        continue;
+      }
+
+      if (empty($row[$name])) {
+        // No value.
+        continue;
+      }
+
+      if (count($public_field['resource']) == 1) {
+        $resource = reset($public_field['resource']);
+        $resource_name = $resource['name'];
+      }
+      elseif ($this->handler instanceof \RestfulEntityBase) {
+        // @todo: How to deal with non entity resource, where we can't
+        // entity_load()?
+        $id = $row['id'];
+        $entity_type = $this->handler->getEntityType();
+        $entity = entity_load_single($entity_type, $id);
+        list(,, $bundle) = entity_extract_ids($entity_type, $entity);
+
+        foreach ($public_field['resource'] as $resource_bundle => $resource) {
+          if ($resource_bundle == $bundle) {
+            $resource_name = $resource['name'];
+            continue 2;
+          }
+        }
+      }
+
+      $curies_resource = variable_get('restful_hal_curies_name', 'hal') . ':' . $resource_name;
+
+
+      $output += array('_embedded' => array());
+      $output['_embedded'][$curies_resource][] = $row[$name];
+
+      // Remove the original reference.
+      unset($row[$name]);
+
+
+    }
+
     return $row;
   }
 
