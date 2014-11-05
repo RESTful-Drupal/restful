@@ -357,20 +357,19 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
   }
 
   /**
-   * Get the "target_type" property from an entity reference field.
+   * Get the "target_type" property from an field or property reference.
    *
-   * @param $property
-   *   The field name.
-   * @param \EntityMetadataWrapper $property_wrapper
+   * @param \EntityMetadataWrapper $wrapper
    *   The wrapped property.
+   * @param $property
+   *   The public field name.
    *
    * @return string
    *   The target type of the referenced entity.
    *
-   * @throws Exception
-   *   Errors is the passed field name is invalid.
+   * @throws \RestfulException
    */
-  protected function getTargetTypeFromEntityReference($property, \EntityMetadataWrapper $property_wrapper) {
+  protected function getTargetTypeFromEntityReference(\EntityMetadataWrapper $wrapper, $property) {
     $params = array('@property' => $property);
 
     if ($field = field_info_field($property)) {
@@ -381,17 +380,17 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
         return 'taxonomy_term';
       }
 
-      throw new Exception(format_string('Field @property is not an entity reference or taxonomy reference field.', $params));
+      throw new \RestfulException(format_string('Field @property is not an entity reference or taxonomy reference field.', $params));
     }
     else {
       // This is a property referencing another entity (e.g. the "uid" on the
       // node object).
-      $info = $property_wrapper->info();
+      $info = $wrapper->info();
       if (entity_get_info($info['type'])) {
         return $info['type'];
       }
 
-      throw new Exception(format_string('Property @property is not defined as reference in the EntityMetadataWrapper definition.', $params));
+      throw new \RestfulException(format_string('Property @property is not defined as reference in the EntityMetadataWrapper definition.', $params));
     }
   }
 
@@ -415,7 +414,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       return;
     }
 
-    $target_type = $this->getTargetTypeFromEntityReference($property, $wrapper->{$property});
+    $target_type = $this->getTargetTypeFromEntityReference($wrapper, $property);
     list($id,, $bundle) = entity_extract_ids($target_type, $entity);
 
     if (empty($resource[$bundle])) {
@@ -1130,6 +1129,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
         'resource' => array(),
         'sub_property' => FALSE,
         'wrapper_method' => 'value',
+        'wrapper_method_on_entity' => FALSE,
       );
 
       if ($field = field_info_field($info['property'])) {
@@ -1146,12 +1146,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
           $info += $this->getFieldInfoAndFormSchema($field);
         }
       }
-      elseif ($info['resource']) {
-        // This is a property with a reference (e.g. the UID on a node entity).
-        $info += array('wrapper_method_on_entity' => TRUE);
-      }
 
-      $info += array('wrapper_method_on_entity' => FALSE);
 
       foreach ($info['resource'] as &$resource) {
         // Expand array to be verbose.
