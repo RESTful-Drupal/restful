@@ -95,7 +95,15 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
   }
 
   /**
-   * {@inheritdoc}
+   * Massage the data of a single row.
+   *
+   * @param array $row
+   *   A single row array.
+   * @param array $output
+   *   The output array, passed by reference.
+   *
+   * @return array
+   *   The massaged data of a single row.
    */
   public function prepareRow(array $row, array &$output) {
     $this->addHateoasRow($row);
@@ -146,6 +154,12 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
     return $row;
   }
 
+  /**
+   * Add Hateoas to a single row.
+   * 
+   * @param array $row
+   *   A single row array, passed by reference.
+   */
   protected function addHateoasRow(array &$row) {
     $row += array('_links' => array());
 
