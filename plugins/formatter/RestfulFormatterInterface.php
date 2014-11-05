@@ -6,6 +6,7 @@
  */
 
 interface RestfulFormatterInterface {
+
   /**
    * Massages the raw data to create a structured array to pass to the renderer.
    *
@@ -16,6 +17,17 @@ interface RestfulFormatterInterface {
    *   The data prepared to be rendered.
    */
   public function prepare(array $data);
+
+  /**
+   * Massages a single resource to pass to the renderer.
+   *
+   * @param array $row
+   *   The raw data to return.
+   *
+   * @return array
+   *   The data prepared to be rendered.
+   */
+  public function prepareRow(array $row);
 
   /**
    * Renders an array in the selected format.

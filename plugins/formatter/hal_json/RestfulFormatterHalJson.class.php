@@ -24,7 +24,14 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
       return $data;
     }
     // Here we get the data after calling the backend storage for the resources.
-    $output = array('data' => $data);
+
+    foreach ($data as &$row) {
+      $row = $this->prepareRow($row);
+    }
+
+    $curies_resource = variable_get('restful_hal_curies_name', 'hal') . ':' . $this->handler->getResourceName();
+
+    $output = array($curies_resource => $data);
 
     if (!empty($this->handler)) {
       if (method_exists($this->handler, 'isListRequest') && !$this->handler->isListRequest()) {
@@ -40,20 +47,6 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
     }
 
     return $output;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function render(array $structured_data) {
-    return drupal_json_encode($structured_data);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getContentTypeHeader() {
-    return $this->contentType;
   }
 
   /**
@@ -85,6 +78,48 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
       $request['page'] = $page + 1;
       $data['_links']['next'] = $this->handler->getUrl($request);
     }
+
+    $href = variable_get('restful_hal_curies_href');
+
+    $data['curies'] = array(
+      'name' => variable_get('restful_hal_curies_name', 'hal'),
+      'href' => $href ? $href : url('rels', array('absolute' => TRUE)) . '/{rel}',
+      'templated' => TRUE,
+    );
   }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function prepareRow(array $row) {
+    $this->addHateoasRow($row);
+    return $row;
+  }
+
+  protected function addHateoasRow(array &$row) {
+    $row += array('_links' => array());
+
+    if ($row['self']) {
+      $row['_links']['self']['href'] = $row['self'];
+      unset($row['self']);
+    }
+
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function render(array $structured_data) {
+    return drupal_json_encode($structured_data);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getContentTypeHeader() {
+    return $this->contentType;
+  }
+
+
 }
 
