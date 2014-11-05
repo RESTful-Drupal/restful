@@ -66,13 +66,19 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
     $data['_links'] = array();
 
     // Get self link.
-    $data['_links']['self']['href'] = $this->handler->getUrl($request);
+    $data['_links']['self'] = array(
+      'title' => 'Self',
+      'href' => $this->handler->getUrl($request),
+    );
 
     $page = !empty($request['page']) ? $request['page'] : 1;
 
     if ($page > 1) {
       $request['page'] = $page - 1;
-      $data['_links']['previous']['href'] = $this->handler->getUrl($request);
+      $data['_links']['previous'] = array(
+        'title' => 'Previous',
+        'href' => $this->handler->getUrl($request),
+      );
     }
 
     // We know that there are more pages if the total count is bigger than the
@@ -82,12 +88,15 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
     $previous_items = ($page - 1) * $items_per_page;
     if ($data['count'] > count($data[$curies_resource]) + $previous_items) {
       $request['page'] = $page + 1;
-      $data['_links']['next']['href'] = $this->handler->getUrl($request);
+      $data['_links']['next'] = array(
+        'title' => 'Next',
+        'href' => $this->handler->getUrl($request),
+      );
     }
 
     $href = variable_get('restful_hal_curies_href');
 
-    $data['curies'] = array(
+    $data['_links']['curies'] = array(
       'name' => variable_get('restful_hal_curies_name', 'hal'),
       'href' => $href ? $href : url('docs/rels', array('absolute' => TRUE)) . '/{rel}',
       'templated' => TRUE,
@@ -141,14 +150,11 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
 
       $curies_resource = variable_get('restful_hal_curies_name', 'hal') . ':' . $resource_name;
 
-
       $output += array('_embedded' => array());
       $output['_embedded'][$curies_resource][] = $row[$name];
 
       // Remove the original reference.
       unset($row[$name]);
-
-
     }
 
     return $row;
@@ -156,7 +162,7 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
 
   /**
    * Add Hateoas to a single row.
-   * 
+   *
    * @param array $row
    *   A single row array, passed by reference.
    */
