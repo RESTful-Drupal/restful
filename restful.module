@@ -26,9 +26,9 @@ function restful_plugin_process(&$plugin, $info) {
   );
 
   // Call the plugin specific process functions.
-  $function = '\RestfulManager::pluginProcess' . ucfirst($info['type']);
+  $function = array('\RestfulManager', 'pluginProcess' . preg_replace('/ /', '', ucwords(preg_replace('/_/', ' ', $info['type']))));
   if (is_callable($function)) {
-    $function($plugin, $info);
+    $plugin = call_user_func_array($function, array($plugin, $info));
   }
 }
 

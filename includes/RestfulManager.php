@@ -101,7 +101,7 @@ class RestfulManager {
    *   Typically used to avoid CORS problems. This will also populate the
    *   Access-Control-Allow-Origin header in the response.
    */
-  public static function pluginProcessRestful(&$plugin, $info) {
+  public static function pluginProcessRestful($plugin, $info) {
     $plugin += array(
       'major_version' => 1,
       'minor_version' => 0,
@@ -152,6 +152,7 @@ class RestfulManager {
       );
     }
 
+    return $plugin;
   }
 
   /**
@@ -162,10 +163,12 @@ class RestfulManager {
    * - name: The name of the event.
    * - class: Name of the class implementing RestfulRateLimitInterface.
    */
-  public static function pluginProcessAuthentication(&$plugin, $info) {
+  public static function pluginProcessAuthentication($plugin, $info) {
     $plugin += array(
       'settings' => array(),
     );
+
+    return $plugin;
   }
 
   /**
@@ -176,8 +179,9 @@ class RestfulManager {
    * - name: The name of the event.
    * - class: Name of the class implementing RestfulRateLimitInterface.
    */
-  public static function pluginProcessRateLimit(&$plugin, $info) {
+  public static function pluginProcessRateLimit($plugin, $info) {
     // Nothing to be done.
+    return $plugin;
   }
 
   /**
@@ -188,8 +192,9 @@ class RestfulManager {
    * - name: The name of the formatter.
    * - class: Name of the class implementing RestfulFormatterInterface.
    */
-  public static function pluginProcessFormatter(&$plugin, $info) {
+  public static function pluginProcessFormatter($plugin, $info) {
     // Nothing to be done.
+    return $plugin;
   }
 
   /**
