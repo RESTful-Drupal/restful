@@ -314,7 +314,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
             }
 
             if ($resource) {
-              if ($value_from_resource = $this->getValueFromResource($item_wrapper, $property, $resource)) {
+              if ($value_from_resource = $this->getValueFromResource($item_wrapper, $property, $resource, $public_field_name, $wrapper->getIdentifier())) {
                 $value[] = $value_from_resource;
               }
             }
@@ -331,7 +331,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
           }
 
           if ($resource) {
-            $value = $this->getValueFromResource($sub_wrapper, $property, $resource);
+            $value = $this->getValueFromResource($sub_wrapper, $property, $resource, $public_field_name, $wrapper->getIdentifier());
           }
           else {
             // Wrapper method.
@@ -403,11 +403,16 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    *   The property name (i.e. the field name).
    * @param array $resource
    *   Array with resource names, keyed by the bundle name.
+   * @param string $public_field_name
+   *   Field name in the output. This is used to store additional metadata
+   *   useful for the formatter.
+   * @param int $host_id
+   *   Host entity ID. Used to structure the value metadata.
    *
    * @return mixed
    *   The value if found, or NULL if bundle not defined.
    */
-  protected function getValueFromResource(EntityMetadataWrapper $wrapper, $property, $resource) {
+  protected function getValueFromResource(EntityMetadataWrapper $wrapper, $property, $resource, $public_field_name = NULL, $host_id = NULL) {
     $handlers = &drupal_static(__FUNCTION__, array());
 
     if (!$entity = $wrapper->value()) {
@@ -427,6 +432,14 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       return $wrapper->value(array('identifier' => TRUE));
     }
 
+    if ($public_field_name) {
+      $this->valueMetadata[$host_id][$public_field_name][] = array(
+        'id' => $id,
+        'entity_type' => $target_type,
+        'bundle' => $bundle,
+        'resource_name' => $resource[$bundle]['name'],
+      );
+    }
 
     if (empty($handlers[$bundle])) {
       $handlers[$bundle] = restful_get_restful_handler($resource[$bundle]['name'], $resource[$bundle]['major_version'], $resource[$bundle]['minor_version']);

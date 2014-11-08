@@ -137,53 +137,20 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
       return $row;
     }
 
-    foreach ($this->handler->getPublicFields() as $name => $public_field) {
+    foreach ($this->handler->getPublicFields() as $pubilc_field_name => $public_field) {
       if (empty($public_field['resource'])) {
         // Not a resource.
         continue;
       }
 
-      if (empty($row[$name])) {
+      if (empty($row[$pubilc_field_name])) {
         // No value.
         continue;
       }
 
-      if (count($public_field['resource']) == 1) {
-        $resource = reset($public_field['resource']);
-        $resource_name = $resource['name'];
-      }
-      else {
-        foreach ($public_field['resource'] as $resource_bundle => $resource) {
-          $resource_handler = restful_get_restful_handler($resource['name'], $resource['major_version'], $resource['minor_version']);
-          if ($this->handler instanceof \RestfulEntityBase) {
-            // Only entity resources can have multiple resources assigned to a
-            // field. This is to avoid the creation of a resource with multiple
-            // bundles for every entityreference field.
-            continue;
-          }
-          $entity_type = $resource_handler->getEntityType();
-          // @todo: To avoid an extra entity load we should be able to pass
-          // this info in when generating the output array.
-          $entity = entity_load_single($entity_type, $row['id']);
-          list(,, $bundle) = entity_extract_ids($entity_type, $entity);
-          if ($resource_handler->getBundle() == $bundle) {
-            $resource_name = $resource['name'];
-            continue 2;
-          }
-        }
-      }
-
-      $curies_resource = $this->withCurie($resource_name);
-
       $output += array('_embedded' => array());
 
-      foreach ($row[$name] as $resource_row) {
-        $resource_row = $this->prepareRow($resource_row, $output);
-        $output['_embedded'][$curies_resource][] = $resource_row;
-      }
-
-      // Remove the original reference.
-      unset($row[$name]);
+      $this->moveReferencesToEmbeds($output, $row, $public_field, $pubilc_field_name);
     }
 
     return $row;
@@ -242,6 +209,50 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
    */
   protected function getCurie() {
     return $this->getPluginKey('curie');
+  }
+
+  /**
+   * Move the fields referencing other resources to the _embed key.
+   *
+   * @param array $output
+   *   Output array to be modified.
+   * @param array $row
+   *   The row being processed.
+   * @param $public_field
+   * @param $public_field_name
+   *   The name of the public field.
+   */
+  protected function moveReferencesToEmbeds(array &$output, array &$row, $public_field, $public_field_name) {
+    $value_metadata = $this->handler->getValueMetadata($row['id'], $public_field_name);
+    foreach ($row[$public_field_name] as $index => $resource_row) {
+      $metadata = $value_metadata[$index];
+
+      // If there is no resource name in the metadata for this particular value,
+      // assume that we are referring to the first resource in the field
+      // definition.
+      $resource_name = NULL;
+      if (!empty($metadata['resource_name'])) {
+        // Make sure that the resource in the metadata exists in the list of
+        // resources available for this particular public field.
+        foreach ($public_field['resource'] as $resource) {
+          if ($resource['name'] != $metadata['resource_name']) {
+            continue;
+          }
+          $resource_name = $metadata['resource_name'];
+        }
+      }
+      if (empty($resource_name)) {
+        $resource = reset($public_field['resource']);
+        $resource_name = $resource['name'];
+      }
+
+      $curies_resource = $this->withCurie($resource_name);
+      $resource_row = $this->prepareRow($resource_row, $output);
+      $output['_embedded'][$curies_resource][] = $resource_row;
+    }
+
+    // Remove the original reference.
+    unset($row[$public_field_name]);
   }
 
 }
