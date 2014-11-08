@@ -144,6 +144,7 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
         // @todo: How to deal with non entity resource, where we can't
         // entity_load()?
         $id = $row['id'];
+
         $entity_type = $this->handler->getEntityType();
         $entity = entity_load_single($entity_type, $id);
         list(,, $bundle) = entity_extract_ids($entity_type, $entity);
@@ -224,7 +225,7 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
    *   Associative array with the curie information.
    */
   protected function getCurie() {
-    $this->getPluginKey('curie');
+    return $this->getPluginKey('curie');
   }
 
 }
