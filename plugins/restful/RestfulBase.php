@@ -390,8 +390,17 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
    *   The formatted output.
    */
   public function format(array $data) {
-    $formatter_handler = restful_output_format($this);
-    return $formatter_handler->format($data);
+    return $this->formatter()->format($data);
+  }
+
+  /**
+   * Get the formatter handler for the current restful formatter.
+   *
+   * @return \RestfulFormatterInterface
+   *   The formatter handler.
+   */
+  protected function formatter() {
+    return \RestfulManager::outputFormat($this);
   }
 
   /**
