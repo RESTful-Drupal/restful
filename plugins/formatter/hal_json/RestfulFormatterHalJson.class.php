@@ -35,10 +35,11 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
     $output[$curies_resource] = $data;
 
     if (!empty($this->handler)) {
-      if (method_exists($this->handler, 'isListRequest') && !$this->handler->isListRequest()) {
-        return $output;
-      }
-      if (method_exists($this->handler, 'getTotalCount')) {
+      if (
+        method_exists($this->handler, 'getTotalCount') &&
+        method_exists($this->handler, 'isListRequest') &&
+        $this->handler->isListRequest()
+      ) {
         // Get the total number of items for the current request without pagination.
         $output['count'] = $this->handler->getTotalCount();
       }
@@ -67,7 +68,7 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
     // Get self link.
     $data['_links']['self'] = array(
       'title' => 'Self',
-      'href' => $this->handler->getUrl($request),
+      'href' => $this->handler->versionedUrl($this->handler->getPath()),
     );
 
     $page = !empty($request['page']) ? $request['page'] : 1;
@@ -140,17 +141,21 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
         $resource = reset($public_field['resource']);
         $resource_name = $resource['name'];
       }
-      elseif ($this->handler instanceof \RestfulEntityBase) {
-        // @todo: How to deal with non entity resource, where we can't
-        // entity_load()?
-        $id = $row['id'];
-
-        $entity_type = $this->handler->getEntityType();
-        $entity = entity_load_single($entity_type, $id);
-        list(,, $bundle) = entity_extract_ids($entity_type, $entity);
-
+      else {
         foreach ($public_field['resource'] as $resource_bundle => $resource) {
-          if ($resource_bundle == $bundle) {
+          $resource_handler = restful_get_restful_handler($resource['name'], $resource['major_version'], $resource['minor_version']);
+          if ($this->handler instanceof \RestfulEntityBase) {
+            // Only entity resources can have multiple resources assigned to a
+            // field. This is to avoid the creation of a resource with multiple
+            // bundles for every entityreference field.
+            continue;
+          }
+          $entity_type = $resource_handler->getEntityType();
+          // @todo: To avoid an extra entity load we should be able to pass
+          // this info in when generating the output array.
+          $entity = entity_load_single($entity_type, $row['id']);
+          list(,, $bundle) = entity_extract_ids($entity_type, $entity);
+          if ($resource_handler->getBundle() == $bundle) {
             $resource_name = $resource['name'];
             continue 2;
           }
