@@ -9,8 +9,8 @@ class RestfulReferenceTestCase extends RestfulCurlBaseTestCase {
 
   public static function getInfo() {
     return array(
-      'name' => 'Referenced properties',
-      'description' => 'Test defining a public field as a resource for base properties (e.g. the UID on the node entity).s',
+      'name' => 'Referenced resources',
+      'description' => 'Test defining a public field as a resource for base properties (e.g. the UID on the node entity) and fields.',
       'group' => 'Restful',
     );
   }
@@ -20,9 +20,9 @@ class RestfulReferenceTestCase extends RestfulCurlBaseTestCase {
   }
 
   /**
-   * Test reference.
+   * Test property reference.
    */
-  function testReference() {
+  function testPropertyReference() {
     $user1 = $this->drupalCreateUser();
 
     $settings = array(
@@ -33,16 +33,84 @@ class RestfulReferenceTestCase extends RestfulCurlBaseTestCase {
     $node2 = $this->drupalCreateNode($settings);
 
     $handler = restful_get_restful_handler('test_articles', 1, 2);
-    variable_set('restful_property_reference_simple', TRUE);
+    variable_set('restful_test_reference_simple', TRUE);
 
     $result = $handler->get($node1->nid);
     $this->assertEqual($result[0]['user']->uid, $user1->uid, 'Property is not defined as resource, thus the referenced entity appears as the entity.');
 
-    variable_set('restful_property_reference_advanced', TRUE);
+    variable_set('restful_test_reference_resource', TRUE);
     // Clear public fields cache.
     $handler->setPublicFields(array());
 
     $result = $handler->get($node2->nid);
-    $this->assertEqual($result[0]['user']['id'], $user1->uid, 'Property is not defined as resource, thus the referenced entity appears as the rendered resource.');
+    $this->assertEqual($result[0]['user']['id'], $user1->uid, 'Property is defined as resource, thus the referenced entity appears as the rendered resource.');
+  }
+
+  /**
+   * Test field reference.
+   */
+  function testEntityReference() {
+    restful_test_add_fields();
+
+    foreach (array('entity_reference_single', 'entity_reference_multiple') as $field_name) {
+      $field = field_info_field($field_name);
+      $field['settings']['target_type'] = 'node';
+      field_update_field($field);
+    }
+
+    $handler = restful_get_restful_handler('main', 1, 1);
+    $node_handler = restful_get_restful_handler('test_articles', 1, 1);
+
+    $public_fields = $handler->getPublicFields();
+    $public_fields['entity_reference_single_resource']['resource']['article'] = $public_fields['entity_reference_single_resource']['resource']['main'];
+    $public_fields['entity_reference_single_resource']['resource']['article']['name'] = 'test_articles';
+
+    $public_fields['entity_reference_multiple_resource']['resource']['article'] = $public_fields['entity_reference_single_resource']['resource']['article'];
+
+    unset($public_fields['entity_reference_single_resource']['main']);
+    unset($public_fields['entity_reference_multiple_resource']['main']);
+
+    $handler->setPublicFields($public_fields);
+
+    $user1 = $this->drupalCreateUser();
+    $settings = array(
+      'type' => 'article',
+      'uid' => $user1->uid,
+    );
+    $node1 = $this->drupalCreateNode($settings);
+    $node2 = $this->drupalCreateNode($settings);
+
+    $user1 = $this->drupalCreateUser();
+    $entity1 = entity_create('entity_test', array('name' => 'main', 'uid' => $user1->uid));
+    $entity1->save();
+
+    $wrapper = entity_metadata_wrapper('entity_test', $entity1);
+    $wrapper->entity_reference_single->set($node1);
+    $wrapper->entity_reference_multiple->set(array($node1, $node2));
+    $wrapper->save();
+
+    $result = $handler->get($entity1->pid);
+    $response1 = $node_handler->get($node1->nid);
+    $response2 = $node_handler->get($node2->nid);
+    $expected_result = $response1[0];
+    $this->assertEqual($result[0]['entity_reference_single_resource'], $expected_result, 'Single reference with resource of another entity has correct response.');
+
+    $expected_result = array(
+      $response1[0],
+      $response2[0],
+    );
+
+    $this->assertEqual($result[0]['entity_reference_multiple_resource'], $expected_result, 'Multiple reference with resource of another entity has correct response.');
+
+    // Test the "full_view" property on a referenced entity.
+    // We change the definition via the handler instead of creating another
+    // plugin.
+    $public_fields['entity_reference_single_resource']['resource']['article']['full_view'] = FALSE;
+    $handler->setPublicFields($public_fields);
+
+    // Clear cache.
+    _restful_invalidate_entity_cache('*');
+    $result = $handler->get($entity1->pid);
+    $this->assertEqual($result[0]['entity_reference_single_resource'], $node1->nid, '"full_view" disabled is showing only the entity ID.');
   }
 }

@@ -357,20 +357,19 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
   }
 
   /**
-   * Get the "target_type" property from an entity reference field.
+   * Get the "target_type" property from an field or property reference.
    *
-   * @param $property
-   *   The field name.
-   * @param \EntityMetadataWrapper $property_wrapper
+   * @param \EntityMetadataWrapper $wrapper
    *   The wrapped property.
+   * @param $property
+   *   The public field name.
    *
    * @return string
    *   The target type of the referenced entity.
    *
-   * @throws Exception
-   *   Errors is the passed field name is invalid.
+   * @throws \RestfulException
    */
-  protected function getTargetTypeFromEntityReference($property, \EntityMetadataWrapper $property_wrapper) {
+  protected function getTargetTypeFromEntityReference(\EntityMetadataWrapper $wrapper, $property) {
     $params = array('@property' => $property);
 
     if ($field = field_info_field($property)) {
@@ -381,17 +380,17 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
         return 'taxonomy_term';
       }
 
-      throw new Exception(format_string('Field @property is not an entity reference or taxonomy reference field.', $params));
+      throw new \RestfulException(format_string('Field @property is not an entity reference or taxonomy reference field.', $params));
     }
     else {
       // This is a property referencing another entity (e.g. the "uid" on the
       // node object).
-      $info = $property_wrapper->info();
+      $info = $wrapper->info();
       if (entity_get_info($info['type'])) {
         return $info['type'];
       }
 
-      throw new Exception(format_string('Property @property is not defined as reference in the EntityMetadataWrapper definition.', $params));
+      throw new \RestfulException(format_string('Property @property is not defined as reference in the EntityMetadataWrapper definition.', $params));
     }
   }
 
@@ -415,7 +414,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       return;
     }
 
-    $target_type = $this->getTargetTypeFromEntityReference($property, $wrapper->{$property});
+    $target_type = $this->getTargetTypeFromEntityReference($wrapper, $property);
     list($id,, $bundle) = entity_extract_ids($target_type, $entity);
 
     if (empty($resource[$bundle])) {
@@ -1130,6 +1129,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
         'resource' => array(),
         'sub_property' => FALSE,
         'wrapper_method' => 'value',
+        'wrapper_method_on_entity' => FALSE,
       );
 
       if ($field = field_info_field($info['property'])) {
@@ -1146,12 +1146,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
           $info += $this->getFieldInfoAndFormSchema($field);
         }
       }
-      elseif ($info['resource']) {
-        // This is a property with a reference (e.g. the UID on a node entity).
-        $info += array('wrapper_method_on_entity' => TRUE);
-      }
 
-      $info += array('wrapper_method_on_entity' => FALSE);
 
       foreach ($info['resource'] as &$resource) {
         // Expand array to be verbose.
@@ -1182,32 +1177,105 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
   /**
    * Get the field info, data and form element
    *
-   * @param string $field_info
+   * @param string $field
    *   The field info.
    *
    *
    * @return array
    *   Array with the 'info', 'data' and 'form_element' keys.
    */
-  protected function getFieldInfoAndFormSchema($field_info) {
+  protected function getFieldInfoAndFormSchema($field) {
     $discovery_info = array();
-    $instance_info = field_info_instance($this->getEntityType(), $field_info['field_name'], $this->getBundle());
+    $instance_info = field_info_instance($this->getEntityType(), $field['field_name'], $this->getBundle());
 
     $discovery_info['info']['label'] = $instance_info['label'];
     $discovery_info['info']['description'] = $instance_info['description'];
 
-    $discovery_info['data']['type'] = $field_info['type'];
+    $discovery_info['data']['type'] = $field['type'];
     $discovery_info['data']['required'] = $instance_info['required'];
 
-    $discovery_info['form_element']['default_value'] = $instance_info['default_value'];
+    $discovery_info['form_element']['default_value'] = isset($instance_info['default_value']) ? $instance_info['default_value'] : NULL;
 
-    switch($field_info['type']) {
-      case 'list_text':
-        $discovery_info['form_element']['allowed_values'] = $field_info['settings']['allowed_values'];
-        break;
-    }
+    $discovery_info['form_element']['allowed_values'] = $this->getFormSchemaAllowedValues($field);
 
     return array('discovery' => $discovery_info);
+  }
+
+  /**
+   * Get allowed values for the form schema.
+   *
+   * Using Field API's "Options" module to get the allowed values.
+   *
+   * @param array $field
+   *   The field info array.
+   *
+   * @return mix | NULL
+   *   The allowed values or NULL if none found.
+   */
+  protected function getFormSchemaAllowedValues($field) {
+    if (!module_exists('options')) {
+      return;
+    }
+
+    $entity_type = $this->getEntityType();
+    $bundle = $this->getBundle();
+    $instance = field_info_instance($entity_type, $field['field_name'], $bundle);
+
+    if (!$this->formSchemaHasAllowedValues($field, $instance)) {
+      // Field doesn't have allowed values.
+      return;
+    }
+
+    // Use Field API's widget to get the allowed values.
+    $type = str_replace('options_', '', $instance['widget']['type']);
+    $multiple = $field['cardinality'] > 1 || $field['cardinality'] == FIELD_CARDINALITY_UNLIMITED;
+    // Always pass TRUE for "required" and "has_value", as we don't want to get
+    // the "none" option.
+    $required = TRUE;
+    $has_value = TRUE;
+    $properties = _options_properties($type, $multiple, $required, $has_value);
+
+    // Mock an entity.
+    $values = array();
+    $entity_info = entity_get_info($entity_type);
+
+    if (!empty($entity_info['entity keys']['bundle'])) {
+      // Set the bundle of the entity.
+      $values[$entity_info['entity keys']['bundle']] = $bundle;
+    }
+
+    $entity = entity_create($entity_type, $values);
+
+    return _options_get_options($field, $instance, $properties, $this->getEntityType(), $entity);
+  }
+
+  /**
+   * Determines if a field has allowed values.
+   *
+   * If Field is reference, and widget is autocomplete, so for performance
+   * reasons we do not try to grab all the referenced entities.
+   *
+   * @param array $field
+   *   The field info array.
+   * @param array $instance
+   *   The instance info array.
+   *
+   * @return bool
+   *   TRUE if a field should be populated with the allowed values.
+   */
+  protected function formSchemaHasAllowedValues($field, $instance) {
+    $field_types = array(
+      'entityreference',
+      'taxonomy_term_reference',
+    );
+
+    $widget_types = array(
+      'taxonomy_autocomplete',
+      'entityreference_autocomplete',
+      'entityreference_autocomplete_tags',
+    );
+
+    return !in_array($field['type'], $field_types) || !in_array($instance['widget']['type'], $widget_types);
   }
 
   /**

@@ -58,12 +58,12 @@ class RestfulTestArticlesResource__1_2 extends RestfulEntityBaseNode {
       );
     }
 
-    if (variable_get('restful_property_reference_simple')) {
+    if (variable_get('restful_test_reference_simple')) {
       $public_fields['user'] = array(
         'property' => 'author',
       );
 
-      if (variable_get('restful_property_reference_advanced')) {
+      if (variable_get('restful_test_reference_resource')) {
         $public_fields['user']['resource'] = array('user' => 'users');
       }
     }
