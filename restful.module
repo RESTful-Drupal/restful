@@ -866,45 +866,7 @@ function restful_deliver_menu_not_found($page_callback_result) {
  * Implements hook_cron().
  */
 function restful_cron() {
-  // Clear the expired restful_rate_limit entries.
-  $query = new \EntityFieldQuery();
-  $results = $query
-    ->entityCondition('entity_type', 'rate_limit')
-    ->propertyCondition('expiration', REQUEST_TIME, '>')
-    ->execute();
-  if (!empty($results['rate_limit'])) {
-    $rlids = array_keys($results['rate_limit']);
-    entity_delete_multiple('rate_limit', $rlids);
-  }
-}
-
-/**
- * Delete cached entities from all the cache bins associated to restful
- * resources.
- *
- * @param string $cid
- *   The wildcard cache id to invalidate.
- */
-function _restful_invalidate_entity_cache($cid) {
-  $plugins = restful_get_restful_plugins();
-  foreach ($plugins as $plugin) {
-    $handler = restful_get_restful_handler($plugin['resource'], $plugin['major_version'], $plugin['minor_version']);
-    $reflector = new \ReflectionClass($handler);
-    if ($reflector->hasMethod('cacheInvalidate')) {
-      $version = $handler->getVersion();
-      // Get the uid for the invalidation.
-      try {
-        $uid = $handler->getAccount(FALSE)->uid;
-      }
-      catch (\RestfulUnauthorizedException $e) {
-        // If no user could be found using the handler default to the logged in
-        // user.
-        $uid = $GLOBALS['user']->uid;
-      }
-      $version_cid = 'v' . $version['major'] . '.' . $version['minor'] . '::uu' . $uid;
-      $handler->cacheInvalidate($version_cid . '::' . $cid);
-    }
-  }
+  \RestfulRateLimitManager::deleteExpired();
 }
 
 /**

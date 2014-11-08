@@ -72,4 +72,33 @@ class RestfulManager {
     return (bool) preg_match($regexps[$pattern], $content_type);
   }
 
+  /**
+   * Delete cached entities from all the cache bins associated to restful
+   * resources.
+   *
+   * @param string $cid
+   *   The wildcard cache id to invalidate.
+   */
+  public static function invalidateEntityCache($cid) {
+    $plugins = restful_get_restful_plugins();
+    foreach ($plugins as $plugin) {
+      $handler = restful_get_restful_handler($plugin['resource'], $plugin['major_version'], $plugin['minor_version']);
+      $reflector = new \ReflectionClass($handler);
+      if ($reflector->hasMethod('cacheInvalidate')) {
+        $version = $handler->getVersion();
+        // Get the uid for the invalidation.
+        try {
+          $uid = $handler->getAccount(FALSE)->uid;
+        }
+        catch (\RestfulUnauthorizedException $e) {
+          // If no user could be found using the handler default to the logged in
+          // user.
+          $uid = $GLOBALS['user']->uid;
+        }
+        $version_cid = 'v' . $version['major'] . '.' . $version['minor'] . '::uu' . $uid;
+        $handler->cacheInvalidate($version_cid . '::' . $cid);
+      }
+    }
+  }
+
 }

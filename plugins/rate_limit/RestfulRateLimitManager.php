@@ -148,4 +148,19 @@ class RestfulRateLimitManager extends \RestfulPluginBase {
     }
   }
 
+  /**
+   * Delete all expired rate limit entities.
+   */
+  public static function deleteExpired() {
+    // Clear the expired restful_rate_limit entries.
+    $query = new \EntityFieldQuery();
+    $results = $query
+      ->entityCondition('entity_type', 'rate_limit')
+      ->propertyCondition('expiration', REQUEST_TIME, '>')
+      ->execute();
+    if (!empty($results['rate_limit'])) {
+      $rlids = array_keys($results['rate_limit']);
+      entity_delete_multiple('rate_limit', $rlids);
+    }
+  }
 }
