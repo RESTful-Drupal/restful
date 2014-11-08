@@ -319,4 +319,109 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
     ));
     $this->assertEqual($response['code'], 503, 'Error shown for invalid formatter.');
   }
+
+  /**
+   * Test the Simple JSON formatter.
+   */
+  public function testSimpleJson() {
+    list($node, $taxonomy_field_name) = $this->createNodeWithTags();
+    $handler = restful_get_restful_handler('articles', 1, 5);
+    // Use the simple JSON formatter.
+    $handler->setPluginKey('formatter', 'json');
+
+    $response = $handler->get($node->nid);
+    $formatter = \RestfulManager::outputFormat($handler);
+    $result = $formatter->format($response);
+    debug($result);
+    if ($decoded_json = drupal_json_decode($result)) {
+      $this->pass('Valid JSON output generated.');
+    }
+    else {
+      $this->fail('Invalid JSON output generated.');
+    }
+  }
+
+  /**
+   * Helper function that creates a node with taxonomy terms.
+   *
+   * @return array
+   *   A numeric array with the node and the taxonomy field name.
+   *
+   * @throws Exception
+   * @throws FieldException
+   */
+  protected function createNodeWithTags() {
+    $entity_type = 'node';
+    $bundle = 'article';
+    // Create a node with some tags in it as embeds.
+    $node = $this->drupalCreateNode(array('type' => $bundle));
+
+    // Create a vocabulary.
+    $vocabulary = (object) array(
+      'name' => $this->randomString(),
+      'machine_name' => $this->randomMachineName(),
+    );
+    taxonomy_vocabulary_save($vocabulary);
+
+    $field_name = 'field_tags';
+
+    // Taxonomy term reference - multiple.
+    $field = array(
+      'settings' => array(
+        'allowed_values' => array(
+          array(
+            'vocabulary' => $vocabulary->machine_name,
+            'parent' => 0,
+          )
+        ),
+      ),
+      'entity_types' => array(),
+      'field_name' => $field_name,
+      'type' => 'taxonomy_term_reference',
+      'cardinality' => '-1',
+      'active' => '1',
+      'bundles' => array(
+        'node' => array('article'),
+      ),
+    );
+    field_create_field($field);
+
+    $instance = array(
+      'entity_type' => $entity_type,
+      'field_name' => $field_name,
+      'bundle' => $bundle,
+      'label' => t('Tags'),
+    );
+    field_create_instance($instance);
+
+    // Create a random number of tags for the created node.
+    for ($index = 0; $index < mt_rand(1, 10); $index++) {
+      $term = (object) array(
+        'vid' => 1,
+        'name' => $this->randomString(),
+      );
+      taxonomy_term_save($term);
+      $terms[] = $term;
+      $node->{$field_name}[LANGUAGE_NONE][$index]['tid'] = $term->tid;
+    }
+
+    node_save($node);
+
+    return array($node, $field_name);
+
+  }
+
+  /**
+   * Generate a random machine name.
+   */
+  public static function randomMachineName($length = 8) {
+    $values = array_merge(range(97, 122), range(48, 57));
+    $max = count($values) - 1;
+    $str = chr(mt_rand(97, 122));
+    for ($i = 1; $i < $length; $i++) {
+      $str .= chr($values[mt_rand(0, $max)]);
+    }
+    return $str;
+  }
+
 }
