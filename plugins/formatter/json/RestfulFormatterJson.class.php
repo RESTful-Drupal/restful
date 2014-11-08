@@ -76,7 +76,7 @@ class RestfulFormatterJson extends \RestfulFormatterBase implements \RestfulForm
     // previous pages.
     $items_per_page = $this->handler->getRange();
     $previous_items = ($page - 1) * $items_per_page;
-    if ($data['count'] > count($data['data']) + $previous_items) {
+    if (isset($data['count']) && $data['count'] > count($data['data']) + $previous_items) {
       $request['page'] = $page + 1;
       $data['next'] = array(
         'title' => 'Next',

@@ -324,7 +324,7 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
    * Test the Simple JSON formatter.
    */
   public function testSimpleJson() {
-    list($node, $taxonomy_field_name) = $this->createNodeWithTags();
+    $node = $this->createNodeWithTags();
     $handler = restful_get_restful_handler('articles', 1, 5);
     // Use the simple JSON formatter.
     $handler->setPluginKey('formatter', 'json');
@@ -332,96 +332,66 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
     $response = $handler->get($node->nid);
     $formatter = \RestfulManager::outputFormat($handler);
     $result = $formatter->format($response);
-    debug($result);
     if ($decoded_json = drupal_json_decode($result)) {
       $this->pass('Valid JSON output generated.');
     }
     else {
       $this->fail('Invalid JSON output generated.');
     }
+
+    $this->assertNotNull($decoded_json['data'], 'The "data" wrapper was created successfully.');
+
+    // Assert the embedded tags.
+    foreach ($decoded_json['data'][0]['tags'] as $index => $tag_info) {
+      $this->assertNotNull($tag_info['self'], 'The "self" property was populated for the tags.');
+      $this->assertNotNull($tag_info['id'], 'The "id" property was populated.');
+      $this->assertEqual($tag_info['label'], $response[0]['tags'][$index]['label'], 'The "label" property was populated correctly.');
+    }
+
+    // Assert the HATEOAS.
+    // Create another node for pagination.
+    $this->createNodeWithTags();
+    $handler->setRange(1);
+    $response = $handler->get();
+    $result = $formatter->format($response);
+    $decoded_json = drupal_json_decode($result);
+
+    $this->assertNotNull($decoded_json['self'], '"Self" property added.');
+    $this->assertEqual($decoded_json['count'], 2, 'Count was populated correctly.');
+    $this->assertEqual(count($decoded_json['data']), 1, 'The correct number of items was listed.');
+    $this->assertNotNull($decoded_json['next'], '"Next" property added.');
   }
 
   /**
    * Helper function that creates a node with taxonomy terms.
    *
-   * @return array
-   *   A numeric array with the node and the taxonomy field name.
+   * @return object
+   *   The created node.
    *
    * @throws Exception
    * @throws FieldException
    */
   protected function createNodeWithTags() {
-    $entity_type = 'node';
     $bundle = 'article';
     // Create a node with some tags in it as embeds.
     $node = $this->drupalCreateNode(array('type' => $bundle));
 
-    // Create a vocabulary.
-    $vocabulary = (object) array(
-      'name' => $this->randomString(),
-      'machine_name' => $this->randomMachineName(),
-    );
-    taxonomy_vocabulary_save($vocabulary);
-
-    $field_name = 'field_tags';
-
-    // Taxonomy term reference - multiple.
-    $field = array(
-      'settings' => array(
-        'allowed_values' => array(
-          array(
-            'vocabulary' => $vocabulary->machine_name,
-            'parent' => 0,
-          )
-        ),
-      ),
-      'entity_types' => array(),
-      'field_name' => $field_name,
-      'type' => 'taxonomy_term_reference',
-      'cardinality' => '-1',
-      'active' => '1',
-      'bundles' => array(
-        'node' => array('article'),
-      ),
-    );
-    field_create_field($field);
-
-    $instance = array(
-      'entity_type' => $entity_type,
-      'field_name' => $field_name,
-      'bundle' => $bundle,
-      'label' => t('Tags'),
-    );
-    field_create_instance($instance);
+    $vocabulary = taxonomy_vocabulary_machine_name_load('tags');
 
     // Create a random number of tags for the created node.
     for ($index = 0; $index < mt_rand(1, 10); $index++) {
       $term = (object) array(
-        'vid' => 1,
+        'vid' => $vocabulary->vid,
         'name' => $this->randomString(),
       );
       taxonomy_term_save($term);
       $terms[] = $term;
-      $node->{$field_name}[LANGUAGE_NONE][$index]['tid'] = $term->tid;
+      $node->field_tags[LANGUAGE_NONE][$index]['tid'] = $term->tid;
     }
-
     node_save($node);
 
-    return array($node, $field_name);
+    return $node;
 
-  }
-
-  /**
-   * Generate a random machine name.
-   */
-  public static function randomMachineName($length = 8) {
-    $values = array_merge(range(97, 122), range(48, 57));
-    $max = count($values) - 1;
-    $str = chr(mt_rand(97, 122));
-    for ($i = 1; $i < $length; $i++) {
-      $str .= chr($values[mt_rand(0, $max)]);
-    }
-    return $str;
   }
 
 }
