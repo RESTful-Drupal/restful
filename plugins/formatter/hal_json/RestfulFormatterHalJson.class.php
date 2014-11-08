@@ -48,6 +48,17 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
       $this->addHateoas($output);
     }
 
+    // Cosmetic sorting to send the hateoas properties to the end of the output.
+    uksort($output, function ($a, $b) {
+      if (
+        ($a[0] == '_' && $b[0] == '_') ||
+        ($a[0] != '_' && $b[0] != '_')
+      ) {
+        return strcmp($a, $b);
+      }
+      return $a[0] == '_' ? 1 : -1;
+    });
+
     return $output;
   }
 
