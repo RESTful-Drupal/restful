@@ -5,7 +5,8 @@
  * Turn Drupal to a RESTful server, following best practices.
  */
 
-include __DIR__ . '/restful.entity.inc';
+include_once __DIR__ . '/restful.entity.inc';
+
 /**
  * Implements hook_ctools_plugin_directory().
  */
