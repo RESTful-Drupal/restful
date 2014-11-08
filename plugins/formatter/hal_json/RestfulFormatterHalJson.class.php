@@ -25,7 +25,7 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
     }
     // Here we get the data after calling the backend storage for the resources.
 
-    $curies_resource = variable_get('restful_hal_curies_name', 'hal') . ':' . $this->handler->getResourceName();
+    $curies_resource = $this->withCurie($this->handler->getResourceName());
     $output = array();
 
     foreach ($data as &$row) {
@@ -61,7 +61,6 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
       return;
     }
     $request = $this->handler->getRequest();
-    $curies_resource = variable_get('restful_hal_curies_name', 'hal') . ':' . $this->handler->getResourceName();
 
     $data['_links'] = array();
 
@@ -81,6 +80,8 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
       );
     }
 
+    $curies_resource = $this->withCurie($this->handler->getResourceName());
+
     // We know that there are more pages if the total count is bigger than the
     // number of items of the current request plus the number of items in
     // previous pages.
@@ -94,11 +95,13 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
       );
     }
 
-    $href = variable_get('restful_hal_curies_href');
+    if (!$curie = $this->getCurie()) {
+      return;
+    }
 
     $data['_links']['curies'] = array(
-      'name' => variable_get('restful_hal_curies_name', 'hal'),
-      'href' => $href ? $href : url('docs/rels', array('absolute' => TRUE)) . '/{rel}',
+      'name' => $curie['name'],
+      'href' => $curie['href'] ? $curie['href'] : url('docs/rels', array('absolute' => TRUE)) . '/{rel}',
       'templated' => TRUE,
     );
   }
@@ -116,6 +119,11 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
    */
   public function prepareRow(array $row, array &$output) {
     $this->addHateoasRow($row);
+
+    if (!$curie = $this->getCurie()) {
+      // Skip if there is no curie defined.
+      return $row;
+    }
 
     foreach ($this->handler->getPublicFields() as $name => $public_field) {
       if (empty($public_field['resource'])) {
@@ -148,7 +156,7 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
         }
       }
 
-      $curies_resource = variable_get('restful_hal_curies_name', 'hal') . ':' . $resource_name;
+      $curies_resource = $this->withCurie($resource_name);
 
       $output += array('_embedded' => array());
 
@@ -193,6 +201,31 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
     return $this->contentType;
   }
 
+  /**
+   * Prefix a property name with the curie, if present.
+   *
+   * @param string $property_name
+   *   The input string.
+   *
+   * @return string
+   *   The property name prefixed with the curie.
+   */
+  protected function withCurie($property_name) {
+    if ($curie = $this->getCurie()) {
+      return $property_name ? $curie['name'] . ':' . $property_name : $curie['name'];
+    }
+    return $property_name;
+  }
+
+  /**
+   * Checks if the current plugin has a defined curie.
+   *
+   * @return array
+   *   Associative array with the curie information.
+   */
+  protected function getCurie() {
+    $this->getPluginKey('curie');
+  }
 
 }
 
