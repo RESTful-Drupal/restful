@@ -99,7 +99,7 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
     // previous pages.
     $items_per_page = $this->handler->getRange();
     $previous_items = ($page - 1) * $items_per_page;
-    if ($data['count'] > count($data[$curies_resource]) + $previous_items) {
+    if (isset($data['count']) && $data['count'] > count($data[$curies_resource]) + $previous_items) {
       $request['page'] = $page + 1;
       $data['_links']['next'] = array(
         'title' => 'Next',
