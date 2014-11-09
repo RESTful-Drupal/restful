@@ -194,7 +194,7 @@ abstract class RestfulDataProviderCToolsPlugins extends \RestfulBase implements 
    * {@inheritdoc}
    */
   public function getTotalCount() {
-    return count($this->getPluginsSortedAndFiltered());
+    return count($this->getPluginsSortedAndFiltered()) - $this->getSupressedRows();
   }
 
   public function index() {
@@ -208,6 +208,7 @@ abstract class RestfulDataProviderCToolsPlugins extends \RestfulBase implements 
       catch (\RestfulForbiddenException $e) {
         // Do nothing. If an item in the list is forbidden, then just don't add
         // it to the output.
+        $this->supressedRows++;
       }
     }
 

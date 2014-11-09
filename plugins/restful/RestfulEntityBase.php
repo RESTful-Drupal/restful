@@ -135,6 +135,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       catch (\RestfulForbiddenException $e) {
         // Do nothing. If an item in the list is forbidden, then just don't add
         // it to the output.
+        $this->supressedRows++;
       }
     }
 
@@ -155,6 +156,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       catch (\RestfulForbiddenException $e) {
         // Do nothing. If an item in the list is forbidden, then just don't add
         // it to the output.
+        $this->supressedRows++;
       }
     }
     return $output;
