@@ -109,7 +109,7 @@ class RestfulReferenceTestCase extends RestfulCurlBaseTestCase {
     $handler->setPublicFields($public_fields);
 
     // Clear cache.
-    _restful_invalidate_entity_cache('*');
+    \RestfulManager::invalidateEntityCache('*');
     $result = $handler->get($entity1->pid);
     $this->assertEqual($result[0]['entity_reference_single_resource'], $node1->nid, '"full_view" disabled is showing only the entity ID.');
   }
