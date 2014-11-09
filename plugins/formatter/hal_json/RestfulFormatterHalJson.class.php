@@ -35,10 +35,11 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
     $output[$curies_resource] = $data;
 
     if (!empty($this->handler)) {
-      if (method_exists($this->handler, 'isListRequest') && !$this->handler->isListRequest()) {
-        return $output;
-      }
-      if (method_exists($this->handler, 'getTotalCount')) {
+      if (
+        method_exists($this->handler, 'getTotalCount') &&
+        method_exists($this->handler, 'isListRequest') &&
+        $this->handler->isListRequest()
+      ) {
         // Get the total number of items for the current request without pagination.
         $output['count'] = $this->handler->getTotalCount();
       }
@@ -46,6 +47,17 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
       // Add HATEOAS to the output.
       $this->addHateoas($output);
     }
+
+    // Cosmetic sorting to send the hateoas properties to the end of the output.
+    uksort($output, function ($a, $b) {
+      if (
+        ($a[0] == '_' && $b[0] == '_') ||
+        ($a[0] != '_' && $b[0] != '_')
+      ) {
+        return strcmp($a, $b);
+      }
+      return $a[0] == '_' ? 1 : -1;
+    });
 
     return $output;
   }
@@ -67,7 +79,7 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
     // Get self link.
     $data['_links']['self'] = array(
       'title' => 'Self',
-      'href' => $this->handler->getUrl($request),
+      'href' => $this->handler->versionedUrl($this->handler->getPath()),
     );
 
     $page = !empty($request['page']) ? $request['page'] : 1;
@@ -87,7 +99,7 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
     // previous pages.
     $items_per_page = $this->handler->getRange();
     $previous_items = ($page - 1) * $items_per_page;
-    if ($data['count'] > count($data[$curies_resource]) + $previous_items) {
+    if (isset($data['count']) && $data['count'] > count($data[$curies_resource]) + $previous_items) {
       $request['page'] = $page + 1;
       $data['_links']['next'] = array(
         'title' => 'Next',
@@ -125,49 +137,20 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
       return $row;
     }
 
-    foreach ($this->handler->getPublicFields() as $name => $public_field) {
+    foreach ($this->handler->getPublicFields() as $pubilc_field_name => $public_field) {
       if (empty($public_field['resource'])) {
         // Not a resource.
         continue;
       }
 
-      if (empty($row[$name])) {
+      if (empty($row[$pubilc_field_name])) {
         // No value.
         continue;
       }
 
-      if (count($public_field['resource']) == 1) {
-        $resource = reset($public_field['resource']);
-        $resource_name = $resource['name'];
-      }
-      elseif ($this->handler instanceof \RestfulEntityBase) {
-        // @todo: How to deal with non entity resource, where we can't
-        // entity_load()?
-        $id = $row['id'];
-
-        $entity_type = $this->handler->getEntityType();
-        $entity = entity_load_single($entity_type, $id);
-        list(,, $bundle) = entity_extract_ids($entity_type, $entity);
-
-        foreach ($public_field['resource'] as $resource_bundle => $resource) {
-          if ($resource_bundle == $bundle) {
-            $resource_name = $resource['name'];
-            continue 2;
-          }
-        }
-      }
-
-      $curies_resource = $this->withCurie($resource_name);
-
       $output += array('_embedded' => array());
 
-      foreach ($row[$name] as $resource_row) {
-        $resource_row = $this->prepareRow($resource_row, $output);
-        $output['_embedded'][$curies_resource][] = $resource_row;
-      }
-
-      // Remove the original reference.
-      unset($row[$name]);
+      $this->moveReferencesToEmbeds($output, $row, $public_field, $pubilc_field_name);
     }
 
     return $row;
@@ -226,6 +209,50 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
    */
   protected function getCurie() {
     return $this->getPluginKey('curie');
+  }
+
+  /**
+   * Move the fields referencing other resources to the _embed key.
+   *
+   * @param array $output
+   *   Output array to be modified.
+   * @param array $row
+   *   The row being processed.
+   * @param $public_field
+   * @param $public_field_name
+   *   The name of the public field.
+   */
+  protected function moveReferencesToEmbeds(array &$output, array &$row, $public_field, $public_field_name) {
+    $value_metadata = $this->handler->getValueMetadata($row['id'], $public_field_name);
+    foreach ($row[$public_field_name] as $index => $resource_row) {
+      $metadata = $value_metadata[$index];
+
+      // If there is no resource name in the metadata for this particular value,
+      // assume that we are referring to the first resource in the field
+      // definition.
+      $resource_name = NULL;
+      if (!empty($metadata['resource_name'])) {
+        // Make sure that the resource in the metadata exists in the list of
+        // resources available for this particular public field.
+        foreach ($public_field['resource'] as $resource) {
+          if ($resource['name'] != $metadata['resource_name']) {
+            continue;
+          }
+          $resource_name = $metadata['resource_name'];
+        }
+      }
+      if (empty($resource_name)) {
+        $resource = reset($public_field['resource']);
+        $resource_name = $resource['name'];
+      }
+
+      $curies_resource = $this->withCurie($resource_name);
+      $resource_row = $this->prepareRow($resource_row, $output);
+      $output['_embedded'][$curies_resource][] = $resource_row;
+    }
+
+    // Remove the original reference.
+    unset($row[$public_field_name]);
   }
 
 }
