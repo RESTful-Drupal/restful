@@ -202,7 +202,13 @@ abstract class RestfulDataProviderCToolsPlugins extends \RestfulBase implements 
     $return = array();
 
     foreach (array_keys($this->getPluginsSortedAndFiltered()) as $plugin_name) {
-      $return[] = $this->view($plugin_name);
+      try {
+        $return[] = $this->view($plugin_name);
+      }
+      catch (\RestfulForbiddenException $e) {
+        // Do nothing. If an item in the list is forbidden, then just don't add
+        // it to the output.
+      }
     }
 
     return $return;

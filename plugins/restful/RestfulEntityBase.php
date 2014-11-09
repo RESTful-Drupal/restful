@@ -129,7 +129,13 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     $return = array();
 
     foreach ($ids as $id) {
-      $return[] = $this->viewEntity($id);
+      try {
+        $return[] = $this->viewEntity($id);
+      }
+      catch (\RestfulForbiddenException $e) {
+        // Do nothing. If an item in the list is forbidden, then just don't add
+        // it to the output.
+      }
     }
 
     return $return;
@@ -143,7 +149,13 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     $output = array();
 
     foreach ($entity_ids as $entity_id) {
-      $output[] = $this->viewEntity($entity_id);
+      try {
+        $output[] = $this->viewEntity($entity_id);
+      }
+      catch (\RestfulForbiddenException $e) {
+        // Do nothing. If an item in the list is forbidden, then just don't add
+        // it to the output.
+      }
     }
     return $output;
   }
