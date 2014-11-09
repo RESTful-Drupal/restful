@@ -341,6 +341,33 @@ Will result with an HTTP code 400, and the following JSON:
 }
 ```
 
+## Reference fields and properties
+
+It is considered a best practice to map a reference field (i.e. entity
+reference or taxonomy term reference) or a reference property (e.g. the ``uid``
+property on the node entity) to the resource it belongs to.
+
+
+```php
+public function publicFieldsInfo() {
+  $public_fields = parent::publicFieldsInfo();
+  // ...
+  $public_fields['user'] = array(
+    'property' => 'author',
+    'resource' => array(
+      // The bundle of the entity.
+      'user' => array(
+      // The name of the resource to map to.
+      'name' => 'users',
+      // Determines if the entire resource should appear, or only the ID.
+      'full_view' => TRUE,
+    ),
+  );
+  // ...
+  return $public_fields;
+}
+```
+
 ## Sub-requests
 It is possible to create multiple referencing entities in a single request. A
 typical example would be a node referencing a new taxonomy term. For example if
@@ -359,6 +386,8 @@ public function publicFieldsInfo() {
       'tags' => 'tags',
     ),
   );
+  // ...
+  return $public_fields;
 }
 
 ```
