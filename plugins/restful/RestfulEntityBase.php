@@ -507,7 +507,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
   public function createEntity() {
     $entity_info = entity_get_info($this->entityType);
     $bundle_key = $entity_info['entity keys']['bundle'];
-    $values = array($bundle_key => $this->bundle);
+    $values = $bundle_key ? array($bundle_key => $this->bundle) : array();
 
     $entity = entity_create($this->entityType, $values);
 
