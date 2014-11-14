@@ -95,6 +95,11 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
   protected function queryForListSort(\EntityFieldQuery $query) {
     $public_fields = $this->getPublicFields();
     $sorts = $this->parseRequestForListSort();
+
+    if (empty($sorts)) {
+      $sorts = $this->processDefaultSorts();
+    }
+
     if (empty($sorts)) {
       // Some endpoints like 'token_auth' don't have an id public field. In that
       // case, skip the default sorting.

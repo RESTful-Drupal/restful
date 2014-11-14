@@ -263,7 +263,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
 
   /**
    * Getter for rateLimitManager.
-
+   *
    * @return \RestfulRateLimitManager
    */
   public function getRateLimitManager() {
