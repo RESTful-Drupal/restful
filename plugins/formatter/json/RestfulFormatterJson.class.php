@@ -24,14 +24,15 @@ class RestfulFormatterJson extends \RestfulFormatterBase implements \RestfulForm
       $this->contentType = 'application/problem+json; charset=utf-8';
       return $data;
     }
-    // Here we get the data after calling the backend storage for the resources.
+
     $output = array('data' => $data);
 
     if (!empty($this->handler)) {
-      if (method_exists($this->handler, 'isListRequest') && !$this->handler->isListRequest()) {
-        return $output;
-      }
-      if (method_exists($this->handler, 'getTotalCount')) {
+      if (
+        method_exists($this->handler, 'getTotalCount') &&
+        method_exists($this->handler, 'isListRequest') &&
+        $this->handler->isListRequest()
+      ) {
         // Get the total number of items for the current request without pagination.
         $output['count'] = $this->handler->getTotalCount();
       }
@@ -41,20 +42,6 @@ class RestfulFormatterJson extends \RestfulFormatterBase implements \RestfulForm
     }
 
     return $output;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function render(array $structured_data) {
-    return drupal_json_encode($structured_data);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getContentTypeHeader() {
-    return $this->contentType;
   }
 
   /**
@@ -69,12 +56,20 @@ class RestfulFormatterJson extends \RestfulFormatterBase implements \RestfulForm
     }
     $request = $this->handler->getRequest();
 
-    $data['_links'] = array();
+    // Get self link.
+    $data['self'] = array(
+      'title' => 'Self',
+      'href' => $this->handler->versionedUrl($this->handler->getPath()),
+    );
+
     $page = !empty($request['page']) ? $request['page'] : 1;
 
     if ($page > 1) {
       $request['page'] = $page - 1;
-      $data['_links']['previous'] = $this->handler->getUrl($request);
+      $data['previous'] = array(
+        'title' => 'Previous',
+        'href' => $this->handler->getUrl($request),
+      );
     }
 
     // We know that there are more pages if the total count is bigger than the
@@ -82,10 +77,28 @@ class RestfulFormatterJson extends \RestfulFormatterBase implements \RestfulForm
     // previous pages.
     $items_per_page = $this->handler->getRange();
     $previous_items = ($page - 1) * $items_per_page;
-    if ($data['count'] > count($data['data']) + $previous_items) {
+    if (isset($data['count']) && $data['count'] > count($data['data']) + $previous_items) {
       $request['page'] = $page + 1;
-      $data['_links']['next'] = $this->handler->getUrl($request);
+      $data['next'] = array(
+        'title' => 'Next',
+        'href' => $this->handler->getUrl($request),
+      );
     }
+
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function render(array $structured_data) {
+    return drupal_json_encode($structured_data);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getContentTypeHeader() {
+    return $this->contentType;
   }
 }
 
