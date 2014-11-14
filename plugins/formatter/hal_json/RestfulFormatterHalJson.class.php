@@ -219,7 +219,7 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
    * @param array $row
    *   The row being processed.
    * @param array $public_field
-   *   The public field ocnfiguration array.
+   *   The public field configuration array.
    * @param $public_field_name
    *   The name of the public field.
    */
