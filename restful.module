@@ -181,6 +181,17 @@ function restful_menu() {
     $items[$base_path . '/login']['access callback'] = 'user_is_anonymous';
   }
 
+  // Add administration page.
+  $items['admin/config/services/restful'] = array(
+    'title' => 'RESTful',
+    'description' => 'Administer the RESTful module.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('restful_admin_settings'),
+    // @todo: Have our own administer permission?
+    'access arguments' => array('administer site configuration'),
+    'file' => 'restful.admin.inc',
+  );
+
   return $items;
 }
 
