@@ -217,7 +217,7 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
     $results = $xml->xpath('/api/data/item0/label');
     $result = reset($results);
 
-    $this->assertEqual($node->title, $result->__toString(), 'XML parsed correctlty.');
+    $this->assertEqual($node->title, $result->__toString(), 'XML parsed correctly.');
 
     // Test Image variations based on image styles.
     // Add the multiple images field to the article bundle.
