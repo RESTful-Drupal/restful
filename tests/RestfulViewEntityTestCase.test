@@ -214,7 +214,7 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
     // </api>
 
     $xml = new SimpleXMLElement($response['body']);
-    $results = $xml->xpath('/api/data/item0/label');
+    $results = $xml->xpath('/api/articles/item0/label');
     $result = reset($results);
 
     $this->assertEqual($node->title, $result->__toString(), 'XML parsed correctly.');

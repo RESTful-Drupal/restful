@@ -66,6 +66,10 @@ class RestfulUpdateEntityCurlTestCase extends RestfulCurlBaseTestCase {
         'self' => url('api/v1.0/test_articles/' . $id, array('absolute' => TRUE)),
         'body' => NULL,
       )),
+      'self' => array(
+        'title' => 'Self',
+        'href' => url('api/v1.0/test_articles/' . $id, array('absolute' => TRUE)),
+      )
     );
 
     $this->assertEqual($result['body'], drupal_json_encode($expected_result));
@@ -99,6 +103,10 @@ class RestfulUpdateEntityCurlTestCase extends RestfulCurlBaseTestCase {
         'self' => url('api/v1.0/test_articles/' . $id, array('absolute' => TRUE)),
         'body' => $text,
       )),
+      'self' => array(
+        'title' => 'Self',
+        'href' => url('api/v1.0/test_articles/' . $id, array('absolute' => TRUE)),
+      )
     );
 
     $result = drupal_json_decode($result['body']);
