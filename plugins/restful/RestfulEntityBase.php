@@ -939,7 +939,8 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     // Check format access for text fields.
     if ($property_wrapper->type() == 'text_formatted' && $property_wrapper->value() && $property_wrapper->format->value()) {
       $format = (object) array('format' => $property_wrapper->format->value());
-      if (!filter_access($format, $account)) {
+      // Only check filter access on write contexts.
+      if (\RestfulBase::isWriteMethod($this->getMethod()) && !filter_access($format, $account)) {
         return FALSE;
       }
     }
