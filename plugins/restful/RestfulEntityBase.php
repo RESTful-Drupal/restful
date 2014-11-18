@@ -643,6 +643,11 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    *   The value to set using the wrapped property.
    */
   protected function propertyValuesPreprocessReference($property_name, $value, $field_info, $public_field_name) {
+    if (!$value) {
+      // If value is empty, return NULL, so no new entity will be created.
+      return;
+    }
+
     if ($field_info['cardinality'] != 1 && !is_array($value)) {
       // If the field is entity reference type and its cardinality larger than
       // 1 set value to an array.
@@ -939,7 +944,8 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     // Check format access for text fields.
     if ($property_wrapper->type() == 'text_formatted' && $property_wrapper->value() && $property_wrapper->format->value()) {
       $format = (object) array('format' => $property_wrapper->format->value());
-      if (!filter_access($format, $account)) {
+      // Only check filter access on write contexts.
+      if (\RestfulBase::isWriteMethod($this->getMethod()) && !filter_access($format, $account)) {
         return FALSE;
       }
     }
