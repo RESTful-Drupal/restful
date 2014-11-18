@@ -643,6 +643,11 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    *   The value to set using the wrapped property.
    */
   protected function propertyValuesPreprocessReference($property_name, $value, $field_info, $public_field_name) {
+    if (!$value) {
+      // If value is empty, return NULL, so no new entity will be created.
+      return;
+    }
+
     if ($field_info['cardinality'] != 1 && !is_array($value)) {
       // If the field is entity reference type and its cardinality larger than
       // 1 set value to an array.
