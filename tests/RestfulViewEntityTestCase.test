@@ -217,7 +217,7 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
     $results = $xml->xpath('/api/data/item0/label');
     $result = reset($results);
 
-    $this->assertEqual($node->title, $result->__toString(), 'XML parsed correctlty.');
+    $this->assertEqual($node->title, $result->__toString(), 'XML parsed correctly.');
 
     // Test Image variations based on image styles.
     // Add the multiple images field to the article bundle.
@@ -319,4 +319,79 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
     ));
     $this->assertEqual($response['code'], 503, 'Error shown for invalid formatter.');
   }
+
+  /**
+   * Test the Simple JSON formatter.
+   */
+  public function testSimpleJson() {
+    $node = $this->createNodeWithTags();
+    $handler = restful_get_restful_handler('articles', 1, 5);
+    // Use the simple JSON formatter.
+    $handler->setPluginKey('formatter', 'json');
+
+    $response = $handler->get($node->nid);
+    $formatter = \RestfulManager::outputFormat($handler);
+    $result = $formatter->format($response);
+    if ($decoded_json = drupal_json_decode($result)) {
+      $this->pass('Valid JSON output generated.');
+    }
+    else {
+      $this->fail('Invalid JSON output generated.');
+    }
+
+    $this->assertNotNull($decoded_json['data'], 'The "data" wrapper was created successfully.');
+
+    // Assert the embedded tags.
+    foreach ($decoded_json['data'][0]['tags'] as $index => $tag_info) {
+      $this->assertNotNull($tag_info['self'], 'The "self" property was populated for the tags.');
+      $this->assertNotNull($tag_info['id'], 'The "id" property was populated.');
+      $this->assertEqual($tag_info['label'], $response[0]['tags'][$index]['label'], 'The "label" property was populated correctly.');
+    }
+
+    // Assert the HATEOAS.
+    // Create another node for pagination.
+    $this->createNodeWithTags();
+    $handler->setRange(1);
+    $response = $handler->get();
+    $result = $formatter->format($response);
+    $decoded_json = drupal_json_decode($result);
+
+    $this->assertNotNull($decoded_json['self'], '"Self" property added.');
+    $this->assertEqual($decoded_json['count'], 2, 'Count was populated correctly.');
+    $this->assertEqual(count($decoded_json['data']), 1, 'The correct number of items was listed.');
+    $this->assertNotNull($decoded_json['next'], '"Next" property added.');
+  }
+
+  /**
+   * Helper function that creates a node with taxonomy terms.
+   *
+   * @return object
+   *   The created node.
+   *
+   * @throws Exception
+   * @throws FieldException
+   */
+  protected function createNodeWithTags() {
+    $bundle = 'article';
+    // Create a node with some tags in it as embeds.
+    $node = $this->drupalCreateNode(array('type' => $bundle));
+
+    $vocabulary = taxonomy_vocabulary_machine_name_load('tags');
+
+    // Create a random number of tags for the created node.
+    for ($index = 0; $index < mt_rand(1, 10); $index++) {
+      $term = (object) array(
+        'vid' => $vocabulary->vid,
+        'name' => $this->randomString(),
+      );
+      taxonomy_term_save($term);
+      $terms[] = $term;
+      $node->field_tags[LANGUAGE_NONE][$index]['tid'] = $term->tid;
+    }
+    node_save($node);
+
+    return $node;
+
+  }
+
 }

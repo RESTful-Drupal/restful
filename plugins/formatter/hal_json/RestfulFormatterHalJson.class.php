@@ -218,13 +218,18 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
    *   Output array to be modified.
    * @param array $row
    *   The row being processed.
-   * @param $public_field
+   * @param array $public_field
+   *   The public field configuration array.
    * @param $public_field_name
    *   The name of the public field.
    */
   protected function moveReferencesToEmbeds(array &$output, array &$row, $public_field, $public_field_name) {
     $value_metadata = $this->handler->getValueMetadata($row['id'], $public_field_name);
     foreach ($row[$public_field_name] as $index => $resource_row) {
+      if (empty($value_metadata[$index])) {
+        // No metadata.
+        continue;
+      }
       $metadata = $value_metadata[$index];
 
       // If there is no resource name in the metadata for this particular value,
