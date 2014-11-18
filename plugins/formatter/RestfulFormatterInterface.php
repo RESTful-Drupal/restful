@@ -6,6 +6,7 @@
  */
 
 interface RestfulFormatterInterface {
+
   /**
    * Massages the raw data to create a structured array to pass to the renderer.
    *

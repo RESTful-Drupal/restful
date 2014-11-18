@@ -225,7 +225,7 @@ class RestfulManager {
         }
       }
     }
-    $formatter_name = variable_get('restful_default_output_formatter', 'hal_json');
+    $formatter_name = variable_get('restful_default_output_formatter', 'json');
     return restful_get_formatter_handler($formatter_name, $restful_handler);
   }
 
