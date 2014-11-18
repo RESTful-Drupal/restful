@@ -68,6 +68,29 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
   protected $range = 50;
 
   /**
+   * Holds additional information about the generated values. This information
+   * is available to the formatters.
+   *
+   * @var array
+   */
+  protected $valueMetadata = array();
+
+  /**
+   * Get value metadata.
+   *
+   * @param mixed $id
+   *   The resource item id.
+   * @param string $public_field_name
+   *   The public field name as in the output.
+   *
+   * @return array
+   *   An associative array containing extra metadata about the requested value.
+   */
+  public function getValueMetadata($id, $public_field_name) {
+    return isset($this->valueMetadata[$id][$public_field_name]) ? $this->valueMetadata[$id][$public_field_name] : NULL;
+  }
+
+  /**
    * Set the pager range.
    *
    * @param int $range
