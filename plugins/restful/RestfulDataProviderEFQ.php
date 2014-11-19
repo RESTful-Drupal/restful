@@ -187,7 +187,7 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
   public function getTotalCount() {
     return intval($this
       ->getQueryCount()
-      ->execute());
+      ->execute()) - $this->getSupressedRows();
   }
 
   /**

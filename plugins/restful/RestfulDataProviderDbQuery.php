@@ -196,7 +196,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
   public function getTotalCount() {
     return intval($this
       ->getQueryCount()
-      ->execute());
+      ->execute()) - $this->getSupressedRows();
   }
 
   /**
@@ -224,7 +224,14 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
     $return = array();
 
     foreach ($results as $result) {
-      $return[] = $this->mapDbRowToPublicFields($result);
+      try {
+        $return[] = $this->mapDbRowToPublicFields($result);
+      }
+      catch (\RestfulForbiddenException $e) {
+        // Do nothing. If an item in the list is forbidden, then just don't add
+        // it to the output.
+        $this->supressedRows++;
+      }
     }
 
     return $return;
@@ -247,7 +254,14 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
     $return = array();
 
     foreach ($results as $result) {
-      $return[] = $this->mapDbRowToPublicFields($result);
+      try {
+        $return[] = $this->mapDbRowToPublicFields($result);
+      }
+      catch (\RestfulForbiddenException $e) {
+        // Do nothing. If an item in the list is forbidden, then just don't add
+        // it to the output.
+        $this->supressedRows++;
+      }
     }
 
     return $return;

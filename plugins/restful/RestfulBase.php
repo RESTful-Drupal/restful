@@ -68,6 +68,22 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
   protected $range = 50;
 
   /**
+   * Supressed rows. Used to correct the count items.
+   *
+   * @var int
+   */
+  protected $supressedRows = 0;
+
+  /**
+   * Get the number of supressed rows in the list resources.
+   *
+   * @return int
+   */
+  public function getSupressedRows() {
+    return $this->supressedRows;
+  }
+
+  /**
    * Set the pager range.
    *
    * @param int $range
