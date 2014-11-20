@@ -23,19 +23,8 @@ function restful_token_auth_restful_parse_request_alter(&$request) {
   $plugin = restful_get_authentication_plugin('token');
   $param_name = $plugin['options']['param_name'];
 
-  $capital_name = 'HTTP_' . strtoupper($param_name);
-
-  $value = !empty($_SERVER[$capital_name]) ? $_SERVER[$capital_name] : NULL;
-
-  if (!$value && function_exists('apache_request_headers')) {
-    // Apache may be strict with variables with underscore, so we get the
-    // headers directly from Apache.
-    $headers = apache_request_headers();
-    $value = !empty($headers[$param_name]) ? $headers[$param_name] : NULL;
-  }
-
   $request['__application'] += array(
-    $param_name => $value,
+    $param_name => \RestfulManager::getHttpHeader($param_name),
   );
 }
 
