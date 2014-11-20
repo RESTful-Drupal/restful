@@ -1027,15 +1027,15 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
 
     if ($this->checkEntityAccess($op, $entity_type, $entity) === FALSE) {
 
-      if (!$this->isListRequest()) {
-        // Entity was explicitly requested so we need to throw an exception.
-        throw new RestfulForbiddenException(format_string('You do not have access to entity ID @id of resource @resource', $params));
+      if ($op == 'view' && $this->isListRequest()) {
+        // Just return FALSE, without an exception, for example when a list of
+        // entities is requested, and we don't want to fail all the list because
+        // of a single item without access.
+        return FALSE;
       }
 
-      // Just return FALSE, without an exception, for example when a list of
-      // entities is requested, and we don't want to fail all the list because
-      // of a single item without access.
-      return FALSE;
+      // Entity was explicitly requested so we need to throw an exception.
+      throw new RestfulForbiddenException(format_string('You do not have access to entity ID @id of resource @resource', $params));
     }
 
     return TRUE;
