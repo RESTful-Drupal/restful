@@ -298,6 +298,10 @@ class RestfulManager {
    *   The key to use.
    * @param string $default_value
    *   The default value to return if no value exists. Defaults to NULL.
+   *
+   * @return string
+   *   The value in the HTTP header if exists, other the value of the given
+   *   "default value".
    */
   public static function getHttpHeader($key, $default_value = NULL) {
     $capital_name = 'HTTP_' . strtoupper($key);
