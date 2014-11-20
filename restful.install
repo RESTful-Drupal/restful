@@ -71,6 +71,8 @@ function restful_schema() {
  * Implements hook_uninstall().
  */
 function restful_uninstall() {
+  variable_del('restful_default_output_formatter');
+
   variable_del('restful_enable_discovery_resource');
 
   variable_del('restful_file_upload');
