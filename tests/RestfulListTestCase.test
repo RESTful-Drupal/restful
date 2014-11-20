@@ -428,24 +428,5 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     catch (\Exception $e) {
       $this->fail('Exception of wrong type was thrown for un-accessible node for specific IDs list.');
     }
-
-    $request = array(
-      'filter' => array(
-        'id' => array(
-          'value' => 1,
-          'operator' => '>='
-        ),
-      ),
-    );
-    try {
-      $handler->get('', $request);
-      $this->fail('Exception was not thrown for un-accessible node for list with filter on the ID.');
-    }
-    catch (\RestfulForbiddenException $e) {
-      $this->pass('Exception was thrown for un-accessible node for with filter on the ID.');
-    }
-    catch (\Exception $e) {
-      $this->fail('Exception of wrong type was thrown for un-accessible node for with filter on the ID.');
-    }
   }
 }

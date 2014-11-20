@@ -267,16 +267,13 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
    *
    * @param int $entity_id
    *   The entity ID.
-   * @param bool $error_on_no_access
-   *   Determines if an exception should be thrown if user has no access to the
-   *   entity. Defaults to TRUE.
    *
    * @return array
    *   Array with the public fields populated.
    *
    * @throws Exception
    */
-  abstract public function viewEntity($entity_id, $error_on_no_access = TRUE);
+  abstract public function viewEntity($entity_id);
 
   /**
    * Get a list of entities based on a list of IDs.

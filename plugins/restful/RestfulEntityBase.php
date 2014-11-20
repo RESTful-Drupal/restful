@@ -130,10 +130,8 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
 
     // If no IDs were requested, we should not throw an exception in case an
     // entity is un-accessible by the user.
-    $error_on_no_access = !$this->isListRequest() || !empty($request['filter']['id']);
-
     foreach ($ids as $id) {
-      if ($row = $this->viewEntity($id, $error_on_no_access)) {
+      if ($row = $this->viewEntity($id)) {
         $return[] = $row;
       }
     }
@@ -269,7 +267,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
   /**
    * {@inheritdoc}
    */
-  public function viewEntity($entity_id, $error_on_no_access = TRUE) {
+  public function viewEntity($entity_id) {
     $request = $this->getRequest();
 
     $cached_data = $this->getRenderedCache(array(
@@ -280,7 +278,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       return $cached_data->data;
     }
 
-    if (!$this->isValidEntity('view', $entity_id, $error_on_no_access)) {
+    if (!$this->isValidEntity('view', $entity_id)) {
       return;
     }
 
@@ -1001,9 +999,6 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    *   The operation to perform on the entity (view, update, delete).
    * @param $entity_id
    *   The entity ID.
-   * @param bool $error_on_no_access
-   *   Determines if an exception should be thrown if user has no access to the
-   *   entity. Defaults to TRUE.
    *
    * @return bool
    *   TRUE if entity is valid, and user can access it.
@@ -1011,7 +1006,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    * @throws RestfulUnprocessableEntityException
    * @throws RestfulForbiddenException
    */
-  protected function isValidEntity($op, $entity_id, $error_on_no_access = TRUE) {
+  protected function isValidEntity($op, $entity_id) {
     $entity_type = $this->entityType;
 
     $params = array(
@@ -1031,8 +1026,9 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     }
 
     if ($this->checkEntityAccess($op, $entity_type, $entity) === FALSE) {
-      if ($error_on_no_access) {
-        // Entity was explicitly denied.
+
+      if (!$this->isListRequest()) {
+        // Entity was explicitly requested so we need to throw an exception.
         throw new RestfulForbiddenException(format_string('You do not have access to entity ID @id of resource @resource', $params));
       }
 
