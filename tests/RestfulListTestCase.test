@@ -387,4 +387,61 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     );
     field_create_instance($instance);
   }
+
+  /**
+   * Test error handeling when no access is granted to an entity in a list.
+   */
+  function testAccessHandeling() {
+    $settings = array(
+      'type' => 'article',
+    );
+
+    $node1 = $this->drupalCreateNode($settings);
+    $node2 = $this->drupalCreateNode($settings);
+    $node3 = $this->drupalCreateNode($settings);
+
+    // Deny access via hook_node_access() to a specific node.
+    restful_test_deny_access_node($node2->nid);
+
+    $handler = restful_get_restful_handler('articles');
+    $result = $handler->get();
+
+    $this->assertEqual($result['count'], 2);
+
+    // Get a list with specific IDs.
+    $ids = array(
+      $node1->nid,
+      $node2->nid,
+      $node3->nid,
+    );
+    try {
+      $handler->get(explode(',', $ids));
+      $this->fail('Exception was not thrown for un-accessible node for specific IDs list.');
+    }
+    catch (\RestfulForbiddenException $e) {
+      $this->pass('Exception was thrown for un-accessible node for specific IDs list.');
+    }
+    catch (\Exception $e) {
+      $this->fail('Exception of wrong type was thrown for un-accessible node for specific IDs list.');
+    }
+
+    $request = array(
+      'filter' => array(
+        'id' => array(
+          'value' => 1,
+          'operator' => '>='
+        ),
+      ),
+    );
+    try {
+      $handler->get('', $request);
+      $this->fail('Exception was not thrown for un-accessible node for list with filter on the ID.');
+    }
+    catch (\RestfulForbiddenException $e) {
+      $this->pass('Exception was thrown for un-accessible node for with filter on the ID.');
+    }
+    catch (\Exception $e) {
+      $this->fail('Exception of wrong type was thrown for un-accessible node for with filter on the ID.');
+    }
+  }
 }
