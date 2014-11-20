@@ -130,7 +130,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
 
     // If no IDs were requested, we should not throw an exception in case an
     // entity is un-accessible by the user.
-    $error_on_no_access = !empty($request['id']) || !empty($request['filter']['id']);
+    $error_on_no_access = !$this->isListRequest() || !empty($request['filter']['id']);
 
     foreach ($ids as $id) {
       if ($row = $this->viewEntity($id, $error_on_no_access)) {
