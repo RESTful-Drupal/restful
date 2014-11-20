@@ -400,13 +400,17 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     $node2 = $this->drupalCreateNode($settings);
     $node3 = $this->drupalCreateNode($settings);
 
+    $user1 = $this->drupalCreateUser();
+
     // Deny access via hook_node_access() to a specific node.
     restful_test_deny_access_node($node2->nid);
 
     $handler = restful_get_restful_handler('articles');
+    $handler->setAccount($user1);
+
     $result = $handler->get();
 
-    $this->assertEqual($result['count'], 2);
+    $this->assertEqual(count($result), 2, 'List returned and ignored un-accessible entity.');
 
     // Get a list with specific IDs.
     $ids = array(
@@ -415,7 +419,7 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
       $node3->nid,
     );
     try {
-      $handler->get(explode(',', $ids));
+      $handler->get(implode(',', $ids));
       $this->fail('Exception was not thrown for un-accessible node for specific IDs list.');
     }
     catch (\RestfulForbiddenException $e) {

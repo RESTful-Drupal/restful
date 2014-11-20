@@ -39,7 +39,7 @@ function restful_test_node_access($node, $op, $account) {
     return;
   }
 
-  if (!$op != 'view') {
+  if ($op != 'view') {
     return;
   }
 
