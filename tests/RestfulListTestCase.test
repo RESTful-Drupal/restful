@@ -287,31 +287,31 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     $result = $handler->get('', array('page' => 1));
     $output = drupal_json_decode($handler->format($result));
     $this->assertEqual(count($result), 3);
-    $this->assertTrue($output['_links']['next'], '"Next" link exists on the first page.');
-    $this->assertTrue(empty($output['_links']['previous']), '"Previous" link does not exist on the first page.');
+    $this->assertTrue($output['next'], '"Next" link exists on the first page.');
+    $this->assertTrue(empty($output['previous']), '"Previous" link does not exist on the first page.');
 
     // Check pagination of middle pages
     $result = $handler->get('', array('page' => 2));
     $output = drupal_json_decode($handler->format($result));
-    $this->assertTrue($output['_links']['next'], '"Next" link exists on the middle page.');
-    $this->assertEqual($output['_links']['next'], $handler->versionedUrl('', array(
+    $this->assertTrue($output['next'], '"Next" link exists on the middle page.');
+    $this->assertEqual($output['next']['href'], $handler->versionedUrl('', array(
       'query' => array('page' => 3),
     )));
-    $this->assertTrue($output['_links']['previous'], '"Previous" link exists on the middle page.');
-    $this->assertEqual($output['_links']['previous'], $handler->versionedUrl('', array(
+    $this->assertTrue($output['previous'], '"Previous" link exists on the middle page.');
+    $this->assertEqual($output['previous']['href'], $handler->versionedUrl('', array(
       'query' => array('page' => 1),
     )));
 
     // Check pagination of last page.
     $result = $handler->get('', array('page' => 3));
     $output = drupal_json_decode($handler->format($result));
-    $this->assertTrue(empty($output['_links']['next']), '"Next" link does not exist on the last page.');
-    $this->assertTrue($output['_links']['previous'], '"Previous" link exists on the last page.');
+    $this->assertTrue(empty($output['next']), '"Next" link does not exist on the last page.');
+    $this->assertTrue($output['previous'], '"Previous" link exists on the last page.');
 
     // Check other query strings are retained in the _links.
     $result = $handler->get('', array('page' => 3, 'sort' => '-id'));
     $output = drupal_json_decode($handler->format($result));
-    $this->assertTrue(strpos($output['_links']['previous'], 'sort=-id'), 'Query strings are retained in the _links.');
+    $this->assertTrue(strpos($output['previous']['href'], 'sort=-id'), 'Query strings are retained in the _links.');
 
     // Check pagination with non-numeric value.
     try {
@@ -386,5 +386,47 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
       'label' => t('Integer multiple'),
     );
     field_create_instance($instance);
+  }
+
+  /**
+   * Test error handeling when no access is granted to an entity in a list.
+   */
+  function testAccessHandeling() {
+    $settings = array(
+      'type' => 'article',
+    );
+
+    $node1 = $this->drupalCreateNode($settings);
+    $node2 = $this->drupalCreateNode($settings);
+    $node3 = $this->drupalCreateNode($settings);
+
+    $user1 = $this->drupalCreateUser();
+
+    // Deny access via hook_node_access() to a specific node.
+    restful_test_deny_access_node($node2->nid);
+
+    $handler = restful_get_restful_handler('articles');
+    $handler->setAccount($user1);
+
+    $result = $handler->get();
+
+    $this->assertEqual(count($result), 2, 'List returned and ignored un-accessible entity.');
+
+    // Get a list with specific IDs.
+    $ids = array(
+      $node1->nid,
+      $node2->nid,
+      $node3->nid,
+    );
+    try {
+      $handler->get(implode(',', $ids));
+      $this->fail('Exception was not thrown for un-accessible node for specific IDs list.');
+    }
+    catch (\RestfulForbiddenException $e) {
+      $this->pass('Exception was thrown for un-accessible node for specific IDs list.');
+    }
+    catch (\Exception $e) {
+      $this->fail('Exception of wrong type was thrown for un-accessible node for specific IDs list.');
+    }
   }
 }

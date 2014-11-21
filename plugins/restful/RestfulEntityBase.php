@@ -128,8 +128,12 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
 
     $return = array();
 
+    // If no IDs were requested, we should not throw an exception in case an
+    // entity is un-accessible by the user.
     foreach ($ids as $id) {
-      $return[] = $this->viewEntity($id);
+      if ($row = $this->viewEntity($id)) {
+        $return[] = $row;
+      }
     }
 
     return $return;
@@ -274,7 +278,9 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       return $cached_data->data;
     }
 
-    $this->isValidEntity('view', $entity_id);
+    if (!$this->isValidEntity('view', $entity_id)) {
+      return;
+    }
 
     $wrapper = entity_metadata_wrapper($this->entityType, $entity_id);
     $values = array();
@@ -314,7 +320,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
             }
 
             if ($resource) {
-              if ($value_from_resource = $this->getValueFromResource($item_wrapper, $property, $resource)) {
+              if ($value_from_resource = $this->getValueFromResource($item_wrapper, $property, $resource, $public_field_name, $wrapper->getIdentifier())) {
                 $value[] = $value_from_resource;
               }
             }
@@ -331,7 +337,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
           }
 
           if ($resource) {
-            $value = $this->getValueFromResource($sub_wrapper, $property, $resource);
+            $value = $this->getValueFromResource($sub_wrapper, $property, $resource, $public_field_name, $wrapper->getIdentifier());
           }
           else {
             // Wrapper method.
@@ -403,11 +409,16 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    *   The property name (i.e. the field name).
    * @param array $resource
    *   Array with resource names, keyed by the bundle name.
+   * @param string $public_field_name
+   *   Field name in the output. This is used to store additional metadata
+   *   useful for the formatter.
+   * @param int $host_id
+   *   Host entity ID. Used to structure the value metadata.
    *
    * @return mixed
    *   The value if found, or NULL if bundle not defined.
    */
-  protected function getValueFromResource(EntityMetadataWrapper $wrapper, $property, $resource) {
+  protected function getValueFromResource(EntityMetadataWrapper $wrapper, $property, $resource, $public_field_name = NULL, $host_id = NULL) {
     $handlers = &drupal_static(__FUNCTION__, array());
 
     if (!$entity = $wrapper->value()) {
@@ -427,6 +438,14 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       return $wrapper->value(array('identifier' => TRUE));
     }
 
+    if ($public_field_name) {
+      $this->valueMetadata[$host_id][$public_field_name][] = array(
+        'id' => $id,
+        'entity_type' => $target_type,
+        'bundle' => $bundle,
+        'resource_name' => $resource[$bundle]['name'],
+      );
+    }
 
     if (empty($handlers[$bundle])) {
       $handlers[$bundle] = restful_get_restful_handler($resource[$bundle]['name'], $resource[$bundle]['major_version'], $resource[$bundle]['minor_version']);
@@ -643,6 +662,11 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    *   The value to set using the wrapped property.
    */
   protected function propertyValuesPreprocessReference($property_name, $value, $field_info, $public_field_name) {
+    if (!$value) {
+      // If value is empty, return NULL, so no new entity will be created.
+      return;
+    }
+
     if ($field_info['cardinality'] != 1 && !is_array($value)) {
       // If the field is entity reference type and its cardinality larger than
       // 1 set value to an array.
@@ -939,7 +963,8 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     // Check format access for text fields.
     if ($property_wrapper->type() == 'text_formatted' && $property_wrapper->value() && $property_wrapper->format->value()) {
       $format = (object) array('format' => $property_wrapper->format->value());
-      if (!filter_access($format, $account)) {
+      // Only check filter access on write contexts.
+      if (\RestfulBase::isWriteMethod($this->getMethod()) && !filter_access($format, $account)) {
         return FALSE;
       }
     }
@@ -1020,7 +1045,15 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     }
 
     if ($this->checkEntityAccess($op, $entity_type, $entity) === FALSE) {
-      // Entity was explicitly denied.
+
+      if ($op == 'view' && !$this->getPath()) {
+        // Just return FALSE, without an exception, for example when a list of
+        // entities is requested, and we don't want to fail all the list because
+        // of a single item without access.
+        return FALSE;
+      }
+
+      // Entity was explicitly requested so we need to throw an exception.
       throw new RestfulForbiddenException(format_string('You do not have access to entity ID @id of resource @resource', $params));
     }
 

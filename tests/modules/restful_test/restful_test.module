@@ -17,6 +17,44 @@ function restful_test_ctools_plugin_directory($module, $plugin) {
 /**
  * Flag a field to not be accessible.
  *
+ * @param $nid
+ *   The node ID to deny access.
+ */
+function restful_test_deny_access_node($nid) {
+  variable_set('restful_test_deny_access_node', $nid);
+}
+
+/**
+ * Clear un-accessible node.
+ */
+function restful_test_clear_access_node() {
+  variable_del('restful_test_deny_access_node');
+}
+
+/**
+ * Implements hook_node_access().
+ */
+function restful_test_node_access($node, $op, $account) {
+  if (!$nid = variable_get('restful_test_deny_access_node')) {
+    return;
+  }
+
+  if ($op != 'view') {
+    return;
+  }
+
+  if ($node->nid != $nid) {
+    return;
+  }
+
+  // Deny access.
+  return NODE_ACCESS_DENY;
+}
+
+
+/**
+ * Flag a field to not be accessible.
+ *
  * @param $field_name
  *   The field name. Defaults to "body".
  */
@@ -27,7 +65,7 @@ function restful_test_deny_access_field($field_name = 'body') {
 /**
  * Clear un-accessible fields.
  */
-function restful_test_clear_access() {
+function restful_test_clear_access_field() {
   variable_del('restful_test_deny_access_field');
 }
 
