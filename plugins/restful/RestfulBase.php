@@ -882,6 +882,17 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
   }
 
   /**
+   * Defines default sort fields if none are provided via the request URL.
+   *
+   * @return array of key/value pairs:
+   *   each key must match a field returned by publicFieldsInfo(), and each
+   *   value must be one of either ASC or DESC.
+   */
+  public function defaultSortInfo() {
+    return array();
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function access() {

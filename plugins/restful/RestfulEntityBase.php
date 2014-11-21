@@ -1175,17 +1175,6 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
   }
 
   /**
-   * Defines default sort fields if none are provided via the request URL.
-   *
-   * @return array of key/value pairs:
-   *   each key must match a field returned by publicFieldsInfo(), and each
-   *   value must be one of either ASC or DESC.
-   */
-  public function defaultSortInfo() {
-    return array();
-  }
-
-  /**
    * Get the field info, data and form element
    *
    * @param string $field
