@@ -203,42 +203,22 @@ array(
 ```
 
 You can also define default sort fields in your plugin, by overriding
-defaultSortInfo() in your class definition.
+`defaultSortInfo()` in your class definition.
 
 This method should return an associative array, with each element having a key
-that matches a field from publicFieldsInfo(), and a value of either 'ASC' or 'DESC'.
+that matches a field from `publicFieldsInfo()`, and a value of either 'ASC' or 'DESC'.
 
-This default sort will be nullified if the request URL contains a sort query.
+This default sort will be ignored if the request URL contains a sort query.
 
 ```php
 class MyPlugin extends \RestfulEntityBaseTaxonomyTerm {
-
-  /**
-   * Overrides \RestfulEntityBase::publicFieldsInfo().
-   */
-  public function publicFieldsInfo() {
-    $public_fields = parent::publicFieldsInfo();
-
-    $public_fields['name'] = array(
-      'property' => 'name'
-    );
-
-    $public_fields['myfield'] = array(
-      'property' => 'field_myfield'
-    );
-
-    return $public_fields;
-  }
-
   /**
    * Overrides \RestfulEntityBase::defaultSortInfo().
    */
   public function defaultSortInfo() {
-    // Sort by 'field_myfield' in descending order.
-    return array('myfield' => 'DESC');
+    // Sort by 'id' in descending order.
+    return array('id' => 'DESC');
   }
-
-  // ...
 }
 
 ```

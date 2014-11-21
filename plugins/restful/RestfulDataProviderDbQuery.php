@@ -94,6 +94,16 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
   }
 
   /**
+   * Defines default sort columns if none are provided via the request URL.
+   *
+   * @return array
+   *   Array keyed by the database column name, and the order ('ASC' or 'DESC') as value.
+   */
+  public function defaultSortInfo() {
+    return array($this->getIdColumn() => 'ASC');
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function getQueryForList() {
@@ -125,14 +135,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
     // Get the sorting options from the request object.
     $sorts = $this->parseRequestForListSort();
 
-    if (empty($sorts)) {
-      $sorts = $this->defaultSortInfo();
-    }
-
-    if (empty($sorts)) {
-      $query->orderBy($this->getIdColumn(), 'ASC');
-      return;
-    }
+    $sorts = $sorts ? $sorts : $this->defaultSortInfo();
 
     foreach ($sorts as $sort => $direction) {
       $query->orderBy($public_fields[$sort]['property'], $direction);
