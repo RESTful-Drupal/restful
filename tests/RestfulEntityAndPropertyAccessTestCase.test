@@ -62,7 +62,7 @@ class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
     catch (Exception $e) {
       $this->pass('Non-privileged user cannot create entity with unaccessible property that was passed in the request.');
     }
-    restful_test_clear_access();
+    restful_test_clear_access_field();
   }
 
   /**
@@ -121,7 +121,7 @@ class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
     catch (Exception $e) {
       $this->pass('Non-privileged user cannot update entity with unaccessible property that was passed in the request.');
     }
-    restful_test_clear_access();
+    restful_test_clear_access_field();
   }
 
   /**
@@ -155,7 +155,7 @@ class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
     $handler->setAccount($user1);
     $result = $handler->get($node1->nid, array());
     $this->assertTrue(!isset($result['body']), 'Privileged user can view entity but without unaccessible properties.');
-    restful_test_clear_access();
+    restful_test_clear_access_field();
 
     // Non-privileged user (Revoke "access content" permission).
     user_role_revoke_permissions(DRUPAL_ANONYMOUS_RID, array('access content'));

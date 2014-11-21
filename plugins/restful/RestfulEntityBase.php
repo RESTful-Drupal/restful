@@ -128,8 +128,12 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
 
     $return = array();
 
+    // If no IDs were requested, we should not throw an exception in case an
+    // entity is un-accessible by the user.
     foreach ($ids as $id) {
-      $return[] = $this->viewEntity($id);
+      if ($row = $this->viewEntity($id)) {
+        $return[] = $row;
+      }
     }
 
     return $return;
@@ -274,7 +278,9 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       return $cached_data->data;
     }
 
-    $this->isValidEntity('view', $entity_id);
+    if (!$this->isValidEntity('view', $entity_id)) {
+      return;
+    }
 
     $wrapper = entity_metadata_wrapper($this->entityType, $entity_id);
     $values = array();
@@ -1039,7 +1045,15 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     }
 
     if ($this->checkEntityAccess($op, $entity_type, $entity) === FALSE) {
-      // Entity was explicitly denied.
+
+      if ($op == 'view' && !$this->getPath()) {
+        // Just return FALSE, without an exception, for example when a list of
+        // entities is requested, and we don't want to fail all the list because
+        // of a single item without access.
+        return FALSE;
+      }
+
+      // Entity was explicitly requested so we need to throw an exception.
       throw new RestfulForbiddenException(format_string('You do not have access to entity ID @id of resource @resource', $params));
     }
 
