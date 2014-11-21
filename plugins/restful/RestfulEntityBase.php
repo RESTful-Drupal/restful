@@ -281,10 +281,6 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
 
     $limit_fields = !empty($request['fields']) ? explode(',', $request['fields']) : array();
 
-    if (empty($limit_fields)) {
-      $limit_fields = $this->processDefaultFields();
-    }
-
     foreach ($this->getPublicFields() as $public_field_name => $info) {
       if ($limit_fields && !in_array($public_field_name, $limit_fields)) {
         // Limit fields doesn't include this property.
@@ -1180,90 +1176,13 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
 
   /**
    * Defines default sort fields if none are provided via the request URL.
-   * The sort fields are specified as strings in an indexed array, exactly
-   * as they would be if specified in the request URL.
    *
-   * Prepend a minus (-) to the field name to sort descending.
-   *
-   * @return array
-   *   Strings that match the names of public fields used for sorting.
+   * @return array of key/value pairs:
+   *   each key must match a field returned by publicFieldsInfo(), and each
+   *   value must be one of either ASC or DESC.
    */
   public function defaultSortInfo() {
     return array();
-  }
-
-  /**
-   * Defines default fields processed by viewEntity(), inf none are provided
-   * via the request URL.
-   *
-   * The filter fields are specified as strings in an indexed array, exactly
-   * as they would be if specified in the request URL.
-   *
-   * @return array
-   *   Strings that match the names of public fields returned by the response.
-   */
-  public function defaultFieldInfo() {
-    return array();
-  }
-
-  /**
-   * Process default sort field definitions to get the sorting options.
-   *
-   * @return array
-   *   With the different sorting options.
-   *
-   * @throws Exception
-   */
-  protected function processDefaultSorts() {
-    $default_sorts = $this->defaultSortInfo();
-    $public_fields = $this->getPublicFields();
-
-    if (empty($default_sorts)) {
-      return array();
-    }
-
-    $sorts = array();
-
-    foreach ($default_sorts as $sort) {
-      $direction = $sort[0] == '-' ? 'DESC' : 'ASC';
-      $sort = str_replace('-', '', $sort);
-      // Check the sort is on a legal key.
-      if (empty($public_fields[$sort])) {
-        throw new Exception("Invalid default sort field supplied.");
-      }
-
-      $sorts[$sort] = $direction;
-    }
-    return $sorts;
-  }
-
-  /**
-   * Process default field limiters to make sure they are valid.
-   *
-   * @return array
-   *   With the different sorting options.
-   *
-   * @throws Exception
-   */
-  protected function processDefaultFields() {
-    $default_fields = $this->defaultFieldInfo();
-    $public_fields = $this->getPublicFields();
-
-    if (empty($default_fields)) {
-      return array();
-    }
-
-    $fields = array();
-
-    foreach ($default_fields as $field) {
-      // Check the field is on a legal key.
-      if (empty($public_fields[$field])) {
-        throw new Exception("Invalid default field limiter supplied.");
-      }
-
-      $fields[] = $field;
-    }
-    return $fields;
   }
 
   /**

@@ -97,7 +97,7 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
     $sorts = $this->parseRequestForListSort();
 
     if (empty($sorts)) {
-      $sorts = $this->processDefaultSorts();
+      $sorts = $this->defaultSortInfo();
     }
 
     if (empty($sorts)) {

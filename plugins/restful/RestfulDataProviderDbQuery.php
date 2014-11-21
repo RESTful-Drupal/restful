@@ -121,8 +121,14 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
    */
   protected function queryForListSort(\SelectQuery $query) {
     $public_fields = $this->getPublicFields();
+
     // Get the sorting options from the request object.
     $sorts = $this->parseRequestForListSort();
+
+    if (empty($sorts)) {
+      $sorts = $this->defaultSortInfo();
+    }
+
     if (empty($sorts)) {
       $query->orderBy($this->getIdColumn(), 'ASC');
       return;

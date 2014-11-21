@@ -143,48 +143,6 @@ array(
 );
 ```
 
-You can also define default field limiters in your plugin, by overriding
-defaultFieldInfo() in your class definition.
-
-This method should return an indexed array, with each element being a property
-name that you want to restrict the response to.  Each field limiter you declare
-should match a field defined in publicFieldsInfo().
-
-These field limiters will be nullified if the request URL contains a sort query.
-
-```php
-class MyPlugin extends \RestfulEntityBaseTaxonomyTerm {
-
-  // ...
-
-  public function publicFieldsInfo() {
-    $public_fields['name'] = array(
-      'property' => 'name'
-    );
-
-    $public_fields['tid'] = array(
-      'property' => 'tid'
-    );
-
-    return $public_fields;
-  }
-
-  public function defaultSortInfo() {
-    return array('-tid');
-  }
-
-  public function defaultFieldInfo() {
-    return array('name');
-    // We are querying for both 'name' and 'tid', sorting by 'tid' in descending
-    // order, and then showing only the 'name' field in the response.
-  }
-
-  // ...
-
-}
-
-```
-
 #### Image derivatives
 Many client side technologies have lots of problems resizing images to serve
 them optimized and thus avoiding browser scaling. For that reason the RESTful
@@ -247,20 +205,17 @@ array(
 You can also define default sort fields in your plugin, by overriding
 defaultSortInfo() in your class definition.
 
-This method should return an indexed array, with each element being a property
-name that you want to use for sorting.  Each sort field you declare should match
-a field defined in publicFieldsInfo().
-
-Prefixing the sort field names with a minus (-) sign will apply a descending sort,
-instead of the default ascending.
+This method should return an associative array, with each element having a key
+that matches a field from publicFieldsInfo(), and a value of either 'ASC' or 'DESC'.
 
 This default sort will be nullified if the request URL contains a sort query.
 
 ```php
 class MyPlugin extends \RestfulEntityBaseTaxonomyTerm {
 
-  // ...
-
+  /**
+   * Overrides \RestfulEntityBase::publicFieldsInfo().
+   */
   public function publicFieldsInfo() {
     $public_fields = parent::publicFieldsInfo();
 
@@ -268,16 +223,19 @@ class MyPlugin extends \RestfulEntityBaseTaxonomyTerm {
       'property' => 'name'
     );
 
-    $public_fields['tid'] = array(
-      'property' => 'tid'
+    $public_fields['myfield'] = array(
+      'property' => 'field_myfield'
     );
 
     return $public_fields;
   }
 
+  /**
+   * Overrides \RestfulEntityBase::defaultSortInfo().
+   */
   public function defaultSortInfo() {
-    return array('-tid');
-    // In this case, we are sorting by term tid in descending order.
+    // Sort by 'field_myfield' in descending order.
+    return array('myfield' => 'DESC');
   }
 
   // ...
