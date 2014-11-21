@@ -44,12 +44,17 @@ class RestfulHookMenuTestCase extends RestfulCurlBaseTestCase {
         'label' => $node1->title,
         'self' => url('api/v1.0/articles/' . $node1->nid, array('absolute' => TRUE)),
       )),
+      'self' => array(
+        'title' => 'Self',
+        'href' => url('api/v1.0/articles/' . $node1->nid, array('absolute' => TRUE)),
+      ),
     );
 
     $this->assertEqual($result['body'], json_encode($expected_result));
 
     // Test version 1.1
     $result = $this->httpRequest('api/v1.1/articles/' . $node1->nid, \RestfulInterface::GET);
+    $expected_result['self']['href'] = url('api/v1.1/articles/' . $node1->nid, array('absolute' => TRUE));
     unset($expected_result['data'][0]['self']);
     $this->assertEqual($result['body'], json_encode($expected_result));
 
@@ -72,7 +77,7 @@ class RestfulHookMenuTestCase extends RestfulCurlBaseTestCase {
   function testHttpHeadersAndStatus() {
     // Valid request (eventough it's empty).
     $result = $this->httpRequest('api/v1.0/articles/', \RestfulInterface::GET);
-    $this->assertTrue(strpos($result['headers'], 'application/hal+json;'), '"application/hal+json" found in valid request.');
+    $this->assertTrue(strpos($result['headers'], 'application/json;'), '"application/json" found in valid request.');
 
     // Invalid request.
     $result = $this->httpRequest('api/v1.0/articles/', \RestfulInterface::GET, array('sort' => 'invalid_key'));
