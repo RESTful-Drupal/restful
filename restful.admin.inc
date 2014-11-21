@@ -64,13 +64,6 @@ function restful_admin_settings($form_state) {
     '#collapsed' => TRUE,
   );
 
-  $form['advanced']['restful_enable_discovery_resource'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Discovery resource'),
-    '#description' => t('Enable discovery resource which shows all accessible resources under @api URL.', $params),
-    '#default_value' => variable_get('restful_enable_discovery_resource', TRUE),
-  );
-
   $form['advanced']['restful_hijack_api_pages'] = array(
     '#type' => 'checkbox',
     '#title' => t('Hijack API pages'),
@@ -97,6 +90,13 @@ function restful_admin_settings($form_state) {
     '#title' => t('User resource'),
     '#description' => t('Determines if the default user resource should be enabled.'),
     '#default_value' => variable_get('restful_enable_users_resource', TRUE),
+  );
+
+  $form['advanced']['restful_enable_discovery_resource'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Discovery resource'),
+    '#description' => t('Enable discovery resource which shows all accessible resources under @api URL.', $params),
+    '#default_value' => variable_get('restful_enable_discovery_resource', TRUE),
   );
 
   $form['advanced']['restful_global_rate_limit'] = array(
