@@ -1,6 +1,6 @@
 <?php
 
-if (variable_get('restful_user_login_menu_item', TRUE)) {
+if (variable_get('restful_enable_user_login_resource', TRUE)) {
   $plugin = array(
     'label' => t('Login'),
     'description' => t('Login a user and return a JSON along with the authentication cookie..'),

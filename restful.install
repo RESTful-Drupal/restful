@@ -81,7 +81,7 @@ function restful_uninstall() {
   variable_del('restful_hijack_api_pages');
   variable_del('restful_hook_menu_base_path');
 
-  variable_del('restful_user_login_menu_item');
+  variable_del('restful_enable_user_login_resource');
 
   variable_del('restful_global_rate_limit');
   variable_del('restful_global_rate_period');
