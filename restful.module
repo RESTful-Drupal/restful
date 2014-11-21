@@ -689,5 +689,5 @@ function restful_cron() {
  * Page callback: returns a session token for the currently active user.
  */
 function restful_csrf_session_token() {
-  return array('X-CSRF-Token' => drupal_get_token(\RestfulInterface::TOKEN_VALUE));
+  return array('X-CSRF-Token' => \RestfulBase::getToken());
 }
