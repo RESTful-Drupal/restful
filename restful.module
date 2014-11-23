@@ -213,7 +213,7 @@ function restful_help($path, $arg) {
   switch ($path) {
     case 'admin/structure/block':
     case 'admin/help#restful':
-      return '<p>' . t('This module is managed in GitHub. Please make sure to read the !link page for more help.', array(
+      return '<p>' . t('This module is managed in GitHub. Please make sure to read the docs in the !link page for more help.', array(
         '!link' => l('README.md', 'https://github.com/Gizra/restful/blob/7.x-1.x/README.md'),
       )) . '</p>';
   }
