@@ -12,11 +12,11 @@
 function restful_token_auth_menu_alter(&$items) {
   $access_token_plugins = array();
   foreach (restful_get_restful_plugins() as $plugin) {
-    if ($plugin['name'] == 'access_token') {
+    if ($plugin['entity_type'] == 'restful_token_auth') {
       $access_token_plugins[] = $plugin;
     }
   }
-  if (empty($access_token_plugin)) {
+  if (empty($access_token_plugins)) {
     return;
   }
   foreach ($access_token_plugins as $access_token_plugin) {
