@@ -67,8 +67,12 @@ function restful_token_auth_entity_info() {
       'bundle' => 'type',
     ),
     'bundles' => array(
-      'access_token',
-      'refresh_token',
+      'access_token' => array(
+        'label' => t('Access token'),
+      ),
+      'refresh_token' => array(
+        'label' => t('Refresh token'),
+      ),
     ),
     'bundle keys' => array(
       'bundle' => 'type',
