@@ -1424,4 +1424,19 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
     throw new \RestfulNotImplementedException(format_string('The "@method" method is not implemented in class @class.', array('@method' => $operation, '@class' => __CLASS__)));
   }
 
+  /**
+   * Get a CSRF token.
+   *
+   * @return string
+   *   Get a CSRF token suitable for an HTTP header.
+   */
+  public static function getToken() {
+    $token = drupal_get_token(\RestfulInterface::TOKEN_VALUE);
+    $replacements = array('_' => '-');
+    foreach ($replacements as $original => $new) {
+      $token = str_replace($original, $new, $token);
+    }
+    return $token;
+  }
+
 }
