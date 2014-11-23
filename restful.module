@@ -187,12 +187,36 @@ function restful_menu() {
     'description' => 'Administer the RESTful module.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('restful_admin_settings'),
-    // @todo: Have our own administer permission?
-    'access arguments' => array('administer site configuration'),
+    'access arguments' => array('administer restful'),
     'file' => 'restful.admin.inc',
   );
 
   return $items;
+}
+
+/**
+ *  Implements hook_permission().
+ */
+function restful_permission() {
+  return array(
+    'administer restful' => array(
+      'title' => t('Administer the RESTful module'),
+      'description' => t('Access the administration pages for the RESTful module.'),
+    ),
+  );
+}
+
+/**
+ *  Implements hook_help().
+ */
+function restful_help($path, $arg) {
+  switch ($path) {
+    case 'admin/structure/block':
+    case 'admin/help#restful':
+      return '<p>' . t('This module is managed in GitHub. Please make sure to read the !link page for more help.', array(
+        '!link' => l('README.md', 'https://github.com/Gizra/restful/blob/7.x-1.x/README.md'),
+      )) . '</p>';
+  }
 }
 
 /**
