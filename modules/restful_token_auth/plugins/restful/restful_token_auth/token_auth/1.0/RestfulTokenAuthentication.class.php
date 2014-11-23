@@ -71,6 +71,7 @@ class RestfulTokenAuthentication extends \RestfulEntityBase {
         'created' => REQUEST_TIME,
         'name' => 'self',
         'token' => drupal_random_key(),
+        'expire' => $this->getExpireTime(),
       );
       $auth_token = entity_create('restful_token_auth', $values);
       entity_save('restful_token_auth', $auth_token);
@@ -79,8 +80,16 @@ class RestfulTokenAuthentication extends \RestfulEntityBase {
 
     $output = $this->viewEntity($id);
 
-    // Add CSRF token.
-    $output += restful_csrf_session_token();
     return $output;
+  }
+
+  /**
+   * Return the expiration time.
+   *
+   * @return int
+   *   Timestamp with the expiration time.
+   */
+  protected function getExpireTime() {
+    return strtotime('now + 1 week');
   }
 }
