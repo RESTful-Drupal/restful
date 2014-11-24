@@ -190,6 +190,8 @@ function restful_menu() {
     'access arguments' => array('administer restful'),
     'file' => 'restful.admin.inc',
   );
+  $items['admin/config/services/restful/restful'] = $items['admin/config/services/restful'];
+  $items['admin/config/services/restful/restful']['type'] = MENU_DEFAULT_LOCAL_TASK;
 
   return $items;
 }

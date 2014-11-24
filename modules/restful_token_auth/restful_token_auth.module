@@ -5,6 +5,22 @@
  * RESTful token authentication.
  */
 
+/**
+ *  Implements hook_menu().
+ */
+function restful_token_auth_menu() {
+  // Add administration page.
+  $items['admin/config/services/restful/token-auth'] = array(
+    'title' => 'Token Authentication',
+    'description' => 'Administer the RESTful Token Authentication module.',
+    'type' => MENU_LOCAL_TASK,
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('restful_token_auth_admin_settings'),
+    'access arguments' => array('administer restful'),
+    'file' => 'restful_token_auth.admin.inc',
+  );
+  return $items;
+}
 
 /**
  * Implements hook_menu_alter().
