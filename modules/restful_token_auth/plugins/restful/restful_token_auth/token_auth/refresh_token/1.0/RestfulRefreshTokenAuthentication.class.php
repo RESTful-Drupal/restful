@@ -51,7 +51,7 @@ class RestfulRefreshTokenAuthentication extends \RestfulTokenAuthenticationBase 
 
     // Create the new access token and return it.
     $controller = entity_get_controller($this->getEntityType());
-    $token = $controller->createAccessToken($account->uid);
+    $token = $controller->generateAccessToken($account->uid);
     return $this->viewEntity($token->id);
   }
 

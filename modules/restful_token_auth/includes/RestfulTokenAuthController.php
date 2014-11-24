@@ -12,14 +12,12 @@ class RestfulTokenAuthController extends \EntityAPIController {
    *
    * @param int $uid
    *   The user ID.
-   * @param int $expiration
-   *   The timestamp when this token will expire
    *
    * @return \RestfulTokenAuth
    *   The created entity.
    */
-  public function createAccessToken($uid) {
-    $refresh_token = $this->createRefreshToken($uid);
+  public function generateAccessToken($uid) {
+    $refresh_token = $this->generateRefreshToken($uid);
     // Create a new access token.
     $values = array(
       'uid' => $uid,
@@ -50,7 +48,7 @@ class RestfulTokenAuthController extends \EntityAPIController {
    * @return \RestfulTokenAuth
    *   The token entity.
    */
-  private function createRefreshToken($uid) {
+  private function generateRefreshToken($uid) {
     // Check if there are other refresh tokens for the user.
     $query = new \EntityFieldQuery();
     $results = $query
@@ -74,8 +72,8 @@ class RestfulTokenAuthController extends \EntityAPIController {
       )),
       'token' => drupal_random_key(),
     );
-    $refresh_token = entity_create('restful_token_auth', $values);
-    $refresh_token->save();
+    $refresh_token = $this->create($values);
+    $this->save($refresh_token);
     return $refresh_token;
   }
 

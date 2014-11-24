@@ -53,7 +53,7 @@ class RestfulAccessTokenAuthentication extends \RestfulTokenAuthenticationBase {
 
     if (!$token_exists) {
       $controller = entity_get_controller($this->getEntityType());
-      $access_token = $controller->createAccessToken($account->uid);
+      $access_token = $controller->generateAccessToken($account->uid);
       $id = $access_token->id;
     }
 
