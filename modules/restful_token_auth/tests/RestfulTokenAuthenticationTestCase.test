@@ -102,18 +102,13 @@ class RestfulTokenAuthenticationTestCase extends DrupalWebTestCase {
 
     // Make sure the token was deleted.
     $query = new \EntityFieldQuery();
-    $results = $query
+    $result = $query
       ->entityCondition('entity_type', 'restful_token_auth')
       ->entityCondition('bundle', 'refresh_token')
       ->propertyCondition('token', $access_token)
       ->execute();
 
-    if (empty($results['restful_token_auth'])) {
-      $this->pass('The token was deleted.');
-    }
-    else {
-      $this->fail('The token was not deleted.');
-    }
+    $this->assertTrue(empty($result['restful_token_auth']), 'The token was deleted.');
 
     // Test the refresh capabilities.
     $handler = restful_get_restful_handler('refresh_token');
