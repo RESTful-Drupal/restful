@@ -113,8 +113,8 @@ class RestfulTokenAuthenticationTestCase extends DrupalWebTestCase {
     // Test the refresh capabilities.
     $handler = restful_get_restful_handler('refresh_token');
     $result = $handler->get($refresh_token);
-    $this->assertNotNull($result['access_token']);
-    $this->assertNotNull($result['refresh_token']);
+    $this->assertNotNull($result['access_token'], 'A new access token granted for a valid refresh token.');
+    $this->assertNotNull($result['refresh_token'], 'A new refresh token granted for a valid refresh token.');
     $this->assertNotEqual($refresh_token, $result['refresh_token']);
 
     // Test invalid refresh token.
