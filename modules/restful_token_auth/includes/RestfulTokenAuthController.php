@@ -89,7 +89,7 @@ class RestfulTokenAuthController extends \EntityAPIController {
   protected function getExpireTime() {
     $now = new \DateTime();
     try {
-      $expiration = $now->add(new \DateInterval(variable_get('restful_token_auth_expiration_period', 'P7D')));
+      $expiration = $now->add(new \DateInterval(variable_get('restful_token_auth_expiration_period', 'P1D')));
     }
     catch (\Exception $e) {
       throw new \RestfulServerConfigurationException('Invalid DateInterval format provided.');

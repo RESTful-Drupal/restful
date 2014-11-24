@@ -110,6 +110,7 @@ function restful_admin_settings($form_state) {
     '#title' => t('Rate limit'),
     '#description' => t('The period string compatible with <a href="@url">\DateInterval</a>.', array('@url' => 'http://php.net/manual/en/class.dateinterval.php')),
     '#default_value' => variable_get('restful_global_rate_period', 'P1D'),
+    '#element_validate' => array('restful_date_time_format_element_validate'),
   );
 
   return system_settings_form($form);
