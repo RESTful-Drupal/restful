@@ -124,14 +124,6 @@ function restful_create_field_refresh_token() {
       'handler' => 'base',
       'target_type' => 'restful_token_auth',
       'handler_settings' => array(
-        'behaviors' => array(
-          'views-select-list' => array(
-            'status' => 0,
-          ),
-        ),
-        'sort' => array(
-          'type' => 'none',
-        ),
         'target_bundles' => array(
           'refresh_token' => 'refresh_token',
         ),
