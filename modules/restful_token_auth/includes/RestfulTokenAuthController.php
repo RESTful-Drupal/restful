@@ -39,8 +39,9 @@ class RestfulTokenAuthController extends \EntityAPIController {
   }
 
   /**
-   * Create a refresh token for the current user and delete all the existing
-   * ones for that same user.
+   * Create a refresh token for the current user
+   *
+   * It will delete all the existing refresh tokens for that same user as well.
    *
    * @param int $uid
    *   The user ID.
