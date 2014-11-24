@@ -75,7 +75,7 @@ class RestfulTokenAuthController extends \EntityAPIController {
       'token' => drupal_random_key(),
     );
     $refresh_token = entity_create('restful_token_auth', $values);
-    entity_save('restful_token_auth', $refresh_token);
+    $refresh_token->save();
     return $refresh_token;
   }
 
