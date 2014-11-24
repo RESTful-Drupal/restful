@@ -6,27 +6,25 @@
 function restful_admin_settings($form_state) {
   $form = array();
 
-  $options = array();
-  foreach (restful_get_formatter_plugins() as $plugin_name => $plugin) {
-    $options[$plugin_name] = check_plain($plugin['label']);
-  }
-
   $form['restful_default_output_formatter'] = array(
     '#type' => 'radios',
     '#title' => t('Default formatter'),
     '#description' => t('Determine the default formatter that would be used.'),
-    '#options' => $options,
+    '#options' => array(),
     '#default_value' => variable_get('restful_default_output_formatter', 'hal_json'),
     '#required' => TRUE,
   );
 
-  // Add description for each formatter.
+  $element = &$form['restful_default_output_formatter'];
   foreach (restful_get_formatter_plugins() as $plugin_name => $plugin) {
+    $element['#options'][$plugin_name] = check_plain($plugin['label']);
+
+    // Add description for each formatter.
     if (!$plugin['description']) {
       continue;
     }
 
-    $form['restful_default_output_formatter'][$plugin_name]['#description'] = check_plain($plugin['description']);
+    $element[$plugin_name]['#description'] = check_plain($plugin['description']);
   }
 
   $params = array(
