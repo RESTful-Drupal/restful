@@ -110,3 +110,46 @@ function restful_token_auth_cron() {
   $ids = array_keys($result['restful_token_auth']);
   entity_delete_multiple('restful_token_auth', $ids);
 }
+
+/**
+ * Helper function to create the refresh token entity reference.
+ */
+function restful_create_field_refresh_token() {
+  // Add an entity reference field to the access_token bundle to link to the
+  // corresponding refresh token.
+  $field_name = 'refresh_token_reference';
+  $field = array(
+    'entity_types' => array('restful_token_auth'),
+    'settings' => array(
+      'handler' => 'base',
+      'target_type' => 'restful_token_auth',
+      'handler_settings' => array(
+        'behaviors' => array(
+          'views-select-list' => array(
+            'status' => 0,
+          ),
+        ),
+        'sort' => array(
+          'type' => 'none',
+        ),
+        'target_bundles' => array(
+          'refresh_token' => 'refresh_token',
+        ),
+      ),
+    ),
+    'field_name' => $field_name,
+    'type' => 'entityreference',
+    'cardinality' => 1,
+  );
+  field_create_field($field);
+
+  $instance = array(
+    'field_name' => $field_name,
+    'bundle' => 'access_token',
+    'entity_type' => 'restful_token_auth',
+    'label' => t('Refresh token'),
+    'description' => t('Token used to get a new access token once it is expired.'),
+    'required' => FALSE,
+  );
+  field_create_instance($instance);
+}

@@ -16,7 +16,8 @@ class RestfulTokenAuthenticationTestCase extends DrupalWebTestCase {
   }
 
   function setUp() {
-    parent::setUp('restful_example', 'restful_token_auth');
+    parent::setUp('restful_example', 'restful_token_auth', 'entityreference');
+    restful_create_field_refresh_token();
   }
 
   /**
@@ -84,7 +85,7 @@ class RestfulTokenAuthenticationTestCase extends DrupalWebTestCase {
     $results = $query
       ->entityCondition('entity_type', 'restful_token_auth')
       ->entityCondition('bundle', 'refresh_token')
-      ->propertyCondition('token', $access_token)
+      ->propertyCondition('token', $refresh_token)
       ->execute();
 
     if (empty($results['restful_token_auth'])) {
@@ -96,17 +97,8 @@ class RestfulTokenAuthenticationTestCase extends DrupalWebTestCase {
     $token->expire = time() - 1;
     $token->save();
 
-    // Get a "protected" resource with an expired access token.
-    try {
-      $handler->get($id, array('access_token' => $access_token));
-      $this->fail('"Unauthorized" exception not thrown.');
-    }
-    catch (\RestfulUnauthorizedException $e) {
-      $this->pass('"Unauthorized" exception was thrown.');
-    }
-    catch (\Exception $e) {
-      $this->fail('Exception different from "Unauthorized" exception was thrown.');
-    }
+    // Make a GET request to trigger a deletion of the token.
+    $handler->get($id, array('access_token' => $access_token));
 
     // Make sure the token was deleted.
     $query = new \EntityFieldQuery();
