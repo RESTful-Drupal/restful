@@ -115,6 +115,19 @@ class RestfulTokenAuthenticationTestCase extends DrupalWebTestCase {
     $result = $handler->get($refresh_token);
     $this->assertNotNull($result['access_token']);
     $this->assertNotNull($result['refresh_token']);
+    $this->assertNotEqual($refresh_token, $result['refresh_token']);
+
+    // Test invalid refresh token.
+    try {
+      $handler->get('invalid');
+      $this->fail('"Bad Request" exception not thrown.');
+    }
+    catch (\RestfulBadRequestException $e) {
+      $this->pass('"Bad Request" exception was thrown.');
+    }
+    catch (\Exception $e) {
+      $this->fail('Exception different from "Bad Request" exception was thrown.');
+    }
   }
 
 }
