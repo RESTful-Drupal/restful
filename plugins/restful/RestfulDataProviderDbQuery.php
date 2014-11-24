@@ -69,6 +69,20 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
   }
 
   /**
+   * @return string
+   */
+  public function getPrimary() {
+    return $this->primary;
+  }
+
+  /**
+   * @param string $primary
+   */
+  public function setPrimary($primary) {
+    $this->primary = $primary;
+  }
+
+  /**
    * Constructs a RestfulDataProviderDbQuery object.
    *
    * @param array $plugin
@@ -90,7 +104,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
 
     $this->tableName = $options['table_name'];
     $this->idColumn = $options['id_column'];
-    $this->primary = empty($plugin['primary']) ? NULL : $this->primary = $plugin['primary'];
+    $this->primary = !empty($options['primary']) ? $options['primary'] : $options['id_column'];
   }
 
   /**
@@ -240,14 +254,13 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
       return array();
     }
     $query->condition($this->getTableName() . '.' . $this->getIdColumn(), $ids, 'IN');
-    $results = $query->execute();
+    $result = $query->execute();
 
     // TODO: Right now render cache only works for Entity based resources.
-
     $return = array();
 
-    foreach ($results as $result) {
-      $return[] = $this->mapDbRowToPublicFields($result);
+    foreach ($result as $row) {
+      $return[] = $this->mapDbRowToPublicFields($row);
     }
 
     return $return;
@@ -263,17 +276,21 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
     $query->condition($this->getTableName() . '.' . $this->getIdColumn(), $id);
 
     $this->addExtraInfoToQuery($query);
-    $results = $query->execute();
+    $result = $query
+      ->execute()
+      // We expect a single value.
+      ->fetchObject();
 
-    // TODO: Right now render cache only works for Entity based resources.
-
-    $return = array();
-
-    foreach ($results as $result) {
-      $return[] = $this->mapDbRowToPublicFields($result);
+    if (!$result) {
+      $params = array(
+        '@id' => $id,
+        '@resource' => $this->getPluginKey('label'),
+      );
+      throw new \RestfulUnprocessableEntityException(format_string('The ID @id for @resource does not exist.', $params));
     }
 
-    return $return;
+    // TODO: Right now render cache only works for Entity based resources.
+    return $this->mapDbRowToPublicFields($result);
   }
 
   /**
@@ -287,9 +304,6 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
    * {@inheritdoc}
    */
   public function update($id, $full_replace = FALSE) {
-    $query = db_update($this->getTableName());
-    $query->condition($this->getIdColumn(), $id);
-
     // Build the update array.
     $request = $this->getRequest();
     static::cleanRequest($request);
@@ -311,12 +325,16 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
       }
     }
     if (empty($fields)) {
-      return $this->view($id);
+      throw new \RestfulBadRequestException('No values were changed.');
     }
 
-    // Once the update array is built, execute the query.
-    $query->fields($fields)->execute();
-    return $this->view($id, TRUE);
+    // Set the ID field.
+    $fields[$this->getIdColumn()] = $id;
+
+    if (!drupal_write_record($this->getTableName(), $fields, $this->getPrimary())) {
+      throw new \RestfulServiceUnavailable('Record could not be updated to the database.');
+    }
+    return $this->view($id);
   }
 
   /**
@@ -343,7 +361,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
 
     // Once the update array is built, execute the query.
     if ($id = $query->fields($fields)->execute()) {
-      return $this->view($id, TRUE);
+      return $this->view($id);
     }
     // Some times db_insert does not know how to get the ID.
     if ($passed_id) {
