@@ -128,6 +128,53 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     );
     $this->assertEqual($result, $expected_result, 'Sort by ID and by label.');
 
+    // Test default sorting from plugin definition; by label, then by reverse id.
+    $handler = restful_get_restful_handler('test_articles', 1, 1);
+    unset($request['sort']);
+    $result = $handler->get('', $request);
+    $expected_result = array(
+      array(
+        'id' => $node->nid,
+        'label' => 'abc',
+      ),
+      array(
+        'id' => $nodes['abc'],
+        'label' => 'abc',
+      ),
+      array(
+        'id' => $nodes['efg'],
+        'label' => 'efg',
+      ),
+      array(
+        'id' => $nodes['xyz'],
+        'label' => 'xyz',
+      ),
+    );
+    $this->assertEqual($result, $expected_result, 'Default sort by ID and by label.');
+
+    // Test that the default sort can be overridden.
+    $request['sort'] = 'id';
+    $result = $handler->get('', $request);
+    $expected_result = array(
+      array(
+        'id' => $nodes['abc'],
+        'label' => 'abc',
+      ),
+      array(
+        'id' => $nodes['xyz'],
+        'label' => 'xyz',
+      ),
+      array(
+        'id' => $nodes['efg'],
+        'label' => 'efg',
+      ),
+      array(
+        'id' => $node->nid,
+        'label' => 'abc',
+      ),
+    );
+    $this->assertEqual($result, $expected_result, 'Sort by ID, overriding default sort.');
+
     // Illegal sort property.
     $request['sort'] = 'wrong_key';
     try {
