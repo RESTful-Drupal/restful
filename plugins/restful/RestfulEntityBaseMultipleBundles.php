@@ -83,7 +83,9 @@ class RestfulEntityBaseMultipleBundles extends RestfulEntityBase {
       }
 
       $bundle_handler = $handlers[$bundle];
-      $return[] = $bundle_handler->viewEntity($id, $request, $account);
+      $bundle_handler->setAccount($account);
+      $bundle_handler->setRequest($request);
+      $return[] = $bundle_handler->viewEntity($id);
     }
 
     return $return;
