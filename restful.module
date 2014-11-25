@@ -417,8 +417,8 @@ function restful_menu_access_callback($resource_name, $version = NULL) {
   }
 
   $method = strtoupper($_SERVER['REQUEST_METHOD']);
-  if ($method == \RestfulInterface::POST && !empty($_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE'])) {
-    $method = strtoupper($_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE']);
+  if ($method == \RestfulInterface::POST && \RestfulManager::getHttpHeader('X-HTTP-Method-Override')) {
+    $method = strtoupper(\RestfulManager::getHttpHeader('X-HTTP-Method-Override'));
   }
 
   if (!\RestfulBase::isValidMethod($method, FALSE)) {
@@ -457,7 +457,7 @@ function restful_menu_process_callback($resource_name, $version = NULL) {
   }
 
   // Vary the response with the presence of the X-API-Version header.
-  if (!empty($_SERVER['HTTP_X_API_VERSION'])) {
+  if (\RestfulManager::getHttpHeader('X-API-Version')) {
     $headers = $handler->getHttpHeaders();
     $vary = empty($headers['Vary']) ? '' : $headers['Vary'];
     $handler->setHttpHeaders('Vary', implode(',', array($vary, 'X-API-Version')));
@@ -472,8 +472,8 @@ function restful_menu_process_callback($resource_name, $version = NULL) {
 
   $method = strtoupper($_SERVER['REQUEST_METHOD']);
 
-  if ($method == \RestfulInterface::POST && !empty($_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE'])) {
-    $method = strtoupper($_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE']);
+  if ($method == \RestfulInterface::POST && \RestfulManager::getHttpHeader('X-HTTP-Method-Override')) {
+    $method = strtoupper(\RestfulManager::getHttpHeader('X-HTTP-Method-Override'));
   }
 
   $method = strtolower($method);
@@ -549,7 +549,7 @@ function restful_parse_request() {
   // CURL";
   $request['__application'] = array(
     'rest_call' => TRUE,
-    'csrf_token' => !empty($_SERVER['HTTP_X_CSRF_TOKEN']) ? $_SERVER['HTTP_X_CSRF_TOKEN'] : NULL,
+    'csrf_token' => \RestfulManager::getHttpHeader('X-CSRF-Token'),
   );
 
   // Allow implemeting modules to alter the request.
