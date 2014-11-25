@@ -1068,6 +1068,8 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
   /**
    * Generate a cache identifier for the request and the current context.
    *
+   * This cache ID may be used by all RestfulDataProviderInterface.
+   *
    * @param array $context
    *   An associative array with additional information to build the cache ID.
    *
