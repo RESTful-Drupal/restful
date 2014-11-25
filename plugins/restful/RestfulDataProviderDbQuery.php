@@ -219,8 +219,6 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
       ->getQueryForList()
       ->execute();
 
-    // TODO: Right now render cache only works for Entity based resources.
-
     $return = array();
 
     foreach ($results as $result) {
@@ -234,6 +232,16 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
    * {@inheritdoc}
    */
   public function viewMultiple(array $ids) {
+    $cache_id = array(
+      'tb' => $this->getTableName(),
+      'cl' => $this->getIdColumn(),
+      'id' => $ids,
+    );
+    $cached_data = $this->getRenderedCache($cache_id);
+    if (!empty($cached_data->data)) {
+      return $cached_data->data;
+    }
+
     // Get a list query with all the sorting and pagination in place.
     $query = $this->getQueryForList();
     if (empty($ids)) {
@@ -242,14 +250,13 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
     $query->condition($this->getTableName() . '.' . $this->getIdColumn(), $ids, 'IN');
     $results = $query->execute();
 
-    // TODO: Right now render cache only works for Entity based resources.
-
     $return = array();
 
     foreach ($results as $result) {
       $return[] = $this->mapDbRowToPublicFields($result);
     }
 
+    $this->setRenderedCache($return, $cache_id);
     return $return;
   }
 
@@ -257,6 +264,16 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
    * {@inheritdoc}
    */
   public function view($id) {
+    $cache_id = array(
+      'tb' => $this->getTableName(),
+      'cl' => $this->getIdColumn(),
+      'id' => $id,
+    );
+    $cached_data = $this->getRenderedCache($cache_id);
+    if (!empty($cached_data->data)) {
+      return $cached_data->data;
+    }
+
     $table = $this->getTableName();
     $query = db_select($table)
       ->fields($table);
@@ -265,7 +282,6 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
     $this->addExtraInfoToQuery($query);
     $results = $query->execute();
 
-    // TODO: Right now render cache only works for Entity based resources.
 
     $return = array();
 
@@ -273,6 +289,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
       $return[] = $this->mapDbRowToPublicFields($result);
     }
 
+    $this->setRenderedCache($return, $cache_id);
     return $return;
   }
 
