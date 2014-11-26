@@ -520,9 +520,14 @@ $plugin = array(
     'expire' => CACHE_TEMPORARY,
     // Enable cache invalidation for entity based resources. Defaults to TRUE (optional).
     'simple_invalidate' => TRUE,
+    // Use a different cache backend for this resource. Defaults to variable_get('cache_default_class', 'DrupalDatabaseCache') (optional).
+    'class' => 'MemCacheDrupal',
   ),
 );
 ```
+
+Additionally you can define a cache backend for a given cache bin by setting the variable `cache_class_<cache-bin-name>` to the class to be used. This way all the resouces caching to that particular bin will use that cache backend instead of the default one.
+
 ## Rate Limit
 RESTful provides rate limit functionality out of the box. A rate limit is a way
 to protect your API service from flooding, basically consisting on checking is
