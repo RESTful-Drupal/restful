@@ -987,7 +987,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
    *   The user object.
    */
   public function getAccount($cache = TRUE) {
-    $account = &drupal_static(__CLASS__ . '::' . __FUNCTION__);
+    $account = &drupal_static(__CLASS__ . '::getAccount');
     if (isset($account)) {
       return $account;
     }
