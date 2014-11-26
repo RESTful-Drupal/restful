@@ -333,6 +333,13 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
 
     // Once the update array is built, execute the query.
     $query->fields($fields)->execute();
+
+    // Clear the rendered cache before calling the view method.
+    $this->clearRenderedCache(array(
+      'tb' => $this->getTableName(),
+      'cl' => $this->getIdColumn(),
+      'id' => $id,
+    ));
     return $this->view($id, TRUE);
   }
 
