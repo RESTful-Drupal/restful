@@ -1105,9 +1105,13 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
     $version = $this->getVersion();
     $cid = 'v' . $version['major'] . '.' . $version['minor'] . '::uu' . $this->getAccount()->uid . '::pa';
     $cid_params = array();
-    $request = $this->getRequest();
-    static::cleanRequest($request);
-    $options = $context + $request;
+    $options = $context;
+    if ($this->isReadMethod($this->getMethod())) {
+      // We don't want to split the cache with the body data on write requests.
+      $request = $this->getRequest();
+      static::cleanRequest($request);
+      $options = $context + $request;
+    }
     foreach ($options as $param => $value) {
       // Some request parameters don't affect how the resource is rendered, this
       // means that we should skip them for the cache ID generation.

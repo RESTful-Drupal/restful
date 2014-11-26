@@ -235,7 +235,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
     $cache_id = array(
       'tb' => $this->getTableName(),
       'cl' => $this->getIdColumn(),
-      'id' => $ids,
+      'id' => implode(',', $ids),
     );
     $cached_data = $this->getRenderedCache($cache_id);
     if (!empty($cached_data->data)) {
