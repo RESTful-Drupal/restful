@@ -960,10 +960,6 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
    *   The user object.
    */
   public function getAccount($cache = TRUE) {
-    $account = &drupal_static(__CLASS__ . '::getAccount');
-    if (isset($account)) {
-      return $account;
-    }
     // The request.
     $request = $this->getRequest();
     // The HTTP method. Defaults to "get".
@@ -985,7 +981,6 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
    *   The account to set.
    */
   public function setAccount(\stdClass $account) {
-    drupal_static_reset(__CLASS__ . '::getAccount');
     // If the limit rate is enabled for the current plugin then set the account.
     if ($this->getRateLimitManager()) {
       $this->getRateLimitManager()->setAccount($account);
