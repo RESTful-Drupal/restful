@@ -76,6 +76,40 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
   protected $valueMetadata = array();
 
   /**
+   * Get the cache id parameters based on the keys.
+   *
+   * @param $keys
+   *   Keys to turn into cache id parameters.
+   *
+   * @return array
+   *   The cache id parameters.
+   */
+  protected static function addCidParams($keys) {
+    $cid_params = array();
+    foreach ($keys as $param => $value) {
+      // Some request parameters don't affect how the resource is rendered, this
+      // means that we should skip them for the cache ID generation.
+      if (in_array($param, array(
+        'page',
+        'sort',
+        'q',
+        '__application',
+        'filter'
+      ))) {
+        continue;
+      }
+      // Make sure that ?fields=title,id and ?fields=id,title hit the same cache
+      // identifier.
+      $values = explode(',', $value);
+      sort($values);
+      $value = implode(',', $values);
+
+      $cid_params[] = substr($param, 0, 2) . ':' . $value;
+    }
+    return $cid_params;
+  }
+
+  /**
    * Get value metadata.
    *
    * @param mixed $id
@@ -479,10 +513,15 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
    *   definition.
    */
   public function getVersion() {
-    return array(
+    $version = &drupal_static(__CLASS__ . '::' . __FUNCTION__);
+    if (isset($version)) {
+      return $version;
+    }
+    $version = array(
       'major' => $this->getPluginKey('major_version'),
       'minor' => $this->getPluginKey('minor_version'),
     );
+    return $version;
   }
 
   /**
@@ -1080,35 +1119,31 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
    *   The cache identifier.
    */
   protected function generateCacheId(array $context = array()) {
-    // Get the cache ID from the selected params. We will use a complex cache ID
-    // for smarter invalidation. The cache id will be like:
-    // v<major version>.<minor version>::uu<user uid>::pa<params array>
-    // The code before every bit is a 2 letter representation of the label. For
-    // instance, the params array will be something like:
-    // fi:id,title::re:admin
-    // When the request has ?fields=id,title&restrict=admin
-    $version = $this->getVersion();
-    $cid = 'v' . $version['major'] . '.' . $version['minor'] . '::uu' . $this->getAccount()->uid . '::pa';
-    $cid_params = array();
-    $request = $this->getRequest();
-    static::cleanRequest($request);
-    $options = $context + $request;
-    foreach ($options as $param => $value) {
-      // Some request parameters don't affect how the resource is rendered, this
-      // means that we should skip them for the cache ID generation.
-      if (in_array($param, array('page', 'sort', 'q', '__application', 'filter'))) {
-        continue;
+    // For performance reasons create the request part and cache it, then add
+    // the context part.
+    $request_cid = &drupal_static(__CLASS__ . '::' . __FUNCTION__);
+    if (!isset($request_cid)) {
+      // Get the cache ID from the selected params. We will use a complex cache
+      // ID for smarter invalidation. The cache id will be like:
+      // v<major version>.<minor version>::uu<user uid>::pa<params array>
+      // The code before every bit is a 2 letter representation of the label.
+      // For instance, the params array will be something like:
+      // fi:id,title::re:admin
+      // When the request has ?fields=id,title&restrict=admin
+      $version = $this->getVersion();
+      $cid = 'v' . $version['major'] . '.' . $version['minor'] . '::uu' . $this->getAccount()->uid . '::pa';
+      $cid_params = array();
+      if ($this->isReadMethod($this->getMethod())) {
+        // We don't want to split the cache with the body data on write requests.
+        $request = $this->getRequest();
+        static::cleanRequest($request);
+        $cid_params = static::addCidParams($request);
       }
-      // Make sure that ?fields=title,id and ?fields=id,title hit the same cache
-      // identifier.
-      $values = explode(',', $value);
-      sort($values);
-      $value = implode(',', $values);
-
-      $cid_params[] = substr($param, 0, 2) . ':' . $value;
+      $request_cid = $cid . implode('::', $cid_params);
     }
-    $cid .= implode('::', $cid_params);
-    return $cid;
+    // Now add the context part to the cid
+    $cid_params = static::addCidParams($context);
+    return $request_cid . '::' . implode('::', $cid_params);
   }
 
   /**
