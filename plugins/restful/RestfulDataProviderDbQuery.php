@@ -100,7 +100,11 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
    *   Array keyed by the database column name, and the order ('ASC' or 'DESC') as value.
    */
   public function defaultSortInfo() {
-    return array($this->getIdColumn() => 'ASC');
+    $sorts = array();
+    if (isset($this->getPublicFields[$this->getIdColumn()])) {
+      $sorts[$this->getIdColumn()] = 'ASC';
+    }
+    return $sorts;
   }
 
   /**
