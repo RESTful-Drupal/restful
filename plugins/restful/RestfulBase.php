@@ -658,6 +658,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
    * {@inheritdoc}
    */
   public function process($path = '', array $request = array(), $method = \RestfulInterface::GET, $check_rate_limit = TRUE) {
+    drupal_static_reset(__CLASS__ . '::getAccount');
     $this->setMethod($method);
     $this->setPath($path);
     $this->setRequest($request);
