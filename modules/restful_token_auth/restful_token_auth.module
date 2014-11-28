@@ -5,14 +5,40 @@
  * RESTful token authentication.
  */
 
+/**
+ *  Implements hook_menu().
+ */
+function restful_token_auth_menu() {
+  // Add administration page.
+  $items['admin/config/services/restful/token-auth'] = array(
+    'title' => 'Token Authentication',
+    'description' => 'Administer the RESTful Token Authentication module.',
+    'type' => MENU_LOCAL_TASK,
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('restful_token_auth_admin_settings'),
+    'access arguments' => array('administer restful'),
+    'file' => 'restful_token_auth.admin.inc',
+  );
+  return $items;
+}
 
 /**
  * Implements hook_menu_alter().
  */
 function restful_token_auth_menu_alter(&$items) {
-  $base_path = variable_get('restful_hook_menu_base_path', 'api');
-  if (!empty($items[$base_path . '/login-token'])) {
-    $items[$base_path . '/login-token']['delivery callback'] = 'restful_unprepared_delivery';
+  $access_token_plugins = array();
+  foreach (restful_get_restful_plugins() as $plugin) {
+    if ($plugin['entity_type'] == 'restful_token_auth') {
+      $access_token_plugins[] = $plugin;
+    }
+  }
+  if (empty($access_token_plugins)) {
+    return;
+  }
+  foreach ($access_token_plugins as $access_token_plugin) {
+    if (!empty($items[$access_token_plugin['menu_item']])) {
+      $items[$access_token_plugin['menu_item']]['delivery callback'] = 'restful_unprepared_delivery';
+    }
   }
 }
 
@@ -48,7 +74,7 @@ function restful_token_auth_entity_info() {
   $items['restful_token_auth'] = array(
     'label' => t('Authentication token'),
     'entity class' => 'RestfulTokenAuth',
-    'controller class' => 'EntityAPIController',
+    'controller class' => 'RestfulTokenAuthController',
     'base table' => 'restful_token_auth',
     'fieldable' => TRUE,
     'entity keys' => array(
@@ -56,7 +82,14 @@ function restful_token_auth_entity_info() {
       'label' => 'name',
       'bundle' => 'type',
     ),
-    'bundles' => array(),
+    'bundles' => array(
+      'access_token' => array(
+        'label' => t('Access token'),
+      ),
+      'refresh_token' => array(
+        'label' => t('Refresh token'),
+      ),
+    ),
     'bundle keys' => array(
       'bundle' => 'type',
     ),

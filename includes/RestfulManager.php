@@ -291,4 +291,19 @@ class RestfulManager {
     }
   }
 
+  /**
+   * Helper function to echo static strings.
+   *
+   * @param mixed $value
+   *   The resource value.
+   * @param string $message
+   *   The string to relay.
+   *
+   * @return string
+   *   Returns $message
+   */
+  public static function echoMessage($value, $message) {
+    return $message;
+  }
+
 }

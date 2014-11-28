@@ -28,7 +28,7 @@ abstract class RestfulPluginBase implements \RestfulPluginInterface {
    * {@inheritdoc}
    */
   public function getPluginKey($key = NULL) {
-    return empty($this->plugin[$key]) ? NULL : $this->plugin[$key];
+    return isset($this->plugin[$key]) ? $this->plugin[$key] : NULL;
   }
 
   /**
