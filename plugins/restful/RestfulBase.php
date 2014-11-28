@@ -921,12 +921,21 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
    *   The user object.
    */
   public function getAccount($cache = TRUE) {
+    $cached_uid = &drupal_static(__CLASS__ . '::getAccount', array());
+
     // The request.
     $request = $this->getRequest();
     // The HTTP method. Defaults to "get".
     $method = $this->getMethod();
 
+    $unique_identifier = md5(serialize($request) . $method);
+
+    if (isset($cached_uid[$unique_identifier])) {
+      return $cached_uid ? user_load($cached_uid[$unique_identifier]) : drupal_anonymous_user();
+    }
+
     $account = $this->getAuthenticationManager()->getAccount($request, $method, $cache);
+    $cached_uid[$unique_identifier] = $account->uid;
 
     // If the limit rate is enabled for the current plugin then set the account.
     if ($this->getRateLimitManager()) {
