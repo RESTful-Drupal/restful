@@ -132,14 +132,14 @@ class RestfulHookMenuTestCase extends RestfulCurlBaseTestCase {
 
     // 3. my-api/articles with header X-API-Version: v1.1 yields 1.1
     // Fake the HTTP header.
-    \RestfulManager::getHttpHeader('X-API-Version') = 'v1.1';
+    $_SERVER['HTTP_X_API_VERSION'] = 'v1.1';
     drupal_static_reset('RestfulBase::getVersionFromRequest');
     $handler = restful_get_restful_handler_for_path('api/articles');
     $this->assertEqual($handler->getVersion(), array('major' => 1, 'minor' => 1), 'api/articles resolves 1.1');
 
     // 4. my-api/articles with header X-API-Version: v1 yields 1.6
     // Fake the HTTP header.
-    \RestfulManager::getHttpHeader('X-API-Version') = 'v1';
+    $_SERVER['HTTP_X_API_VERSION'] = 'v1';
     drupal_static_reset('RestfulBase::getVersionFromRequest');
     drupal_static_reset('restful_get_restful_handler_for_path');
     $handler = restful_get_restful_handler_for_path('api/articles');
