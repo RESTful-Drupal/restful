@@ -492,7 +492,7 @@ plugin definition will use that output format by default. Ex:
 variable_set('restful_default_output_formatter', 'my_formatter');
 ```
 
-## Cache layer
+## Render Cache.
 The RESTful module is compatible and leverages the popular
 [Entity Cache](https://drupal.org/project/entitycache) module and adds a new
 cache layer on its own for the rendered entity. Two requests made by the same
@@ -504,7 +504,29 @@ Developers have absolute control where the cache is stored and the expiration
 for every resource, meaning that very volatile resources can skip cache entirely
 while other resources can have its cache in MemCached or the database. To
 configure this developers just have to specify the following keys in their
-_restful_ plugin definition.
+_restful_ plugin definition:
+
+```php
+<?php
+
+$plugin = array(
+  ...
+  'render_cache' => array(
+    // Enables the render cache.
+    'render' => TRUE,
+    // Defaults to 'cache_restful' (optional).
+    'bin' => 'cache_bin_name',
+    // Expiration logic. Defaults to CACHE_PERMANENT (optional).
+    'expire' => CACHE_TEMPORARY,
+    // Enable cache invalidation for entity based resources. Defaults to TRUE (optional).
+    'simple_invalidate' => TRUE,
+    // Use a different cache backend for this resource. Defaults to variable_get('cache_default_class', 'DrupalDatabaseCache') (optional).
+    'class' => 'MemCacheDrupal',
+  ),
+);
+```
+
+Additionally you can define a cache backend for a given cache bin by setting the variable `cache_class_<cache-bin-name>` to the class to be used. This way all the resouces caching to that particular bin will use that cache backend instead of the default one.
 
 ## Rate Limit
 RESTful provides rate limit functionality out of the box. A rate limit is a way
