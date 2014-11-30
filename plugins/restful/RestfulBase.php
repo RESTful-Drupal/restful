@@ -592,6 +592,8 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
    */
   public function options($path = '', array $request = array()) {
     $this->setMethod(\RestfulInterface::OPTIONS);
+    $this->setPath($path);
+    $this->setRequest($request);
     // A list of discoverable methods.
     $allowed_methods = array();
     foreach ($this->getControllers() as $pattern => $controllers) {
