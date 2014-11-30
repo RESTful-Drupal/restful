@@ -58,7 +58,7 @@ class RestfulRenderCacheTestCase extends DrupalWebTestCase {
     $node = reset($nodes);
     $cid = 'v1.1' . '::uu' . $account->uid . '::pa' . 'et:node::ei:' . $node->nid;
     $record = $cache->get($cid);
-    $this->assertEqual($pre_cache_results[0], $record->data, 'Data in cache bins is correct.');
+    $this->assertEqual($pre_cache_results[2], $record->data, 'Data in cache bins is correct.');
 
     // Test that invalidation is clearing cache records.
     // 1. Update node and watch cache vanish.
@@ -92,8 +92,8 @@ class RestfulRenderCacheTestCase extends DrupalWebTestCase {
     // Check that the stored data for both cache ids exists and is different.
     $this->assertNotEqual($record->data, $cache->get($cid_wo_request)->data, 'Cache with request params is different.');
     // Make sure that we are not storing the same data than before.
-    $this->assertNotEqual($results_wo_request[0], $record->data, 'Cache with request is not overwritten.');
+    $this->assertNotEqual($results_wo_request[2], $record->data, 'Cache with request is not overwritten.');
     // Assure that the stored cache corresponds to the returned rendered entity.
-    $this->assertEqual($results_w_request[0], $record->data, 'Cache with request is correctly stored.');
+    $this->assertEqual($results_w_request[2], $record->data, 'Cache with request is correctly stored.');
   }
 }
