@@ -59,7 +59,7 @@ function restful_admin_settings($form_state) {
     '#type' => 'checkbox',
     '#title' => t('Cache results'),
     '#description' => t('When enabled any resource that has not explicitly disabled the caching will be cached. Note that the first hit may result with slower response, although the next ones would be significantly faster.'),
-    '#default_value' => variable_get('restful_render_cache', FALSE),
+    '#default_value' => variable_get('restful_render_cache', TRUE),
   );
 
   $form['advanced'] = array(
