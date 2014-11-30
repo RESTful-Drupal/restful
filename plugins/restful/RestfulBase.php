@@ -661,6 +661,9 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
     $this->setMethod($method);
     $this->setPath($path);
     $this->setRequest($request);
+    if (!empty($request['range'])) {
+      $this->setRange($request['range']);
+    }
     $version = $this->getVersion();
     $this->setHttpHeaders('X-API-Version', 'v' . $version['major']  . '.' . $version['minor']);
 
