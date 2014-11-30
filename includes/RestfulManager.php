@@ -320,7 +320,7 @@ class RestfulManager {
     // Commit the user session, if needed.
     drupal_session_commit();
 
-    if (variable_get('restful_page_cache', 0) && ($cache = drupal_page_set_cache())) {
+    if (variable_get('restful_page_cache', FALSE) && ($cache = drupal_page_set_cache())) {
       drupal_serve_page_from_cache($cache);
     }
     else {
