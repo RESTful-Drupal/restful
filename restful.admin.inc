@@ -55,7 +55,26 @@ function restful_admin_settings($form_state) {
     ),
   );
 
-  $form['restful_render_cache'] = array(
+  $form['restful_cache'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Cache'),
+    '#description' => t('Cache options for the different layers of RESTful.'),
+    '#collapsible' => FALSE,
+  );
+
+  $message = 'When enabled the RESTful module will leverage Drupal\'s page cache to serve requests.';
+  $message .= !variable_get('cache', FALSE) ? ' You need to !link for this feature to work.' : '';
+  $form['restful_cache']['restful_page_cache'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Use page cache'),
+    '#description' => t($message, array(
+      '!link' => l(t('activate page cache'), 'admin/config/development/performance'),
+    )),
+    '#default_value' => variable_get('restful_page_cache', FALSE),
+    '#disabled' => !variable_get('cache', FALSE),
+  );
+
+  $form['restful_cache']['restful_render_cache'] = array(
     '#type' => 'checkbox',
     '#title' => t('Cache results'),
     '#description' => t('When enabled any resource that has not explicitly disabled the caching will be cached. Note that the first hit may result with slower response, although the next ones would be significantly faster.'),

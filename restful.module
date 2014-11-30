@@ -607,10 +607,12 @@ function restful_delivery($var = NULL, $method = 'format') {
   catch (\RestfulException $e) {
     // Handle if the formatter does not exist.
     drupal_add_http_header('Status', $e->getCode());
-    $output = $e->getMessage();
+    echo $e->getMessage();
+    return;
   }
 
-  echo $output;
+  print $output;
+  \RestfulManager::pageFooter();
 }
 
 /**

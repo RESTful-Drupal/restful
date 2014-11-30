@@ -306,4 +306,31 @@ class RestfulManager {
     return $message;
   }
 
+  /**
+   * Performs end-of-request tasks.
+   *
+   * This function sets the page cache if appropriate, and allows modules to
+   * react to the closing of the page by calling hook_exit().
+   *
+   * @see drupal_page_footer().
+   */
+  public static function pageFooter() {
+    module_invoke_all('restful_exit');
+
+    // Commit the user session, if needed.
+    drupal_session_commit();
+
+    if (variable_get('restful_page_cache', 0) && ($cache = drupal_page_set_cache())) {
+      drupal_serve_page_from_cache($cache);
+    }
+    else {
+      ob_flush();
+    }
+
+    _registry_check_code(REGISTRY_WRITE_LOOKUP_CACHE);
+    drupal_cache_system_paths();
+    module_implements_write_cache();
+    system_run_automated_cron();
+  }
+
 }
