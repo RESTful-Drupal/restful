@@ -662,6 +662,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
     $this->setPath($path);
     $this->setRequest($request);
     if (!empty($request['range'])) {
+      // If there is a range property in the request override the range.
       $this->setRange($request['range']);
     }
     $version = $this->getVersion();
