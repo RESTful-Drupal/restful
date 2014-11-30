@@ -101,7 +101,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
    */
   public function defaultSortInfo() {
     $sorts = array();
-    if (isset($this->getPublicFields[$this->getIdColumn()])) {
+    if (!empty($this->getPublicFields[$this->getIdColumn()])) {
       $sorts[$this->getIdColumn()] = 'ASC';
     }
     return $sorts;
