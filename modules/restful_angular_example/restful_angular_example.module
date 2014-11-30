@@ -52,6 +52,7 @@ function restful_angular_example_ctools_plugin_directory($module, $plugin) {
 function restful_angular_example_library() {
   $bower_path = drupal_get_path('module', 'restful_angular_example') . '/components/restful-app/bower_components';
 
+  // AngularJS library.
   $libraries['angular'] = array(
     'title' => t('AngularJS'),
     'version' => '1.2.26',
@@ -61,6 +62,7 @@ function restful_angular_example_library() {
     ),
   );
 
+  // JSON pretty print library.
   $libraries['json-pretty-print'] = array(
     'title' => t('JSON pretty print'),
     'version' => '0.1.1',
@@ -76,6 +78,7 @@ function restful_angular_example_library() {
     ),
   );
 
+  // Select2 library.
   $libraries['select2'] = array(
     'title' => t('Select 2'),
     'version' => '0.0.5',
@@ -94,6 +97,7 @@ function restful_angular_example_library() {
 
   // Load our custom app.
   $app_path = drupal_get_path('module', 'restful_angular_example') . '/components/restful-app/dist';
+  // Custom library.
   $libraries['restful-angular'] = array(
     'title' => t('RESTful Angular'),
     'version' => '1.0.0',
@@ -142,6 +146,7 @@ function restful_angular_example_form_page($example) {
   if (empty($url)) {
     return t('Example not found.');
   }
+  // Add the library.
   drupal_add_library('restful_angular_example', 'restful-angular');
   return theme('restful_angular_example_angular', array('url' => $url));
 }
