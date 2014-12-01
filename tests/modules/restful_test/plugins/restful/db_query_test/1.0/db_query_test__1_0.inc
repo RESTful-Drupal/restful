@@ -11,4 +11,7 @@ $plugin = array(
     'id_column' => 'id',
     'primary' => 'id',
   ),
+  'render_cache' => array(
+    'render' => TRUE,
+  ),
 );

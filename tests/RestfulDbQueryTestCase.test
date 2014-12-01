@@ -104,4 +104,39 @@ class RestfulDbQueryTestCase extends DrupalWebTestCase {
     $result = $handler->get();
     $this->assertEqual($result, array($mock_data4), 'All the content listed successfully.');
   }
+
+  /**
+   * Test the render cache.
+   */
+  public function testRenderCache() {
+    $account = $this->drupalCreateUser();
+
+    // Populate the table with some values.
+    $mock_data = array(
+      'str_field' => $this->randomName(),
+      'int_field' => intval(mt_rand(1, 100)),
+    );
+    $mock_data['serialized_field'] = serialize($mock_data);
+    $id = db_insert($this->tableName)
+      ->fields($mock_data)
+      ->execute();
+    $id = intval($id);
+
+    // Get the handler.
+    $handler = restful_get_restful_handler('db_query_test');
+    $handler->setAccount($account);
+    $cache = $handler->getCacheController();
+
+    // Populate the cache entry.
+    $handler->get($id);
+    $version = $handler->getVersion();
+    $cid = 'v'. $version['major'] . '.' . $version['minor'] . '::uu' . $account->uid . '::patb:restful_test_db_query::cl:id::id:' . $id;
+    $cache_data = $cache->get($cid);
+    $this->assertNotNull($cache_data->data, 'Cache data is present.');
+
+    $this->assertEqual($cache_data->data[0]['string'], $mock_data['str_field'], 'The record was retrieved successfully.');
+    $this->assertEqual($cache_data->data[0]['integer'], $mock_data['int_field'], 'The record was retrieved successfully.');
+    $this->assertEqual($cache_data->data[0]['serialized'], $mock_data['serialized_field'], 'The record was retrieved successfully.');
+  }
+
 }
