@@ -17,6 +17,7 @@ function restful_angular_example_menu() {
     'access callback' => 'node_access',
     'access arguments' => array('create', 'article'),
     'page callback' => 'restful_angular_example_form_page',
+    'page arguments' => array(1),
   );
   return $items;
 }
@@ -25,8 +26,8 @@ function restful_angular_example_menu() {
  * Implements hook_theme().
  */
 function restful_angular_example_theme() {
-  $theme['restful_angular_example_angular_form'] = array(
-    'template' => 'restful-angular-form',
+  $theme['restful_angular_example_angular'] = array(
+    'template' => 'restful-angular',
     'path' => drupal_get_path('module', 'restful_angular_example') . '/templates',
     'variables' => array(
       'url' => NULL
@@ -46,45 +47,107 @@ function restful_angular_example_ctools_plugin_directory($module, $plugin) {
 }
 
 /**
- * Page callback; Load the AngularJs form.
+ *  Implements hook_library().
  */
-function restful_angular_example_form_page() {
+function restful_angular_example_library() {
   $bower_path = drupal_get_path('module', 'restful_angular_example') . '/components/restful-app/bower_components';
 
-  // Load the libraries.
-  drupal_add_js($bower_path . '/danialfarid-angular-file-upload/dist/angular-file-upload-shim.min.js');
-  drupal_add_js($bower_path . '/angular/angular.js');
-  drupal_add_js($bower_path . '/danialfarid-angular-file-upload/dist/angular-file-upload.min.js');
+  // AngularJS library.
+  $libraries['angular'] = array(
+    'title' => t('AngularJS'),
+    'version' => '1.2.26',
+    'website' => 'https://github.com/angular/angular.js',
+    'js' => array(
+      $bower_path . '/angular/angular.js' => array(),
+    ),
+  );
 
   // JSON pretty print library.
-  drupal_add_js($bower_path . '/ng-prettyjson/dist/ng-prettyjson.min.js');
-  drupal_add_css($bower_path . '/ng-prettyjson/dist/ng-prettyjson.min.css');
+  $libraries['json-pretty-print'] = array(
+    'title' => t('JSON pretty print'),
+    'version' => '0.1.1',
+    'website' => 'https://github.com/darul75/ng-prettyjson',
+    'js' => array(
+      $bower_path . '/ng-prettyjson/dist/ng-prettyjson.min.js' => array(),
+    ),
+    'css' => array(
+      $bower_path . '/ng-prettyjson/dist/ng-prettyjson.min.css' => array(),
+    ),
+    'dependencies' => array(
+      array('restful_angular_example', 'angular'),
+    ),
+  );
 
-  // Select2.
-  drupal_add_js($bower_path . '/select2/select2.js');
-  drupal_add_css($bower_path . '/select2/select2.css');
-  drupal_add_js($bower_path . '/angular-ui-select2/src/select2.js');
+  // Select2 library.
+  $libraries['select2'] = array(
+    'title' => t('Select 2'),
+    'version' => '0.0.5',
+    'website' => 'https://github.com/angular-ui/ui-select2',
+    'js' => array(
+      $bower_path . '/select2/select2.js' => array(),
+      $bower_path . '/angular-ui-select2/src/select2.js' => array(),
+    ),
+    'css' => array(
+      $bower_path . '/select2/select2.css' => array(),
+    ),
+    'dependencies' => array(
+      array('restful_angular_example', 'angular'),
+    ),
+  );
 
   // Load our custom app.
   $app_path = drupal_get_path('module', 'restful_angular_example') . '/components/restful-app/dist';
-  drupal_add_js($app_path . '/restful-app.js');
-  drupal_add_css($app_path . '/css/restful-app.css');
-
-  // Pass info via Drupal.settings.
-  $settings['restfulExample'] = array(
-    'basePath' => url('', array('absolute' => TRUE)),
-    'csrfToken' => drupal_get_token(\RestfulInterface::TOKEN_VALUE),
-    'data' => array(
-      'article' => array(
-        'label' => 'no',
-      ),
+  // Custom library.
+  $libraries['restful-angular'] = array(
+    'title' => t('RESTful Angular'),
+    'version' => '1.0.0',
+    'website' => 'https://github.com/Gizra/restful/blob/7.x-1.x/modules/restful_angular_example/README.md',
+    'js' => array(
+      $bower_path . '/danialfarid-angular-file-upload/dist/angular-file-upload-shim.min.js' => array(),
+      $bower_path . '/danialfarid-angular-file-upload/dist/angular-file-upload.min.js' => array(),
+      $app_path . '/restful-app.js' => array(),
+    ),
+    'css' => array(
+      $app_path . '/css/restful-app.css' => array(),
+    ),
+    'dependencies' => array(
+      array('restful_angular_example', 'json-pretty-print'),
+      array('restful_angular_example', 'select2'),
     ),
   );
-  drupal_add_js($settings, 'setting');
 
-  // Theme function simply declares the angular app, and ng-includes the app's
-  // view.
-  $url = url($app_path . '/views/main.html', array('absolute' => TRUE));
-  return theme('restful_angular_example_angular_form', array('url' => $url));
+  return $libraries;
+}
+
+/**
+ * Page callback; Load the AngularJs form.
+ */
+function restful_angular_example_form_page($example) {
+
+  if ($example == 'form') {
+    // Pass info via Drupal.settings.
+    $settings['restfulExample'] = array(
+      'basePath' => url('', array('absolute' => TRUE)),
+      'csrfToken' => drupal_get_token(\RestfulInterface::TOKEN_VALUE),
+      'data' => array(
+        'article' => array(
+          'label' => 'no',
+        ),
+      ),
+    );
+    drupal_add_js($settings, 'setting');
+
+    // Theme function simply declares the angular app, and ng-includes the app's
+    // view.
+    $app_path = drupal_get_path('module', 'restful_angular_example') . '/components/restful-app/dist';
+    $url = url($app_path . '/views/main.html', array('absolute' => TRUE));
+  }
+
+  if (empty($url)) {
+    return t('Example not found.');
+  }
+  // Add the library.
+  drupal_add_library('restful_angular_example', 'restful-angular');
+  return theme('restful_angular_example_angular', array('url' => $url));
 }
 
