@@ -12,11 +12,11 @@
  * Implements hook_menu().
  */
 function restful_angular_example_menu() {
-  $items['restful-example/form'] = array(
-    'title' => 'AngularJs Form',
+  $items['restful-example/%'] = array(
+    'title' => 'AngularJs example',
     'access callback' => 'node_access',
     'access arguments' => array('create', 'article'),
-    'page callback' => 'restful_angular_example_form_page',
+    'page callback' => 'restful_angular_example_page',
     'page arguments' => array(1),
   );
   return $items;
@@ -30,7 +30,8 @@ function restful_angular_example_theme() {
     'template' => 'restful-angular',
     'path' => drupal_get_path('module', 'restful_angular_example') . '/templates',
     'variables' => array(
-      'url' => NULL
+      'url' => NULL,
+      'controller' => NULL,
     ),
   );
 
@@ -55,7 +56,7 @@ function restful_angular_example_library() {
   // AngularJS library.
   $libraries['angular'] = array(
     'title' => t('AngularJS'),
-    'version' => '1.2.26',
+    'version' => '~1.2.27',
     'website' => 'https://github.com/angular/angular.js',
     'js' => array(
       $bower_path . '/angular/angular.js' => array(),
@@ -65,7 +66,7 @@ function restful_angular_example_library() {
   // JSON pretty print library.
   $libraries['json-pretty-print'] = array(
     'title' => t('JSON pretty print'),
-    'version' => '0.1.1',
+    'version' => '~0.1.1',
     'website' => 'https://github.com/darul75/ng-prettyjson',
     'js' => array(
       $bower_path . '/ng-prettyjson/dist/ng-prettyjson.min.js' => array(),
@@ -95,16 +96,45 @@ function restful_angular_example_library() {
     ),
   );
 
-  // Load our custom app.
-  $app_path = drupal_get_path('module', 'restful_angular_example') . '/components/restful-app/dist';
-  // Custom library.
-  $libraries['restful-angular'] = array(
-    'title' => t('RESTful Angular'),
-    'version' => '1.0.0',
-    'website' => 'https://github.com/Gizra/restful/blob/7.x-1.x/modules/restful_angular_example/README.md',
+  // File upload library.
+  $libraries['file-upload'] = array(
+    'title' => t('File upload'),
+    'version' => '~2.0.0',
+    'website' => 'https://github.com/danialfarid/angular-file-upload',
     'js' => array(
       $bower_path . '/danialfarid-angular-file-upload/dist/angular-file-upload-shim.min.js' => array(),
       $bower_path . '/danialfarid-angular-file-upload/dist/angular-file-upload.min.js' => array(),
+    ),
+    'dependencies' => array(
+      array('restful_angular_example', 'angular'),
+    ),
+  );
+
+  // ng-admin library.
+  $libraries['ng-admin'] = array(
+    'title' => t('ng-admin'),
+    'version' => '~0.3.3',
+    'website' => 'https://github.com/marmelab/ng-admin',
+    'js' => array(
+      $bower_path . 'ng-admin/build/ng-admin.min.js' => array(),
+    ),
+    'css' => array(
+      $bower_path . '/ng-admin/build/ng-admin.min.css' => array(),
+    ),
+    'dependencies' => array(
+      array('restful_angular_example', 'angular'),
+    ),
+  );
+
+  // Load our custom app.
+  $app_path = drupal_get_path('module', 'restful_angular_example') . '/components/restful-app/dist';
+
+  // Custom libraries.
+  $libraries['restful-angular-form'] = array(
+    'title' => t('RESTful Angular Form'),
+    'version' => '1.0.0',
+    'website' => 'https://github.com/Gizra/restful/blob/7.x-1.x/modules/restful_angular_example/README.md',
+    'js' => array(
       $app_path . '/restful-app.js' => array(),
     ),
     'css' => array(
@@ -113,6 +143,21 @@ function restful_angular_example_library() {
     'dependencies' => array(
       array('restful_angular_example', 'json-pretty-print'),
       array('restful_angular_example', 'select2'),
+      array('restful_angular_example', 'file-upload'),
+    ),
+  );
+  $libraries['restful-angular-admin'] = array(
+    'title' => t('RESTful Angular Admin'),
+    'version' => '1.0.0',
+    'website' => 'https://github.com/Gizra/restful/blob/7.x-1.x/modules/restful_angular_example/README.md',
+    'js' => array(
+      $app_path . '/restful-app.js' => array(),
+    ),
+    'css' => array(
+      $app_path . '/css/restful-app.css' => array(),
+    ),
+    'dependencies' => array(
+      array('restful_angular_example', 'ng-admin'),
     ),
   );
 
@@ -122,8 +167,10 @@ function restful_angular_example_library() {
 /**
  * Page callback; Load the AngularJs form.
  */
-function restful_angular_example_form_page($example) {
-
+function restful_angular_example_page($example) {
+  $controller_name = preg_replace('/-_/', ' ', $example) . ' Ctrl';
+  $controller_name = ucfirst($controller_name);
+  $controller_name = preg_replace('/ /', '', $controller_name);
   if ($example == 'form') {
     // Pass info via Drupal.settings.
     $settings['restfulExample'] = array(
@@ -140,14 +187,35 @@ function restful_angular_example_form_page($example) {
     // Theme function simply declares the angular app, and ng-includes the app's
     // view.
     $app_path = drupal_get_path('module', 'restful_angular_example') . '/components/restful-app/dist';
-    $url = url($app_path . '/views/main.html', array('absolute' => TRUE));
+    $url = url($app_path . '/views/form.html', array('absolute' => TRUE));
+
+    // Add the library.
+    drupal_add_library('restful_angular_example', 'restful-angular-form');
+  }
+  elseif ($example == 'admin') {
+    // Pass info via Drupal.settings.
+    $settings['restfulExample'] = array(
+      'basePath' => url('', array('absolute' => TRUE)),
+      'csrfToken' => drupal_get_token(\RestfulInterface::TOKEN_VALUE),
+      'data' => array(
+        'article' => array(
+          'label' => 'no',
+        ),
+      ),
+    );
+    drupal_add_js($settings, 'setting');
+
+    // Theme function simply declares the angular app, and ng-includes the app's
+    // view.
+    $app_path = drupal_get_path('module', 'restful_angular_example') . '/components/restful-app/dist';
+    $url = url($app_path . '/views/form.html', array('absolute' => TRUE));
+
+    // Add the library.
+    drupal_add_library('restful_angular_example', 'restful-angular-form');
   }
 
   if (empty($url)) {
     return t('Example not found.');
   }
-  // Add the library.
-  drupal_add_library('restful_angular_example', 'restful-angular');
-  return theme('restful_angular_example_angular', array('url' => $url));
+  return theme('restful_angular_example_angular', array('url' => $url, 'controller' => $controller_name));
 }
-
