@@ -148,6 +148,17 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
       $this->pass('Exception thrown on illegal sort property, descending.');
     }
 
+    // Test the range overrides.
+    $request['range'] = 2;
+    $result = $handler->get('', $request);
+    $this->assertEqual(count($result), $request['range'], 'Range parameter overridden correctly');
+
+    // Test invalid range.
+    $request['range'] = $this->randomName();
+    $result = $handler->get('', $request);
+    $range = $handler->getRange();
+    $this->assertEqual(count($result), min($range, count($expected_result)), 'Invalid range parameter ignored correctly');
+
     // Test the administrator's content listing.
     $role_name = 'administrator';
     $handler = restful_get_restful_handler_by_name('per_role_content__1_0:' . $role_name);
