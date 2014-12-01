@@ -1,10 +1,6 @@
 'use strict';
 
-angular.module('restfulApp', [
-    'angularFileUpload',
-    'ngPrettyJson',
-    'ui.select2'
-  ], function($httpProvider) {
+var app = angular.module('restfulApp', restfulExampleModules, function($httpProvider) {
 
     // Use x-www-form-urlencoded Content-Type
     $httpProvider.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded;charset=utf-8';
@@ -51,3 +47,54 @@ angular.module('restfulApp', [
       return result;
     }];
   });
+
+if (restfulExampleModules.indexOf('ng-admin') !== -1) {
+  // This configuration is specific for ng-admin. Do not add it for other
+  // examples.
+  app.config(function (NgAdminConfigurationProvider, Application, Entity, Field, Reference, ReferencedList, ReferenceMany) {
+    // set the main API endpoint for this admin
+    var app = new Application('RESTful Admin')
+      .baseApiUrl('http://localhost/restful');
+
+    // define an entity mapped by the http://localhost/api/articles endpoint
+    var article = new Entity('articles');
+    app
+      .addEntity(article);
+
+
+    // set the list of fields to map in each  view
+    var truncate = function (value, entry) {
+      return value + '(' + entry.values.subValue + ')';
+    };
+    var pagination = function(page, maxPerPage) {
+      return {
+        begin: (page - 1) * maxPerPage,
+        end: page * maxPerPage
+      };
+    };
+    article.dashboardView()
+      .title('Recent articles')
+      .order(1) // display the article panel first in the dashboard
+      .limit(5) // limit the panel to the 5 latest articles
+      .pagination(pagination) // use the custom pagination function to format the API request correctly
+      .addField(new Field('title').isEditLink(true).map(truncate));
+
+    article.listView()
+      .title('All articles') // default title is "List of articles"
+      .pagination(pagination)
+      .addField(new Field('id').label('ID'))
+      .addField(new Field('title'));
+
+    article.creationView()
+      .title('Add a new article') // default title is "Create a article"
+      .addField(new Field('title')) // the default edit field type is "string", and displays as a text input
+      .addField(new Field('body').type('wysiwyg')) // overriding the type allows rich text editing for the body
+
+    article.editionView()
+      .addField(new Field('title'))
+      .addField(new Field('body').type('wysiwyg')
+    );
+
+    NgAdminConfigurationProvider.configure(app);
+  });
+}

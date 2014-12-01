@@ -56,7 +56,7 @@ function restful_angular_example_library() {
   // AngularJS library.
   $libraries['angular'] = array(
     'title' => t('AngularJS'),
-    'version' => '~1.2.27',
+    'version' => '1.2.27',
     'website' => 'https://github.com/angular/angular.js',
     'js' => array(
       $bower_path . '/angular/angular.js' => array(),
@@ -66,7 +66,7 @@ function restful_angular_example_library() {
   // JSON pretty print library.
   $libraries['json-pretty-print'] = array(
     'title' => t('JSON pretty print'),
-    'version' => '~0.1.1',
+    'version' => '0.1.1',
     'website' => 'https://github.com/darul75/ng-prettyjson',
     'js' => array(
       $bower_path . '/ng-prettyjson/dist/ng-prettyjson.min.js' => array(),
@@ -99,7 +99,7 @@ function restful_angular_example_library() {
   // File upload library.
   $libraries['file-upload'] = array(
     'title' => t('File upload'),
-    'version' => '~2.0.0',
+    'version' => '2.0.0',
     'website' => 'https://github.com/danialfarid/angular-file-upload',
     'js' => array(
       $bower_path . '/danialfarid-angular-file-upload/dist/angular-file-upload-shim.min.js' => array(),
@@ -113,10 +113,10 @@ function restful_angular_example_library() {
   // ng-admin library.
   $libraries['ng-admin'] = array(
     'title' => t('ng-admin'),
-    'version' => '~0.3.3',
+    'version' => '0.3.3',
     'website' => 'https://github.com/marmelab/ng-admin',
     'js' => array(
-      $bower_path . 'ng-admin/build/ng-admin.min.js' => array(),
+      $bower_path . '/ng-admin/build/ng-admin.min.js' => array(),
     ),
     'css' => array(
       $bower_path . '/ng-admin/build/ng-admin.min.css' => array(),
@@ -184,6 +184,18 @@ function restful_angular_example_page($example) {
     );
     drupal_add_js($settings, 'setting');
 
+    // This is a big piece of hack, since Drupal.settings is not available when
+    // adding Angular. This is because of the JS_LIBRARY group against the hard
+    // coded group in core to add the settings. The alternative is add a global
+    // variable in the window object that contains the information we want to
+    // pass to the angular module constructor.
+    drupal_add_js("window.restfulExampleModules = ['angularFileUpload', 'ngPrettyJson', 'ui.select2']", array(
+      'type' => 'inline',
+      // Make sure it is available when constructing the angular module.
+      'scope' => 'header',
+      'group' => JS_LIBRARY - 10,
+    ));
+
     // Theme function simply declares the angular app, and ng-includes the app's
     // view.
     $app_path = drupal_get_path('module', 'restful_angular_example') . '/components/restful-app/dist';
@@ -191,6 +203,34 @@ function restful_angular_example_page($example) {
 
     // Add the library.
     drupal_add_library('restful_angular_example', 'restful-angular-form');
+  }
+  if ($example == 'admin') {
+    // Pass info via Drupal.settings.
+    $settings['restfulExample'] = array(
+      'basePath' => url('', array('absolute' => TRUE)),
+      'csrfToken' => drupal_get_token(\RestfulInterface::TOKEN_VALUE),
+      'data' => array(
+        'article' => array(
+          'label' => 'no',
+        ),
+      ),
+    );
+    drupal_add_js($settings, 'setting');
+
+    drupal_add_js("window.restfulExampleModules = ['ng-admin']", array(
+      'type' => 'inline',
+      // Make sure it is available when constructing the angular module.
+      'scope' => 'header',
+      'group' => JS_LIBRARY - 10,
+    ));
+
+    // Theme function simply declares the angular app, and ng-includes the app's
+    // view.
+    $app_path = drupal_get_path('module', 'restful_angular_example') . '/components/restful-app/dist';
+    $url = url($app_path . '/views/admin.html', array('absolute' => TRUE));
+
+    // Add the library.
+    drupal_add_library('restful_angular_example', 'restful-angular-admin');
   }
 
   if (empty($url)) {
