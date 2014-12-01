@@ -168,8 +168,8 @@ function restful_angular_example_library() {
  * Page callback; Load the AngularJs form.
  */
 function restful_angular_example_page($example) {
-  $controller_name = preg_replace('/-_/', ' ', $example) . ' Ctrl';
-  $controller_name = ucfirst($controller_name);
+  $controller_name = preg_replace('/[-_]/', ' ', $example) . ' Ctrl';
+  $controller_name = ucwords($controller_name);
   $controller_name = preg_replace('/ /', '', $controller_name);
   if ($example == 'form') {
     // Pass info via Drupal.settings.
