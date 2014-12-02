@@ -133,7 +133,7 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
 
     // Clear the cache.
     $handler->clearRenderedCache(array(
-      'et' => 'main',
+      'et' => 'entity_test',
       'ei' => $id,
     ));
 
