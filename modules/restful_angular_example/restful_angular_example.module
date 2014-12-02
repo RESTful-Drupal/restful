@@ -18,8 +18,30 @@ function restful_angular_example_menu() {
     'access arguments' => array('create', 'article'),
     'page callback' => 'restful_angular_example_page',
     'page arguments' => array(1),
+    'delivery callback' => 'restful_angular_example_delivery',
   );
   return $items;
+}
+
+/**
+ * Custom delivery callback.
+ *
+ * Used to override html.tpl.php from the module.
+ */
+function restful_angular_example_delivery($page_callback_result) {
+  global $language;
+  // Pass variables to the template.
+  $vars = array(
+    'language' => $language,
+    'head_title' => drupal_get_title(),
+    'favicon' => '',
+    'styles' => drupal_get_css(),
+    'scripts' => drupal_get_js(),
+    'messages' => drupal_get_messages(),
+    'content' => $page_callback_result,
+  );
+  echo theme('restful_angular_example_html', $vars);
+  drupal_page_footer();
 }
 
 /**
@@ -32,6 +54,20 @@ function restful_angular_example_theme() {
     'variables' => array(
       'url' => NULL,
       'controller' => NULL,
+    ),
+  );
+
+  $theme['restful_angular_example_html'] = array(
+    'template' => 'restful-angular-html',
+    'path' => drupal_get_path('module', 'restful_angular_example') . '/templates',
+    'variables' => array(
+      'language' => NULL,
+      'head_title' => NULL,
+      'favicon' => NULL,
+      'styles' => NULL,
+      'scripts' => NULL,
+      'messages' => NULL,
+      'content' => NULL,
     ),
   );
 
@@ -217,7 +253,7 @@ function restful_angular_example_page($example) {
     );
     drupal_add_js($settings, 'setting');
 
-    drupal_add_js("window.restfulExampleModules = ['ng-admin']", array(
+    drupal_add_js("window.restfulExampleModules = ['ng-admin', 'restangular']", array(
       'type' => 'inline',
       // Make sure it is available when constructing the angular module.
       'scope' => 'header',

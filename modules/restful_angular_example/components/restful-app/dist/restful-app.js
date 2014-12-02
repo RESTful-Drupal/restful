@@ -1,6 +1,6 @@
 /**
  * restful-app
- * @version v0.0.1 - 2014-12-01
+ * @version v0.0.1 - 2014-12-02
  * @link 
  * @author  <>
  * @license MIT License, http://www.opensource.org/licenses/MIT
@@ -103,6 +103,18 @@ if (restfulExampleModules.indexOf('ng-admin') !== -1) {
     );
 
     NgAdminConfigurationProvider.configure(app);
+  });
+  app.config(function(RestangularProvider) {
+    // Add a response intereceptor.
+    RestangularProvider.addResponseInterceptor(function(data, operation, what, url, response, deferred) {
+      var extractedData;
+      if (operation === "getList") {
+        extractedData = data.data;
+      } else {
+        extractedData = data.data[0];
+      }
+      return extractedData;
+    });
   });
 }
 
