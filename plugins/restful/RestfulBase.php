@@ -1075,7 +1075,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
    *
    * @see \RestfulEntityInterface::viewEntity().
    */
-  protected function clearRenderedCache(array $context = array()) {
+  public function clearRenderedCache(array $context = array()) {
     $cache_info = $this->getPluginKey('render_cache');
     if (!$cache_info['render']) {
       return;
