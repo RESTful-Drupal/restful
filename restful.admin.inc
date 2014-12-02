@@ -55,11 +55,25 @@ function restful_admin_settings($form_state) {
     ),
   );
 
-  $form['restful_render_cache'] = array(
+  $form['restful_cache'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Cache'),
+    '#description' => t('Cache options for the different layers of RESTful.'),
+    '#collapsible' => FALSE,
+  );
+
+  $form['restful_cache']['restful_page_cache'] = array(
+    '#markup' => t('RESTful leverages page cache out of the box. !link to start caching responses. Status: <strong>@status</strong>.', array(
+      '!link' => l(t('Enable page cache'), 'admin/config/development/performance'),
+      '@status' => variable_get('cache', FALSE) ? t('Enabled') : t('Disabled'),
+    )),
+  );
+
+  $form['restful_cache']['restful_render_cache'] = array(
     '#type' => 'checkbox',
     '#title' => t('Cache results'),
-    '#description' => t('When enabled any resource that has not explicitly disabled the caching will be cached. Note that the first hit may result with slower response, although the next ones would be significantly faster.'),
-    '#default_value' => variable_get('restful_render_cache', TRUE),
+    '#description' => t('When enabled any resource that has not explicitly disabled the caching will be cached. Note that the first hit may result with slower response, although the next ones would be significantly faster. This is different from the page cache in the sense that it acts at the row level (a single entity, a single database row, ...), therefore allowing you to assemble non cached pages with the cached bits faster.'),
+    '#default_value' => variable_get('restful_render_cache', FALSE),
   );
 
   $form['advanced'] = array(

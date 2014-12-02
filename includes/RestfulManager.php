@@ -306,4 +306,19 @@ class RestfulManager {
     return $message;
   }
 
+  /**
+   * Performs end-of-request tasks.
+   *
+   * This function sets the page cache if appropriate, and allows modules to
+   * react to the closing of the page by calling hook_exit().
+   *
+   * This is just a wrapper around drupal_page_footer() so extending classes can
+   * override this method if necessary.
+   *
+   * @see drupal_page_footer().
+   */
+  public static function pageFooter() {
+    drupal_page_footer();
+  }
+
 }
