@@ -155,9 +155,13 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
 
     // Test invalid range.
     $request['range'] = $this->randomName();
-    $result = $handler->get('', $request);
-    $range = $handler->getRange();
-    $this->assertEqual(count($result), min($range, count($expected_result)), 'Invalid range parameter ignored correctly');
+    try {
+      $handler->get('', $request);
+      $this->fail('Exception not raised on invalid range parameter.');
+    }
+    catch (\RestfulBadRequestException $e) {
+      $this->pass('Exception raised on invalid range parameter.');
+    }
 
     // Test the administrator's content listing.
     $role_name = 'administrator';
