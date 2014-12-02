@@ -26,10 +26,9 @@ class RestfulRenderCacheTestCase extends DrupalWebTestCase {
     $settings = array('type' => 'article');
     $account = $this->drupalCreateUser();
 
-
     $num_articles = 3;
     for ($index = 0; $index < $num_articles; $index++) {
-      $settings['title'] = 'Node title '.$index;
+      $settings['title'] = 'Node title ' . $index;
       $node = $this->drupalCreateNode($settings);
       $nodes[$node->nid] = $node;
     }
@@ -66,7 +65,6 @@ class RestfulRenderCacheTestCase extends DrupalWebTestCase {
     $this->assertTrue($cache_info['simple_invalidate'], 'Cache render simple invalidation is activated');
     $node->title .= ' updated';
     node_save($node);
-
     $record = $cache->get($cid);
     $this->assertFalse($record, 'Cache record cleared correctly.');
     $this->assertFalse($cache->isEmpty(), 'Remaining cache items are intact after updating entity.');
@@ -80,9 +78,7 @@ class RestfulRenderCacheTestCase extends DrupalWebTestCase {
     $record = $cache->get($cid);
     $this->assertFalse($record, 'Cache bin is emptied after updating a user.');
 
-    $node = reset($nodes);
-    $cid = 'v1.1' . '::uu' . $account->uid . '::pa' . 'et:node::ei:' . $node->nid;
-
+    // Test cache segmentation with request params.
     // Rebuild caches.
     $cache->clear('*', TRUE);
     $results_wo_request = $handler->get();
