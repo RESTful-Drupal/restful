@@ -50,4 +50,4 @@ angular.module('restfulApp', [
       var result = angular.isObject(data) && String(data) !== '[object File]' ? param(data) : data;
       return result;
     }];
-});
+  });

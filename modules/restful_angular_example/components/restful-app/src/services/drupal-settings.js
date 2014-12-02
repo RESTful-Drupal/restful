@@ -37,5 +37,5 @@ angular.module('restfulApp')
      */
     this.getData = function(id) {
       return (angular.isDefined(self.settings.restfulExample.data[id])) ? self.settings.restfulExample.data[id] : {};
-    }
+    };
   });

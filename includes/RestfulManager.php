@@ -120,7 +120,7 @@ class RestfulManager {
     );
 
     $plugin['render_cache'] += array(
-      'render' => variable_get('restful_render_cache', FALSE),
+      'render' => variable_get('restful_render_cache', TRUE),
       'class' => NULL,
       'bin' => 'cache_restful',
       'expire' => CACHE_PERMANENT,

@@ -211,6 +211,12 @@ class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
     $public_fields['label']['access_callbacks'][] = array($this, 'publicFieldAccessFalse');
     $handler->setPublicFields($public_fields);
 
+    // Clear the cache.
+    $handler->clearRenderedCache(array(
+      'et' => 'node',
+      'ei' => $node->nid,
+    ));
+
     $result = $handler->get($node->nid);
     $this->assertTrue(empty($result[0]['label']), 'Label access is denied with access callback.');
   }
