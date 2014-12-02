@@ -131,6 +131,12 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
     );
     $handler->setPublicFields($public_fields);
 
+    // Clear the cache.
+    $handler->clearRenderedCache(array(
+      'et' => 'main',
+      'ei' => $id,
+    ));
+
     $result = $handler->get($id);
     $this->assertEqual($result[0]['entity_reference_single_resource'], $entity1->pid, '"full_view" property is working properly.');
 
