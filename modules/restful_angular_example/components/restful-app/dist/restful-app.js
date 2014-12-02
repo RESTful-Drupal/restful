@@ -1,7 +1,7 @@
 /**
  * restful-app
- * @version v0.0.1 - 2014-07-24
- * @link
+ * @version v0.0.1 - 2014-12-01
+ * @link 
  * @author  <>
  * @license MIT License, http://www.opensource.org/licenses/MIT
  */
@@ -57,15 +57,15 @@ angular.module('restfulApp', [
       var result = angular.isObject(data) && String(data) !== '[object File]' ? param(data) : data;
       return result;
     }];
-});
+  });
 
 'use strict';
 
 angular.module('restfulApp')
-  .controller('MainCtrl', function($scope, DrupalSettings, ArticlesResource, FileUpload, $http, $log) {
+  .controller('FormCtrl', function($scope, DrupalSettings, ArticlesResource, FileUpload, $http, $log) {
     $scope.data = DrupalSettings.getData('article');
-    $scope.data.label = 'yes',
-    $scope.data.body = 'Drupal stuff',
+    $scope.data.label = 'yes';
+    $scope.data.body = 'Drupal stuff';
     $scope.serverSide = {};
     $scope.tagsQueryCache = [];
 
@@ -93,7 +93,7 @@ angular.module('restfulApp')
         }
       }).success(function(data) {
 
-        if (data.length == 0) {
+        if (data.length === 0) {
           terms.results.push({
             text: query.term,
             id: query.term,
@@ -151,13 +151,14 @@ angular.module('restfulApp')
     };
 
     $scope.onFileSelect = function($files) {
+      var updateFileProperties = function(data) {
+        $scope.data.image = data.data.data[0].id;
+        $scope.serverSide.image = data.data.data[0];
+      };
       //$files: an array of files selected, each file has name, size, and type.
       for (var i = 0; i < $files.length; i++) {
         var file = $files[i];
-        FileUpload.upload(file).then(function(data) {
-          $scope.data.image = data.data.data[0].id;
-          $scope.serverSide.image = data.data.data[0];
-        });
+        FileUpload.upload(file).then(updateFileProperties);
       }
     };
   });
@@ -180,14 +181,14 @@ angular.module('restfulApp')
       var config = {
         withCredentials: true,
         headers: {
-          "X-CSRF-Token": DrupalSettings.getCsrfToken(),
+          'X-CSRF-Token': DrupalSettings.getCsrfToken()
           // Call the correct resource version (v1.5) that has the "body" and
           // "image" fields exposed.
         }
       };
 
       return $http.post(DrupalSettings.getBasePath() + 'api/v1.5/articles', data, config);
-    }
+    };
   });
 
 'use strict';
@@ -229,7 +230,7 @@ angular.module('restfulApp')
      */
     this.getData = function(id) {
       return (angular.isDefined(self.settings.restfulExample.data[id])) ? self.settings.restfulExample.data[id] : {};
-    }
+    };
   });
 
 'use strict';
@@ -253,7 +254,7 @@ angular.module('restfulApp')
         file: file,
         withCredentials:  true,
         headers: {
-          "X-CSRF-Token": DrupalSettings.getCsrfToken()
+          'X-CSRF-Token': DrupalSettings.getCsrfToken()
         }
       });
     };
