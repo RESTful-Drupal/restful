@@ -663,6 +663,17 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
     $this->setMethod($method);
     $this->setPath($path);
     $this->setRequest($request);
+    // Override the range with the value in the URL.
+    if (!empty($request['range'])) {
+      if (!ctype_digit((string) $request['range']) || $request['range'] < 1) {
+        throw new \RestfulBadRequestException('"Range" property should be numeric and higher than 0.');
+      }
+      if ($request['range'] < $this->getRange()) {
+        // If there is a valid range property in the request override the range.
+        $this->setRange($request['range']);
+      }
+    }
+
     $version = $this->getVersion();
     $this->setHttpHeaders('X-API-Version', 'v' . $version['major']  . '.' . $version['minor']);
 
