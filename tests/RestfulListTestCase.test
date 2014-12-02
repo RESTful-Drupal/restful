@@ -149,6 +149,7 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     }
 
     // Test the range overrides.
+    unset($request['sort']);
     $request['range'] = 2;
     $result = $handler->get('', $request);
     $this->assertEqual(count($result), $request['range'], 'Range parameter overridden correctly');
