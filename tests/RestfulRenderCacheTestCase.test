@@ -29,18 +29,10 @@ class RestfulRenderCacheTestCase extends DrupalWebTestCase {
 
     $num_articles = 3;
     for ($index = 0; $index < $num_articles; $index++) {
-      $settings['title'] = $this->randomName();
+      $settings['title'] = 'Node title '.$index;
       $node = $this->drupalCreateNode($settings);
       $nodes[$node->nid] = $node;
     }
-
-    // Fake defaultSortInfo() on resource.
-    // Ignore secondary id sort, since the chances of having duplicate
-    // randomly-generated node titles is astronomical.
-    function labelSort($a, $b) {
-      return strcasecmp($a->title, $b->title);
-    }
-    usort($nodes, 'labelSort');
 
     $handler = restful_get_restful_handler('test_articles', 1, 1);
     $handler->setAccount($account);
@@ -88,9 +80,6 @@ class RestfulRenderCacheTestCase extends DrupalWebTestCase {
     $record = $cache->get($cid);
     $this->assertFalse($record, 'Cache bin is emptied after updating a user.');
 
-    // Test cache segmentation with request params.
-    // Re-fake defaultSortInfo, since label has changed.
-    usort($nodes, 'labelSort');
     $node = reset($nodes);
     $cid = 'v1.1' . '::uu' . $account->uid . '::pa' . 'et:node::ei:' . $node->nid;
 
