@@ -64,8 +64,8 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
     $query = new EntityFieldQuery();
     $query->entityCondition('entity_type', $this->getEntityType());
 
-    if ($this->bundle && $entity_info['entity keys']['bundle']) {
-      $query->entityCondition('bundle', $this->getBundle());
+    if ($bundle = $this->getBundle() && $entity_info['entity keys']['bundle']) {
+      $query->entityCondition('bundle', $bundle);
     }
     if ($path = $this->getPath()) {
       $ids = explode(',', $path);
@@ -122,7 +122,7 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
   protected function queryForListFilter(\EntityFieldQuery $query) {
     $public_fields = $this->getPublicFields();
     foreach ($this->parseRequestForListFilter() as $filter) {
-      // Determine if sorting is by field or property.
+      // Determine if filtering is by field or property.
       if (empty($public_fields[$filter['public_field']]['column'])) {
         $query->propertyCondition($public_fields[$filter['public_field']]['property'], $filter['value'], $filter['operator']);
       }
