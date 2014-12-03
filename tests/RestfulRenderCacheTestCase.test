@@ -26,10 +26,9 @@ class RestfulRenderCacheTestCase extends DrupalWebTestCase {
     $settings = array('type' => 'article');
     $account = $this->drupalCreateUser();
 
-
     $num_articles = 3;
     for ($index = 0; $index < $num_articles; $index++) {
-      $settings['title'] = $this->randomName();
+      $settings['title'] = 'Node title ' . $index;
       $node = $this->drupalCreateNode($settings);
       $nodes[$node->nid] = $node;
     }

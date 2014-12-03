@@ -202,6 +202,27 @@ array(
 );
 ```
 
+You can also define default sort fields in your plugin, by overriding
+`defaultSortInfo()` in your class definition.
+
+This method should return an associative array, with each element having a key
+that matches a field from `publicFieldsInfo()`, and a value of either 'ASC' or 'DESC'.
+
+This default sort will be ignored if the request URL contains a sort query.
+
+```php
+class MyPlugin extends \RestfulEntityBaseTaxonomyTerm {
+  /**
+   * Overrides \RestfulEntityBase::defaultSortInfo().
+   */
+  public function defaultSortInfo() {
+    // Sort by 'id' in descending order.
+    return array('id' => 'DESC');
+  }
+}
+
+```
+
 ### Filter
 RESTful allows filtering of a list.
 
@@ -580,7 +601,7 @@ Since the global event is not tied to any resource the limit and period is speci
     all roles.
   - `restful_global_rate_period`: The period string compatible with
     \DateInterval.
-    
+
 ## Documenting your API
 It is of most importance to document your API, this is why the RESTful module
 provides a way to comprehensively document your resources and endpoints. This
