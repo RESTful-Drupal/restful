@@ -100,6 +100,9 @@ class RestfulManager {
    *   it does not match the allow_origin value the access will be denied.
    *   Typically used to avoid CORS problems. This will also populate the
    *   Access-Control-Allow-Origin header in the response.
+   * - url_params: Associative array to configure if the "sort", "filter" and
+   *   "range" url parameters should be allowed. Defaults to TRUE in all of
+   *   them.
    */
   public static function pluginProcessRestful($plugin, $info) {
     $plugin += array(
@@ -117,6 +120,7 @@ class RestfulManager {
       'discoverable' => TRUE,
       'data_provider_options' => array(),
       'menu_item' => FALSE,
+      'url_params' => array(),
     );
 
     $plugin['render_cache'] += array(
@@ -131,6 +135,12 @@ class RestfulManager {
       'enable' => TRUE,
       'operator' => 'CONTAINS',
       'range' => 10,
+    );
+
+    $plugin['url_params'] += array(
+      'sort' => TRUE,
+      'range' => TRUE,
+      'filter' => TRUE,
     );
 
     if (!empty($plugin['rate_limit'])) {
