@@ -665,6 +665,11 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
     $this->setRequest($request);
     // Override the range with the value in the URL.
     if (!empty($request['range'])) {
+      $url_params = $this->getPluginKey('url_params');
+      if (!$url_params['range']) {
+        throw new \RestfulBadRequestException('The range parameter has been disabled in server configuration.');
+      }
+
       if (!ctype_digit((string) $request['range']) || $request['range'] < 1) {
         throw new \RestfulBadRequestException('"Range" property should be numeric and higher than 0.');
       }
@@ -779,10 +784,15 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
     $request = $this->getRequest();
     $public_fields = $this->getPublicFields();
 
-    $sorts = array();
     if (empty($request['sort'])) {
       return array();
     }
+    $url_params = $this->getPluginKey('url_params');
+    if (!$url_params['sort']) {
+      throw new \RestfulBadRequestException('Sort parameters have been disabled in server configuration.');
+    }
+
+    $sorts = array();
     foreach (explode(',', $request['sort']) as $sort) {
       $direction = $sort[0] == '-' ? 'DESC' : 'ASC';
       $sort = str_replace('-', '', $sort);
@@ -839,6 +849,10 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
     if (empty($request['filter'])) {
       // No filtering is needed.
       return array();
+    }
+    $url_params = $this->getPluginKey('url_params');
+    if (!$url_params['filter']) {
+      throw new \RestfulBadRequestException('Filter parameters have been disabled in server configuration.');
     }
 
     $filters = array();

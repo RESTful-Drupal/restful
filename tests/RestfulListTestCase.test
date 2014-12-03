@@ -195,6 +195,21 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
       $this->pass('Exception thrown on illegal sort property, descending.');
     }
 
+    // Test valid sort with sort params disabled.
+    $handler->setPluginKey('url_params', array(
+      'filter' => TRUE,
+      'sort' => FALSE,
+      'range' => TRUE,
+    ));
+    $request['sort'] = 'label,id';
+    try {
+      $handler->get('', $request);
+      $this->fail('Exception not raised for disabled sort parameter.');
+    }
+    catch (\RestfulBadRequestException $e) {
+      $this->pass('Exception raised for disabled sort parameter.');
+    }
+
     // Test the range overrides.
     unset($request['sort']);
     $request['range'] = 2;
@@ -209,6 +224,21 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     }
     catch (\RestfulBadRequestException $e) {
       $this->pass('Exception raised on invalid range parameter.');
+    }
+
+    // Test valid range with range params disabled.
+    $handler->setPluginKey('url_params', array(
+      'filter' => TRUE,
+      'sort' => TRUE,
+      'range' => FALSE,
+    ));
+    $request['range'] = 2;
+    try {
+      $handler->get('', $request);
+      $this->fail('Exception not raised for disabled range parameter.');
+    }
+    catch (\RestfulBadRequestException $e) {
+      $this->pass('Exception raised for disabled range parameter.');
     }
 
     // Test the administrator's content listing.
@@ -328,6 +358,21 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     $query = array('filter' => array('invalid-key' => 'foo'));
     $result = $this->httpRequest('api/v1.0/articles/1', \RestfulInterface::GET, $query);
     $this->assertEqual($result['code'], '200', 'Invalid filter key was ignored on non-list query.');
+
+    // Test valid filter with filter params disabled.
+    $handler->setPluginKey('url_params', array(
+      'filter' => FALSE,
+      'sort' => TRUE,
+      'range' => TRUE,
+    ));
+    $request['filter'] = array('label' => 'abc');
+    try {
+      $handler->get('', $request);
+      $this->fail('Exception not raised for disabled filter parameter.');
+    }
+    catch (\RestfulBadRequestException $e) {
+      $this->pass('Exception raised for disabled filter parameter.');
+    }
   }
 
   /**

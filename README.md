@@ -202,6 +202,16 @@ array(
 );
 ```
 
+The sort parameter can be disabled in your resource plugin definition:
+
+```php
+$plugin = array(
+  ...
+  'url_params' => array(
+    'sort' => FALSE,
+  ),
+);
+
 You can also define default sort fields in your plugin, by overriding
 `defaultSortInfo()` in your class definition.
 
@@ -220,7 +230,6 @@ class MyPlugin extends \RestfulEntityBaseTaxonomyTerm {
     return array('id' => 'DESC');
   }
 }
-
 ```
 
 ### Filter
@@ -231,6 +240,17 @@ $handler = restful_get_restful_handler('articles');
 // Single value property.
 $request['filter'] = array('label' => 'abc');
 $result = $handler->get('', $request);
+```
+
+The filter parameter can be disabled in your resource plugin definition:
+
+```php
+$plugin = array(
+  ...
+  'url_params' => array(
+    'filter' => FALSE,
+  ),
+);
 ```
 
 ### Autocomplete
@@ -252,6 +272,27 @@ $request = array(
 );
 
 $handler->get('', $request);
+```
+
+### Range
+RESTful allows you to cotrol the number of elements per page you want to show. This value will always be limited by the `$range` variable in your resource class. This variable, in turn, defaults to 50.
+
+```php
+$handler = restful_get_restful_handler('articles');
+// Single value property.
+$request['range'] = 25;
+$result = $handler->get('', $request);
+```
+
+The range parameter can be disabled in your resource plugin definition:
+
+```php
+$plugin = array(
+  ...
+  'url_params' => array(
+    'range' => FALSE,
+  ),
+);
 ```
 
 ## API via URL
@@ -306,6 +347,14 @@ RESTful allows filtering of a list.
 ```php
 # Handler v1.0
 curl https://example.com/api/v1/articles?filter[label]=abc
+```
+
+You can even filter results using basic operators. For instance to get all the
+articles after a certain date:
+
+```shell
+# Handler v1.0
+curl https://example.com/api/articles?filter[created][value]=1417591992&filter[created][operator]=">="
 ```
 
 ## Authentication providers
