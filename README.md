@@ -211,6 +211,7 @@ $plugin = array(
     'sort' => FALSE,
   ),
 );
+```
 
 You can also define default sort fields in your plugin, by overriding
 `defaultSortInfo()` in your class definition.
