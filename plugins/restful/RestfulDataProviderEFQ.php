@@ -62,7 +62,7 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
    *   Array keyed by the public field name, and the order ('ASC' or 'DESC') as value.
    */
   public function defaultSortInfo() {
-    return array('id' => 'ASC');
+    return array();
   }
 
   /**
