@@ -1185,7 +1185,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
     }
     // Now add the context part to the cid
     $cid_params = static::addCidParams($context);
-    return $request_cid . '::' . implode('::', $cid_params);
+    return $request_cid . implode('::', $cid_params);
   }
 
   /**

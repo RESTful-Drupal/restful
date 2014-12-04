@@ -686,7 +686,6 @@ function _restful_get_json_from_menu_status(&$var) {
   }
 }
 
-
 /**
  * Implements hook_page_delivery_callback_alter().
  *
