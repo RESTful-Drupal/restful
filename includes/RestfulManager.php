@@ -100,6 +100,9 @@ class RestfulManager {
    *   it does not match the allow_origin value the access will be denied.
    *   Typically used to avoid CORS problems. This will also populate the
    *   Access-Control-Allow-Origin header in the response.
+   * - url_params: Associative array to configure if the "sort", "filter" and
+   *   "range" url parameters should be allowed. Defaults to TRUE in all of
+   *   them.
    */
   public static function pluginProcessRestful($plugin, $info) {
     $plugin += array(
@@ -117,10 +120,11 @@ class RestfulManager {
       'discoverable' => TRUE,
       'data_provider_options' => array(),
       'menu_item' => FALSE,
+      'url_params' => array(),
     );
 
     $plugin['render_cache'] += array(
-      'render' => FALSE,
+      'render' => variable_get('restful_render_cache', FALSE),
       'class' => NULL,
       'bin' => 'cache_restful',
       'expire' => CACHE_PERMANENT,
@@ -131,6 +135,12 @@ class RestfulManager {
       'enable' => TRUE,
       'operator' => 'CONTAINS',
       'range' => 10,
+    );
+
+    $plugin['url_params'] += array(
+      'sort' => TRUE,
+      'range' => TRUE,
+      'filter' => TRUE,
     );
 
     if (!empty($plugin['rate_limit'])) {
@@ -304,6 +314,21 @@ class RestfulManager {
    */
   public static function echoMessage($value, $message) {
     return $message;
+  }
+
+  /**
+   * Performs end-of-request tasks.
+   *
+   * This function sets the page cache if appropriate, and allows modules to
+   * react to the closing of the page by calling hook_exit().
+   *
+   * This is just a wrapper around drupal_page_footer() so extending classes can
+   * override this method if necessary.
+   *
+   * @see drupal_page_footer().
+   */
+  public static function pageFooter() {
+    drupal_page_footer();
   }
 
 }

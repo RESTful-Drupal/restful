@@ -202,6 +202,37 @@ array(
 );
 ```
 
+The sort parameter can be disabled in your resource plugin definition:
+
+```php
+$plugin = array(
+  ...
+  'url_params' => array(
+    'sort' => FALSE,
+  ),
+);
+```
+
+You can also define default sort fields in your plugin, by overriding
+`defaultSortInfo()` in your class definition.
+
+This method should return an associative array, with each element having a key
+that matches a field from `publicFieldsInfo()`, and a value of either 'ASC' or 'DESC'.
+
+This default sort will be ignored if the request URL contains a sort query.
+
+```php
+class MyPlugin extends \RestfulEntityBaseTaxonomyTerm {
+  /**
+   * Overrides \RestfulEntityBase::defaultSortInfo().
+   */
+  public function defaultSortInfo() {
+    // Sort by 'id' in descending order.
+    return array('id' => 'DESC');
+  }
+}
+```
+
 ### Filter
 RESTful allows filtering of a list.
 
@@ -210,6 +241,17 @@ $handler = restful_get_restful_handler('articles');
 // Single value property.
 $request['filter'] = array('label' => 'abc');
 $result = $handler->get('', $request);
+```
+
+The filter parameter can be disabled in your resource plugin definition:
+
+```php
+$plugin = array(
+  ...
+  'url_params' => array(
+    'filter' => FALSE,
+  ),
+);
 ```
 
 ### Autocomplete
@@ -231,6 +273,27 @@ $request = array(
 );
 
 $handler->get('', $request);
+```
+
+### Range
+RESTful allows you to cotrol the number of elements per page you want to show. This value will always be limited by the `$range` variable in your resource class. This variable, in turn, defaults to 50.
+
+```php
+$handler = restful_get_restful_handler('articles');
+// Single value property.
+$request['range'] = 25;
+$result = $handler->get('', $request);
+```
+
+The range parameter can be disabled in your resource plugin definition:
+
+```php
+$plugin = array(
+  ...
+  'url_params' => array(
+    'range' => FALSE,
+  ),
+);
 ```
 
 ## API via URL
@@ -285,6 +348,14 @@ RESTful allows filtering of a list.
 ```php
 # Handler v1.0
 curl https://example.com/api/v1/articles?filter[label]=abc
+```
+
+You can even filter results using basic operators. For instance to get all the
+articles after a certain date:
+
+```shell
+# Handler v1.0
+curl https://example.com/api/articles?filter[created][value]=1417591992&filter[created][operator]=">="
 ```
 
 ## Authentication providers
@@ -492,7 +563,7 @@ plugin definition will use that output format by default. Ex:
 variable_set('restful_default_output_formatter', 'my_formatter');
 ```
 
-## Cache layer
+## Render Cache.
 The RESTful module is compatible and leverages the popular
 [Entity Cache](https://drupal.org/project/entitycache) module and adds a new
 cache layer on its own for the rendered entity. Two requests made by the same
@@ -504,7 +575,29 @@ Developers have absolute control where the cache is stored and the expiration
 for every resource, meaning that very volatile resources can skip cache entirely
 while other resources can have its cache in MemCached or the database. To
 configure this developers just have to specify the following keys in their
-_restful_ plugin definition.
+_restful_ plugin definition:
+
+```php
+<?php
+
+$plugin = array(
+  ...
+  'render_cache' => array(
+    // Enables the render cache.
+    'render' => TRUE,
+    // Defaults to 'cache_restful' (optional).
+    'bin' => 'cache_bin_name',
+    // Expiration logic. Defaults to CACHE_PERMANENT (optional).
+    'expire' => CACHE_TEMPORARY,
+    // Enable cache invalidation for entity based resources. Defaults to TRUE (optional).
+    'simple_invalidate' => TRUE,
+    // Use a different cache backend for this resource. Defaults to variable_get('cache_default_class', 'DrupalDatabaseCache') (optional).
+    'class' => 'MemCacheDrupal',
+  ),
+);
+```
+
+Additionally you can define a cache backend for a given cache bin by setting the variable `cache_class_<cache-bin-name>` to the class to be used. This way all the resouces caching to that particular bin will use that cache backend instead of the default one.
 
 ## Rate Limit
 RESTful provides rate limit functionality out of the box. A rate limit is a way
@@ -558,7 +651,7 @@ Since the global event is not tied to any resource the limit and period is speci
     all roles.
   - `restful_global_rate_period`: The period string compatible with
     \DateInterval.
-    
+
 ## Documenting your API
 It is of most importance to document your API, this is why the RESTful module
 provides a way to comprehensively document your resources and endpoints. This

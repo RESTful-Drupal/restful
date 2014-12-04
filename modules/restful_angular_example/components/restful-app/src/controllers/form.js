@@ -1,10 +1,10 @@
 'use strict';
 
 angular.module('restfulApp')
-  .controller('MainCtrl', function($scope, DrupalSettings, ArticlesResource, FileUpload, $http, $log) {
+  .controller('FormCtrl', function($scope, DrupalSettings, ArticlesResource, FileUpload, $http, $log) {
     $scope.data = DrupalSettings.getData('article');
-    $scope.data.label = 'yes',
-    $scope.data.body = 'Drupal stuff',
+    $scope.data.label = 'yes';
+    $scope.data.body = 'Drupal stuff';
     $scope.serverSide = {};
     $scope.tagsQueryCache = [];
 
@@ -32,7 +32,7 @@ angular.module('restfulApp')
         }
       }).success(function(data) {
 
-        if (data.length == 0) {
+        if (data.length === 0) {
           terms.results.push({
             text: query.term,
             id: query.term,
@@ -90,13 +90,14 @@ angular.module('restfulApp')
     };
 
     $scope.onFileSelect = function($files) {
+      var updateFileProperties = function(data) {
+        $scope.data.image = data.data.data[0].id;
+        $scope.serverSide.image = data.data.data[0];
+      };
       //$files: an array of files selected, each file has name, size, and type.
       for (var i = 0; i < $files.length; i++) {
         var file = $files[i];
-        FileUpload.upload(file).then(function(data) {
-          $scope.data.image = data.data.list[0].id;
-          $scope.serverSide.image = data.data.list[0];
-        });
+        FileUpload.upload(file).then(updateFileProperties);
       }
     };
   });

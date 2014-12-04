@@ -94,6 +94,20 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
   }
 
   /**
+   * Defines default sort columns if none are provided via the request URL.
+   *
+   * @return array
+   *   Array keyed by the database column name, and the order ('ASC' or 'DESC') as value.
+   */
+  public function defaultSortInfo() {
+    $sorts = array();
+    if (!empty($this->getPublicFields[$this->getIdColumn()])) {
+      $sorts[$this->getIdColumn()] = 'ASC';
+    }
+    return $sorts;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function getQueryForList() {
@@ -121,12 +135,11 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
    */
   protected function queryForListSort(\SelectQuery $query) {
     $public_fields = $this->getPublicFields();
+
     // Get the sorting options from the request object.
     $sorts = $this->parseRequestForListSort();
-    if (empty($sorts)) {
-      $query->orderBy($this->getIdColumn(), 'ASC');
-      return;
-    }
+
+    $sorts = $sorts ? $sorts : $this->defaultSortInfo();
 
     foreach ($sorts as $sort => $direction) {
       $query->orderBy($public_fields[$sort]['property'], $direction);
@@ -219,8 +232,6 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
       ->getQueryForList()
       ->execute();
 
-    // TODO: Right now render cache only works for Entity based resources.
-
     $return = array();
 
     foreach ($results as $result) {
@@ -234,6 +245,16 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
    * {@inheritdoc}
    */
   public function viewMultiple(array $ids) {
+    $cache_id = array(
+      'tb' => $this->getTableName(),
+      'cl' => $this->getIdColumn(),
+      'id' => implode(',', $ids),
+    );
+    $cached_data = $this->getRenderedCache($cache_id);
+    if (!empty($cached_data->data)) {
+      return $cached_data->data;
+    }
+
     // Get a list query with all the sorting and pagination in place.
     $query = $this->getQueryForList();
     if (empty($ids)) {
@@ -242,14 +263,13 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
     $query->condition($this->getTableName() . '.' . $this->getIdColumn(), $ids, 'IN');
     $results = $query->execute();
 
-    // TODO: Right now render cache only works for Entity based resources.
-
     $return = array();
 
     foreach ($results as $result) {
       $return[] = $this->mapDbRowToPublicFields($result);
     }
 
+    $this->setRenderedCache($return, $cache_id);
     return $return;
   }
 
@@ -257,6 +277,16 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
    * {@inheritdoc}
    */
   public function view($id) {
+    $cache_id = array(
+      'tb' => $this->getTableName(),
+      'cl' => $this->getIdColumn(),
+      'id' => $id,
+    );
+    $cached_data = $this->getRenderedCache($cache_id);
+    if (!empty($cached_data->data)) {
+      return $cached_data->data;
+    }
+
     $table = $this->getTableName();
     $query = db_select($table)
       ->fields($table);
@@ -265,7 +295,6 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
     $this->addExtraInfoToQuery($query);
     $results = $query->execute();
 
-    // TODO: Right now render cache only works for Entity based resources.
 
     $return = array();
 
@@ -273,6 +302,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
       $return[] = $this->mapDbRowToPublicFields($result);
     }
 
+    $this->setRenderedCache($return, $cache_id);
     return $return;
   }
 
@@ -316,6 +346,13 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
 
     // Once the update array is built, execute the query.
     $query->fields($fields)->execute();
+
+    // Clear the rendered cache before calling the view method.
+    $this->clearRenderedCache(array(
+      'tb' => $this->getTableName(),
+      'cl' => $this->getIdColumn(),
+      'id' => $id,
+    ));
     return $this->view($id, TRUE);
   }
 
