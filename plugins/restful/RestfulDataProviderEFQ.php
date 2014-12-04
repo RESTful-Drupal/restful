@@ -56,6 +56,16 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
   }
 
   /**
+   * Defines default sort fields if none are provided via the request URL.
+   *
+   * @return array
+   *   Array keyed by the public field name, and the order ('ASC' or 'DESC') as value.
+   */
+  public function defaultSortInfo() {
+    return array('id' => 'ASC');
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function getQueryForList() {
@@ -94,9 +104,11 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
    */
   protected function queryForListSort(\EntityFieldQuery $query) {
     $public_fields = $this->getPublicFields();
-    if (!$sorts = $this->parseRequestForListSort()) {
-      return;
-    }
+
+    // Get the sorting options from the request object.
+    $sorts = $this->parseRequestForListSort();
+
+    $sorts = $sorts ? $sorts : $this->defaultSortInfo();
 
     foreach ($sorts as $sort => $direction) {
       // Determine if sorting is by field or property.
