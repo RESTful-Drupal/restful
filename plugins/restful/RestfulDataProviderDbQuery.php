@@ -408,7 +408,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
   public function mapDbRowToPublicFields($row) {
     if ($this->getMethod() == \RestfulInterface::GET) {
       // For read operations cache the result.
-      $output = &$this->staticCache->get(__CLASS__ . '::' . __FUNCTION__ . '::' . $this->getUniqueId($row));
+      $output = $this->staticCache->get(__CLASS__ . '::' . __FUNCTION__ . '::' . $this->getUniqueId($row));
       if (isset($output)) {
         return $output;
       }

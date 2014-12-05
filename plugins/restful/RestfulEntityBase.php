@@ -419,7 +419,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    *   The value if found, or NULL if bundle not defined.
    */
   protected function getValueFromResource(EntityMetadataWrapper $wrapper, $property, $resource, $public_field_name = NULL, $host_id = NULL) {
-    $handlers = &$this->staticCache->get(__CLASS__ . '::' . __FUNCTION__, array());
+    $handlers = $this->staticCache->get(__CLASS__ . '::' . __FUNCTION__, array());
 
     if (!$entity = $wrapper->value()) {
       return;
