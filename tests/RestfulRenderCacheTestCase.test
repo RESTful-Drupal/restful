@@ -46,8 +46,6 @@ class RestfulRenderCacheTestCase extends DrupalWebTestCase {
 
     // Test that cache is being generated correctly.
     // Get the articles.
-    drupal_static_reset('RestfulBase::generateCacheId');
-    drupal_static_reset('RestfulBase::getVersion');
     drupal_static_reset('RestfulBase::getVersionFromRequest');
     $pre_cache_results = $handler->get();
     // Make sure some cache entries are generated.
@@ -84,9 +82,7 @@ class RestfulRenderCacheTestCase extends DrupalWebTestCase {
     // Test cache segmentation with request params.
     // Rebuild caches.
     $cache->clear('*', TRUE);
-    drupal_static_reset('RestfulBase::generateCacheId');
     $results_wo_request = $handler->get();
-    drupal_static_reset('RestfulBase::generateCacheId');
     $results_w_request = $handler->get('', array('fields' => 'id,label'));
     // Check that the cached results for the entity without request array are
     // different than with the request array.

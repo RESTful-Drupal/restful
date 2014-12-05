@@ -408,14 +408,14 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
   public function mapDbRowToPublicFields($row) {
     if ($this->getMethod() == \RestfulInterface::GET) {
       // For read operations cache the result.
-      $output = &drupal_static(__CLASS__ . '::' . __FUNCTION__ . '::' . $this->getUniqueId($row));
+      $output = &$this->staticCache->get(__CLASS__ . '::' . __FUNCTION__ . '::' . $this->getUniqueId($row));
       if (isset($output)) {
         return $output;
       }
     }
     else {
       // Clear the cache if the request is not GET.
-      drupal_static_reset(__CLASS__ . '::' . __FUNCTION__ . '::' . $this->getUniqueId($row));
+      $this->staticCache->clear(__CLASS__ . '::' . __FUNCTION__ . '::' . $this->getUniqueId($row));
     }
     // Loop over all the defined public fields.
     foreach ($this->getPublicFields() as $public_field_name => $info) {
