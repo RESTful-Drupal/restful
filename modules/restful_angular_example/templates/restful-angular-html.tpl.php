@@ -6,11 +6,6 @@
   <title><?php print $head_title; ?></title>
   <?php print $styles; ?>
   <?php print $scripts; ?>
-  <style>
-    body {
-      margin: 2% 5%;
-    }
-  </style>
 </head>
 <body class="angular-example">
 <h1>RESTful Angular example.</h1>
