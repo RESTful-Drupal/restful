@@ -1,6 +1,6 @@
 /**
  * restful-app
- * @version v0.0.1 - 2014-12-02
+ * @version v0.0.1 - 2014-12-06
  * @link 
  * @author  <>
  * @license MIT License, http://www.opensource.org/licenses/MIT
@@ -11,6 +11,7 @@ var app = angular.module('restfulApp', restfulExampleModules, function($httpProv
 
     // Use x-www-form-urlencoded Content-Type
     $httpProvider.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded;charset=utf-8';
+    $httpProvider.defaults.headers.common['X-API-Version'] = 'v1.5';
 
     /**
      * The workhorse; converts an object to x-www-form-urlencoded serialization.
@@ -61,9 +62,9 @@ if (restfulExampleModules.indexOf('ng-admin') !== -1) {
   app.config(function (NgAdminConfigurationProvider, Application, Entity, Field, Reference, ReferencedList, ReferenceMany) {
     // set the main API endpoint for this admin
     var app = new Application('RESTful Admin')
-      .baseApiUrl('http://localhost/restful');
+      .baseApiUrl(Drupal.settings.restfulExample.apiPath);
 
-    // define an entity mapped by the http://localhost/api/articles endpoint
+    // define an entity mapped by the http://<hostname>/api/articles endpoint
     var article = new Entity('articles');
     app
       .addEntity(article);
@@ -84,21 +85,21 @@ if (restfulExampleModules.indexOf('ng-admin') !== -1) {
       .order(1) // display the article panel first in the dashboard
       .limit(5) // limit the panel to the 5 latest articles
       .pagination(pagination) // use the custom pagination function to format the API request correctly
-      .addField(new Field('title').isEditLink(true).map(truncate));
+      .addField(new Field('label').isEditLink(true).map(truncate));
 
     article.listView()
       .title('All articles') // default title is "List of articles"
       .pagination(pagination)
       .addField(new Field('id').label('ID'))
-      .addField(new Field('title'));
+      .addField(new Field('label'));
 
     article.creationView()
       .title('Add a new article') // default title is "Create a article"
-      .addField(new Field('title')) // the default edit field type is "string", and displays as a text input
-      .addField(new Field('body').type('wysiwyg')) // overriding the type allows rich text editing for the body
+      .addField(new Field('label')) // the default edit field type is "string", and displays as a text input
+      .addField(new Field('body').type('wysiwyg')); // overriding the type allows rich text editing for the body
 
     article.editionView()
-      .addField(new Field('title'))
+      .addField(new Field('label'))
       .addField(new Field('body').type('wysiwyg')
     );
 
@@ -108,7 +109,7 @@ if (restfulExampleModules.indexOf('ng-admin') !== -1) {
     // Add a response intereceptor.
     RestangularProvider.addResponseInterceptor(function(data, operation, what, url, response, deferred) {
       var extractedData;
-      if (operation === "getList") {
+      if (operation === 'getList') {
         extractedData = data.data;
       } else {
         extractedData = data.data[0];
