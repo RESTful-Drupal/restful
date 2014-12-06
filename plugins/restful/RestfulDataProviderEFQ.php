@@ -56,6 +56,16 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
   }
 
   /**
+   * Defines default sort fields if none are provided via the request URL.
+   *
+   * @return array
+   *   Array keyed by the public field name, and the order ('ASC' or 'DESC') as value.
+   */
+  public function defaultSortInfo() {
+    return array('id' => 'ASC');
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function getQueryForList() {
@@ -94,15 +104,11 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
    */
   protected function queryForListSort(\EntityFieldQuery $query) {
     $public_fields = $this->getPublicFields();
+
+    // Get the sorting options from the request object.
     $sorts = $this->parseRequestForListSort();
-    if (empty($sorts)) {
-      // Some endpoints like 'token_auth' don't have an id public field. In that
-      // case, skip the default sorting.
-      if (!empty($public_fields['id'])) {
-        // Sort by default using the entity ID.
-        $sorts['id'] = 'ASC';
-      }
-    }
+
+    $sorts = $sorts ? $sorts : $this->defaultSortInfo();
 
     foreach ($sorts as $sort => $direction) {
       // Determine if sorting is by field or property.

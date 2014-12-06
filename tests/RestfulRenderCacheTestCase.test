@@ -26,10 +26,9 @@ class RestfulRenderCacheTestCase extends DrupalWebTestCase {
     $settings = array('type' => 'article');
     $account = $this->drupalCreateUser();
 
-
     $num_articles = 3;
     for ($index = 0; $index < $num_articles; $index++) {
-      $settings['title'] = $this->randomName();
+      $settings['title'] = 'Node title ' . $index;
       $node = $this->drupalCreateNode($settings);
       $nodes[$node->nid] = $node;
     }
@@ -47,6 +46,9 @@ class RestfulRenderCacheTestCase extends DrupalWebTestCase {
 
     // Test that cache is being generated correctly.
     // Get the articles.
+    drupal_static_reset('RestfulBase::generateCacheId');
+    drupal_static_reset('RestfulBase::getVersion');
+    drupal_static_reset('RestfulBase::getVersionFromRequest');
     $pre_cache_results = $handler->get();
     // Make sure some cache entries are generated.
     $this->assertFalse($cache->isEmpty(), 'Cache render is being populated.');
@@ -82,12 +84,14 @@ class RestfulRenderCacheTestCase extends DrupalWebTestCase {
     // Test cache segmentation with request params.
     // Rebuild caches.
     $cache->clear('*', TRUE);
+    drupal_static_reset('RestfulBase::generateCacheId');
     $results_wo_request = $handler->get();
+    drupal_static_reset('RestfulBase::generateCacheId');
     $results_w_request = $handler->get('', array('fields' => 'id,label'));
     // Check that the cached results for the entity without request array are
     // different than with the request array.
     $cid_wo_request = $cid;
-    $cid_w_request = $cid_wo_request . '::fi:id,label';
+    $cid_w_request = 'v1.1' . '::uu' . $account->uid . '::pafi:id,labelet:node::ei:' . $node->nid;
     $record = $cache->get($cid_w_request);
     // Check that the stored data for both cache ids exists and is different.
     $this->assertNotEqual($record->data, $cache->get($cid_wo_request)->data, 'Cache with request params is different.');
