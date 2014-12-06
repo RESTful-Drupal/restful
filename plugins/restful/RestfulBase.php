@@ -1151,6 +1151,16 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
   }
 
   /**
+   * Clear all caches corresponding to the current resource.
+   */
+  public function clearResourceRenderedCache() {
+    // Build the cache ID.
+    $version = $this->getVersion();
+    $cid = 'v' . $version['major'] . '.' . $version['minor'] . '::' . $this->getResourceName();
+    $this->cacheInvalidate($cid);
+  }
+
+  /**
    * Generate a cache identifier for the request and the current context.
    *
    * This cache ID may be used by all RestfulDataProviderInterface.
@@ -1193,7 +1203,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
    * Invalidates cache for a certain entity.
    *
    * @param string $cid
-   *   The wildcard cache id to invalidate.
+   *   The wildcard cache id to invalidate. Do not add * for the wildcard.
    */
   public function cacheInvalidate($cid) {
     $cache_info = $this->getPluginKey('render_cache');

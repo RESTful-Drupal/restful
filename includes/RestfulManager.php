@@ -283,8 +283,7 @@ class RestfulManager {
     $plugins = restful_get_restful_plugins();
     foreach ($plugins as $plugin) {
       $handler = restful_get_restful_handler($plugin['resource'], $plugin['major_version'], $plugin['minor_version']);
-      $reflector = new \ReflectionClass($handler);
-      if ($reflector->hasMethod('cacheInvalidate')) {
+      if (method_exists($handler, 'cacheInvalidate')) {
         $version = $handler->getVersion();
         // Get the uid for the invalidation.
         try {
