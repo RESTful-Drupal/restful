@@ -74,8 +74,8 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
     $query = new EntityFieldQuery();
     $query->entityCondition('entity_type', $this->getEntityType());
 
-    if ($bundle = $this->getBundle() && $entity_info['entity keys']['bundle']) {
-      $query->entityCondition('bundle', $bundle);
+    if ($this->bundle && $entity_info['entity keys']['bundle']) {
+      $query->entityCondition('bundle', $this->getBundle());
     }
     if ($path = $this->getPath()) {
       $ids = explode(',', $path);
