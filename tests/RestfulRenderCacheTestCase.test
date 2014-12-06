@@ -101,5 +101,29 @@ class RestfulRenderCacheTestCase extends DrupalWebTestCase {
     $this->assertNotEqual($results_wo_request[0], $record->data, 'Cache with request is not overwritten.');
     // Assure that the stored cache corresponds to the returned rendered entity.
     $this->assertEqual($results_w_request[0], $record->data, 'Cache with request is correctly stored.');
+
+    // Test helper functions.
+    foreach ($nodes as $nid => $entity) {
+      // Populate the cache.
+      $handler->get($nid);
+      $handler->get($nid, $request);
+    }
+    // Testing clearResourceRenderedCacheEntity.
+    $handler->clearResourceRenderedCacheEntity($node->nid);
+    $record = $cache->get($cid);
+    $this->assertFalse($record, 'The entity cache for the current resource has been deleted.');
+    $record = $cache->get($cid_w_request);
+    $this->assertFalse($record, 'The entity cache for the current resource has been deleted.');
+    $this->assertFalse($cache->isEmpty(), 'Other entities keep the cache.');
+    // Testing clearResourceRenderedCache
+    $handler->clearResourceRenderedCache();
+    foreach ($nodes as $nid => $entity) {
+      $cid = 'v1.1::test_articles::uu' . $account->uid . '::pa' . 'et:node::ei:' . $nid;
+      $record = $cache->get($cid);
+      $this->assertFalse($record, 'The entity cache for the current resource has been deleted.');
+      $cid_w_request = $cid . '::fi:id,label';
+      $record = $cache->get($cid_w_request);
+      $this->assertFalse($record, 'The entity cache for the current resource has been deleted.');
+    }
   }
 }
