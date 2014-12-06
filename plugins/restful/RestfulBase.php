@@ -97,11 +97,12 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
       // Some request parameters don't affect how the resource is rendered, this
       // means that we should skip them for the cache ID generation.
       if (in_array($param, array(
-        'page',
-        'sort',
-        'q',
         '__application',
-        'filter'
+        'filter',
+        'page',
+        'q',
+        'range',
+        'sort',
       ))) {
         continue;
       }
@@ -1163,8 +1164,8 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
   protected function generateCacheId(array $context = array()) {
     // For performance reasons create the request part and cache it, then add
     // the context part.
-    $request_cid = $this->staticCache->get(__CLASS__ . '::' . __FUNCTION__);
-    if (!isset($request_cid)) {
+    $base_cid = $this->staticCache->get(__CLASS__ . '::' . __FUNCTION__);
+    if (!isset($base_cid)) {
       // Get the cache ID from the selected params. We will use a complex cache
       // ID for smarter invalidation. The cache id will be like:
       // v<major version>.<minor version>::uu<user uid>::pa<params array>
@@ -1173,20 +1174,19 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
       // fi:id,title::re:admin
       // When the request has ?fields=id,title&restrict=admin
       $version = $this->getVersion();
-      $cid = 'v' . $version['major'] . '.' . $version['minor'] . '::uu' . $this->getAccount()->uid . '::pa';
-      $cid_params = array();
-      if ($this->isReadMethod($this->getMethod())) {
-        // We don't want to split the cache with the body data on write requests.
-        $request = $this->getRequest();
-        static::cleanRequest($request);
-        $cid_params = static::addCidParams($request);
-      }
-      $request_cid = $cid . implode('::', $cid_params);
-      $this->staticCache->set(__CLASS__ . '::' . __FUNCTION__, $request_cid);
+      $base_cid = 'v' . $version['major'] . '.' . $version['minor'] . '::uu' . $this->getAccount()->uid . '::pa';
+      $this->staticCache->set(__CLASS__ . '::' . __FUNCTION__, $base_cid);
     }
     // Now add the context part to the cid
     $cid_params = static::addCidParams($context);
-    return $request_cid . implode('::', $cid_params);
+    if ($this->isReadMethod($this->getMethod())) {
+      // We don't want to split the cache with the body data on write requests.
+      $request = $this->getRequest();
+      static::cleanRequest($request);
+      $cid_params = array_merge($cid_params, static::addCidParams($request));
+    }
+
+    return $base_cid . implode('::', $cid_params);
   }
 
   /**
