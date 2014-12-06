@@ -295,7 +295,7 @@ class RestfulManager {
           // user.
           $uid = $GLOBALS['user']->uid;
         }
-        $version_cid = 'v' . $version['major'] . '.' . $version['minor'] . '::uu' . $uid;
+        $version_cid = 'v' . $version['major'] . '.' . $version['minor'] . '::' . $handler->getResourceName() . '::uu' . $uid;
         $handler->cacheInvalidate($version_cid . '::' . $cid);
       }
     }

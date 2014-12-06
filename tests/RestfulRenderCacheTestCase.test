@@ -56,35 +56,35 @@ class RestfulRenderCacheTestCase extends DrupalWebTestCase {
     $this->assertEqual($pre_cache_results[0], $post_cache_results[0], 'Cached data is consistent.');
     // Get a cached result directly from the cache backend.
     $node = reset($nodes);
-    $cid = 'v1.1' . '::uu' . $account->uid . '::pa' . 'et:node::ei:' . $node->nid;
+    $cid = 'v1.1::test_articles::uu' . $account->uid . '::pa' . 'et:node::ei:' . $node->nid;
     $record = $cache->get($cid);
     $this->assertEqual($pre_cache_results[0], $record->data, 'Data in cache bins is correct.');
 
     // Test that invalidation is clearing cache records.
     // 1. Update node and watch cache vanish.
     // Make sure the cache is activated.
+    $request = array('fields' => 'id,label');
+    $handler->get('', $request);
+    $cid_w_request = $cid . '::fi:id,label';
     $this->assertTrue($cache_info['simple_invalidate'], 'Cache render simple invalidation is activated');
     $node->title .= ' updated';
     node_save($node);
     $record = $cache->get($cid);
     $this->assertFalse($record, 'Cache record cleared correctly.');
+    $record = $cache->get($cid_w_request);
+    $this->assertFalse($record, 'Cache record cleared correctly with request params.');
     $this->assertFalse($cache->isEmpty(), 'Remaining cache items are intact after updating entity.');
     // Regenerate cache for $node.
-    $request = array('fields' => 'id,label');
     $handler->get($node->nid);
     $handler->get($node->nid, $request);
     $record = $cache->get($cid);
     $this->assertNotNull($record->data, 'Cache is being generated for non-list requests.');
-    $cid_w_request = 'v1.1' . '::uu' . $account->uid . '::paet:node::ei:' . $node->nid . '::fi:id,label';
     $record = $cache->get($cid_w_request);
-    $this->assertNotNull($record->data, 'Cache is being generated for non-list requests.');
+    $this->assertNotNull($record->data, 'Cache is being generated for non-list requests with request params.');
     // 2. Update the user account. All cache records should be invalidated.
     $account->name .= ' updated';
     user_save($account);
-    $record = $cache->get($cid);
-    $this->assertFalse($record, 'Cache bin is emptied after updating a user.');
-    $record = $cache->get($cid_w_request);
-    $this->assertFalse($record, 'Cache bin is emptied after updating a user.');
+    $this->assertTrue($cache->isEmpty(), 'Cache bin is emptied after updating a user.');
 
     // Test cache segmentation with request params.
     // Rebuild caches.
@@ -101,13 +101,5 @@ class RestfulRenderCacheTestCase extends DrupalWebTestCase {
     $this->assertNotEqual($results_wo_request[0], $record->data, 'Cache with request is not overwritten.');
     // Assure that the stored cache corresponds to the returned rendered entity.
     $this->assertEqual($results_w_request[0], $record->data, 'Cache with request is correctly stored.');
-
-    // Test that after updating node all cache entries are invalidated.
-    $node->title = $this->randomName();
-    node_save($node);
-    $record = $cache->get($cid);
-    $this->assertFalse($record, 'Cache bin is emptied after updating the node.');
-    $record = $cache->get($cid_w_request);
-    $this->assertFalse($record, 'Cache bin is emptied after updating the node.');
   }
 }

@@ -1174,7 +1174,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
       // fi:id,title::re:admin
       // When the request has ?fields=id,title&restrict=admin
       $version = $this->getVersion();
-      $base_cid = 'v' . $version['major'] . '.' . $version['minor'] . '::uu' . $this->getAccount()->uid . '::pa';
+      $base_cid = 'v' . $version['major'] . '.' . $version['minor'] . '::' . $this->getResourceName() . '::uu' . $this->getAccount()->uid . '::pa';
       $this->staticCache->set(__CLASS__ . '::' . __FUNCTION__, $base_cid);
     }
     // Now add the context part to the cid
