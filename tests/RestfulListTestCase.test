@@ -43,24 +43,6 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     $handler = restful_get_restful_handler('articles');
     $request['fields'] = 'id,label';
 
-    // No sorting (default sorting).
-    $result = $handler->get('', $request);
-    $expected_result = array(
-      array(
-        'id' => $nodes['abc'],
-        'label' => 'abc',
-      ),
-      array(
-        'id' => $nodes['xyz'],
-        'label' => 'xyz',
-      ),
-      array(
-        'id' => $nodes['efg'],
-        'label' => 'efg',
-      ),
-    );
-    $this->assertEqual($result, $expected_result, 'No sorting (default sorting).');
-
     // Sort by ID descending.
     $request['sort'] = '-id';
     $result = $handler->get('', $request);
