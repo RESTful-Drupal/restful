@@ -129,6 +129,7 @@ class RestfulManager {
       'bin' => 'cache_restful',
       'expire' => CACHE_PERMANENT,
       'simple_invalidate' => TRUE,
+      'granularity' => DRUPAL_CACHE_PER_ROLE,
     );
 
     $plugin['autocomplete'] += array(
