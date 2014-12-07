@@ -1184,7 +1184,21 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
       // fi:id,title::re:admin
       // When the request has ?fields=id,title&restrict=admin
       $version = $this->getVersion();
-      $base_cid = 'v' . $version['major'] . '.' . $version['minor'] . '::' . $this->getResourceName() . '::uu' . $this->getAccount()->uid . '::pa';
+      $account = $this->getAccount();
+      $cache_info = $this->getPluginKey('cache');
+      if ($cache_info['granularity'] == DRUPAL_CACHE_PER_USER) {
+        $account_cid = '::uu' . $account->uid;
+      }
+      elseif ($cache_info['granularity'] == DRUPAL_CACHE_PER_ROLE) {
+        // Instead of encoding the user ID in the cache ID add the role ids.
+        $account_cid = '::ur' . implode(',', array_keys($account->roles));
+      }
+      else {
+        throw new \RestfulNotImplementedException(format_string('The selected cache granularity (@granularity) is not supported.', array(
+          '@granularity' => $cache_info['granularity'],
+        )));
+      }
+      $base_cid = 'v' . $version['major'] . '.' . $version['minor'] . '::' . $this->getResourceName() . $account_cid . '::pa';
       $this->staticCache->set(__CLASS__ . '::' . __FUNCTION__, $base_cid);
     }
     // Now add the context part to the cid
