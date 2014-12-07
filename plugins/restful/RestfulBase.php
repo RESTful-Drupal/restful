@@ -1185,7 +1185,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
       // When the request has ?fields=id,title&restrict=admin
       $version = $this->getVersion();
       $account = $this->getAccount();
-      $cache_info = $this->getPluginKey('cache');
+      $cache_info = $this->getPluginKey('render_cache');
       if ($cache_info['granularity'] == DRUPAL_CACHE_PER_USER) {
         $account_cid = '::uu' . $account->uid;
       }
