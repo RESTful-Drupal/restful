@@ -35,3 +35,7 @@
   height: 50px;
   width: 50px;
 }
+
+body.angular-example {
+  margin: 2% 5%;
+}

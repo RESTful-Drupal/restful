@@ -725,8 +725,8 @@ $public_fields['text_multiple'] = array(
       'default_value' => '',
       // The placeholder text for the form element. Defaults to: ''.
       'placeholder' => t('This is helpful.'),
-      // The size of the form element (if applies).
-      'size' => 255, Defaults to: NULL.
+      // The size of the form element (if applies). Defaults to: NULL.
+      'size' => 255,
       // The allowed values for form elements with a limited set of options. Defaults to: NULL.
       'allowed_values' => NULL,
     ),
@@ -748,11 +748,11 @@ for you out of the box, without you needing to do anything else. This
 information will be derived from the Entity API and Field API. The following
 will be populated automatically:
 
-  - `$discovery_info['info']['label']`
-  - `$discovery_info['info']['description']`
-  - `$discovery_info['data']['type']`
-  - `$discovery_info['data']['required']`
-  - `$discovery_info['form_element']['default_value']`
+  - `$discovery_info['info']['label']`.
+  - `$discovery_info['info']['description']`.
+  - `$discovery_info['data']['type']`.
+  - `$discovery_info['data']['required']`.
+  - `$discovery_info['form_element']['default_value']`.
   - `$discovery_info['form_element']['allowed_values']` for text lists.
 
 ## Modules integration
