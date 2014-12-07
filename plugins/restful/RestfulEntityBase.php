@@ -1384,4 +1384,19 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     return TRUE;
   }
 
+  /**
+   * Clear all caches corresponding to the current resource for a given entity.
+   *
+   * @param int $id
+   *   The entity ID.
+   */
+  public function clearResourceRenderedCacheEntity($id) {
+    // Build the cache ID.
+    $version = $this->getVersion();
+    $cid = 'v' . $version['major'] . '.' . $version['minor'] . '::' . $this->getResourceName() . '::uu' . $this->getAccount()->uid . '::paet:';
+    $cid .= $this->getEntityType();
+    $cid .= '::ei:' . $id;
+    $this->cacheInvalidate($cid);
+  }
+
 }
