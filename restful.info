@@ -37,6 +37,8 @@ files[] = includes/RestfulManager.php
 files[] = includes/RestfulPluginBase.php
 files[] = includes/RestfulPluginInterface.php
 files[] = includes/RestfulRateLimit.php
+files[] = includes/RestfulStaticCacheController.php
+files[] = includes/RestfulStaticCacheControllerInterface.php
 
 ; Exceptions
 files[] = exceptions/RestfulBadRequestException.php

@@ -76,6 +76,13 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
   protected $valueMetadata = array();
 
   /**
+   * Static cache controller.
+   *
+   * @var \RestfulStaticCacheController
+   */
+  public $staticCache;
+
+  /**
    * Get the cache id parameters based on the keys.
    *
    * @param $keys
@@ -344,6 +351,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
     if ($rate_limit = $this->getPluginKey('rate_limit')) {
       $this->setRateLimitManager(new \RestfulRateLimitManager($this->getPluginKey('resource'), $rate_limit));
     }
+    $this->staticCache = new \RestfulStaticCacheController();
   }
 
   /**
@@ -513,7 +521,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
    *   definition.
    */
   public function getVersion() {
-    $version = &drupal_static(__CLASS__ . '::' . __FUNCTION__);
+    $version = $this->staticCache->get(__CLASS__ . '::' . __FUNCTION__);
     if (isset($version)) {
       return $version;
     }
@@ -521,6 +529,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
       'major' => $this->getPluginKey('major_version'),
       'minor' => $this->getPluginKey('minor_version'),
     );
+    $this->staticCache->set(__CLASS__ . '::' . __FUNCTION__, $version);
     return $version;
   }
 
@@ -702,21 +711,12 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
     $this->setMethod($method);
     $this->setPath($path);
     $this->setRequest($request);
-    // Override the range with the value in the URL.
-    if (!empty($request['range'])) {
-      $url_params = $this->getPluginKey('url_params');
-      if (!$url_params['range']) {
-        throw new \RestfulBadRequestException('The range parameter has been disabled in server configuration.');
-      }
 
-      if (!ctype_digit((string) $request['range']) || $request['range'] < 1) {
-        throw new \RestfulBadRequestException('"Range" property should be numeric and higher than 0.');
-      }
-      if ($request['range'] < $this->getRange()) {
-        // If there is a valid range property in the request override the range.
-        $this->setRange($request['range']);
-      }
-    }
+    // Clear all static caches from previous requests.
+    $this->staticCache->clearAll();
+
+    // Override the range with the value in the URL.
+    $this->overrideRange();
 
     $version = $this->getVersion();
     $this->setHttpHeaders('X-API-Version', 'v' . $version['major']  . '.' . $version['minor']);
@@ -1163,7 +1163,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
   protected function generateCacheId(array $context = array()) {
     // For performance reasons create the request part and cache it, then add
     // the context part.
-    $request_cid = &drupal_static(__CLASS__ . '::' . __FUNCTION__);
+    $request_cid = $this->staticCache->get(__CLASS__ . '::' . __FUNCTION__);
     if (!isset($request_cid)) {
       // Get the cache ID from the selected params. We will use a complex cache
       // ID for smarter invalidation. The cache id will be like:
@@ -1182,6 +1182,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
         $cid_params = static::addCidParams($request);
       }
       $request_cid = $cid . implode('::', $cid_params);
+      $this->staticCache->set(__CLASS__ . '::' . __FUNCTION__, $request_cid);
     }
     // Now add the context part to the cid
     $cid_params = static::addCidParams($context);
@@ -1504,6 +1505,29 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
   protected static function notImplementedCrudOperation($operation) {
     // The default behavior is to not support the crud action.
     throw new \RestfulNotImplementedException(format_string('The "@method" method is not implemented in class @class.', array('@method' => $operation, '@class' => __CLASS__)));
+  }
+
+  /**
+   * Overrides the range parameter with the URL value if any.
+   *
+   * @throws RestfulBadRequestException
+   */
+  protected function overrideRange() {
+    $request = $this->getRequest();
+    if (!empty($request['range'])) {
+      $url_params = $this->getPluginKey('url_params');
+      if (!$url_params['range']) {
+        throw new \RestfulBadRequestException('The range parameter has been disabled in server configuration.');
+      }
+
+      if (!ctype_digit((string) $request['range']) || $request['range'] < 1) {
+        throw new \RestfulBadRequestException('"Range" property should be numeric and higher than 0.');
+      }
+      if ($request['range'] < $this->getRange()) {
+        // If there is a valid range property in the request override the range.
+        $this->setRange($request['range']);
+      }
+    }
   }
 
 }
