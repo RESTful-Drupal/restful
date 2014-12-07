@@ -460,7 +460,7 @@ function restful_menu_process_callback($resource_name, $version = NULL) {
   $headers = $handler->getHttpHeaders();
   $vary = empty($headers['Vary']) ? '' : $headers['Vary'];
   $additional_variations = array($vary, 'Accept');
-  if (\RestfulManager::getHttpHeader('X-API-Version') {
+  if (\RestfulManager::getHttpHeader('X-API-Version')) {
     $additional_variations[] = 'X-API-Version';
   }
   if ($additional_variations) {
