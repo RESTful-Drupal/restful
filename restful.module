@@ -456,11 +456,15 @@ function restful_menu_process_callback($resource_name, $version = NULL) {
     throw new \RestfulServiceUnavailable(format_string('The selected plugin (@plugin) does not implement \RestfulDataProviderInterface.', array('@plugin' => $resource_name . ' v' . $major_version . '.' . $minor_version)));
   }
 
-  // Vary the response with the presence of the X-API-Version header.
-  if (\RestfulManager::getHttpHeader('X-API-Version')) {
-    $headers = $handler->getHttpHeaders();
-    $vary = empty($headers['Vary']) ? '' : $headers['Vary'];
-    $handler->setHttpHeaders('Vary', implode(',', array($vary, 'X-API-Version')));
+  // Vary the response with the presence of the X-API-Version or Accept headers.
+  $headers = $handler->getHttpHeaders();
+  $vary = empty($headers['Vary']) ? '' : $headers['Vary'];
+  $additional_variations = array($vary, 'Accept');
+  if (\RestfulManager::getHttpHeader('X-API-Version') {
+    $additional_variations[] = 'X-API-Version';
+  }
+  if ($additional_variations) {
+    $handler->setHttpHeaders('Vary', implode(',', $additional_variations));
   }
 
   // Always add the allow origin if configured.
@@ -607,10 +611,12 @@ function restful_delivery($var = NULL, $method = 'format') {
   catch (\RestfulException $e) {
     // Handle if the formatter does not exist.
     drupal_add_http_header('Status', $e->getCode());
-    $output = $e->getMessage();
+    echo $e->getMessage();
+    return;
   }
 
-  echo $output;
+  print $output;
+  \RestfulManager::pageFooter();
 }
 
 /**
@@ -679,7 +685,6 @@ function _restful_get_json_from_menu_status(&$var) {
     $var['errors'] = $errors;
   }
 }
-
 
 /**
  * Implements hook_page_delivery_callback_alter().

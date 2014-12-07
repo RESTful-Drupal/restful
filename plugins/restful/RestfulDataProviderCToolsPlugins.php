@@ -198,7 +198,6 @@ abstract class RestfulDataProviderCToolsPlugins extends \RestfulBase implements 
   }
 
   public function index() {
-    // TODO: Right now render cache only works for Entity based resources.
     $return = array();
 
     foreach (array_keys($this->getPluginsSortedAndFiltered()) as $plugin_name) {
@@ -214,6 +213,16 @@ abstract class RestfulDataProviderCToolsPlugins extends \RestfulBase implements 
    * @todo: We should generalize this, as it's repeated often.
    */
   public function view($id) {
+    $cache_id = array(
+      'md' => $this->getModule(),
+      'tp' => $this->getType(),
+      'id' => $id,
+    );
+    $cached_data = $this->getRenderedCache($cache_id);
+    if (!empty($cached_data->data)) {
+      return $cached_data->data;
+    }
+
     if (!$plugin = ctools_get_plugins($this->getModule(), $this->getType(), $id)) {
       // Since the discovery resource sits under 'api/' it will pick up all
       // invalid paths like 'api/invalid'. If it is not a valid plugin then
@@ -243,6 +252,7 @@ abstract class RestfulDataProviderCToolsPlugins extends \RestfulBase implements 
       $output[$public_field_name] = $value;
     }
 
+    $this->setRenderedCache($output, $cache_id);
     return $output;
   }
 }

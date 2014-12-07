@@ -19,7 +19,7 @@ angular.module('restfulApp')
         file: file,
         withCredentials:  true,
         headers: {
-          "X-CSRF-Token": DrupalSettings.getCsrfToken()
+          'X-CSRF-Token': DrupalSettings.getCsrfToken()
         }
       });
     };

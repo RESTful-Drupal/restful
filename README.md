@@ -202,6 +202,37 @@ array(
 );
 ```
 
+The sort parameter can be disabled in your resource plugin definition:
+
+```php
+$plugin = array(
+  ...
+  'url_params' => array(
+    'sort' => FALSE,
+  ),
+);
+```
+
+You can also define default sort fields in your plugin, by overriding
+`defaultSortInfo()` in your class definition.
+
+This method should return an associative array, with each element having a key
+that matches a field from `publicFieldsInfo()`, and a value of either 'ASC' or 'DESC'.
+
+This default sort will be ignored if the request URL contains a sort query.
+
+```php
+class MyPlugin extends \RestfulEntityBaseTaxonomyTerm {
+  /**
+   * Overrides \RestfulEntityBase::defaultSortInfo().
+   */
+  public function defaultSortInfo() {
+    // Sort by 'id' in descending order.
+    return array('id' => 'DESC');
+  }
+}
+```
+
 ### Filter
 RESTful allows filtering of a list.
 
@@ -210,6 +241,17 @@ $handler = restful_get_restful_handler('articles');
 // Single value property.
 $request['filter'] = array('label' => 'abc');
 $result = $handler->get('', $request);
+```
+
+The filter parameter can be disabled in your resource plugin definition:
+
+```php
+$plugin = array(
+  ...
+  'url_params' => array(
+    'filter' => FALSE,
+  ),
+);
 ```
 
 ### Autocomplete
@@ -231,6 +273,27 @@ $request = array(
 );
 
 $handler->get('', $request);
+```
+
+### Range
+RESTful allows you to cotrol the number of elements per page you want to show. This value will always be limited by the `$range` variable in your resource class. This variable, in turn, defaults to 50.
+
+```php
+$handler = restful_get_restful_handler('articles');
+// Single value property.
+$request['range'] = 25;
+$result = $handler->get('', $request);
+```
+
+The range parameter can be disabled in your resource plugin definition:
+
+```php
+$plugin = array(
+  ...
+  'url_params' => array(
+    'range' => FALSE,
+  ),
+);
 ```
 
 ## API via URL
@@ -285,6 +348,14 @@ RESTful allows filtering of a list.
 ```php
 # Handler v1.0
 curl https://example.com/api/v1/articles?filter[label]=abc
+```
+
+You can even filter results using basic operators. For instance to get all the
+articles after a certain date:
+
+```shell
+# Handler v1.0
+curl https://example.com/api/articles?filter[created][value]=1417591992&filter[created][operator]=">="
 ```
 
 ## Authentication providers
@@ -580,7 +651,7 @@ Since the global event is not tied to any resource the limit and period is speci
     all roles.
   - `restful_global_rate_period`: The period string compatible with
     \DateInterval.
-    
+
 ## Documenting your API
 It is of most importance to document your API, this is why the RESTful module
 provides a way to comprehensively document your resources and endpoints. This
@@ -654,8 +725,8 @@ $public_fields['text_multiple'] = array(
       'default_value' => '',
       // The placeholder text for the form element. Defaults to: ''.
       'placeholder' => t('This is helpful.'),
-      // The size of the form element (if applies).
-      'size' => 255, Defaults to: NULL.
+      // The size of the form element (if applies). Defaults to: NULL.
+      'size' => 255,
       // The allowed values for form elements with a limited set of options. Defaults to: NULL.
       'allowed_values' => NULL,
     ),
@@ -677,11 +748,11 @@ for you out of the box, without you needing to do anything else. This
 information will be derived from the Entity API and Field API. The following
 will be populated automatically:
 
-  - `$discovery_info['info']['label']`
-  - `$discovery_info['info']['description']`
-  - `$discovery_info['data']['type']`
-  - `$discovery_info['data']['required']`
-  - `$discovery_info['form_element']['default_value']`
+  - `$discovery_info['info']['label']`.
+  - `$discovery_info['info']['description']`.
+  - `$discovery_info['data']['type']`.
+  - `$discovery_info['data']['required']`.
+  - `$discovery_info['form_element']['default_value']`.
   - `$discovery_info['form_element']['allowed_values']` for text lists.
 
 ## Modules integration

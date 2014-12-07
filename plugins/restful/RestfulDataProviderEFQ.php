@@ -56,6 +56,16 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
   }
 
   /**
+   * Defines default sort fields if none are provided via the request URL.
+   *
+   * @return array
+   *   Array keyed by the public field name, and the order ('ASC' or 'DESC') as value.
+   */
+  public function defaultSortInfo() {
+    return array('id' => 'ASC');
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function getQueryForList() {
@@ -94,15 +104,11 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
    */
   protected function queryForListSort(\EntityFieldQuery $query) {
     $public_fields = $this->getPublicFields();
+
+    // Get the sorting options from the request object.
     $sorts = $this->parseRequestForListSort();
-    if (empty($sorts)) {
-      // Some endpoints like 'token_auth' don't have an id public field. In that
-      // case, skip the default sorting.
-      if (!empty($public_fields['id'])) {
-        // Sort by default using the entity ID.
-        $sorts['id'] = 'ASC';
-      }
-    }
+
+    $sorts = $sorts ? $sorts : $this->defaultSortInfo();
 
     foreach ($sorts as $sort => $direction) {
       // Determine if sorting is by field or property.
@@ -128,7 +134,7 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
   protected function queryForListFilter(\EntityFieldQuery $query) {
     $public_fields = $this->getPublicFields();
     foreach ($this->parseRequestForListFilter() as $filter) {
-      // Determine if sorting is by field or property.
+      // Determine if filtering is by field or property.
       if (empty($public_fields[$filter['public_field']]['column'])) {
         $query->propertyCondition($public_fields[$filter['public_field']]['property'], $filter['value'], $filter['operator']);
       }
