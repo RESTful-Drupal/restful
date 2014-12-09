@@ -1084,38 +1084,6 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    * {@inheritdoc}
    */
   public function publicFieldsInfo() {
-    if ($view_mode_info = $this->getPluginKey('view_mode')) {
-      if (empty($view_mode_info['name'])) {
-        throw new \RestfulServerConfigurationException('View mode not found.');
-      }
-      $view_mode_helper = new \RestfulEntityViewMode($this->getEntityType(), $this->getBundle());
-
-      // Get all the fields that will be displayed.
-      $view_mode = $view_mode_info['name'];
-      $displayed_fields = $view_mode_helper->displayedFieldsList($view_mode);
-
-      // Set the mappings from the field name to the output key.
-      $public_fields = array();
-      foreach ($displayed_fields as $field_name) {
-        if (empty($view_mode_info['mappings'][$field_name])) {
-          throw new \RestfulServerConfigurationException(format_string('No mapping was found for @field_name.', array(
-            '@field_name' => $field_name,
-          )));
-        }
-
-        // Add it to the public fields array with a special callback function.
-        $public_fields[$view_mode_info['mappings'][$field_name]] = array(
-          'callback' => array(
-            array($view_mode_helper, 'renderField'),
-            array($field_name, $view_mode),
-          ),
-        );
-      }
-      if (empty($public_fields)) {
-        throw new \RestfulServerConfigurationException('No fields shown rendering entity view mode.');
-      }
-      return $public_fields;
-    }
     $entity_info = entity_get_info($this->getEntityType());
     $id_key = $entity_info['entity keys']['id'];
 
@@ -1161,6 +1129,16 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
         'callback' => array($this, 'getEntitySelf'),
       ),
     );
+
+    if ($view_mode_info = $this->getPluginKey('view_mode')) {
+      if (empty($view_mode_info['name'])) {
+        throw new \RestfulServerConfigurationException('View mode not found.');
+      }
+      $helper = new \RestfulEntityViewMode($this->getEntityType(), $this->getBundle());
+
+      $public_fields += $helper->mapFields($view_mode_info['name'], $view_mode_info['mappings']);
+      return $public_fields;
+    }
 
     if (!empty($entity_info['entity keys']['label'])) {
       $public_fields['label']['property'] = $entity_info['entity keys']['label'];

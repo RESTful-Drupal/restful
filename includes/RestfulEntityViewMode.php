@@ -44,6 +44,46 @@ class RestfulEntityViewMode {
   }
 
   /**
+   * Generates the public properties configuration array from the mappings.
+   *
+   * @param string $view_mode
+   *   The view mode.
+   * @param array $mappings
+   *   Associative array that maps field names to public properties.
+   *
+   * @throws \RestfulServerConfigurationException
+   *
+   * @return array
+   *   The public properties info array.
+   */
+  public function mapFields($view_mode, $mappings) {
+    $displayed_fields = $this->displayedFieldsList($view_mode);
+
+    // Set the mappings from the field name to the output key.
+    $public_fields = array();
+    foreach ($displayed_fields as $field_name) {
+      if (empty($mappings[$field_name])) {
+        throw new \RestfulServerConfigurationException(format_string('No mapping was found for @field_name.', array(
+          '@field_name' => $field_name,
+        )));
+      }
+
+      // Add it to the public fields array with a special callback function.
+      $public_fields[$mappings[$field_name]] = array(
+        'callback' => array(
+          array($this, 'renderField'),
+          array($field_name, $view_mode),
+        ),
+      );
+    }
+    if (empty($public_fields)) {
+      throw new \RestfulServerConfigurationException('No fields shown rendering entity view mode.');
+    }
+
+    return $public_fields;
+  }
+
+  /**
    * Helper method to get all the displayed fields for a bundle and a view_mode.
    *
    * @param string $view_mode
@@ -52,7 +92,7 @@ class RestfulEntityViewMode {
    * @return array
    *   An array of field names that are displayed in this view mode.
    */
-  function displayedFieldsList($view_mode) {
+  protected function displayedFieldsList($view_mode) {
     $entity_field_instances = field_info_instances($this->entityType);
     $bundle_field_instances = reset($entity_field_instances);
     if ($bundle = $this->bundle) {
