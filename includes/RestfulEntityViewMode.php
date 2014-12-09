@@ -125,8 +125,7 @@ class RestfulEntityViewMode {
    */
   public function renderField(\EntityDrupalWrapper $wrapper, $field_name, $view_mode) {
     $render_element = $this->getEntityRenderElement($wrapper, $view_mode);
-    $render_field_element = $render_element[$this->entityType][$wrapper->getIdentifier()][$field_name];
-    return drupal_render($render_field_element);
+    return drupal_render($render_element[$field_name]);
   }
 
   /**
@@ -141,10 +140,12 @@ class RestfulEntityViewMode {
    *   A render array for the current entity.
    */
   protected function getEntityRenderElement(\EntityDrupalWrapper $wrapper, $view_mode) {
-    if (empty($this->renders[$view_mode])) {
-      $this->renders[$view_mode] = $wrapper->view($view_mode);
+    $entity_id = $wrapper->getIdentifier();
+    if (empty($this->renders[$view_mode][$entity_id])) {
+      $render_element = $wrapper->view($view_mode);
+      $this->renders[$view_mode][$entity_id] = $render_element[$this->entityType][$entity_id];
     }
-    return $this->renders[$view_mode];
+    return $this->renders[$view_mode][$entity_id];
   }
 
 }
