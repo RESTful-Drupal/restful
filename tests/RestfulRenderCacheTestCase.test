@@ -138,4 +138,5 @@ class RestfulRenderCacheTestCase extends DrupalWebTestCase {
     $record = $cache->get($role_cid);
     $this->assertTrue($record->data, 'Cache key contains role information.');
   }
+
 }
