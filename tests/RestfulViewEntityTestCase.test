@@ -276,9 +276,9 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
 
     // Make sure that all the fields were mapped.
     $this->assertNotNull($results[0]['body']);
-    $this->assertNotEmpty($results[0]['body']);
+    $this->assertFalse(empty($results[0]['body']), 'Body is not empty.');
     $this->assertNotNull($results[0]['tags']);
-    $this->assertNotEmpty($results[0]['tags']);
+    $this->assertFalse(empty($results[0]['tags']), 'Tags are not empty.');
     $this->assertNotNull($results[0]['image']);
   }
 
