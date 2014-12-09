@@ -593,6 +593,8 @@ $plugin = array(
     'simple_invalidate' => TRUE,
     // Use a different cache backend for this resource. Defaults to variable_get('cache_default_class', 'DrupalDatabaseCache') (optional).
     'class' => 'MemCacheDrupal',
+    // Account cache granularity. Instead of caching per user you can choose to cache per role. Default: DRUPAL_CACHE_PER_USER.
+    'granularity' => DRUPAL_CACHE_PER_ROLE,
   ),
 );
 ```

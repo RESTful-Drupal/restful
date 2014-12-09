@@ -58,6 +58,7 @@ class RestfulManager {
    *   - simple_invalidate: Set it to false to prevent the RESTful module to
    *     invalidate any cache it may have been generated. The developer will be
    *     responsible to invalidate caches in this scenario. Defaults to TRUE.
+   *   - granularity: DRUPAL_CACHE_PER_USER or DRUPAL_CACHE_PER_ROLE.
    * - rate_limit: The configuration array for the rate limits. There is a special
    *   limit category called 'global' that will not be limited to resource but
    *   will aggregate all request hits across all resources. To enable the global
@@ -129,6 +130,7 @@ class RestfulManager {
       'bin' => 'cache_restful',
       'expire' => CACHE_PERMANENT,
       'simple_invalidate' => TRUE,
+      'granularity' => DRUPAL_CACHE_PER_USER,
     );
 
     $plugin['autocomplete'] += array(

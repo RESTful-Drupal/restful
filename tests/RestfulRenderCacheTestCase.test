@@ -125,5 +125,18 @@ class RestfulRenderCacheTestCase extends DrupalWebTestCase {
       $record = $cache->get($cid_w_request);
       $this->assertFalse($record, 'The entity cache for the current resource has been deleted.');
     }
+
+    // Test PER_ROLE granularity.
+    $cache->clear('*', TRUE);
+
+    $cache_info = $handler->getPluginKey('render_cache');
+    $cache_info['granularity'] = DRUPAL_CACHE_PER_ROLE;
+    $handler->setPluginKey('render_cache', $cache_info);
+
+    $handler->get('');
+    $role_cid = 'v1.1::test_articles::ur' . implode(',', array_keys($account->roles)) . '::pa' . 'et:node::ei:' . $node->nid;
+    $record = $cache->get($role_cid);
+    $this->assertTrue($record->data, 'Cache key contains role information.');
   }
+
 }
