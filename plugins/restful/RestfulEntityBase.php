@@ -1089,7 +1089,31 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
         throw new \RestfulServerConfigurationException('View mode not found.');
       }
       $view_mode_helper = new \RestfulEntityViewMode($this->getEntityType(), $this->getBundle());
-      $displayed_fields = $view_mode_helper->getDisplayedFields($view_mode_info['name']);
+
+      // Get all the fields that will be displayed.
+      $view_mode = $view_mode_info['name'];
+      $displayed_fields = $view_mode_helper->displayedFieldsList($view_mode);
+
+      // Set the mappings from the field name to the output key.
+      $public_fields = array();
+      foreach ($displayed_fields as $field_name) {
+        if (empty($view_mode_info['mappings'][$field_name])) {
+          throw new \RestfulServerConfigurationException(format_string('No mapping was found for @field_name.', array(
+            '@field_name' => $field_name,
+          )));
+        }
+
+        // Add it to the public fields array with a special callback function.
+        $public_fields[$view_mode_info['mappings'][$field_name]] = array(
+          'callback' => array(
+            array($view_mode_helper, 'renderField'),
+            array($field_name, $view_mode),
+          ),
+        );
+      }
+      if (empty($public_fields)) {
+        throw new \RestfulServerConfigurationException('No fields shown rendering entity view mode.');
+      }
       return $public_fields;
     }
     $entity_info = entity_get_info($this->getEntityType());
