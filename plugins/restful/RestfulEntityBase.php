@@ -1084,6 +1084,14 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    * {@inheritdoc}
    */
   public function publicFieldsInfo() {
+    if ($view_mode_info = $this->getPluginKey('view_mode')) {
+      if (empty($view_mode_info['name'])) {
+        throw new \RestfulServerConfigurationException('View mode not found.');
+      }
+      $view_mode_helper = new \RestfulEntityViewMode($this->getEntityType(), $this->getBundle());
+      $displayed_fields = $view_mode_helper->getDisplayedFields($view_mode_info['name']);
+      return $public_fields;
+    }
     $entity_info = entity_get_info($this->getEntityType());
     $id_key = $entity_info['entity keys']['id'];
 
