@@ -271,8 +271,11 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
    */
   public function testViewModes() {
     $handler = restful_get_restful_handler('articles', 1, 7);
-    $node = $this->createNodeWithTags();
-    $results = $handler->get($node->nid);
+    $nodes[] = $this->createNodeWithTags();
+    $nodes[] = $this->createNodeWithTags();
+    // Make sure to get more than one node to increase coverage on
+    // \RestfulEntityViewMode.
+    $results = $handler->get($nodes[0]->nid . ',' . $nodes[1]->nid);
 
     // Make sure that all the fields were mapped.
     $this->assertNotNull($results[0]['body']);
