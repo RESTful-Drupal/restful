@@ -506,7 +506,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
    */
   protected function getColumnfromIds($ids, $column = 0) {
     //Get a single column.
-    return array_map(function($id){
+    return array_map(function($id) use ($column) {
       $parts = explode("::",$id);
       return isset($parts[$column])?$parts[$column]:FALSE;
     }, $ids);
