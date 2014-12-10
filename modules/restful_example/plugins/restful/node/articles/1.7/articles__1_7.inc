@@ -14,7 +14,7 @@ $plugin = array(
   // Add the view mode information.
   'view_mode' => array(
     'name' => 'default',
-    'mappings' => array(
+    'field_map' => array(
       'body' => 'body',
       'field_tags' => 'tags',
       'field_image' => 'image',

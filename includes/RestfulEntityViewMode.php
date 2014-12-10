@@ -48,7 +48,7 @@ class RestfulEntityViewMode {
    *
    * @param string $view_mode
    *   The view mode.
-   * @param array $mappings
+   * @param array $field_map
    *   Associative array that maps field names to public properties.
    *
    * @throws \RestfulServerConfigurationException
@@ -56,20 +56,20 @@ class RestfulEntityViewMode {
    * @return array
    *   The public properties info array.
    */
-  public function mapFields($view_mode, $mappings) {
+  public function mapFields($view_mode, $field_map) {
     $displayed_fields = $this->displayedFieldsList($view_mode);
 
     // Set the mappings from the field name to the output key.
     $public_fields = array();
     foreach ($displayed_fields as $field_name) {
-      if (empty($mappings[$field_name])) {
+      if (empty($field_map[$field_name])) {
         throw new \RestfulServerConfigurationException(format_string('No mapping was found for @field_name.', array(
           '@field_name' => $field_name,
         )));
       }
 
       // Add it to the public fields array with a special callback function.
-      $public_fields[$mappings[$field_name]] = array(
+      $public_fields[$field_map[$field_name]] = array(
         'callback' => array(
           array($this, 'renderField'),
           array($field_name, $view_mode),
