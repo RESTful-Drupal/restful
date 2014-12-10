@@ -202,8 +202,8 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
     if ($path = $this->getPath()) {
       $ids = explode(',', $path);
       if (!empty($ids)) {
-        foreach ($this->getIdColumn() as $key => $column) {
-          $query->condition($table . '.' . $column, $this->getColumnFromIds($ids, $key), 'IN');
+        foreach ($this->getIdColumn() as $index => $column) {
+          $query->condition($table . '.' . $column, $this->getColumnFromIds($ids, $index), 'IN');
         }
       }
     }
@@ -272,8 +272,8 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
     if (empty($ids)) {
       return array();
     }
-    foreach ($this->getIdColumn() as $key => $column) {
-      $query->condition($this->getTableName() . '.' . $column, $this->getColumnFromIds($ids, $key), 'IN');
+    foreach ($this->getIdColumn() as $index => $column) {
+      $query->condition($this->getTableName() . '.' . $column, $this->getColumnFromIds($ids, $index), 'IN');
     }
     $results = $query->execute();
 
@@ -304,8 +304,8 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
     $table = $this->getTableName();
     $query = db_select($table)
       ->fields($table);
-    foreach ($this->getIdColumn() as $key => $column) {
-      $query->condition($this->getTableName() . '.' . $column, current($this->getColumnFromIds(array($id), $key)));
+    foreach ($this->getIdColumn() as $index => $column) {
+      $query->condition($this->getTableName() . '.' . $column, current($this->getColumnFromIds(array($id), $index)));
     }
     $this->addExtraInfoToQuery($query);
     $results = $query->execute();
@@ -333,8 +333,8 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
    */
   public function update($id, $full_replace = FALSE) {
     $query = db_update($this->getTableName());
-    foreach ($this->getIdColumn() as $key => $column) {
-      $query->condition($column, current($this->getColumnFromIds(array($id), $key)));
+    foreach ($this->getIdColumn() as $index => $column) {
+      $query->condition($column, current($this->getColumnFromIds(array($id), $index)));
     }
 
     // Build the update array.
@@ -387,8 +387,8 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
     $id_values = array_fill(0, count($this->getIdColumn()), FALSE);
     foreach ($public_fields as $public_property => $info) {
       // Check if the public property is set in the payload.
-      if (($key = array_search($info['property'], $this->getIdColumn())) !== FALSE) {
-        $id_values[$key] = $request[$public_property];
+      if (($index = array_search($info['property'], $this->getIdColumn())) !== FALSE) {
+        $id_values[$index] = $request[$public_property];
       }
       if (isset($request[$public_property])) {
         $fields[$info['property']] = $request[$public_property];
@@ -420,8 +420,8 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
     $this->setHttpHeaders('Status', 204);
 
     $query = db_delete($this->getTableName());
-    foreach ($this->getIdColumn() as $key => $column) {
-      $query->condition($column, current($this->getColumnFromIds(array($id), $key)));
+    foreach ($this->getIdColumn() as $index => $column) {
+      $query->condition($column, current($this->getColumnFromIds(array($id), $index)));
     }
     $query->execute();
   }
