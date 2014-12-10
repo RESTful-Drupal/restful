@@ -17,9 +17,17 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
   /**
    * The name of the column(s) in the table to be used as the unique key.
    *
-   * @var string / array
+   * @var array
    */
   protected $idColumn;
+
+  /**
+   * The separator used to divide a key into its table columns
+   * when there is more than one column.
+   *
+   * @var string
+   */
+  const COLUMN_IDS_SEPARATOR = '::';
 
   /**
    * Holds the primary field.
@@ -35,11 +43,6 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
    *   An array with the name of the column(s) in the table to be used as the unique key.
    */
   public function getIdColumn() {
-
-    // If idColumn is not an array return an array with the single column.
-    if (!is_array($this->idColumn)) {
-      return array($this->idColumn);
-    }
     return $this->idColumn;
   }
 
@@ -200,7 +203,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
       $ids = explode(',', $path);
       if (!empty($ids)) {
         foreach ($this->getIdColumn() as $key => $column) {
-          $query->condition($table . '.' . $column, $this->getColumnfromIds($ids, $key), 'IN');
+          $query->condition($table . '.' . $column, $this->getColumnFromIds($ids, $key), 'IN');
         }
       }
     }
@@ -256,7 +259,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
   public function viewMultiple(array $ids) {
     $cache_id = array(
       'tb' => $this->getTableName(),
-      'cl' => implode(',',$this->getIdColumn()),
+      'cl' => implode(',', $this->getIdColumn()),
       'id' => implode(',', $ids),
     );
     $cached_data = $this->getRenderedCache($cache_id);
@@ -270,7 +273,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
       return array();
     }
     foreach ($this->getIdColumn() as $key => $column) {
-      $query->condition($this->getTableName() . '.' . $column, $this->getColumnfromIds($ids, $key), 'IN');
+      $query->condition($this->getTableName() . '.' . $column, $this->getColumnFromIds($ids, $key), 'IN');
     }
     $results = $query->execute();
 
@@ -290,7 +293,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
   public function view($id) {
     $cache_id = array(
       'tb' => $this->getTableName(),
-      'cl' => implode(',',$this->getIdColumn()),
+      'cl' => implode(',', $this->getIdColumn()),
       'id' => $id,
     );
     $cached_data = $this->getRenderedCache($cache_id);
@@ -302,7 +305,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
     $query = db_select($table)
       ->fields($table);
     foreach ($this->getIdColumn() as $key => $column) {
-      $query->condition($this->getTableName() . '.' . $column, current($this->getColumnfromIds(array($id), $key)));
+      $query->condition($this->getTableName() . '.' . $column, current($this->getColumnFromIds(array($id), $key)));
     }
     $this->addExtraInfoToQuery($query);
     $results = $query->execute();
@@ -331,7 +334,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
   public function update($id, $full_replace = FALSE) {
     $query = db_update($this->getTableName());
     foreach ($this->getIdColumn() as $key => $column) {
-      $query->condition($column, current($this->getColumnfromIds(array($id), $key)));
+      $query->condition($column, current($this->getColumnFromIds(array($id), $key)));
     }
 
     // Build the update array.
@@ -364,7 +367,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
     // Clear the rendered cache before calling the view method.
     $this->clearRenderedCache(array(
       'tb' => $this->getTableName(),
-      'cl' => implode(',',$this->getIdColumn()),
+      'cl' => implode(',', $this->getIdColumn()),
       'id' => $id,
     ));
     return $this->view($id, TRUE);
@@ -381,7 +384,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
     static::cleanRequest($request);
     $public_fields = $this->getPublicFields();
     $fields = array();
-    $id_values = array_fill(0,count($this->getIdColumn()),FALSE);
+    $id_values = array_fill(0, count($this->getIdColumn()), FALSE);
     foreach ($public_fields as $public_property => $info) {
       // Check if the public property is set in the payload.
       if (($key = array_search($info['property'], $this->getIdColumn())) !== FALSE) {
@@ -394,7 +397,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
     $passed_id = NULL;
     //If we have the full primary key passed use it.
     if (count(array_filter($id_values)) == count($id_values)) {
-      $passed_id = implode("::",$id_values);
+      $passed_id = implode(self::COLUMN_IDS_SEPARATOR, $id_values);
     }
 
     // Once the update array is built, execute the query.
@@ -418,7 +421,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
 
     $query = db_delete($this->getTableName());
     foreach ($this->getIdColumn() as $key => $column) {
-      $query->condition($column, current($this->getColumnfromIds(array($id), $key)));
+      $query->condition($column, current($this->getColumnFromIds(array($id), $key)));
     }
     $query->execute();
   }
@@ -475,7 +478,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
   public function getUniqueId($row) {
     $key = $this->getTableName();
     foreach ($this->getIdColumn() as $column) {
-      $key = $key . "::" . $row->{$column};
+      $key .= self::COLUMN_IDS_SEPARATOR . $row->{$column};
     }
     return  $key;
   }
@@ -495,20 +498,24 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
 
   /**
    * Given an array of string ID's return a single column
-   * where the strings are divided by the delimiter "::"
+   * where the strings are divided by the delimiter self::COLUMN_IDS_SEPARATOR
    *
    * @param array $ids
+   *   An array of object id's
    * @param int $column
-   *  0-N Zero indexed
+   *   0-N Zero indexed
    *
    * @return Array
    *   Returns an array at index $column
    */
-  protected function getColumnfromIds($ids, $column = 0) {
-    //Get a single column.
+  protected function getColumnFromIds($ids, $column = 0) {
+    // Get a single column.
     return array_map(function($id) use ($column) {
-      $parts = explode("::",$id);
-      return isset($parts[$column])?$parts[$column]:FALSE;
+      $parts = explode(self::COLUMN_IDS_SEPARATOR, $id);
+      if (!isset($parts[$column])) {
+        throw new \RestfulException('Invalid ID provided.');
+      }
+      return $parts[$column];
     }, $ids);
   }
 }
