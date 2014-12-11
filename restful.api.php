@@ -19,7 +19,7 @@
  */
 function hook_restful_parse_request_alter(&$request) {
   $request['__application'] += array(
-    'some_header' => \RestfulManager::getHttpHeader('X_HTTP_SOME_HEADER'),
+    'some_header' => \RestfulManager::getRequestHttpHeader('X_HTTP_SOME_HEADER'),
   );
 }
 

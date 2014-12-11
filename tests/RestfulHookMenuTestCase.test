@@ -117,7 +117,7 @@ class RestfulHookMenuTestCase extends RestfulCurlBaseTestCase {
    */
   function testVersionNegotiation() {
     // Fake the HTTP header.
-    $original_header = \RestfulManager::getHttpHeader('X-API-Version');
+    $original_header = \RestfulManager::getRequestHttpHeader('X-API-Version');
 
     // 1. my-api/v1.1/articles yields version 1.1
     $handler = restful_get_restful_handler_for_path('api/v1.1/articles');

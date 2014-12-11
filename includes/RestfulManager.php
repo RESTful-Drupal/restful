@@ -321,8 +321,8 @@ class RestfulManager {
    *   The value in the HTTP header if exists, other the value of the given
    *   "default value".
    */
-  public static function getHttpHeader($key, $default_value = NULL) {
-    $capital_name = 'HTTP_' . strtoupper($key);
+  public static function getRequestHttpHeader($key, $default_value = NULL) {
+    $capital_name = strtoupper($key);
 
     $value = !empty($_SERVER[$capital_name]) ? $_SERVER[$capital_name] : $default_value;
 

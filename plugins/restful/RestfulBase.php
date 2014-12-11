@@ -1267,7 +1267,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
   protected function accessByAllowOrigin() {
     // Check the referrer header and return false if it does not match the
     // Access-Control-Allow-Origin
-    $referer = \RestfulManager::getHttpHeader('Referer', '');
+    $referer = \RestfulManager::getRequestHttpHeader('Referer', '');
     // If there is no allow_origin assume that it is allowed. Also, if there is
     // no referer then grant access since the request probably was not
     // originated from a browser.
@@ -1333,7 +1333,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
       return $version;
     }
     // If there is no version in the URL check the header.
-    if ($api_version = \RestfulManager::getHttpHeader('X_API_VERSION')) {
+    if ($api_version = \RestfulManager::getRequestHttpHeader('X_API_VERSION')) {
       $version =  static::parseVersionString($api_version, $resource_name);
       return $version;
     }

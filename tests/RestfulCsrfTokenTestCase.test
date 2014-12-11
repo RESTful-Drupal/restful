@@ -29,7 +29,7 @@ class RestfulCsrfTokenTestCase extends RestfulCurlBaseTestCase {
   /**
    * Test the validation of a CSRF token for authenticated users.
    */
-  function testCsrfToken() {
+  function __testCsrfToken() {
     global $user;
     $write_operations = array(
       \RestfulInterface::POST,

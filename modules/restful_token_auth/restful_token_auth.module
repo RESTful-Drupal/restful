@@ -50,7 +50,7 @@ function restful_token_auth_restful_parse_request_alter(&$request) {
   $param_name = $plugin['options']['param_name'];
 
   $request['__application'] += array(
-    $param_name => \RestfulManager::getHttpHeader($param_name),
+    $param_name => \RestfulManager::getRequestHttpHeader($param_name),
   );
 }
 
