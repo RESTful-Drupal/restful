@@ -104,6 +104,10 @@ class RestfulManager {
    * - url_params: Associative array to configure if the "sort", "filter" and
    *   "range" url parameters should be allowed. Defaults to TRUE in all of
    *   them.
+   * - view_mode: Associative array that contains two keys:
+   *   - name: The name of the view mode to read from to add the public fields.
+   *   - field_map: An associative array that pairs the name of the Drupal field
+   *     with the name of the exposed (public) field.
    */
   public static function pluginProcessRestful($plugin, $info) {
     $plugin += array(
