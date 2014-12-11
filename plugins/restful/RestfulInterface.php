@@ -76,6 +76,8 @@ interface RestfulInterface {
   /**
    * Return the properties that should be public.
    *
+   * @throws \RestfulEntityViewMode
+   *
    * @return array
    */
   public function publicFieldsInfo();

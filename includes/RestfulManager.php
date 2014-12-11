@@ -58,6 +58,7 @@ class RestfulManager {
    *   - simple_invalidate: Set it to false to prevent the RESTful module to
    *     invalidate any cache it may have been generated. The developer will be
    *     responsible to invalidate caches in this scenario. Defaults to TRUE.
+   *   - granularity: DRUPAL_CACHE_PER_USER or DRUPAL_CACHE_PER_ROLE.
    * - rate_limit: The configuration array for the rate limits. There is a special
    *   limit category called 'global' that will not be limited to resource but
    *   will aggregate all request hits across all resources. To enable the global
@@ -103,6 +104,10 @@ class RestfulManager {
    * - url_params: Associative array to configure if the "sort", "filter" and
    *   "range" url parameters should be allowed. Defaults to TRUE in all of
    *   them.
+   * - view_mode: Associative array that contains two keys:
+   *   - name: The name of the view mode to read from to add the public fields.
+   *   - field_map: An associative array that pairs the name of the Drupal field
+   *     with the name of the exposed (public) field.
    */
   public static function pluginProcessRestful($plugin, $info) {
     $plugin += array(
@@ -129,6 +134,7 @@ class RestfulManager {
       'bin' => 'cache_restful',
       'expire' => CACHE_PERMANENT,
       'simple_invalidate' => TRUE,
+      'granularity' => DRUPAL_CACHE_PER_USER,
     );
 
     $plugin['autocomplete'] += array(
@@ -283,8 +289,7 @@ class RestfulManager {
     $plugins = restful_get_restful_plugins();
     foreach ($plugins as $plugin) {
       $handler = restful_get_restful_handler($plugin['resource'], $plugin['major_version'], $plugin['minor_version']);
-      $reflector = new \ReflectionClass($handler);
-      if ($reflector->hasMethod('cacheInvalidate')) {
+      if (method_exists($handler, 'cacheInvalidate')) {
         $version = $handler->getVersion();
         // Get the uid for the invalidation.
         try {
@@ -295,7 +300,7 @@ class RestfulManager {
           // user.
           $uid = $GLOBALS['user']->uid;
         }
-        $version_cid = 'v' . $version['major'] . '.' . $version['minor'] . '::uu' . $uid;
+        $version_cid = 'v' . $version['major'] . '.' . $version['minor'] . '::' . $handler->getResourceName() . '::uu' . $uid;
         $handler->cacheInvalidate($version_cid . '::' . $cid);
       }
     }

@@ -130,7 +130,7 @@ class RestfulDbQueryTestCase extends DrupalWebTestCase {
     // Populate the cache entry.
     $handler->get($id);
     $version = $handler->getVersion();
-    $cid = 'v'. $version['major'] . '.' . $version['minor'] . '::uu' . $account->uid . '::patb:restful_test_db_query::cl:id::id:' . $id;
+    $cid = 'v'. $version['major'] . '.' . $version['minor'] . '::db_query_test::uu' . $account->uid . '::patb:restful_test_db_query::cl:id::id:' . $id;
     $cache_data = $cache->get($cid);
     $this->assertNotNull($cache_data->data, 'Cache data is present.');
 

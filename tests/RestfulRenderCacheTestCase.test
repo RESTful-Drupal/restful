@@ -56,38 +56,44 @@ class RestfulRenderCacheTestCase extends DrupalWebTestCase {
     $this->assertEqual($pre_cache_results[0], $post_cache_results[0], 'Cached data is consistent.');
     // Get a cached result directly from the cache backend.
     $node = reset($nodes);
-    $cid = 'v1.1' . '::uu' . $account->uid . '::pa' . 'et:node::ei:' . $node->nid;
+    $cid = 'v1.1::test_articles::uu' . $account->uid . '::pa' . 'et:node::ei:' . $node->nid;
     $record = $cache->get($cid);
     $this->assertEqual($pre_cache_results[0], $record->data, 'Data in cache bins is correct.');
 
     // Test that invalidation is clearing cache records.
     // 1. Update node and watch cache vanish.
     // Make sure the cache is activated.
+    $request = array('fields' => 'id,label');
+    $handler->get('', $request);
+    $cid_w_request = $cid . '::fi:id,label';
     $this->assertTrue($cache_info['simple_invalidate'], 'Cache render simple invalidation is activated');
     $node->title .= ' updated';
     node_save($node);
     $record = $cache->get($cid);
     $this->assertFalse($record, 'Cache record cleared correctly.');
+    $record = $cache->get($cid_w_request);
+    $this->assertFalse($record, 'Cache record cleared correctly with request params.');
     $this->assertFalse($cache->isEmpty(), 'Remaining cache items are intact after updating entity.');
     // Regenerate cache for $node.
     $handler->get($node->nid);
+    $handler->get($node->nid, $request);
     $record = $cache->get($cid);
     $this->assertNotNull($record->data, 'Cache is being generated for non-list requests.');
+    $record = $cache->get($cid_w_request);
+    $this->assertNotNull($record->data, 'Cache is being generated for non-list requests with request params.');
     // 2. Update the user account. All cache records should be invalidated.
     $account->name .= ' updated';
     user_save($account);
-    $record = $cache->get($cid);
-    $this->assertFalse($record, 'Cache bin is emptied after updating a user.');
+    $this->assertTrue($cache->isEmpty(), 'Cache bin is emptied after updating a user.');
 
     // Test cache segmentation with request params.
     // Rebuild caches.
     $cache->clear('*', TRUE);
     $results_wo_request = $handler->get();
-    $results_w_request = $handler->get('', array('fields' => 'id,label'));
+    $results_w_request = $handler->get('', $request);
     // Check that the cached results for the entity without request array are
     // different than with the request array.
     $cid_wo_request = $cid;
-    $cid_w_request = 'v1.1' . '::uu' . $account->uid . '::pafi:id,labelet:node::ei:' . $node->nid;
     $record = $cache->get($cid_w_request);
     // Check that the stored data for both cache ids exists and is different.
     $this->assertNotEqual($record->data, $cache->get($cid_wo_request)->data, 'Cache with request params is different.');
@@ -95,5 +101,42 @@ class RestfulRenderCacheTestCase extends DrupalWebTestCase {
     $this->assertNotEqual($results_wo_request[0], $record->data, 'Cache with request is not overwritten.');
     // Assure that the stored cache corresponds to the returned rendered entity.
     $this->assertEqual($results_w_request[0], $record->data, 'Cache with request is correctly stored.');
+
+    // Test helper functions.
+    foreach ($nodes as $nid => $entity) {
+      // Populate the cache.
+      $handler->get($nid);
+      $handler->get($nid, $request);
+    }
+    // Testing clearResourceRenderedCacheEntity.
+    $handler->clearResourceRenderedCacheEntity($node->nid);
+    $record = $cache->get($cid);
+    $this->assertFalse($record, 'The entity cache for the current resource has been deleted.');
+    $record = $cache->get($cid_w_request);
+    $this->assertFalse($record, 'The entity cache for the current resource has been deleted.');
+    $this->assertFalse($cache->isEmpty(), 'Other entities keep the cache.');
+    // Testing clearResourceRenderedCache
+    $handler->clearResourceRenderedCache();
+    foreach ($nodes as $nid => $entity) {
+      $cid = 'v1.1::test_articles::uu' . $account->uid . '::pa' . 'et:node::ei:' . $nid;
+      $record = $cache->get($cid);
+      $this->assertFalse($record, 'The entity cache for the current resource has been deleted.');
+      $cid_w_request = $cid . '::fi:id,label';
+      $record = $cache->get($cid_w_request);
+      $this->assertFalse($record, 'The entity cache for the current resource has been deleted.');
+    }
+
+    // Test PER_ROLE granularity.
+    $cache->clear('*', TRUE);
+
+    $cache_info = $handler->getPluginKey('render_cache');
+    $cache_info['granularity'] = DRUPAL_CACHE_PER_ROLE;
+    $handler->setPluginKey('render_cache', $cache_info);
+
+    $handler->get('');
+    $role_cid = 'v1.1::test_articles::ur' . implode(',', array_keys($account->roles)) . '::pa' . 'et:node::ei:' . $node->nid;
+    $record = $cache->get($role_cid);
+    $this->assertTrue($record->data, 'Cache key contains role information.');
   }
+
 }
