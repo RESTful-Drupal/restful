@@ -40,10 +40,11 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
    * Get ID column
    *
    * @return array
-   *   An array with the name of the column(s) in the table to be used as the unique key.
+   *   An array with the name of the column(s) in the table to be used as the
+   *   unique key.
    */
   public function getIdColumn() {
-    return $this->idColumn;
+    return is_array($this->idColumn) ? $this->idColumn : array($this->idColumn);
   }
 
   /**
@@ -497,23 +498,24 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
   }
 
   /**
-   * Given an array of string ID's return a single column
-   * where the strings are divided by the delimiter self::COLUMN_IDS_SEPARATOR
+   * Given an array of string ID's return a single column. for example:
+   *
+   * Strings are divided by the delimiter self::COLUMN_IDS_SEPARATOR.
    *
    * @param array $ids
-   *   An array of object id's
+   *   An array of object IDs.
    * @param int $column
    *   0-N Zero indexed
    *
    * @return Array
    *   Returns an array at index $column
    */
-  protected function getColumnFromIds($ids, $column = 0) {
+  protected function getColumnFromIds(array $ids, $column = 0) {
     // Get a single column.
     return array_map(function($id) use ($column) {
       $parts = explode(self::COLUMN_IDS_SEPARATOR, $id);
       if (!isset($parts[$column])) {
-        throw new \RestfulException('Invalid ID provided.');
+        throw new \RestfulServerConfigurationException('Invalid ID provided.');
       }
       return $parts[$column];
     }, $ids);
