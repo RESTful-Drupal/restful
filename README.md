@@ -126,12 +126,12 @@ array(
 ```
 
 #### View an entity using a view mode
-You can leverage Drupal core's view modes to render an entity and export it with
-RESTful. All you need is to set up a view mode that renders the output you want
-to expose and tell RESTful to use it. This simplifies the workflow of exposing
-your resource a lot, since you don't even need to create a resource class, but
-it also offers you less features that are configured in the `publicFieldsInfo`
-method.
+You can leverage Drupal core's view modes to render an entity and expose it as a
+resource with RESTful. All you need is to set up a view mode that renders the
+output you want to expose and tell RESTful to use it. This simplifies the
+workflow of exposing your resource a lot, since you don't even need to create a
+resource class, but it also offers you less features that are configured in the
+`publicFieldsInfo` method.
 
 Use this method when you don't need any of the extra features that are added via
 `publicFieldsInfo` (like the discovery metadata, image styles for images,
@@ -139,32 +139,8 @@ process callbacks, custom access callbacks for properties, etc.). This is also a
 good way to stub a resource really quick and then move to the more fine grained
 method.
 
-To use this method just set it in the plugin definition file:
-
-```php
-$plugin = array(
-  'label' => t('Articles'),
-  'resource' => 'articles',
-  'name' => 'articles__1_7',
-  'entity_type' => 'node',
-  'bundle' => 'article',
-  'description' => t('Export the article content type using view modes.'),
-  // Generic node class. Specify your custom class that extends from this one to
-  // override the needed methods if you need.
-  'class' => 'RestfulEntityBaseNode',
-  'minor_version' => 7,
-  // Add the view mode information.
-  'view_mode' => array(
-    'name' => 'default',
-    'field_map' => array(
-      // field_name => public name.
-      'body' => 'body',
-      'field_tags' => 'tags',
-      'field_image' => 'image',
-    ),
-  ),
-);
-```
+To use this method just set it in the plugin definition file, as demonstrated in
+[this example](https://github.com/Gizra/restful/blob/7.x-1.x/modules/restful_example/plugins/restful/node/articles/1.7/articles__1_7.inc#L3-L23).
 
 #### Filtering fields
 Using the ``?fields`` query string, you can declare which fields should be
