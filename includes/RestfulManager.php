@@ -322,7 +322,7 @@ class RestfulManager {
    *   "default value".
    */
   public static function getRequestHttpHeader($key, $default_value = NULL) {
-    $capital_name = strtoupper($key);
+    $capital_name = 'HTTP_' . strtoupper(str_replace('-', '_', $key));
 
     $value = !empty($_SERVER[$capital_name]) ? $_SERVER[$capital_name] : $default_value;
 
