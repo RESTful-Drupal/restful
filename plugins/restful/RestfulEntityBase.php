@@ -329,7 +329,8 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
         else {
           // Get values from the formatter.
           $display = $info['formatter']['view_mode'] ? $info['formatter']['view_mode'] : array('settings' =>  $info['formatter']['settings']);
-          $output = field_view_field($this->getEntityType(), $wrapper->value(), $property, $display)
+          $output = field_view_field($this->getEntityType(), $wrapper->value(), $property, $display);
+
           $value = drupal_render($output);
         }
       }
