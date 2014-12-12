@@ -305,7 +305,6 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       else {
         // Exposing an entity field.
         $property = $info['property'];
-
         $sub_wrapper = $info['wrapper_method_on_entity'] ? $wrapper : $wrapper->{$property};
 
         // Check user has access to the property.
@@ -313,40 +312,15 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
           continue;
         }
 
-        $method = $info['wrapper_method'] ? $info['wrapper_method'] : NULL;
-        $resource = $info['resource'] ? $info['resource'] : NULL;
-
         if ($sub_wrapper instanceof EntityListWrapper) {
           // Multiple value.
           foreach ($sub_wrapper as $item_wrapper) {
-            if ($info['sub_property'] && $item_wrapper->value()) {
-              $item_wrapper = $item_wrapper->{$info['sub_property']};
-            }
-
-            if ($resource) {
-              if ($value_from_resource = $this->getValueFromResource($item_wrapper, $property, $resource, $public_field_name, $wrapper->getIdentifier())) {
-                $value[] = $value_from_resource;
-              }
-            }
-            else {
-              // Wrapper method.
-              $value[] = $item_wrapper->{$method}();
-            }
+            $value[] = $value = $this->getValueFromProperty($wrapper, $item_wrapper, $info, $public_field_name);
           }
         }
         else {
           // Single value.
-          if ($info['sub_property'] && $sub_wrapper->value()) {
-            $sub_wrapper = $sub_wrapper->{$info['sub_property']};
-          }
-
-          if ($resource) {
-            $value = $this->getValueFromResource($sub_wrapper, $property, $resource, $public_field_name, $wrapper->getIdentifier());
-          }
-          else {
-            // Wrapper method.
-            $value = $sub_wrapper->{$method}();
-          }
+          $value = $this->getValueFromProperty($wrapper, $sub_wrapper, $info, $public_field_name);
         }
       }
 
@@ -364,6 +338,31 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       'ei' => $entity_id,
     ));
     return $values;
+  }
+
+  protected function getValueFromProperty(\EntityMetadataWrapper $wrapper, \EntityMetadataWrapper $sub_wrapper, array $info, $public_field_name) {
+    $property = $info['property'];
+    $method = $info['wrapper_method'];
+    $resource = $info['resource'] ? $info['resource'] : NULL;
+
+    if ($info['sub_property'] && $sub_wrapper->value()) {
+      $sub_wrapper = $sub_wrapper->{$info['sub_property']};
+    }
+
+    if ($resource) {
+      $value = $this->getValueFromResource($sub_wrapper, $property, $resource, $public_field_name, $wrapper->getIdentifier());
+    }
+    else {
+      if ($info['formatter']) {
+        // Get the value from the formatter.
+      }
+      else {
+        // Wrapper method.
+        $value = $sub_wrapper->{$method}();
+      }
+    }
+
+    return $value;
   }
 
   /**
