@@ -313,7 +313,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
 
         if (empty($info['formatter'])) {
           if ($sub_wrapper instanceof EntityListWrapper) {
-            // Multiple value.
+            // Multiple values.
             foreach ($sub_wrapper as $item_wrapper) {
               $value[] = $value = $this->getValueFromProperty($wrapper, $item_wrapper, $info, $public_field_name);
             }
@@ -326,11 +326,20 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
         else {
           // Get values from the formatter.
           $display = $info['formatter'];
+
           $output = field_view_field($this->getEntityType(), $wrapper->value(), $property, $display);
 
-          dpm($output);
-
-          $value = drupal_render($output);
+          if ($sub_wrapper instanceof EntityListWrapper) {
+            // Multiple values.
+            $deltas = array_keys($output);
+            foreach (element_children($deltas) as $delta) {
+              $value[] = drupal_render($output[$delta]);
+            }
+          }
+          else {
+            // Single value.
+            $value = drupal_render($output);
+          }
         }
       }
 
@@ -1201,6 +1210,11 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
 
         if ($this->getMethod() == \RestfulInterface::OPTIONS) {
           $info += $this->getFieldInfoAndFormSchema($field);
+        }
+
+        if (is_array($info['formatter'])) {
+          // Hide the label of the formatter by default.
+          $info['formatter'] += array('label' => 'hidden');
         }
       }
 
