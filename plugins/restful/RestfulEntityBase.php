@@ -30,9 +30,10 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    *   content. This can be used for example on a text field with filtered text
    *   input format where we would need to do $wrapper->body->value->value().
    *   Defaults to FALSE.
-   * - "view_mode": The name of the view mode to be used for rendering the value
-   *   of a configurable field using Drupal field API's formatter. All the
-   *   formatter settings will be picked up from the view mode itself.
+   * - "formatter": An array used for rendering the value of a configurable field using
+   *   Drupal field API's formatter. The array keys are:
+   *   - name: The name of the formatter.
+   *   - settings: An array of the formatter's settings.
    * - "wrapper_method": The wrapper's method name to perform on the field.
    *   This can be used for example to get the entity label, by setting the
    *   value to "label". Defaults to "value".
@@ -1176,8 +1177,12 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
         'sub_property' => FALSE,
         'wrapper_method' => 'value',
         'wrapper_method_on_entity' => FALSE,
-        'view_mode' => FALSE,
+        'formatter' => array(),
       );
+
+      if ($info['formatter']) {
+        $info['formatter'] += array('settings' => array());
+      }
 
       if ($field = field_info_field($info['property'])) {
         if (!empty($info['view_mode'])) {
