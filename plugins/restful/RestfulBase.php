@@ -1333,7 +1333,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
       return $version;
     }
     // If there is no version in the URL check the header.
-    if ($api_version = \RestfulManager::getRequestHttpHeader('X_API_VERSION')) {
+    if ($api_version = \RestfulManager::getRequestHttpHeader('X-API-Version')) {
       $version =  static::parseVersionString($api_version, $resource_name);
       return $version;
     }
