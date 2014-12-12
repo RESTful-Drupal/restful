@@ -30,12 +30,9 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    *   content. This can be used for example on a text field with filtered text
    *   input format where we would need to do $wrapper->body->value->value().
    *   Defaults to FALSE.
-   * - "formatter": An array used for rendering the value of a configurable field using
-   *   Drupal field API's formatter. The array keys are:
-   *   - name: The name of the formatter.
-   *   - view_mode: (optional) The name of the view mode to use.
-   *   - settings: (optional) If not view mode was selected, use an array of the
-   *     formatter's settings, as passed to field_view_field().
+   * - "formatter": Used for rendering the value of a configurable field using
+   *   Drupal field API's formatter. The value is the one that should be passed
+   *   as $display to field_view_field().
    * - "wrapper_method": The wrapper's method name to perform on the field.
    *   This can be used for example to get the entity label, by setting the
    *   value to "label". Defaults to "value".
@@ -328,8 +325,10 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
         }
         else {
           // Get values from the formatter.
-          $display = $info['formatter']['view_mode'] ? $info['formatter']['view_mode'] : array('settings' =>  $info['formatter']['settings']);
+          $display = $info['formatter'];
           $output = field_view_field($this->getEntityType(), $wrapper->value(), $property, $display);
+
+          dpm($output);
 
           $value = drupal_render($output);
         }
@@ -1182,15 +1181,8 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
         'sub_property' => FALSE,
         'wrapper_method' => 'value',
         'wrapper_method_on_entity' => FALSE,
-        'formatter' => array(),
+        'formatter' => FALSE,
       );
-
-      if ($info['formatter']) {
-        $info['formatter'] += array(
-          'view_mode' => FALSE,
-          'settings' => array(),
-        );
-      }
 
       if ($field = field_info_field($info['property'])) {
         if (!empty($info['view_mode'])) {
