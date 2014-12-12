@@ -1182,7 +1182,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       if ($field = field_info_field($info['property'])) {
         if (!empty($info['view_mode'])) {
           // Pass the value of the field through the field formatter.
-
+          array_unshift($info['process_callbacks'], array(array('RestfulEntityViewMode', 'renderField'), array($field['field_name'], $info['view_mode'])));
         }
 
         // If it's an image check if we need to add image style processing.
