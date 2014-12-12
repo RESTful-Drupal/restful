@@ -31,8 +31,10 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    *   input format where we would need to do $wrapper->body->value->value().
    *   Defaults to FALSE.
    * - "formatter": Used for rendering the value of a configurable field using
-   *   Drupal field API's formatter. The value is the one that should be passed
-   *   as $display to field_view_field().
+   *   Drupal field API's formatter. Array keys are:
+   *   - display: The $display value that is passed to field_view_field().
+   *   - remove_theme: Unset the #theme key from the output, to avoid wrapping
+   *     the formatter's output with HTML. Defaults to TRUE.
    * - "wrapper_method": The wrapper's method name to perform on the field.
    *   This can be used for example to get the entity label, by setting the
    *   value to "label". Defaults to "value".
