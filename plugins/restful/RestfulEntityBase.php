@@ -325,9 +325,14 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
         }
         else {
           // Get values from the formatter.
-          $display = $info['formatter'];
+          $output = field_view_field($this->getEntityType(), $wrapper->value(), $property, $info['formatter']['display']);
 
-          $output = field_view_field($this->getEntityType(), $wrapper->value(), $property, $display);
+          if ($info['formatter']['remove_theme']) {
+            // Unset the theme, as we just want to get the value from the
+            // formatter, without the wrapping HTML.
+            unset($output['#theme']);
+          }
+
 
           if ($sub_wrapper instanceof EntityListWrapper) {
             // Multiple values.
@@ -359,6 +364,21 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     return $values;
   }
 
+  /**
+   * Get value from a property.
+   *
+   * @param EntityMetadataWrapper $wrapper
+   *   The wrapped entity.
+   * @param EntityMetadataWrapper $sub_wrapper
+   *   The wrapped property.
+   * @param array $info
+   *   The public field info array.
+   * @param $public_field_name
+   *   The field name.
+   *
+   * @return mixed
+   *   A single or multiple values.
+   */
   protected function getValueFromProperty(\EntityMetadataWrapper $wrapper, \EntityMetadataWrapper $sub_wrapper, array $info, $public_field_name) {
     $property = $info['property'];
     $method = $info['wrapper_method'];
@@ -1190,7 +1210,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
         'sub_property' => FALSE,
         'wrapper_method' => 'value',
         'wrapper_method_on_entity' => FALSE,
-        'formatter' => FALSE,
+        'formatter' => array(),
       );
 
       if ($field = field_info_field($info['property'])) {
@@ -1212,9 +1232,12 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
           $info += $this->getFieldInfoAndFormSchema($field);
         }
 
-        if (is_array($info['formatter'])) {
+        if (!empty($info['formatter'])) {
           // Hide the label of the formatter by default.
-          $info['formatter'] += array('label' => 'hidden');
+          $info['formatter'] += array(
+            'display' => array(),
+            'remove_theme' => TRUE,
+          );
         }
       }
 
