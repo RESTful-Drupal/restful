@@ -33,7 +33,9 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    * - "formatter": An array used for rendering the value of a configurable field using
    *   Drupal field API's formatter. The array keys are:
    *   - name: The name of the formatter.
-   *   - settings: An array of the formatter's settings.
+   *   - view_mode: (optional) The name of the view mode to use.
+   *   - settings: (optional) If not view mode was selected, use an array of the
+   *     formatter's settings, as passed to field_view_field().
    * - "wrapper_method": The wrapper's method name to perform on the field.
    *   This can be used for example to get the entity label, by setting the
    *   value to "label". Defaults to "value".
@@ -312,15 +314,23 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
           continue;
         }
 
-        if ($sub_wrapper instanceof EntityListWrapper) {
-          // Multiple value.
-          foreach ($sub_wrapper as $item_wrapper) {
-            $value[] = $value = $this->getValueFromProperty($wrapper, $item_wrapper, $info, $public_field_name);
+        if (empty($info['formatter'])) {
+          if ($sub_wrapper instanceof EntityListWrapper) {
+            // Multiple value.
+            foreach ($sub_wrapper as $item_wrapper) {
+              $value[] = $value = $this->getValueFromProperty($wrapper, $item_wrapper, $info, $public_field_name);
+            }
+          }
+          else {
+            // Single value.
+            $value = $this->getValueFromProperty($wrapper, $sub_wrapper, $info, $public_field_name);
           }
         }
         else {
-          // Single value.
-          $value = $this->getValueFromProperty($wrapper, $sub_wrapper, $info, $public_field_name);
+          // Get values from the formatter.
+          $display = $info['formatter']['view_mode'] ? $info['formatter']['view_mode'] : array('settings' =>  $info['formatter']['settings']);
+          $output = field_view_field($this->getEntityType(), $wrapper->value(), $property, $display)
+          $value = drupal_render($output);
         }
       }
 
@@ -353,13 +363,8 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       $value = $this->getValueFromResource($sub_wrapper, $property, $resource, $public_field_name, $wrapper->getIdentifier());
     }
     else {
-      if ($info['formatter']) {
-        // Get the value from the formatter.
-      }
-      else {
-        // Wrapper method.
-        $value = $sub_wrapper->{$method}();
-      }
+      // Wrapper method.
+      $value = $sub_wrapper->{$method}();
     }
 
     return $value;
@@ -1180,7 +1185,10 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       );
 
       if ($info['formatter']) {
-        $info['formatter'] += array('settings' => array());
+        $info['formatter'] += array(
+          'view_mode' => FALSE,
+          'settings' => array(),
+        );
       }
 
       if ($field = field_info_field($info['property'])) {
