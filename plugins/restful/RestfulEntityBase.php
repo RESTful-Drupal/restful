@@ -363,7 +363,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
   protected function getValueFromProperty(\EntityMetadataWrapper $wrapper, \EntityMetadataWrapper $sub_wrapper, array $info, $public_field_name) {
     $property = $info['property'];
     $method = $info['wrapper_method'];
-    $resource = $info['resource'] ? $info['resource'] : NULL;
+    $resource = $info['resource'] ?: NULL;
 
     if ($info['sub_property'] && $sub_wrapper->value()) {
       $sub_wrapper = $sub_wrapper->{$info['sub_property']};
