@@ -315,7 +315,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
           if ($sub_wrapper instanceof EntityListWrapper) {
             // Multiple values.
             foreach ($sub_wrapper as $item_wrapper) {
-              $value[] = $value = $this->getValueFromProperty($wrapper, $item_wrapper, $info, $public_field_name);
+              $value[] = $this->getValueFromProperty($wrapper, $item_wrapper, $info, $public_field_name);
             }
           }
           else {
