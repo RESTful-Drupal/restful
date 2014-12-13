@@ -31,10 +31,8 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    *   input format where we would need to do $wrapper->body->value->value().
    *   Defaults to FALSE.
    * - "formatter": Used for rendering the value of a configurable field using
-   *   Drupal field API's formatter. Array keys are:
-   *   - display: The $display value that is passed to field_view_field().
-   *   - remove_theme: Unset the #theme key from the output, to avoid wrapping
-   *     the formatter's output with HTML. Defaults to TRUE.
+   *   Drupal field API's formatter. The value is The $display value that is
+   *   passed to field_view_field().
    * - "wrapper_method": The wrapper's method name to perform on the field.
    *   This can be used for example to get the entity label, by setting the
    *   value to "label". Defaults to "value".
@@ -326,27 +324,8 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
           }
         }
         else {
-          // Get values from the formatter.
-          $output = field_view_field($this->getEntityType(), $wrapper->value(), $property, $info['formatter']['display']);
-
-          if ($info['formatter']['remove_theme']) {
-            // Unset the theme, as we just want to get the value from the
-            // formatter, without the wrapping HTML.
-            unset($output['#theme']);
-          }
-
-
-          if ($sub_wrapper instanceof EntityListWrapper) {
-            // Multiple values.
-            $deltas = array_keys($output);
-            foreach (element_children($deltas) as $delta) {
-              $value[] = drupal_render($output[$delta]);
-            }
-          }
-          else {
-            // Single value.
-            $value = drupal_render($output);
-          }
+          // Get value from field formatter.
+          $value = $this->getValueFromFieldFormatter($wrapper, $sub_wrapper, $info);
         }
       }
 
@@ -396,6 +375,45 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     else {
       // Wrapper method.
       $value = $sub_wrapper->{$method}();
+    }
+
+    return $value;
+  }
+
+  /**
+   * Get value from a field rendered by Drupal field API's formatter.
+   *
+   * @param EntityMetadataWrapper $wrapper
+   *   The wrapped entity.
+   * @param EntityMetadataWrapper $sub_wrapper
+   *   The wrapped property.
+   * @param array $info
+   *   The public field info array.
+   *
+   * @return mixed
+   *   A single or multiple values.
+   */
+  protected function getValueFromFieldFormatter(\EntityMetadataWrapper $wrapper, \EntityMetadataWrapper $sub_wrapper, array $info) {
+    $property = $info['property'];
+
+    // Get values from the formatter.
+    $output = field_view_field($this->getEntityType(), $wrapper->value(), $property, $info['formatter']['display']);
+
+    // Unset the theme, as we just want to get the value from the
+    // formatter, without the wrapping HTML.
+    unset($output['#theme']);
+
+
+    if ($sub_wrapper instanceof EntityListWrapper) {
+      // Multiple values.
+      $deltas = array_keys($output);
+      foreach (element_children($deltas) as $delta) {
+        $value[] = drupal_render($output[$delta]);
+      }
+    }
+    else {
+      // Single value.
+      $value = drupal_render($output);
     }
 
     return $value;
@@ -1212,7 +1230,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
         'sub_property' => FALSE,
         'wrapper_method' => 'value',
         'wrapper_method_on_entity' => FALSE,
-        'formatter' => array(),
+        'formatter' => FALSE,
       );
 
       if ($field = field_info_field($info['property'])) {
@@ -1227,14 +1245,6 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
 
         if ($this->getMethod() == \RestfulInterface::OPTIONS) {
           $info += $this->getFieldInfoAndFormSchema($field);
-        }
-
-        if (!empty($info['formatter'])) {
-          // Hide the label of the formatter by default.
-          $info['formatter'] += array(
-            'display' => array(),
-            'remove_theme' => TRUE,
-          );
         }
       }
 
