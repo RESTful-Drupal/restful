@@ -399,8 +399,8 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     // Get values from the formatter.
     $output = field_view_field($this->getEntityType(), $wrapper->value(), $property, $info['formatter']['display']);
 
-    // Unset the theme, as we just want to get the value from the
-    // formatter, without the wrapping HTML.
+    // Unset the theme, as we just want to get the value from the formatter,
+    // without the wrapping HTML.
     unset($output['#theme']);
 
 
