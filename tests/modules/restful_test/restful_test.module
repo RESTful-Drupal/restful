@@ -397,9 +397,8 @@ function restful_test_create_vocabulary_and_terms($machine_name = 'test_vocab', 
  *   The saved node.
  */
 function restful_test_create_node_with_tags() {
-  $bundle = 'article';
-  // Create a node with some tags in it as embeds.
-  $node = $this->drupalCreateNode(array('type' => $bundle));
+  $values = array('type' => 'article');
+  $node = entity_create('node', $values);
 
   $vocabulary = taxonomy_vocabulary_machine_name_load('tags');
 
