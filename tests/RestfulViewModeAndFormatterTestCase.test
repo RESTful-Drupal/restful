@@ -58,7 +58,7 @@ class RestfulViewModeAndFormatterTestCase extends DrupalWebTestCase {
 
     // Field with no formatter.
     $result = $handler->get($node->nid);
-    $this->assertEqual(strip_tags($result[0]['body']), $text);
+    $this->assertEqual(trim(strip_tags($result[0]['body'])), $text, 'Raw value passed without a formatter.');
 
     // Add formatter settings.
     $public_fields = $handler->getPublicFields();
@@ -72,6 +72,8 @@ class RestfulViewModeAndFormatterTestCase extends DrupalWebTestCase {
     $handler->setPublicFields($public_fields);
 
     $result = $handler->get($node->nid);
-    $this->assertEqual($result[0]['body'], $text);
+    // Core's trim formatter also inclues the opening <p> tag in the calculation
+    // of number of chars.
+    $this->assertEqual($result[0]['body'], '<p>Some bo</p>', 'Value trimmed by formatter.');
   }
 }
