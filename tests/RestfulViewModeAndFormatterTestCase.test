@@ -16,7 +16,7 @@ class RestfulViewModeAndFormatterTestCase extends DrupalWebTestCase {
   }
 
   function setUp() {
-    parent::setUp('restful_example');
+    parent::setUp('restful_example', 'restful_test');
   }
 
   /**
@@ -31,11 +31,9 @@ class RestfulViewModeAndFormatterTestCase extends DrupalWebTestCase {
     $results = $handler->get($nodes[0]->nid . ',' . $nodes[1]->nid);
 
     // Make sure that all the fields were mapped.
-    $this->assertNotNull($results[0]['body']);
-    $this->assertFalse(empty($results[0]['body']), 'Body is not empty.');
-    $this->assertNotNull($results[0]['tags']);
-    $this->assertFalse(empty($results[0]['tags']), 'Tags are not empty.');
-    $this->assertNotNull($results[0]['image']);
+    $this->assertTrue($results[0]['body'], 'Body field is populated.');
+    $this->assertTrue($results[0]['tags'], 'Tags field is populated.');
+    $this->assertTrue($results[0]['image'], 'Image field is populated.');
   }
 
   /**
