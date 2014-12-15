@@ -24,8 +24,8 @@ class RestfulViewModeAndFormatterTestCase extends DrupalWebTestCase {
    */
   public function testViewModeIntegration() {
     $handler = restful_get_restful_handler('articles', 1, 7);
-    $nodes[] = $this->createNodeWithTags();
-    $nodes[] = $this->createNodeWithTags();
+    $nodes[] = restful_test_create_node_with_tags();
+    $nodes[] = restful_test_create_node_with_tags();
     // Make sure to get more than one node to increase coverage on
     // \RestfulEntityViewMode.
     $results = $handler->get($nodes[0]->nid . ',' . $nodes[1]->nid);

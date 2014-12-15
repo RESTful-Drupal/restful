@@ -324,7 +324,7 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
    * Test the Simple JSON formatter.
    */
   public function testSimpleJson() {
-    $node = $this->createNodeWithTags();
+    $node = restful_test_create_node_with_tags();
     $handler = restful_get_restful_handler('articles', 1, 5);
     // Use the simple JSON formatter.
     $handler->setPluginKey('formatter', 'json');
@@ -350,7 +350,7 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
 
     // Assert the HATEOAS.
     // Create another node for pagination.
-    $this->createNodeWithTags();
+    restful_test_create_node_with_tags();
     $handler->setRange(1);
     $response = $handler->get();
     $result = $formatter->format($response);
@@ -361,37 +361,4 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
     $this->assertEqual(count($decoded_json['data']), 1, 'The correct number of items was listed.');
     $this->assertNotNull($decoded_json['next'], '"Next" property added.');
   }
-
-  /**
-   * Helper function that creates a node with taxonomy terms.
-   *
-   * @return object
-   *   The created node.
-   *
-   * @throws Exception
-   * @throws FieldException
-   */
-  protected function createNodeWithTags() {
-    $bundle = 'article';
-    // Create a node with some tags in it as embeds.
-    $node = $this->drupalCreateNode(array('type' => $bundle));
-
-    $vocabulary = taxonomy_vocabulary_machine_name_load('tags');
-
-    // Create a random number of tags for the created node.
-    for ($index = 0; $index < mt_rand(1, 10); $index++) {
-      $term = (object) array(
-        'vid' => $vocabulary->vid,
-        'name' => $this->randomString(),
-      );
-      taxonomy_term_save($term);
-      $terms[] = $term;
-      $node->field_tags[LANGUAGE_NONE][$index]['tid'] = $term->tid;
-    }
-    node_save($node);
-
-    return $node;
-
-  }
-
 }
