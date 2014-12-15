@@ -28,12 +28,12 @@ class RestfulViewModeAndFormatterTestCase extends DrupalWebTestCase {
     $nodes[] = restful_test_create_node_with_tags();
     // Make sure to get more than one node to increase coverage on
     // \RestfulEntityViewMode.
-    $results = $handler->get($nodes[0]->nid . ',' . $nodes[1]->nid);
+    $result = $handler->get($nodes[0]->nid . ',' . $nodes[1]->nid);
 
     // Make sure that all the fields were mapped.
-    $this->assertTrue($results[0]['body'], 'Body field is populated.');
-    $this->assertTrue($results[0]['tags'], 'Tags field is populated.');
-    $this->assertTrue($results[0]['image'], 'Image field is populated.');
+    $this->assertNotNull($result[0]['body'], 'Body field is populated.');
+    $this->assertTrue($result[0]['tags'], 'Tags field is populated.');
+    $this->assertNotNull($result[0]['image'], 'Image field is not NULL.');
   }
 
   /**
