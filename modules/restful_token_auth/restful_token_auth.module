@@ -49,10 +49,8 @@ function restful_token_auth_restful_parse_request_alter(&$request) {
   $plugin = restful_get_authentication_plugin('token');
   $param_name = $plugin['options']['param_name'];
 
-  $capital_name = strtoupper('HTTP_' . $param_name);
-
   $request['__application'] += array(
-    $param_name => !empty($_SERVER[$capital_name]) ? $_SERVER[$capital_name] : NULL,
+    $param_name => \RestfulManager::getRequestHttpHeader($param_name),
   );
 }
 

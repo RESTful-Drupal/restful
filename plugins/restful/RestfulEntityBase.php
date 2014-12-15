@@ -271,6 +271,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    * {@inheritdoc}
    */
   public function viewEntity($entity_id) {
+    global $language;
     $request = $this->getRequest();
 
     $cached_data = $this->getRenderedCache(array(
@@ -286,6 +287,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     }
 
     $wrapper = entity_metadata_wrapper($this->entityType, $entity_id);
+    $wrapper->language($language->language);
     $values = array();
 
     $limit_fields = !empty($request['fields']) ? explode(',', $request['fields']) : array();
