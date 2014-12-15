@@ -76,6 +76,13 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
   protected $valueMetadata = array();
 
   /**
+   * Determines the language of the items that should be returned.
+   *
+   * @var string
+   */
+  protected $langcode;
+
+  /**
    * Static cache controller.
    *
    * @var \RestfulStaticCacheController
@@ -212,6 +219,25 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
   }
 
   /**
+   * Get the language code.
+   *
+   * @return string
+   */
+  public function getLangCode() {
+    return $this->langcode;
+  }
+
+  /**
+   * Sets the language code.
+   *
+   * @param string $langcode
+   *   The language code.
+   */
+  public function setLangCode($langcode) {
+    $this->langcode = $langcode;
+  }
+
+  /**
    * Set the request array.
    *
    * @param array $request
@@ -345,7 +371,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
    * @param DrupalCacheInterface $cache_controller
    *   (optional) Injected cache backend.
    */
-  public function __construct(array $plugin, \RestfulAuthenticationManager $auth_manager = NULL, \DrupalCacheInterface $cache_controller = NULL) {
+  public function __construct(array $plugin, \RestfulAuthenticationManager $auth_manager = NULL, \DrupalCacheInterface $cache_controller = NULL, $langcode = NULL) {
     parent::__construct($plugin);
     $this->authenticationManager = $auth_manager ? $auth_manager : new \RestfulAuthenticationManager();
     $this->cacheController = $cache_controller ? $cache_controller : $this->newCacheObject();
@@ -353,6 +379,13 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
       $this->setRateLimitManager(new \RestfulRateLimitManager($this->getPluginKey('resource'), $rate_limit));
     }
     $this->staticCache = new \RestfulStaticCacheController();
+    if (is_null($langcode)) {
+      global $language;
+      $this->langcode = $language->language;
+    }
+    else {
+      $this->langcode = $langcode;
+    }
   }
 
   /**
