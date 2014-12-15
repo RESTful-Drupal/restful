@@ -58,15 +58,17 @@ class RestfulViewModeAndFormatterTestCase extends DrupalWebTestCase {
 
     // Field with no formatter.
     $result = $handler->get($node->nid);
-    $this->assertEqual($result[0]['body'], $text);
+    $this->assertEqual(strip_tags($result[0]['body']), $text);
 
-    // Add formatter settings. We use the settings from the "default" view mode
-    // and adjust them..
-    $instance = field_info_instance('node', 'body', 'article');
-    $display = $instance['display'];
-    $display['settings']['trim_length'] = 5;
+    // Add formatter settings.
     $public_fields = $handler->getPublicFields();
-    $public_fields['body']['formatter'] = $instance['display'];
+    $display = array(
+      'type' => 'text_summary_or_trimmed',
+      'settings' => array(
+        'trim_length' => 10,
+      ),
+    );
+    $public_fields['body']['formatter'] = $display;
     $handler->setPublicFields($public_fields);
 
     $result = $handler->get($node->nid);
