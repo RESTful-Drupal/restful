@@ -300,7 +300,7 @@ function restful_get_restful_handler_by_name($plugin_name) {
   ctools_include('plugins');
   $plugin = ctools_get_plugins('restful', 'restful', $plugin_name);
   if (!$class = ctools_plugin_load_class('restful', 'restful', $plugin_name, 'class')) {
-    throw new \RestfulServiceUnavailable('Restful plugin class not found.');
+    throw new \RestfulServiceUnavailable(format_string('Restful plugin class (@plugin) was not found.', array('@plugin' => $plugin_name)));
   }
   $handler = new $class($plugin);
   // If the restful plugin needs authentication load the corresponding
@@ -335,7 +335,7 @@ function restful_get_restful_handler_by_name($plugin_name) {
 function restful_get_authentication_handler($auth_plugin_name) {
   $auth_plugin = restful_get_authentication_plugin($auth_plugin_name);
   if (!$auth_class = ctools_plugin_get_class($auth_plugin, 'class')) {
-    throw new \RestfulServiceUnavailable('Authentication plugin class not found.');
+    throw new \RestfulServiceUnavailable(format_string('Authentication plugin class (@plugin) was not found.', array('@plugin' => $auth_plugin_name)));
   }
   return new $auth_class($auth_plugin);
 }
@@ -357,7 +357,7 @@ function restful_get_authentication_handler($auth_plugin_name) {
 function restful_get_formatter_handler($formatter_plugin_name, $restful_handler) {
   $formatter_plugin = restful_get_formatter_plugin($formatter_plugin_name);
   if (!$formatter_class = ctools_plugin_get_class($formatter_plugin, 'class')) {
-    throw new \RestfulServiceUnavailable('Formatter plugin class not found.');
+    throw new \RestfulServiceUnavailable(format_string('Formatter plugin class (@plugin) was not found.', array('@plugin' => $formatter_plugin_name)));
   }
   return new $formatter_class($formatter_plugin, $restful_handler);
 }
