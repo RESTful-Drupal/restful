@@ -43,7 +43,7 @@ class RestfulAuthenticationCookie extends RestfulAuthenticationBase implements R
    */
   protected function isCli() {
     // Needed to detect if run-tests.sh is running the tests.
-    $cli = isset($_SERVER['HTTP_USER_AGENT']) && $_SERVER['HTTP_USER_AGENT'] == 'Drupal command line';
+    $cli = \RestfulManager::getRequestHttpHeader('User-Agent') == 'Drupal command line';
     return $cli || drupal_is_cli();
   }
 

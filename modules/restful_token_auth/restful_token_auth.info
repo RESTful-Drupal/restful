@@ -3,6 +3,7 @@ description = Authenticate a REST call using a token.
 core = 7.x
 dependencies[] = restful
 dependencies[] = entityreference
+configure = admin/config/services/restful/token-auth
 
 ; Plugins
 files[] = includes/RestfulTokenAuth.php
