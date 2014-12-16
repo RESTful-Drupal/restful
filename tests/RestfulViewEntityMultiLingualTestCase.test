@@ -37,6 +37,7 @@ class RestfulViewEntityMultiLingualTestCase extends RestfulCurlBaseTestCase {
         'translate any entity',
       )
     );
+    require_once DRUPAL_ROOT . '/includes/locale.inc';
     $this->drupalLogin($this->testUser);
     $languages = language_list();
     if (!isset($languages['en'])) {
