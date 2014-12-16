@@ -140,6 +140,8 @@ class RestfulViewEntityMultiLingualTestCase extends RestfulCurlBaseTestCase {
       'image_multiple' => NULL,
       'entity_reference_multiple' => NULL,
       'entity_reference_multiple_resource' => NULL,
+      'entity_reference_single' => NULL,
+      'entity_reference_single_resource' => NULL,
     );
 
     $expected_result = $base_expected_result_v1;
