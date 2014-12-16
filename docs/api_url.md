@@ -233,32 +233,32 @@ Since the global event is not tied to any resource the limit and period is speci
   - `restful_global_rate_period`: The period string compatible with
     \DateInterval.
 
-    ## Error handling
-    If an error occurs when operating the REST endpoint via URL, A valid JSON object
-     with ``code``, ``message`` and ``description`` would be returned.
+## Error handling
+If an error occurs when operating the REST endpoint via URL, A valid JSON object
+ with ``code``, ``message`` and ``description`` would be returned.
 
-    The RESTful module adheres to the [Problem Details for HTTP
-    APIs](http://tools.ietf.org/html/draft-nottingham-http-problem-06) draft to
-    improve DX when dealing with HTTP API errors. Download and enable the [Advanced
-    Help](https://drupal.org/project/advanced_help) module for more information
-    about the errors.
+The RESTful module adheres to the [Problem Details for HTTP
+APIs](http://tools.ietf.org/html/draft-nottingham-http-problem-06) draft to
+improve DX when dealing with HTTP API errors. Download and enable the [Advanced
+Help](https://drupal.org/project/advanced_help) module for more information
+about the errors.
 
-    For example, trying to sort a list by an invalid key
+For example, trying to sort a list by an invalid key
 
-    ```shell
-    curl https://example.com/api/v1/articles?sort=wrong_key
-    ```
+```shell
+curl https://example.com/api/v1/articles?sort=wrong_key
+```
 
-    Will result with an HTTP code 400, and the following JSON:
+Will result with an HTTP code 400, and the following JSON:
 
-    ```javascript
-    {
-      'type' => 'http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.1',
-      'title' => 'The sort wrong_key is not allowed for this path.',
-      'status' => 400,
-      'detail' => 'Bad Request.',
-    }
-    ```
+```javascript
+{
+  'type' => 'http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.1',
+  'title' => 'The sort wrong_key is not allowed for this path.',
+  'status' => 400,
+  'detail' => 'Bad Request.',
+}
+```
 
 
 ## Documenting your API

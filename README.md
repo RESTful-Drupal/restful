@@ -92,8 +92,7 @@ class RestfulExampleArticlesResource extends RestfulEntityBaseNode {
 
 ### Declaring image formats, references, view modes, and others
 
-See the [Defining a RESTful Plugin](./docs/plugin.md) documentation for more
-details.
+See the [Defining a RESTful Plugin](./docs/plugin.md) document for more details.
 
 
 ## Using your API from within Drupal
