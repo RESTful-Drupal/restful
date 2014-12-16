@@ -72,6 +72,13 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
   protected $publicFields = array();
 
   /**
+   * The language of the data exposed to the API.
+   *
+   * @var string
+   */
+  protected $language;
+
+  /**
    * Overrides \RestfulDataProviderEFQ::controllersInfo().
    */
   public static function controllersInfo() {
