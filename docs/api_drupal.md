@@ -1,5 +1,6 @@
 # Using Your API Within Drupal
 
+
 ## Sort
 You can sort the list of entities by multiple properties. Prefixing the property
 with a dash (``-``) will sort is in a descending order.
@@ -29,6 +30,7 @@ array(
 );
 ```
 
+
 ## Filter
 RESTful allows filtering of a list.
 
@@ -39,7 +41,7 @@ $request['filter'] = array('label' => 'abc');
 $result = $handler->get('', $request);
 ```
 
-### Autocomplete
+## Autocomplete
 By passing the autocomplete query string in the request, it is possible to change
 the normal listing behavior into autocomplete.
 
@@ -59,6 +61,7 @@ $request = array(
 
 $handler->get('', $request);
 ```
+
 
 ## Range
 RESTful allows you to cotrol the number of elements per page you want to show. This value will always be limited by the `$range` variable in your resource class. This variable, in turn, defaults to 50.
@@ -122,6 +125,7 @@ $request = array(
 
 $handler->post('', $request);
 ```
+
 
 ### Error handling
 If an error occurs while using the API within Drupal, a PHP ``Exception``

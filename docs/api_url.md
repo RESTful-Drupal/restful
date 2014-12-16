@@ -1,8 +1,10 @@
 # Consuming your API
 
-## Hiding fields
+## Returning specific fields
 Using the ``?fields`` query string, you can declare which fields should be
-returned.
+returned.  Note that you can only return fields already being returned by
+`publicFieldsInfo()`.  This is used, for example, if you have many fields
+in `publicFieldsInfo()`, but your client only needs a few specific ones.
 
 ```shell
 # Handler v1.0
@@ -20,8 +22,9 @@ Returns:
 }
 ```
 
-## Filter
-RESTful allows filtering of a list.
+
+## Applying a query filter
+RESTful allows applying filters to the database query used to generate the list.
 
 ```php
 # Handler v1.0
@@ -36,62 +39,8 @@ articles after a certain date:
 curl https://example.com/api/articles?filter[created][value]=1417591992&filter[created][operator]=">="
 ```
 
-## Error handling
-If an error occurs when operating the REST endpoint via URL, A valid JSON object
- with ``code``, ``message`` and ``description`` would be returned.
-
-The RESTful module adheres to the [Problem Details for HTTP
-APIs](http://tools.ietf.org/html/draft-nottingham-http-problem-06) draft to
-improve DX when dealing with HTTP API errors. Download and enable the [Advanced
-Help](https://drupal.org/project/advanced_help) module for more information
-about the errors.
-
-For example, trying to sort a list by an invalid key
-
-```shell
-curl https://example.com/api/v1/articles?sort=wrong_key
-```
-
-Will result with an HTTP code 400, and the following JSON:
-
-```javascript
-{
-  'type' => 'http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.1',
-  'title' => 'The sort wrong_key is not allowed for this path.',
-  'status' => 400,
-  'detail' => 'Bad Request.',
-}
-```
-
-## Authentication providers
-
-Restful comes with ``cookie``, ``base_auth`` (user name and password in the HTTP header)
-authentications providers, as well as a "RESTful token auth" module that has a
-``token`` authentication provider.
-
-Note: if you use cookie-based authentication then you also need to set the
-HTTP ``X-CSRF-Token`` header on all writing requests (POST, PUT and DELETE).
-You can retrieve the token from ``/api/session/token`` with a standard HTTP
-GET request.
-
-See [this](https://github.com/Gizra/angular-restful-auth) AngularJs example that shows a login from a fully decoupled web app
-to a Drupal backend.
-
-
-```bash
-# (Change username and password)
-curl -u "username:password" https://example.com/api/login
-
-# Response has access token.
-{"access_token":"YOUR_TOKEN"}
-
-# Call a "protected" with token resource (Articles resource version 1.3 in "Restful example")
-curl https://example.com/api/v1.3/articles/1?access_token=YOUR_TOKEN
-```
-
 
 ## Output formats
-
 The RESTful module outputs all resources by using HAL+JSON encoding by default.
 That means that when you have the following data:
 
@@ -151,7 +100,8 @@ $plugin = array(
 );
 ```
 
-### Changing the default output format.
+
+### Changing the default output format
 If you need to change the output format for everything at once then you just
 have to set a special variable with the name of the new output format plugin.
 When you do that all the resources that don't specify a `'formatter'` key in the
@@ -161,7 +111,8 @@ plugin definition will use that output format by default. Ex:
 variable_set('restful_default_output_formatter', 'my_formatter');
 ```
 
-## Render Cache
+
+## Render cache
 The RESTful module is compatible and leverages the popular
 [Entity Cache](https://drupal.org/project/entitycache) module and adds a new
 cache layer on its own for the rendered entity. Two requests made by the same
@@ -200,13 +151,41 @@ Additionally you can define a cache backend for a given cache bin by setting the
 the resouces caching to that particular bin will use that cache backend instead
 of the default one.
 
-## Rate Limit
+
+## Authentication providers
+Restful comes with ``cookie``, ``base_auth`` (user name and password in the HTTP header)
+authentications providers, as well as a "RESTful token auth" module that has a
+``token`` authentication provider.
+
+Note: if you use cookie-based authentication then you also need to set the
+HTTP ``X-CSRF-Token`` header on all writing requests (POST, PUT and DELETE).
+You can retrieve the token from ``/api/session/token`` with a standard HTTP
+GET request.
+
+See [this](https://github.com/Gizra/angular-restful-auth) AngularJs example that shows a login from a fully decoupled web app
+to a Drupal backend.
+
+
+```bash
+# (Change username and password)
+curl -u "username:password" https://example.com/api/login
+
+# Response has access token.
+{"access_token":"YOUR_TOKEN"}
+
+# Call a "protected" with token resource (Articles resource version 1.3 in "Restful example")
+curl https://example.com/api/v1.3/articles/1?access_token=YOUR_TOKEN
+```
+
+
+## Rate limit
 RESTful provides rate limit functionality out of the box. A rate limit is a way
 to protect your API service from flooding, basically consisting on checking is
 the number of times an event has happened in a given period is greater that the
 maximum allowed.
 
-### Rate Limit events
+
+### Rate limit events
 You can define your own rate limit events for your resources and define the
 limit an period for those, for that you only need to create a new _rate\_limit_
 CTools plugin and implement the `isRequestedEvent` method. Every request the
@@ -221,7 +200,8 @@ contained for a given resource, all resources will increment the hit counter-.
 This way, for instance, you could define different limit for read operations
 than for write operations by checking the HTTP method in `isRequestedEvent`.
 
-### Configuring your Rate Limits
+
+### Configuring your rate limits
 You can configure the declared Rate Limit events in every resource by providing
 a configuration array. The following is taken from the example resource articles
 1.4 (articles\_\_1\_4.inc):
@@ -252,6 +232,34 @@ Since the global event is not tied to any resource the limit and period is speci
     all roles.
   - `restful_global_rate_period`: The period string compatible with
     \DateInterval.
+
+    ## Error handling
+    If an error occurs when operating the REST endpoint via URL, A valid JSON object
+     with ``code``, ``message`` and ``description`` would be returned.
+
+    The RESTful module adheres to the [Problem Details for HTTP
+    APIs](http://tools.ietf.org/html/draft-nottingham-http-problem-06) draft to
+    improve DX when dealing with HTTP API errors. Download and enable the [Advanced
+    Help](https://drupal.org/project/advanced_help) module for more information
+    about the errors.
+
+    For example, trying to sort a list by an invalid key
+
+    ```shell
+    curl https://example.com/api/v1/articles?sort=wrong_key
+    ```
+
+    Will result with an HTTP code 400, and the following JSON:
+
+    ```javascript
+    {
+      'type' => 'http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.1',
+      'title' => 'The sort wrong_key is not allowed for this path.',
+      'status' => 400,
+      'detail' => 'Bad Request.',
+    }
+    ```
+
 
 ## Documenting your API
 It is of most importance to document your API, this is why the RESTful module

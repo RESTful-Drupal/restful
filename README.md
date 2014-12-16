@@ -196,8 +196,8 @@ curl https://example.com/api/articles?autocomplete[string]=mystring
 
 ### Security, Caching, and Output
 
-See the [Consuming Your API](./docs/api_url.md) documentation for more details.
-Also, there are quite a few more URL parameters covered in that document.
+See the [Consuming Your API](./docs/api_url.md) document for more details.
+Also, there are quite a few URL parameters covered in that document.
 
 
 ## Modules integration

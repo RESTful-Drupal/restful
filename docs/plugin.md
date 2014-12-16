@@ -70,7 +70,8 @@ array(
 );
 ```
 
-### View an entity using a view mode
+
+## View an entity using a view mode
 You can leverage Drupal core's view modes to render an entity and expose it as a
 resource with RESTful. All you need is to set up a view mode that renders the
 output you want to expose and tell RESTful to use it. This simplifies the
@@ -87,7 +88,8 @@ method.
 To use this method just set it in the plugin definition file, as demonstrated in
 [this example](https://github.com/Gizra/restful/blob/7.x-1.x/modules/restful_example/plugins/restful/node/articles/1.7/articles__1_7.inc#L3-L23).
 
-### Filtering fields
+
+## Filtering fields
 Using the ``?fields`` query string, you can declare which fields should be
 returned.
 
@@ -105,29 +107,21 @@ array(
 );
 ```
 
-### Image derivatives
-Many client side technologies have lots of problems resizing images to serve
-them optimized and thus avoiding browser scaling. For that reason the RESTful
-module will let you specify an array of image style names to get an array of
-image derivatives for your image fields. Just add an `'image_styles'` key in
-your public field info (as shown above) with the list of styles to use and be
-done with it.
 
-### Disabling sort functionality.
-
-The sort parameter can be disabled in your resource plugin definition:
+## Disable filter capability
+The filter parameter can be disabled in your resource plugin definition:
 
 ```php
 $plugin = array(
   ...
   'url_params' => array(
-    'sort' => FALSE,
+    'filter' => FALSE,
   ),
 );
 ```
 
-### Defining a default sort.
 
+## Defining a default sort
 You can also define default sort fields in your plugin, by overriding
 `defaultSortInfo()` in your class definition.
 
@@ -148,26 +142,24 @@ class MyPlugin extends \RestfulEntityBaseTaxonomyTerm {
 }
 ```
 
-# Disable filter functionaliy
 
-The filter parameter can be disabled in your resource plugin definition:
+## Disabling sort capability
+The sort parameter can be disabled in your resource plugin definition:
 
 ```php
 $plugin = array(
   ...
   'url_params' => array(
-    'filter' => FALSE,
+    'sort' => FALSE,
   ),
 );
-```
 
 
-### Setting the default range
-
+## Setting the default range
 The range can be specified by setting $this->range in your plugin definition.
 
-### Disabling the range parameter
 
+### Disabling the range parameter
 The range parameter can be disabled in your resource plugin definition:
 
 ```php
@@ -180,12 +172,19 @@ $plugin = array(
 ```
 
 
-## Reference fields and properties
+## Image derivatives
+Many client side technologies have lots of problems resizing images to serve
+them optimized and thus avoiding browser scaling. For that reason the RESTful
+module will let you specify an array of image style names to get an array of
+image derivatives for your image fields. Just add an `'image_styles'` key in
+your public field info (as shown above) with the list of styles to use and be
+done with it.
 
+
+## Reference fields and properties
 It is considered a best practice to map a reference field (i.e. entity
 reference or taxonomy term reference) or a reference property (e.g. the ``uid``
 property on the node entity) to the resource it belongs to.
-
 
 ```php
 public function publicFieldsInfo() {
@@ -206,6 +205,7 @@ public function publicFieldsInfo() {
   return $public_fields;
 }
 ```
+
 
 ## Documenting your resources.
 A resource can be documented in the plugin definition using the `'label'`
@@ -237,7 +237,7 @@ curl -u user:password https://example.org/api
 ```
 
 
-## Documenting your fields.
+## Documenting your fields
 When declaring your public field and their mappings you will have the
 opportunity to also provide information about the field itself. This includes
 basic information about the field, information about the data the field holds
@@ -290,7 +290,8 @@ to it. You will get the field information in the body, the information about the
 available output formats and the permitted HTTP methods will be contained in the
 corresponding headers.
 
-### Auto-documented fields.
+
+### Auto-documented fields
 If your resource is an entity then some of this information will be populated
 for you out of the box, without you needing to do anything else. This
 information will be derived from the Entity API and Field API. The following
