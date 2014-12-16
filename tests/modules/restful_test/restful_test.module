@@ -94,12 +94,15 @@ function restful_test_field_access($op, $field, $entity_type, $entity, $account)
  *   The vocabulary ID created.
  */
 function restful_test_add_fields($entity_type = 'entity_test', $bundle = 'main') {
+  $entity_translation_entity_types = variable_get('entity_translation_entity_types', array());
+  $translatable = isset($entity_translation_entity_types[$entity_type]) && $entity_translation_entity_types[$entity_type];
   // Text - single.
   $field = array(
     'field_name' => 'text_single',
     'type' => 'text_long',
     'entity_types' => array($entity_type),
     'cardinality' => 1,
+    'translatable' => $translatable,
   );
   field_create_field($field);
 
@@ -121,6 +124,7 @@ function restful_test_add_fields($entity_type = 'entity_test', $bundle = 'main')
     'type' => 'text_long',
     'entity_types' => array($entity_type),
     'cardinality' => 1,
+    'translatable' => $translatable,
   );
   field_create_field($field);
 
@@ -141,6 +145,7 @@ function restful_test_add_fields($entity_type = 'entity_test', $bundle = 'main')
     'type' => 'text_long',
     'entity_types' => array($entity_type),
     'cardinality' => FIELD_CARDINALITY_UNLIMITED,
+    'translatable' => $translatable,
   );
   field_create_field($field);
 
@@ -161,6 +166,7 @@ function restful_test_add_fields($entity_type = 'entity_test', $bundle = 'main')
     'type' => 'text_long',
     'entity_types' => array($entity_type),
     'cardinality' => FIELD_CARDINALITY_UNLIMITED,
+    'translatable' => $translatable,
   );
   field_create_field($field);
 

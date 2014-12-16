@@ -1,0 +1,177 @@
+<?php
+
+/**
+ * @file
+ * Contains RestfulViewEntityMultiLingualTestCase
+ */
+
+class RestfulViewEntityMultiLingualTestCase extends RestfulCurlBaseTestCase {
+
+  /**
+   * The user to run the tests as.
+   */
+  protected $testUser;
+
+  public static function getInfo() {
+    return array(
+      'name' => 'View multilingual entity',
+      'description' => 'Test the viewing of a multilingual entity.',
+      'group' => 'Restful',
+    );
+  }
+
+  function setUp() {
+    parent::setUp(
+      'restful_example',
+      'restful_test',
+      'entityreference',
+      'entity_translation',
+      'locale'
+    );
+
+    $this->testUser = $this->drupalCreateUser(
+      array(
+        'administer languages',
+        'access administration pages',
+        'administer site configuration',
+        'translate any entity',
+      )
+    );
+    $this->drupalLogin($this->testUser);
+    $languages = language_list();
+    if (!isset($languages['en'])) {
+      locale_add_language('en', NULL, NULL, LANGUAGE_LTR, '', 'en');
+    }
+    if (!isset($languages['fr'])) {
+      locale_add_language('fr', NULL, NULL, LANGUAGE_LTR, '', 'fr');
+    }
+    variable_set('entity_translation_entity_types', array('entity_test' => 'entity_test'));
+    restful_test_add_fields();
+  }
+
+  /**
+   * Test viewing an entity (GET method).
+   *
+   * v1.0 - Simple entity view (id, label, self).
+   * v1.1 - Text and entity reference fields.
+   * v1.2 - "callback" and "process callback".
+   * v1.3 - Non-existing "callback" property.
+   * v1.4 - Non-existing "process callback" property.
+   * v1.6 - XML output format.
+   */
+  function testViewEntity() {
+    $user = $this->drupalCreateUser();
+    $entity = entity_create('entity_test', array('name' => 'main', 'uid' => $user->uid));
+    $handler = entity_translation_get_handler('entity_test', $entity);
+    $translation = array(
+      'translate' => 0,
+      'status' => 1,
+      'language' => 'fr',
+      'source' => 'en',
+    );
+    $handler->setTranslation($translation);
+    $wrapper = entity_metadata_wrapper('entity_test', $entity);
+
+    $text1 = array(
+      'en' => $this->randomName(),
+      'fr' => $this->randomName(),
+    );
+    $text2 = array(
+      'en' => $this->randomName(),
+      'fr' => $this->randomName(),
+    );
+
+    foreach (array('en', 'fr') as $langcode) {
+      $wrapper->language($langcode);
+      $wrapper->text_single->set($text1[$langcode]);
+      $wrapper->text_multiple->set(array($text1[$langcode], $text2[$langcode]));
+    }
+    $wrapper->save();
+
+    $id = $entity->pid;
+    foreach (array('en', 'fr') as $langcode) {
+      $this->_testViewEntityLang($langcode, $id, $text1[$langcode], $text2[$langcode]);
+    }
+  }
+
+  /**
+   * Helper to test viewing an entity (GET method) in a certain language.
+   *
+   * @param string $langcode
+   *   The language to view the entity in.
+   * @param int $id
+   *   The ID of the entity to test.
+   */
+  private function _testViewEntityLang($langcode, $id, $text1, $text2) {
+    $base_expected_result = array(
+      'id' => $id,
+      'label' => 'Main test type',
+    );
+
+    // v1.0 - Simple entity view (id, label, self).
+    $handler = restful_get_restful_handler('main', 1, 0);
+    $handler->setLangCode($langcode);
+    $base_expected_result['self'] = $handler->versionedUrl($id);
+    $expected_result = $base_expected_result;
+
+    $response = $handler->get($id);
+    $result = $response[0];
+    $this->assertEqual($result, $expected_result, 'Entity view has expected result for "main" resource v1');
+
+    // v1.1 - Text and entity reference field.
+    $handler = restful_get_restful_handler('main', 1, 1);
+    $handler->setLangCode($langcode);
+    $base_expected_result['self'] = $handler->versionedUrl($id);
+    $response = $handler->get($id);
+    $result = $response[0];
+
+    $base_expected_result_v1 = $base_expected_result;
+
+    // NULL fields.
+    $base_expected_result_v1 += array(
+      'text_single_processing' => NULL,
+      'text_multiple_processing' => NULL,
+      'term_single' => NULL,
+      'term_multiple' => NULL,
+      'file_single' => NULL,
+      'file_multiple' => NULL,
+      'image_single' => NULL,
+      'image_multiple' => NULL,
+      'entity_reference_multiple' => NULL,
+      'entity_reference_multiple_resource' => NULL,
+    );
+
+    $expected_result = $base_expected_result_v1;
+    $expected_result['text_single'] = $text1;
+    $expected_result['text_multiple'] = array($text1, $text2);
+
+    $stripped_result = $result;
+    $stripped_result['text_single'] = trim(strip_tags($result['text_single']));
+    $stripped_result['text_multiple'][0] = trim(strip_tags($result['text_multiple'][0]));
+    $stripped_result['text_multiple'][1] = trim(strip_tags($result['text_multiple'][1]));
+
+    ksort($stripped_result);
+    ksort($expected_result);
+    $this->assertEqual($stripped_result, $expected_result, 'Entity view has correct result for "main" resource v1.1');
+    $wrapper = entity_metadata_wrapper('entity_test', $id);
+    $wrapper->language($langcode);
+    // Empty the text fields.
+    $wrapper->text_single->set(NULL);
+    $wrapper->text_multiple->set(NULL);
+    $wrapper->save();
+
+    $response = $handler->get($id);
+    $result = $response[0];
+    $expected_result = $base_expected_result_v1;
+    $expected_result['text_single'] = NULL;
+    $expected_result['text_multiple'] = NULL;
+    $expected_result['text_single'] = NULL;
+    $expected_result['text_multiple'] = NULL;
+    $expected_result['entity_reference_multiple'] = NULL;
+    $expected_result['entity_reference_multiple_resource'] = NULL;
+
+    ksort($result);
+    ksort($expected_result);
+    $this->assertEqual($result, $expected_result, 'Entity view has correct result for "main" resource v1.1 with empty text fields.');
+  }
+}
