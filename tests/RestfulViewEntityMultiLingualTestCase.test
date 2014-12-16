@@ -25,8 +25,8 @@ class RestfulViewEntityMultiLingualTestCase extends RestfulCurlBaseTestCase {
       'restful_example',
       'restful_test',
       'entityreference',
-      'entity_translation',
-      'locale'
+      'locale',
+      'entity_translation'
     );
 
     $this->testUser = $this->drupalCreateUser(
