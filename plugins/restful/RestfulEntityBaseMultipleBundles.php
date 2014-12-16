@@ -30,8 +30,8 @@ class RestfulEntityBaseMultipleBundles extends RestfulEntityBase {
   /**
    * Overrides \RestfulBase::__construct().
    */
-  public function __construct(array $plugin, \RestfulAuthenticationManager $auth_manager = NULL, \DrupalCacheInterface $cache_controller = NULL) {
-    parent::__construct($plugin, $auth_manager, $cache_controller);
+  public function __construct(array $plugin, \RestfulAuthenticationManager $auth_manager = NULL, \DrupalCacheInterface $cache_controller = NULL, $language = NULL) {
+    parent::__construct($plugin, $auth_manager, $cache_controller, $language);
 
     if (!empty($plugin['bundles'])) {
       $this->bundles = $plugin['bundles'];
