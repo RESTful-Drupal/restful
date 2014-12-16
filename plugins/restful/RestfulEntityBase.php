@@ -79,6 +79,17 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
   protected $language;
 
   /**
+   * Overrides \RestfulDataProviderEFQ::__construct().
+   *
+   * @param string $language
+   *   (optional) The entity language.
+   */
+  public function __construct(array $plugin, \RestfulAuthenticationManager $auth_manager = NULL, \DrupalCacheInterface $cache_controller = NULL, $language = NULL) {
+    parent::__construct($plugin, $auth_manager, $cache_controller);
+    $this->language = $language;
+  }
+
+  /**
    * Overrides \RestfulDataProviderEFQ::controllersInfo().
    */
   public static function controllersInfo() {
