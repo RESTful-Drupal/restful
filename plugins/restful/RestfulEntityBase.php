@@ -72,6 +72,24 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
   protected $publicFields = array();
 
   /**
+   * The language of the data exposed to the API.
+   *
+   * @var string
+   */
+  protected $language;
+
+  /**
+   * Overrides \RestfulDataProviderEFQ::__construct().
+   *
+   * @param string $language
+   *   (optional) The entity language.
+   */
+  public function __construct(array $plugin, \RestfulAuthenticationManager $auth_manager = NULL, \DrupalCacheInterface $cache_controller = NULL, $language = NULL) {
+    parent::__construct($plugin, $auth_manager, $cache_controller);
+    $this->language = $language;
+  }
+
+  /**
    * Overrides \RestfulDataProviderEFQ::controllersInfo().
    */
   public static function controllersInfo() {
@@ -268,7 +286,6 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    * {@inheritdoc}
    */
   public function viewEntity($entity_id) {
-    global $language;
     $request = $this->getRequest();
 
     $cached_data = $this->getRenderedCache(array(
@@ -283,8 +300,18 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       return;
     }
 
+    // Figure out language.
+    if (!empty($this->language)) {
+      $wrapper_language = $this->language;
+
+    }
+    else {
+      global $language;
+      $wrapper_language = $language->language;
+    }
+
     $wrapper = entity_metadata_wrapper($this->entityType, $entity_id);
-    $wrapper->language($language->language);
+    $wrapper->language($wrapper_language);
     $values = array();
 
     $limit_fields = !empty($request['fields']) ? explode(',', $request['fields']) : array();
