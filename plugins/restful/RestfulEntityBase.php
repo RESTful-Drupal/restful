@@ -31,7 +31,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    *   input format where we would need to do $wrapper->body->value->value().
    *   Defaults to FALSE.
    * - "formatter": Used for rendering the value of a configurable field using
-   *   Drupal field API's formatter. The value is The $display value that is
+   *   Drupal field API's formatter. The value is the $display value that is
    *   passed to field_view_field().
    * - "wrapper_method": The wrapper's method name to perform on the field.
    *   This can be used for example to get the entity label, by setting the
@@ -397,6 +397,11 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
   protected function getValueFromFieldFormatter(\EntityMetadataWrapper $wrapper, \EntityMetadataWrapper $sub_wrapper, array $info) {
     $property = $info['property'];
 
+    if (!field_info_field($property)) {
+      // Property is not a field.
+      throw new \RestfulServerConfigurationException(format_string('@property is not a configurable field, so it cannot be processed using field API formatter', array('@property' => $property)));
+    }
+
     // Get values from the formatter.
     $output = field_view_field($this->getEntityType(), $wrapper->value(), $property, $info['formatter']);
 
@@ -407,8 +412,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
 
     if ($sub_wrapper instanceof EntityListWrapper) {
       // Multiple values.
-      $deltas = array_keys($output);
-      foreach (element_children($deltas) as $delta) {
+      foreach (element_children($output) as $delta) {
         $value[] = drupal_render($output[$delta]);
       }
     }
