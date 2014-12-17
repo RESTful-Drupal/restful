@@ -94,15 +94,12 @@ function restful_test_field_access($op, $field, $entity_type, $entity, $account)
  *   The vocabulary ID created.
  */
 function restful_test_add_fields($entity_type = 'entity_test', $bundle = 'main') {
-  $entity_translation_entity_types = variable_get('entity_translation_entity_types', array());
-  $translatable = isset($entity_translation_entity_types[$entity_type]) && $entity_translation_entity_types[$entity_type];
   // Text - single.
   $field = array(
     'field_name' => 'text_single',
     'type' => 'text_long',
     'entity_types' => array($entity_type),
     'cardinality' => 1,
-    'translatable' => $translatable,
   );
   field_create_field($field);
 
@@ -124,7 +121,6 @@ function restful_test_add_fields($entity_type = 'entity_test', $bundle = 'main')
     'type' => 'text_long',
     'entity_types' => array($entity_type),
     'cardinality' => 1,
-    'translatable' => $translatable,
   );
   field_create_field($field);
 
@@ -145,7 +141,6 @@ function restful_test_add_fields($entity_type = 'entity_test', $bundle = 'main')
     'type' => 'text_long',
     'entity_types' => array($entity_type),
     'cardinality' => FIELD_CARDINALITY_UNLIMITED,
-    'translatable' => $translatable,
   );
   field_create_field($field);
 
@@ -166,7 +161,6 @@ function restful_test_add_fields($entity_type = 'entity_test', $bundle = 'main')
     'type' => 'text_long',
     'entity_types' => array($entity_type),
     'cardinality' => FIELD_CARDINALITY_UNLIMITED,
-    'translatable' => $translatable,
   );
   field_create_field($field);
 
@@ -438,4 +432,41 @@ function _restful_test_schema() {
     'primary key' => array('id'),
   );
   return $schema;
+}
+
+/**
+ * Implements hook_entity_info().
+ */
+function restful_test_entity_info() {
+  return array(
+    'restful_test_translatable_entity' => array(
+      'label' => t('Translatable Test Entity'),
+      'plural label' => t('Translatable Test Entities'),
+      'description' => t('An entity type used by the Restful tests.'),
+      'entity class' => 'Entity',
+      'controller class' => 'EntityAPIController',
+      'base table' => 'restful_test_translatable_entity',
+      'fieldable' => TRUE,
+      'entity keys' => array(
+        'id' => 'pid',
+        'bundle' => 'name',
+        'label' => 'label',
+      ),
+      // Make use the class' label() and uri() implementation by default.
+      'label callback' => 'entity_class_label',
+      'uri callback' => 'entity_class_uri',
+      'bundles' => array(
+        'restful_test_translatable_entity' => array(
+          'label' => 'Translatable Test Entity'
+        )
+      ),
+      'bundle keys' => array(
+        'bundle' => 'name',
+      ),
+      'module' => 'restful_test',
+      'translation' => array(
+        'locale' => TRUE,
+      ),
+    ),
+  );
 }

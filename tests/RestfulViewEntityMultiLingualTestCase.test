@@ -25,8 +25,7 @@ class RestfulViewEntityMultiLingualTestCase extends RestfulCurlBaseTestCase {
       'restful_example',
       'restful_test',
       'entityreference',
-      'locale',
-      'entity_translation'
+      'locale'
     );
 
     $this->testUser = $this->drupalCreateUser(
@@ -34,7 +33,6 @@ class RestfulViewEntityMultiLingualTestCase extends RestfulCurlBaseTestCase {
         'administer languages',
         'access administration pages',
         'administer site configuration',
-        'translate any entity',
       )
     );
     require_once DRUPAL_ROOT . '/includes/locale.inc';
@@ -46,8 +44,53 @@ class RestfulViewEntityMultiLingualTestCase extends RestfulCurlBaseTestCase {
     if (!isset($languages['fr'])) {
       locale_add_language('fr', NULL, NULL, LANGUAGE_LTR, '', 'fr');
     }
-    variable_set('entity_translation_entity_types', array('entity_test' => 'entity_test'));
-    restful_test_add_fields();
+    $this->addTestFields();
+  }
+
+  /**
+   * Add test fields.
+   */
+  protected function addTestFields() {
+    // Text - single.
+    $field = array(
+      'field_name' => 'text_single',
+      'type' => 'text_long',
+      'entity_types' => array('restful_test_translatable_entity'),
+      'cardinality' => 1,
+      'translatable' => TRUE,
+    );
+    field_create_field($field);
+
+    $instance = array(
+      'field_name' => 'text_single',
+      'bundle' => 'restful_test_translatable_entity',
+      'entity_type' => 'restful_test_translatable_entity',
+      'label' => t('Text single'),
+      'settings' => array(
+        'text_processing' => 0,
+      ),
+    );
+    field_create_instance($instance);
+    // Text - multiple.
+    $field = array(
+      'field_name' => 'text_multiple',
+      'type' => 'text_long',
+      'entity_types' => array('restful_test_translatable_entity'),
+      'cardinality' => FIELD_CARDINALITY_UNLIMITED,
+      'translatable' => TRUE,
+    );
+    field_create_field($field);
+
+    $instance = array(
+      'field_name' => 'text_multiple',
+      'bundle' => 'restful_test_translatable_entity',
+      'entity_type' => 'restful_test_translatable_entity',
+      'label' => t('Text multiple'),
+      'settings' => array(
+        'text_processing' => 0,
+      ),
+    );
+    field_create_instance($instance);
   }
 
   /**
@@ -62,16 +105,15 @@ class RestfulViewEntityMultiLingualTestCase extends RestfulCurlBaseTestCase {
    */
   function testViewEntity() {
     $user = $this->drupalCreateUser();
-    $entity = entity_create('entity_test', array('name' => 'main', 'uid' => $user->uid));
-    $handler = entity_translation_get_handler('entity_test', $entity);
-    $translation = array(
-      'translate' => 0,
-      'status' => 1,
-      'language' => 'fr',
-      'source' => 'en',
+    $entity = entity_create(
+      'restful_test_translatable_entity',
+      array(
+        'name' => 'restful_test_translatable_entity',
+        'uid' => $user->uid,
+        'label' => 'Test translation',
+      )
     );
-    $handler->setTranslation($translation);
-    $wrapper = entity_metadata_wrapper('entity_test', $entity);
+    $wrapper = entity_metadata_wrapper('restful_test_translatable_entity', $entity);
 
     $text1 = array(
       'en' => $this->randomName(),
@@ -104,49 +146,18 @@ class RestfulViewEntityMultiLingualTestCase extends RestfulCurlBaseTestCase {
    *   The ID of the entity to test.
    */
   private function _testViewEntityLang($langcode, $id, $text1, $text2) {
-    $base_expected_result = array(
+    $handler = restful_get_restful_handler('restful_test_translatable_entity');
+    $handler->setLangCode($langcode);
+    $response = $handler->get($id);
+    $result = $response[0];
+
+    $expected_result = array(
       'id' => $id,
-      'label' => 'Main test type',
+      'label' => 'Test translation',
+      'self' => $handler->versionedUrl($id),
+      'text_single' => $text1,
+      'text_multiple' => array($text1, $text2),
     );
-
-    // v1.0 - Simple entity view (id, label, self).
-    $handler = restful_get_restful_handler('main', 1, 0);
-    $handler->setLangCode($langcode);
-    $base_expected_result['self'] = $handler->versionedUrl($id);
-    $expected_result = $base_expected_result;
-
-    $response = $handler->get($id);
-    $result = $response[0];
-    $this->assertEqual($result, $expected_result, 'Entity view has expected result for "main" resource v1');
-
-    // v1.1 - Text and entity reference field.
-    $handler = restful_get_restful_handler('main', 1, 1);
-    $handler->setLangCode($langcode);
-    $base_expected_result['self'] = $handler->versionedUrl($id);
-    $response = $handler->get($id);
-    $result = $response[0];
-
-    $base_expected_result_v1 = $base_expected_result;
-
-    // NULL fields.
-    $base_expected_result_v1 += array(
-      'text_single_processing' => NULL,
-      'text_multiple_processing' => NULL,
-      'term_single' => NULL,
-      'term_multiple' => NULL,
-      'file_single' => NULL,
-      'file_multiple' => NULL,
-      'image_single' => NULL,
-      'image_multiple' => NULL,
-      'entity_reference_multiple' => NULL,
-      'entity_reference_multiple_resource' => NULL,
-      'entity_reference_single' => NULL,
-      'entity_reference_single_resource' => NULL,
-    );
-
-    $expected_result = $base_expected_result_v1;
-    $expected_result['text_single'] = $text1;
-    $expected_result['text_multiple'] = array($text1, $text2);
 
     $stripped_result = $result;
     $stripped_result['text_single'] = trim(strip_tags($result['text_single']));
@@ -155,26 +166,6 @@ class RestfulViewEntityMultiLingualTestCase extends RestfulCurlBaseTestCase {
 
     ksort($stripped_result);
     ksort($expected_result);
-    $this->assertEqual($stripped_result, $expected_result, 'Entity view has correct result for "main" resource v1.1');
-    $wrapper = entity_metadata_wrapper('entity_test', $id);
-    $wrapper->language($langcode);
-    // Empty the text fields.
-    $wrapper->text_single->set(NULL);
-    $wrapper->text_multiple->set(NULL);
-    $wrapper->save();
-
-    $response = $handler->get($id);
-    $result = $response[0];
-    $expected_result = $base_expected_result_v1;
-    $expected_result['text_single'] = NULL;
-    $expected_result['text_multiple'] = NULL;
-    $expected_result['text_single'] = NULL;
-    $expected_result['text_multiple'] = NULL;
-    $expected_result['entity_reference_multiple'] = NULL;
-    $expected_result['entity_reference_multiple_resource'] = NULL;
-
-    ksort($result);
-    ksort($expected_result);
-    $this->assertEqual($result, $expected_result, 'Entity view has correct result for "main" resource v1.1 with empty text fields.');
+    $this->assertEqual($stripped_result, $expected_result, 'Entity view has correct result for "restful_test_translatable_entity" resource in language "' . $langcode . '".');
   }
 }

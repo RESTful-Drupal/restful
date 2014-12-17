@@ -33,8 +33,6 @@ before_script:
 
   # Download entity validator.
   - drush dl entity_validator --dev --yes
-  # Download entity_translation.
-  - drush dl entity_translation --yes
 
   # Patch Entity API.
   - curl -O https://www.drupal.org/files/issues/2086225-entity-access-check-node-create-3.patch
