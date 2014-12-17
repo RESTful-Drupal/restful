@@ -23,6 +23,12 @@ class RestfulAuthenticationBasic extends RestfulAuthenticationBase implements Re
   public function authenticate(array $request = array(), $method = \RestfulInterface::GET) {
     list($username, $password) = $this->getCredentials();
 
+    if (empty($username) && empty($password)) {
+      // No authentication attempt was done, so we don't need to process or
+      // register it.
+      return;
+    }
+
     // Do not allow any login from the current user's IP if the limit has been
     // reached. Default is 50 failed attempts allowed in one hour. This is
     // independent of the per-user limit to catch attempts from one IP to log
