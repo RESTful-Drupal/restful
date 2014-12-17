@@ -82,3 +82,4 @@ files[] = tests/RestfulSubResourcesCreateEntityTestCase.test
 files[] = tests/RestfulUpdateEntityCurlTestCase.test
 files[] = tests/RestfulUserLoginCookieTestCase.test
 files[] = tests/RestfulViewEntityTestCase.test
+files[] = tests/RestfulViewEntityMultiLingualTestCase.test

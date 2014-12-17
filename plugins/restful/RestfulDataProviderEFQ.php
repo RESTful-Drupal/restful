@@ -48,9 +48,11 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
    *   (optional) Injected authentication manager.
    * @param DrupalCacheInterface $cache_controller
    *   (optional) Injected cache backend.
+   * @param string $language
+   *   (optional) The language to return items in.
    */
-  public function __construct(array $plugin, \RestfulAuthenticationManager $auth_manager = NULL, \DrupalCacheInterface $cache_controller = NULL) {
-    parent::__construct($plugin, $auth_manager, $cache_controller);
+  public function __construct(array $plugin, \RestfulAuthenticationManager $auth_manager = NULL, \DrupalCacheInterface $cache_controller = NULL, $language = NULL) {
+    parent::__construct($plugin, $auth_manager, $cache_controller, $language);
     $this->entityType = $plugin['entity_type'];
     $this->bundle = $plugin['bundle'];
   }
