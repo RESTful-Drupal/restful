@@ -27,8 +27,8 @@ class RestfulFilesUpload extends \RestfulEntityBase {
    *   file size.
    * - "scheme": By default the default scheme (e.g. public, private) is used.
    */
-  public function __construct(array $plugin, \RestfulAuthenticationManager $auth_manager = NULL, \DrupalCacheInterface $cache_controller = NULL) {
-    parent::__construct($plugin, $auth_manager, $cache_controller);
+  public function __construct(array $plugin, \RestfulAuthenticationManager $auth_manager = NULL, \DrupalCacheInterface $cache_controller = NULL, $language = NULL) {
+    parent::__construct($plugin, $auth_manager, $cache_controller, $language);
 
     if (!$options = $this->getPluginKey('options')) {
       $options = array();

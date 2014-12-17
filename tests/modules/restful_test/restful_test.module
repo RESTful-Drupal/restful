@@ -460,3 +460,40 @@ function _restful_test_schema() {
   );
   return $schema;
 }
+
+/**
+ * Implements hook_entity_info().
+ */
+function restful_test_entity_info() {
+  return array(
+    'restful_test_translatable_entity' => array(
+      'label' => t('Translatable Test Entity'),
+      'plural label' => t('Translatable Test Entities'),
+      'description' => t('An entity type used by the Restful tests.'),
+      'entity class' => 'Entity',
+      'controller class' => 'EntityAPIController',
+      'base table' => 'restful_test_translatable_entity',
+      'fieldable' => TRUE,
+      'entity keys' => array(
+        'id' => 'pid',
+        'bundle' => 'name',
+        'label' => 'label',
+      ),
+      // Make use the class' label() and uri() implementation by default.
+      'label callback' => 'entity_class_label',
+      'uri callback' => 'entity_class_uri',
+      'bundles' => array(
+        'restful_test_translatable_entity' => array(
+          'label' => 'Translatable Test Entity'
+        )
+      ),
+      'bundle keys' => array(
+        'bundle' => 'name',
+      ),
+      'module' => 'restful_test',
+      'translation' => array(
+        'locale' => TRUE,
+      ),
+    ),
+  );
+}
