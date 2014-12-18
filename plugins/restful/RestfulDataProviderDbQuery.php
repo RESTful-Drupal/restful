@@ -408,6 +408,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
    * {@inheritdoc}
    */
   public function mapDbRowToPublicFields($row) {
+    $output = array();
     if ($this->getMethod() == \RestfulInterface::GET) {
       // For read operations cache the result.
       $output = $this->staticCache->get(__CLASS__ . '::' . __FUNCTION__ . '::' . $this->getUniqueId($row));
@@ -421,24 +422,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
     }
     // Loop over all the defined public fields.
     foreach ($this->getPublicFields() as $public_field_name => $info) {
-      $value = NULL;
-      // If there is a callback defined execute it instead of a direct mapping.
-      if ($info['callback']) {
-        $value = static::executeCallback($info['callback'], array($row));
-      }
-      // Map row names to public properties.
-      elseif ($info['property']) {
-        $value = $row->{$info['property']};
-      }
-
-      // Execute the process callbacks.
-      if ($value && $info['process_callbacks']) {
-        foreach ($info['process_callbacks'] as $process_callback) {
-          $value = static::executeCallback($process_callback, array($value));
-        }
-      }
-
-      $output[$public_field_name] = $value;
+      $output[$public_field_name] = $this->retrievePropertyValue($info, new \RestfulPropertySourceObject($row));
     }
 
     return $output;
