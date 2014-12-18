@@ -122,3 +122,30 @@ curl -u "username:password" https://example.com/api/login
 # Call a "protected" with token resource (Articles resource version 1.3 in "Restful example")
 curl https://example.com/api/v1.3/articles/1?access_token=YOUR_TOKEN
 ```
+
+## Error handling
+If an error occurs when operating the REST endpoint via URL, A valid JSON object
+ with ``code``, ``message`` and ``description`` would be returned.
+
+The RESTful module adheres to the [Problem Details for HTTP
+APIs](http://tools.ietf.org/html/draft-nottingham-http-problem-06) draft to
+improve DX when dealing with HTTP API errors. Download and enable the [Advanced
+Help](https://drupal.org/project/advanced_help) module for more information
+about the errors.
+
+For example, trying to sort a list by an invalid key
+
+```shell
+curl https://example.com/api/v1/articles?sort=wrong_key
+```
+
+Will result with an HTTP code 400, and the following JSON:
+
+```javascript
+{
+  'type' => 'http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.1',
+  'title' => 'The sort wrong_key is not allowed for this path.',
+  'status' => 400,
+  'detail' => 'Bad Request.',
+}
+```

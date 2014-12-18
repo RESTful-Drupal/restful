@@ -97,7 +97,7 @@ class RestfulCustomResource extends RestfulEntityBaseNode {
 After declaring this plugin, the resource could be accessed at its root URL,
 which would be `http://example.com/api/v1.0/articles`.
 
-### Declaring image formats, references, view modes, and others
+### Security, caching, and output
 
 See the [Defining a RESTful Plugin](./docs/plugin.md) document for more details.
 
@@ -202,10 +202,9 @@ curl https://example.com/api/articles?autocomplete[string]=mystring
 ```
 
 
-### Security, Caching, and Output
+### URL Query Strings, HTTP headers, and HTTP requests
 
 See the [Consuming Your API](./docs/api_url.md) document for more details.
-Also, there are quite a few URL parameters covered in that document.
 
 
 ## Documenting your API

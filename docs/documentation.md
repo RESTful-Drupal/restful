@@ -1,13 +1,13 @@
 # Documenting your API
 
 ## Documenting your fields
-When declaring your public field and their mappings you will have the
-opportunity to also provide information about the field itself. This includes
-basic information about the field, information about the data the field holds
-and about how to generate a form element in the client side for this particular
-field. By declaring this information a client can write an implementation that
-reads this information and provide form elements _for free_ via reusable form
-components.
+When declaring a public field and its mappings, you can also provide information
+about the field itself. This includes basic information about the field,
+information about the data the field holds, and information about the form
+element to generate on the client side for this field.
+
+By declaring this information, you make it possible for clients to provide
+form elements for your API using reusable form components.
 
 ```php
 $public_fields['text_multiple'] = array(
