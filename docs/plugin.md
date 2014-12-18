@@ -1,12 +1,12 @@
 # Defining a RESTful Plugin
 
-## View an entity
+## Defining the exposed fields
 By default the RESTful module will expose the ID, label and URL of the entity.
 You probably want to expose more than that. To do so you will need to implement
 the `publicFieldsInfo` method defining the names in the output array and how
 those are mapped to the queried entity. For instance the following example will
 retrieve the basic fields plus the body, tags and images from an article node.
-The RESTful module will know to use the `MyRestfulPlugin` class because your
+The RESTful module will know to use the `MyArticlesResource` class because your
 plugin definition will say so.
 
 ```php
@@ -45,33 +45,15 @@ class MyArticlesResource extends \RestfulEntityBase {
 }
 ```
 
-```php
-// Handler v1.0
-$handler = restful_get_restful_handler('articles');
-// GET method.
-$result = $handler->get(1);
+See [the inline documentation](https://github.com/RESTful-Drupal/restful/blob/7.x-1.x/plugins/restful/RestfulEntityBase.php)
+for `publicFieldsInfo` to get more details on exposing field data to your
+resource.
 
-// Output:
-array(
-  'id' => 1,
-  'label' => 'example title',
-  'self' => 'https://example.com/node/1',
-);
-
-// Handler v1.1 extends v1.0, and removes the "self" property from the
-// exposed properties.
-$handler = restful_get_restful_handler('articles', 1, 1);
-$result = $handler->get(1);
-
-// Output:
-array(
-  'id' => 1,
-  'label' => 'example title',
-);
-```
+If you need even more flexibility, you can use the `'callback'` key to name a
+custom function to compute the field data.
 
 
-## View an entity using a view mode
+## Defining a view mode
 You can leverage Drupal core's view modes to render an entity and expose it as a
 resource with RESTful. All you need is to set up a view mode that renders the
 output you want to expose and tell RESTful to use it. This simplifies the
@@ -85,25 +67,29 @@ process callbacks, custom access callbacks for properties, etc.). This is also a
 good way to stub a resource really quick and then move to the more fine grained
 method.
 
-To use this method just set it in the plugin definition file, as demonstrated in
-[this example](https://github.com/Gizra/restful/blob/7.x-1.x/modules/restful_example/plugins/restful/node/articles/1.7/articles__1_7.inc#L3-L23).
-
-
-## Filtering fields
-Using the ``?fields`` query string, you can declare which fields should be
-returned.
+To use this method, set the `'view_mode'` key in the plugin definition file:
 
 ```php
-$handler = restful_get_restful_handler('articles');
-
-// Define the fields.
-$request['fields'] = 'id,label';
-$result = $handler->get(2, $request);
-
-// Output:
-array(
-  'id' => 2,
-  'label' => 'another title',
+$plugin = array(
+  'label' => t('Articles'),
+  'resource' => 'articles',
+  'name' => 'articles__1_7',
+  'entity_type' => 'node',
+  'bundle' => 'article',
+  'description' => t('Export the article content type using view modes.'),
+  'class' => 'RestfulEntityBaseNode',
+  'authentication_types' => TRUE,
+  'authentication_optional' => TRUE,
+  'minor_version' => 7,
+  // Add the view mode information.
+  'view_mode' => array(
+    'name' => 'default',
+    'field_map' => array(
+      'body' => 'body',
+      'field_tags' => 'tags',
+      'field_image' => 'image',
+    ),
+  ),
 );
 ```
 
@@ -126,7 +112,8 @@ You can also define default sort fields in your plugin, by overriding
 `defaultSortInfo()` in your class definition.
 
 This method should return an associative array, with each element having a key
-that matches a field from `publicFieldsInfo()`, and a value of either 'ASC' or 'DESC'.
+that matches a field from `publicFieldsInfo()`, and a value of either 'ASC' or
+'DESC'.
 
 This default sort will be ignored if the request URL contains a sort query.
 
@@ -153,10 +140,10 @@ $plugin = array(
     'sort' => FALSE,
   ),
 );
-
+```
 
 ## Setting the default range
-The range can be specified by setting $this->range in your plugin definition.
+The range can be specified by setting `$this->range` in your plugin definition.
 
 
 ### Disabling the range parameter
@@ -206,6 +193,200 @@ public function publicFieldsInfo() {
 }
 ```
 
+## Output formats
+The RESTful module outputs all resources by using HAL+JSON encoding by default.
+That means that when you have the following data:
+
+```php
+array(
+  array(
+    'id' => 2,
+    'label' => 'another title',
+    'self' => 'https://example.com/node/2',
+  ),
+  array(
+    'id' => 1,
+    'label' => 'example title',
+    'self' => 'https://example.com/node/1',
+  ),
+);
+```
+
+Then the following output is generated (using the header
+`ContentType:application/hal+json; charset=utf-8`):
+
+```javascript
+{
+  "data": [
+    {
+      "id": 2,
+      "label": "another title",
+      "self": "https:\/\/example.com\/node\/2"
+    },
+    {
+      "id": 1,
+      "label": "example title",
+      "self": "https:\/\/example.com\/node\/1"
+    }
+  ],
+  "count": 2,
+  "_links": []
+}
+```
+
+You can change that to be anything that you need. You have a plugin that will
+allow you to output XML instead of JSON in
+[the example module](./modules/restful_example/plugins/formatter). Take that
+example and create you custom module that contains the formatter plugin the you
+need (maybe you need to output JSON but following a different data structure,
+you may even want to use YAML, ...). All that you will need is to create a
+formatter plugin and tell your restful resource to use that in the restful
+plugin definition:
+
+```php
+$plugin = array(
+  'label' => t('Articles'),
+  'resource' => 'articles',
+  'description' => t('Export the article content type in my cool format.'),
+  ...
+  'formatter' => 'my_formatter', // <-- The name of the formatter plugin.
+);
+```
+
+
+### Changing the default output format
+If you need to change the output format for everything at once then you just
+have to set a special variable with the name of the new output format plugin.
+When you do that all the resources that don't specify a `'formatter'` key in the
+plugin definition will use that output format by default. Ex:
+
+```php
+variable_set('restful_default_output_formatter', 'my_formatter');
+```
+
+
+## Render cache
+In addition to providing its own basic caching, the RESTful module is compatible
+ with the [Entity Cache](https://drupal.org/project/entitycache) module. Two
+ requests made by the same user requesting the same fields on the same entity
+ will benefit from the render cache layer. This means that no entity will need
+ to be loaded if it was rendered in the past under the same conditions.
+
+Developers have absolute control where the cache is stored and the expiration
+for every resource, meaning that very volatile resources can skip cache entirely
+while other resources can have its cache in MemCached or the database. To
+configure this developers just have to specify the following keys in their
+_restful_ plugin definition:
+
+```php
+$plugin = array(
+  ...
+  'render_cache' => array(
+    // Enables the render cache.
+    'render' => TRUE,
+    // Defaults to 'cache_restful' (optional).
+    'bin' => 'cache_bin_name',
+    // Expiration logic. Defaults to CACHE_PERMANENT (optional).
+    'expire' => CACHE_TEMPORARY,
+    // Enable cache invalidation for entity based resources. Defaults to TRUE (optional).
+    'simple_invalidate' => TRUE,
+    // Use a different cache backend for this resource. Defaults to variable_get('cache_default_class', 'DrupalDatabaseCache') (optional).
+    'class' => 'MemCacheDrupal',
+    // Account cache granularity. Instead of caching per user you can choose to cache per role. Default: DRUPAL_CACHE_PER_USER.
+    'granularity' => DRUPAL_CACHE_PER_ROLE,
+  ),
+);
+```
+
+Additionally you can define a cache backend for a given cache bin by setting the
+ variable `cache_class_<cache-bin-name>` to the class to be used. This way all
+the resouces caching to that particular bin will use that cache backend instead
+of the default one.
+
+
+## Rate limit
+RESTful provides rate limit functionality out of the box. A rate limit is a way
+to protect your API service from flooding, basically consisting on checking is
+the number of times an event has happened in a given period is greater that the
+maximum allowed.
+
+
+### Rate limit events
+You can define your own rate limit events for your resources and define the
+limit an period for those, for that you only need to create a new _rate\_limit_
+CTools plugin and implement the `isRequestedEvent` method. Every request the
+`isRequestedEvent` will be evaluated and if it returns true that request will
+increase the number of hits -for that particular user- for that event. If the
+number of hits is bigger than the allowed limit an exception will be raised.
+
+Two events are provided out of the box: the request event -that is always true
+for every request- and the global event -that is always true and is not
+contained for a given resource, all resources will increment the hit counter-.
+
+This way, for instance, you could define different limit for read operations
+than for write operations by checking the HTTP method in `isRequestedEvent`.
+
+
+### Configuring your rate limits
+You can configure the declared Rate Limit events in every resource by providing
+a configuration array. The following is taken from the example resource articles
+1.4 (articles\_\_1\_4.inc):
+
+```php
+…
+  'rate_limit' => array(
+    // The 'request' event is the basic event. You can declare your own events.
+    'request' => array(
+      'event' => 'request',
+      // Rate limit is cleared every day.
+      'period' => new \DateInterval('P1D'),
+      'limits' => array(
+        'authenticated user' => 3,
+        'anonymous user' => 2,
+        'administrator' => \RestfulRateLimitManager::UNLIMITED_RATE_LIMIT,
+      ),
+    ),
+  ),
+…
+```
+
+As you can see in the example you can set the rate limit differently depending
+on the role of the visiting user.
+
+Since the global event is not tied to any resource the limit and period is
+specified by setting the following variables:
+  - `restful_global_rate_limit`: The number of allowed hits. This is global for
+    all roles.
+  - `restful_global_rate_period`: The period string compatible with
+    \DateInterval.
+
+## Error handling
+If an error occurs when operating the REST endpoint via URL, A valid JSON object
+ with ``code``, ``message`` and ``description`` would be returned.
+
+The RESTful module adheres to the [Problem Details for HTTP
+APIs](http://tools.ietf.org/html/draft-nottingham-http-problem-06) draft to
+improve DX when dealing with HTTP API errors. Download and enable the [Advanced
+Help](https://drupal.org/project/advanced_help) module for more information
+about the errors.
+
+For example, trying to sort a list by an invalid key
+
+```shell
+curl https://example.com/api/v1/articles?sort=wrong_key
+```
+
+Will result with an HTTP code 400, and the following JSON:
+
+```javascript
+{
+  'type' => 'http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.1',
+  'title' => 'The sort wrong_key is not allowed for this path.',
+  'status' => 400,
+  'detail' => 'Bad Request.',
+}
+```
+
 
 ## Documenting your resources.
 A resource can be documented in the plugin definition using the `'label'`
@@ -235,71 +416,3 @@ homepage:
 # List resources
 curl -u user:password https://example.org/api
 ```
-
-
-## Documenting your fields
-When declaring your public field and their mappings you will have the
-opportunity to also provide information about the field itself. This includes
-basic information about the field, information about the data the field holds
-and about how to generate a form element in the client side for this particular
-field. By declaring this information a client can write an implementation that
-reads this information and provide form elements _for free_ via reusable form
-components.
-
-```php
-$public_fields['text_multiple'] = array(
-  'property' => 'text_multiple',
-  'discovery' => array(
-    // Basic information about the field for human consumption.
-    'info' => array(
-      // The name of the field. Defaults to: ''.
-      'name' => t('Text multiple'),
-      // The description of the field. Defaults to: ''.
-      'description' => t('This field holds different text inputs.'),
-    ),
-    // Information about the data that the field holds. Typically used to help the client to manage the data appropriately.
-    'data' => array(
-      // The type of data. For instance: 'int', 'string', 'boolean', 'object', 'array', ... Defaults to: NULL.
-      'type' => 'string',
-      // The number of elements that this field can contain. Defaults to: 1.
-      'cardinality' => FIELD_CARDINALITY_UNLIMITED,
-      // Avoid updating/setting this field. Typically used in fields representing the ID for the resource. Defaults to: FALSE.
-      'read_only' => FALSE,
-    ),
-    'form_element' => array(
-      // The type of the input element as in Form API. Defaults to: NULL.
-      'type' => 'textfield',
-      // The default value for the form element. Defaults to: ''.
-      'default_value' => '',
-      // The placeholder text for the form element. Defaults to: ''.
-      'placeholder' => t('This is helpful.'),
-      // The size of the form element (if applies). Defaults to: NULL.
-      'size' => 255,
-      // The allowed values for form elements with a limited set of options. Defaults to: NULL.
-      'allowed_values' => NULL,
-    ),
-  ),
-);
-```
-
-This is the default set of information provided by RESTful. You can add your own
-information to the `'discovery'` property and it will be exposed as well.
-
-To access the information about an specific endpoint just make an `OPTIONS` call
-to it. You will get the field information in the body, the information about the
-available output formats and the permitted HTTP methods will be contained in the
-corresponding headers.
-
-
-### Auto-documented fields
-If your resource is an entity then some of this information will be populated
-for you out of the box, without you needing to do anything else. This
-information will be derived from the Entity API and Field API. The following
-will be populated automatically:
-
-  - `$discovery_info['info']['label']`.
-  - `$discovery_info['info']['description']`.
-  - `$discovery_info['data']['type']`.
-  - `$discovery_info['data']['required']`.
-  - `$discovery_info['form_element']['default_value']`.
-  - `$discovery_info['form_element']['allowed_values']` for text lists.
