@@ -225,6 +225,7 @@ abstract class RestfulDataProviderCToolsPlugins extends \RestfulBase implements 
       return $cached_data->data;
     }
 
+    $output = array();
     if (!$plugin = ctools_get_plugins($this->getModule(), $this->getType(), $id)) {
       // Since the discovery resource sits under 'api/' it will pick up all
       // invalid paths like 'api/invalid'. If it is not a valid plugin then
@@ -234,24 +235,7 @@ abstract class RestfulDataProviderCToolsPlugins extends \RestfulBase implements 
 
     // Loop over all the defined public fields.
     foreach ($this->getPublicFields() as $public_field_name => $info) {
-      $value = NULL;
-      // If there is a callback defined execute it instead of a direct mapping.
-      if ($info['callback']) {
-        $value = static::executeCallback($info['callback'], array($plugin));
-      }
-      // Map row names to public properties.
-      elseif ($info['property']) {
-        $value = $plugin[$info['property']];
-      }
-
-      // Execute the process callbacks.
-      if ($value && $info['process_callbacks']) {
-        foreach ($info['process_callbacks'] as $process_callback) {
-          $value = static::executeCallback($process_callback, array($value));
-        }
-      }
-
-      $output[$public_field_name] = $value;
+      $output[$public_field_name] = $this->retrievePropertyValue($info, new \RestfulPropertySourceArray($plugin));
     }
 
     $this->setRenderedCache($output, $cache_id);
