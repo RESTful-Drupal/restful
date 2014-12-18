@@ -7,23 +7,37 @@
 
 class RestfulPropertySourceObject implements \RestfulPropertySourceInterface {
 
-  protected $data;
+  protected $source;
 
   /**
    * Constructor.
    *
-   * @param object $data
+   * @param object $source
    *   Contains the data object.
    */
-  public function __construct($data) {
-    $this->data = $data;
+  public function __construct($source) {
+    $this->source = $source;
   }
 
   /**
    * {@inheritdoc}
    */
   public function get($key) {
-    return $this->data->{$key};
+    return $this->source->{$key};
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSource() {
+    return $this->source;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setSource($source) {
+    return $this->source = $source;
   }
 
 }

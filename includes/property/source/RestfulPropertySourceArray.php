@@ -7,23 +7,37 @@
 
 class RestfulPropertySourceArray implements \RestfulPropertySourceInterface {
 
-  protected $data;
+  protected $source;
 
   /**
    * Constructor.
    *
-   * @param array $data
+   * @param array $source
    *   Contains the data object.
    */
-  public function __construct(array $data) {
-    $this->data = $data;
+  public function __construct(array $source) {
+    $this->source = $source;
   }
 
   /**
    * {@inheritdoc}
    */
   public function get($key) {
-    return $this->data[$key];
+    return $this->source[$key];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSource() {
+    return $this->source;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setSource($source) {
+    return $this->source = $source;
   }
 
 }
