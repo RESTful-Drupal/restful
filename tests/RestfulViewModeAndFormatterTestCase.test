@@ -1,0 +1,77 @@
+<?php
+
+/**
+ * @file
+ * Contains RestfulViewModeFormatterTestCase
+ */
+
+class RestfulViewModeAndFormatterTestCase extends DrupalWebTestCase {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'View mode and formatter',
+      'description' => 'Test the integration with entity view mode and field API formatters.',
+      'group' => 'Restful',
+    );
+  }
+
+  function setUp() {
+    parent::setUp('restful_example', 'restful_test');
+  }
+
+  /**
+   * Test the view mode integration.
+   */
+  public function testViewModeIntegration() {
+    $handler = restful_get_restful_handler('articles', 1, 7);
+    $nodes[] = restful_test_create_node_with_tags();
+    $nodes[] = restful_test_create_node_with_tags();
+    // Make sure to get more than one node to increase coverage on
+    // \RestfulEntityViewMode.
+    $result = $handler->get($nodes[0]->nid . ',' . $nodes[1]->nid);
+
+    // Make sure that all the fields were mapped.
+    $this->assertNotNull($result[0]['body'], 'Body field is populated.');
+    $this->assertTrue($result[0]['tags'], 'Tags field is populated.');
+    $this->assertNotNull($result[0]['image'], 'Image field is not NULL.');
+  }
+
+  /**
+   * Test the field API formatter integration.
+   */
+  public function testFormatterIntegration() {
+    $handler = restful_get_restful_handler('articles', 1, 5);
+
+    // Create node.
+    $text = 'Some body with long text';
+    $settings = array(
+      'type' => 'article',
+      'body' => array(
+        LANGUAGE_NONE => array(
+          array('value' => $text),
+        )
+      ),
+    );
+    $node = $this->drupalCreateNode($settings);
+
+    // Field with no formatter.
+    $result = $handler->get($node->nid);
+    $this->assertEqual(trim(strip_tags($result[0]['body'])), $text, 'Raw value passed without a formatter.');
+
+    // Add formatter settings.
+    $public_fields = $handler->getPublicFields();
+    $display = array(
+      'type' => 'text_summary_or_trimmed',
+      'settings' => array(
+        'trim_length' => 10,
+      ),
+    );
+    $public_fields['body']['formatter'] = $display;
+    $handler->setPublicFields($public_fields);
+
+    $result = $handler->get($node->nid);
+    // Core's trim formatter also inclues the opening <p> tag in the calculation
+    // of number of chars.
+    $this->assertEqual($result[0]['body'], '<p>Some bo</p>', 'Value trimmed by formatter.');
+  }
+}

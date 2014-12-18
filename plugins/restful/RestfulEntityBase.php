@@ -30,6 +30,9 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    *   content. This can be used for example on a text field with filtered text
    *   input format where we would need to do $wrapper->body->value->value().
    *   Defaults to FALSE.
+   * - "formatter": Used for rendering the value of a configurable field using
+   *   Drupal field API's formatter. The value is the $display value that is
+   *   passed to field_view_field().
    * - "wrapper_method": The wrapper's method name to perform on the field.
    *   This can be used for example to get the entity label, by setting the
    *   value to "label". Defaults to "value".
@@ -302,7 +305,6 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       else {
         // Exposing an entity field.
         $property = $info['property'];
-
         $sub_wrapper = $info['wrapper_method_on_entity'] ? $wrapper : $wrapper->{$property};
 
         // Check user has access to the property.
@@ -310,40 +312,21 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
           continue;
         }
 
-        $method = $info['wrapper_method'] ? $info['wrapper_method'] : NULL;
-        $resource = $info['resource'] ? $info['resource'] : NULL;
-
-        if ($sub_wrapper instanceof EntityListWrapper) {
-          // Multiple value.
-          foreach ($sub_wrapper as $item_wrapper) {
-            if ($info['sub_property'] && $item_wrapper->value()) {
-              $item_wrapper = $item_wrapper->{$info['sub_property']};
+        if (empty($info['formatter'])) {
+          if ($sub_wrapper instanceof EntityListWrapper) {
+            // Multiple values.
+            foreach ($sub_wrapper as $item_wrapper) {
+              $value[] = $this->getValueFromProperty($wrapper, $item_wrapper, $info, $public_field_name);
             }
-
-            if ($resource) {
-              if ($value_from_resource = $this->getValueFromResource($item_wrapper, $property, $resource, $public_field_name, $wrapper->getIdentifier())) {
-                $value[] = $value_from_resource;
-              }
-            }
-            else {
-              // Wrapper method.
-              $value[] = $item_wrapper->{$method}();
-            }
+          }
+          else {
+            // Single value.
+            $value = $this->getValueFromProperty($wrapper, $sub_wrapper, $info, $public_field_name);
           }
         }
         else {
-          // Single value.
-          if ($info['sub_property'] && $sub_wrapper->value()) {
-            $sub_wrapper = $sub_wrapper->{$info['sub_property']};
-          }
-
-          if ($resource) {
-            $value = $this->getValueFromResource($sub_wrapper, $property, $resource, $public_field_name, $wrapper->getIdentifier());
-          }
-          else {
-            // Wrapper method.
-            $value = $sub_wrapper->{$method}();
-          }
+          // Get value from field formatter.
+          $value = $this->getValueFromFieldFormatter($wrapper, $sub_wrapper, $info);
         }
       }
 
@@ -361,6 +344,84 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       'ei' => $entity_id,
     ));
     return $values;
+  }
+
+  /**
+   * Get value from a property.
+   *
+   * @param EntityMetadataWrapper $wrapper
+   *   The wrapped entity.
+   * @param EntityMetadataWrapper $sub_wrapper
+   *   The wrapped property.
+   * @param array $info
+   *   The public field info array.
+   * @param $public_field_name
+   *   The field name.
+   *
+   * @return mixed
+   *   A single or multiple values.
+   */
+  protected function getValueFromProperty(\EntityMetadataWrapper $wrapper, \EntityMetadataWrapper $sub_wrapper, array $info, $public_field_name) {
+    $property = $info['property'];
+    $method = $info['wrapper_method'];
+    $resource = $info['resource'] ?: NULL;
+
+    if ($info['sub_property'] && $sub_wrapper->value()) {
+      $sub_wrapper = $sub_wrapper->{$info['sub_property']};
+    }
+
+    if ($resource) {
+      $value = $this->getValueFromResource($sub_wrapper, $property, $resource, $public_field_name, $wrapper->getIdentifier());
+    }
+    else {
+      // Wrapper method.
+      $value = $sub_wrapper->{$method}();
+    }
+
+    return $value;
+  }
+
+  /**
+   * Get value from a field rendered by Drupal field API's formatter.
+   *
+   * @param EntityMetadataWrapper $wrapper
+   *   The wrapped entity.
+   * @param EntityMetadataWrapper $sub_wrapper
+   *   The wrapped property.
+   * @param array $info
+   *   The public field info array.
+   *
+   * @return mixed
+   *   A single or multiple values.
+   */
+  protected function getValueFromFieldFormatter(\EntityMetadataWrapper $wrapper, \EntityMetadataWrapper $sub_wrapper, array $info) {
+    $property = $info['property'];
+
+    if (!field_info_field($property)) {
+      // Property is not a field.
+      throw new \RestfulServerConfigurationException(format_string('@property is not a configurable field, so it cannot be processed using field API formatter', array('@property' => $property)));
+    }
+
+    // Get values from the formatter.
+    $output = field_view_field($this->getEntityType(), $wrapper->value(), $property, $info['formatter']);
+
+    // Unset the theme, as we just want to get the value from the formatter,
+    // without the wrapping HTML.
+    unset($output['#theme']);
+
+
+    if ($sub_wrapper instanceof EntityListWrapper) {
+      // Multiple values.
+      foreach (element_children($output) as $delta) {
+        $value[] = drupal_render($output[$delta]);
+      }
+    }
+    else {
+      // Single value.
+      $value = drupal_render($output);
+    }
+
+    return $value;
   }
 
   /**
@@ -1174,6 +1235,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
         'sub_property' => FALSE,
         'wrapper_method' => 'value',
         'wrapper_method_on_entity' => FALSE,
+        'formatter' => FALSE,
       );
 
       if ($field = field_info_field($info['property'])) {
