@@ -391,6 +391,33 @@ function restful_test_create_vocabulary_and_terms($machine_name = 'test_vocab', 
 }
 
 /**
+ * Helper function; Create a node with taxonomy terms.
+ *
+ * @return object
+ *   The saved node.
+ */
+function restful_test_create_node_with_tags() {
+  $values = array('type' => 'article');
+  $node = entity_create('node', $values);
+
+  $vocabulary = taxonomy_vocabulary_machine_name_load('tags');
+
+  // Create a random number of tags for the created node.
+  for ($index = 0; $index < mt_rand(1, 10); $index++) {
+    $term = (object) array(
+      'vid' => $vocabulary->vid,
+      'name' => 'term ' . $vocabulary->vid . '::' . $index,
+    );
+    taxonomy_term_save($term);
+    $terms[] = $term;
+    $node->field_tags[LANGUAGE_NONE][$index]['tid'] = $term->tid;
+  }
+  node_save($node);
+
+  return $node;
+}
+
+/**
  * Instead of implementing hook_schema use this helper function.
  *
  * In order to not to delay all tests using the test module. Only create the
