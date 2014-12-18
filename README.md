@@ -97,7 +97,7 @@ class RestfulCustomResource extends RestfulEntityBaseNode {
 After declaring this plugin, the resource could be accessed at its root URL,
 which would be `http://example.com/api/v1.0/articles`.
 
-### Security, caching, and output
+### Security, caching, output, and customization
 
 See the [Defining a RESTful Plugin](./docs/plugin.md) document for more details.
 
@@ -107,7 +107,7 @@ See the [Defining a RESTful Plugin](./docs/plugin.md) document for more details.
 The following examples use the _articles_ resource from the _restful\_example_
 module.
 
-### Getting the default RESTful handler for a resource
+#### Getting the default RESTful handler for a resource
 
 ```php
 // Get handler v1.0
@@ -115,7 +115,7 @@ $handler = restful_get_restful_handler('articles');
 ```
 
 
-### Getting a specific version of a RESTful handler for a resource
+#### Getting a specific version of a RESTful handler for a resource
 
 ```php
 // Get handler v1.1
@@ -123,7 +123,7 @@ $handler = restful_get_restful_handler('articles', 1, 1);
 ```
 
 
-### Create and update an entity
+#### Create and update an entity
 ```php
 $handler = restful_get_restful_handler('articles');
 // POST method, to create.
@@ -136,7 +136,7 @@ $handler->patch($id, $request);
 ```
 
 
-### List entities
+#### List entities
 ```php
 $handler = restful_get_restful_handler('articles');
 $result = $handler->get();
@@ -170,7 +170,7 @@ more details.
 The following examples use the _articles_ resource from the _restful\_example_
 module.
 
-### Consuming specific versions of your API
+#### Consuming specific versions of your API
 ```shell
 # Handler v1.0
 curl https://example.com/api/articles/1 \
@@ -186,7 +186,7 @@ curl https://example.com/api/v1.1/articles/1
 ```
 
 
-### View multiple articles at once
+#### View multiple articles at once
 
 ```shell
 # Handler v1.1
@@ -195,14 +195,14 @@ curl https://example.com/api/articles/1,2 \
 ```
 
 
-### Returning autocomplete results
+#### Returning autocomplete results
 
 ```shell
 curl https://example.com/api/articles?autocomplete[string]=mystring
 ```
 
 
-### URL Query strings, HTTP headers, and HTTP requests
+#### URL Query strings, HTTP headers, and HTTP requests
 
 See the [Consuming Your API](./docs/api_url.md) document for more details.
 
