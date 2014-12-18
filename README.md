@@ -186,7 +186,7 @@ curl https://example.com/api/v1.1/articles/1
 ```
 
 
-### View multiple Articles at once
+### View multiple articles at once
 
 ```shell
 # Handler v1.1
@@ -202,7 +202,7 @@ curl https://example.com/api/articles?autocomplete[string]=mystring
 ```
 
 
-### URL Query Strings, HTTP headers, and HTTP requests
+### URL Query strings, HTTP headers, and HTTP requests
 
 See the [Consuming Your API](./docs/api_url.md) document for more details.
 
