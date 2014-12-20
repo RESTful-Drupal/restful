@@ -57,4 +57,13 @@ interface RestfulPropertySourceInterface {
    *   Returns TRUE if the property is multiple (cardinality > 1).
    */
   public function isMultiple();
+
+  /**
+   * Get the iterator to traverse multiple elements.
+   *
+   * @return Iterator
+   *   The iterator.
+   */
+  public function iterator();
+
 }
