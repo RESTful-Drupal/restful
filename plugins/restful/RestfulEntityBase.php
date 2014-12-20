@@ -296,13 +296,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
         // Limit fields doesn't include this property.
         continue;
       }
-
-      $value = NULL;
-
-      if ($info['callback']) {
-        $value = static::executeCallback($info['callback'], array($wrapper));
-      }
-      else {
+      if (!$info['callback'] && $info['property']) {
         // Exposing an entity field.
         $property = $info['property'];
         $sub_wrapper = $info['wrapper_method_on_entity'] ? $wrapper : $wrapper->{$property};
@@ -311,32 +305,11 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
         if ($property && !$this->checkPropertyAccess('view', $public_field_name, $sub_wrapper, $wrapper)) {
           continue;
         }
-
-        if (empty($info['formatter'])) {
-          if ($sub_wrapper instanceof EntityListWrapper) {
-            // Multiple values.
-            foreach ($sub_wrapper as $item_wrapper) {
-              $value[] = $this->getValueFromProperty($wrapper, $item_wrapper, $info, $public_field_name);
-            }
-          }
-          else {
-            // Single value.
-            $value = $this->getValueFromProperty($wrapper, $sub_wrapper, $info, $public_field_name);
-          }
-        }
-        else {
-          // Get value from field formatter.
-          $value = $this->getValueFromFieldFormatter($wrapper, $sub_wrapper, $info);
-        }
       }
 
-      if ($value && $info['process_callbacks']) {
-        foreach ($info['process_callbacks'] as $process_callback) {
-          $value = static::executeCallback($process_callback, array($value));
-        }
-      }
-
-      $values[$public_field_name] = $value;
+      $property_source = new \RestfulPropertySourceEMW($wrapper);
+      $property_source->setContext($info + array('public_field_name' => $public_field_name));
+      $values[$public_field_name] = $this->retriever->retrieve($info, $property_source);
     }
 
     $this->setRenderedCache($values, array(
@@ -344,41 +317,6 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       'ei' => $entity_id,
     ));
     return $values;
-  }
-
-  /**
-   * Get value from a property.
-   *
-   * @param EntityMetadataWrapper $wrapper
-   *   The wrapped entity.
-   * @param EntityMetadataWrapper $sub_wrapper
-   *   The wrapped property.
-   * @param array $info
-   *   The public field info array.
-   * @param $public_field_name
-   *   The field name.
-   *
-   * @return mixed
-   *   A single or multiple values.
-   */
-  protected function getValueFromProperty(\EntityMetadataWrapper $wrapper, \EntityMetadataWrapper $sub_wrapper, array $info, $public_field_name) {
-    $property = $info['property'];
-    $method = $info['wrapper_method'];
-    $resource = $info['resource'] ?: NULL;
-
-    if ($info['sub_property'] && $sub_wrapper->value()) {
-      $sub_wrapper = $sub_wrapper->{$info['sub_property']};
-    }
-
-    if ($resource) {
-      $value = $this->getValueFromResource($sub_wrapper, $property, $resource, $public_field_name, $wrapper->getIdentifier());
-    }
-    else {
-      // Wrapper method.
-      $value = $sub_wrapper->{$method}();
-    }
-
-    return $value;
   }
 
   /**
@@ -1397,14 +1335,14 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
   /**
    * Get the "self" url.
    *
-   * @param \EntityMetadataWrapper $wrapper
+   * @param \RestfulPropertySourceInterface $source
    *   The wrapped entity.
    *
    * @return string
    *   The self URL.
    */
-  protected function getEntitySelf(\EntityMetadataWrapper $wrapper) {
-    return $this->versionedUrl($wrapper->getIdentifier());
+  protected function getEntitySelf(\RestfulPropertySourceInterface $source) {
+    return $this->versionedUrl($source->getSource()->getIdentifier());
   }
 
   /**

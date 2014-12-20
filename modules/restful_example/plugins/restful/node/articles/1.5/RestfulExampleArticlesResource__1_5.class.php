@@ -25,6 +25,10 @@ class RestfulExampleArticlesResource__1_5 extends RestfulEntityBaseNode {
       ),
     );
 
+    $public_fields['text'] = array(
+      'property' => 'field_text',
+    );
+
     $public_fields['image'] = array(
       'property' => 'field_image',
       'process_callbacks' => array(

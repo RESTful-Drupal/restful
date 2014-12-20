@@ -19,8 +19,8 @@ class RestfulPropertyValueRetrieverEntity implements \RestfulPropertyValueRetrie
     elseif (empty($info['formatter'])) {
       if ($source->isMultiple()) {
         // Multiple values.
-        foreach ($source as $item_source) {
-          $value[] = $item_source->get($info['property']);
+        for ($index = 0; $index < $source->count(); $index++) {
+          $value[] = $source->get($info['property'], $index);
         }
       }
       else {

@@ -5,7 +5,7 @@
  * Contains \RestfulPropertySourceEMW.
  */
 
-class RestfulPropertySourceEMW extends \RestfulPropertySourceBase implements \RestfulPropertySourceInterface, Iterator {
+class RestfulPropertySourceEMW extends \RestfulPropertySourceBase implements \RestfulPropertySourceInterface {
 
   private $position = 0;
 
@@ -22,104 +22,66 @@ class RestfulPropertySourceEMW extends \RestfulPropertySourceBase implements \Re
   /**
    * {@inheritdoc}
    */
-  public function get($key) {
+  public function get($key, $delta = NULL) {
     $context = $this->getContext();
-    $property = $context['property'];
     $method = $context['wrapper_method'];
     $resource = $context['resource'] ?: NULL;
-    $sub_wrapper = $this->subWrapper();
-
-    if ($context['sub_property'] && $this->subWrapper()->value()) {
-      $sub_wrapper = $sub_wrapper->{$context['sub_property']};
-    }
+    $item_wrapper = $this->itemWrapper($key, $delta);
 
     if ($resource) {
-      $value = $this->getValueFromResource($sub_wrapper, $property, $resource, $public_field_name, $wrapper->getIdentifier());
+      $value = NULL;
+      // value = $this->getValueFromResource($item_wrapper, $property, $resource, $public_field_name, $wrapper->getIdentifier());
     }
     else {
       // Wrapper method.
-      $value = $sub_wrapper->{$method}();
+      $value = $item_wrapper->{$method}();
     }
 
     return $value;
   }
 
   /**
-   * Get value from a property.
-   *
-   * @param EntityMetadataWrapper $wrapper
-   *   The wrapped entity.
-   * @param EntityMetadataWrapper $sub_wrapper
-   *   The wrapped property.
-   * @param array $info
-   *   The public field info array.
-   * @param $public_field_name
-   *   The field name.
-   *
-   * @return mixed
-   *   A single or multiple values.
+   * {@inheritdoc}
    */
-  protected function getValueFromProperty(\EntityMetadataWrapper $wrapper, \EntityMetadataWrapper $sub_wrapper, array $info, $public_field_name) {
+  public function isMultiple() {
+    return $this->itemWrapper() instanceof EntityListWrapper;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function isMultiple() {
-    return $this->subWrapper() instanceof EntityListWrapper;
+  public function count() {
+    if ($this->isMultiple()) {
+      return $this->itemWrapper()->count();
+    }
+    return 1;
   }
 
   /**
-   * Get the sub_wrapper
+   * Get the item wrapper.
+   *
+   * @param string $property
+   *   The name of the property to get.
+   * @param int $delta
+   *   The delta.
    *
    * @return \EntityDrupalWrapper
    *   The sub wrapper.
    */
-  protected function subWrapper() {
+  protected function itemWrapper($property = NULL, $delta = NULL) {
     $context = $this->getContext();
+    if (!isset($property)) {
+      $property = $context['property'];
+    }
     $wrapper = $this->getSource();
-    return $context['wrapper_method_on_entity'] ? $wrapper : $wrapper->{$context['property']};
-  }
-
-  /**
-   * {@inheritdoc}
-   *
-   * @return \RestfulPropertySourceEMW
-   */
-  public function current() {
-    $sub_wrapper = $this->subWrapper();
-    $output = new static($sub_wrapper[$this->position]);
-    $output->setContext($this->getContext());
-    return $output;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function key() {
-    return $this->position;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function next() {
-    $this->position++;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function rewind() {
-    $this->position = 0;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function valid() {
-    $wrapper = $this->getSource();
-    return isset($wrapper[$this->position]);
+    $item_wrapper = $context['wrapper_method_on_entity'] ? $wrapper : $wrapper->{$property};
+    if (isset($delta)) {
+      $item_wrapper = $item_wrapper->get($delta);
+    }
+    if ($context['sub_property'] && $item_wrapper->{$context['wrapper_method']}()) {
+      $item_wrapper = $item_wrapper->{$context['sub_property']};
+    }
+    return $item_wrapper;
   }
 
 }
