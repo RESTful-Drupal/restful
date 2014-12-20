@@ -20,7 +20,7 @@ class RestfulPropertySourceArray extends \RestfulPropertySourceBase implements \
   /**
    * {@inheritdoc}
    */
-  public function get($key) {
+  public function get($key, $delta = NULL) {
     return $this->source[$key];
   }
 

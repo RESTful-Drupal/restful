@@ -45,4 +45,11 @@ abstract class RestfulPropertySourceBase implements RestfulPropertySourceInterfa
     return FALSE;
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function count() {
+    return 1;
+  }
+
 }

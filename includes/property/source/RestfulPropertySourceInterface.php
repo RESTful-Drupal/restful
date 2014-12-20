@@ -12,11 +12,13 @@ interface RestfulPropertySourceInterface {
    *
    * @param string $key
    *   The key to get.
+   * @param int $delta
+   *   The delta for multivalue properties.
    *
    * @return mixed
    *   The value.
    */
-  public function get($key);
+  public function get($key, $delta = NULL);
 
   /**
    * Gets the raw source.
@@ -57,5 +59,13 @@ interface RestfulPropertySourceInterface {
    *   Returns TRUE if the property is multiple (cardinality > 1).
    */
   public function isMultiple();
+
+  /**
+   * Number of elements for the property.
+   *
+   * @return int
+   *   Returns the number of elements of the property.
+   */
+  public function count();
 
 }
