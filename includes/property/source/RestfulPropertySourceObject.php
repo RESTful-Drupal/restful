@@ -5,9 +5,7 @@
  * Contains \RestfulPropertySourceObject.
  */
 
-class RestfulPropertySourceObject implements \RestfulPropertySourceInterface {
-
-  protected $source;
+class RestfulPropertySourceObject extends \RestfulPropertySourceBase implements \RestfulPropertySourceInterface {
 
   /**
    * Constructor.
@@ -24,20 +22,6 @@ class RestfulPropertySourceObject implements \RestfulPropertySourceInterface {
    */
   public function get($key) {
     return $this->source->{$key};
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getSource() {
-    return $this->source;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setSource($source) {
-    return $this->source = $source;
   }
 
 }

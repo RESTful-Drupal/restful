@@ -36,6 +36,7 @@ files[] = plugins/restful/RestfulInterface.php
 files[] = includes/property/retriever/RestfulPropertyValueRetrieverBasic.php
 files[] = includes/property/retriever/RestfulPropertyValueRetrieverInterface.php
 files[] = includes/property/source/RestfulPropertySourceArray.php
+files[] = includes/property/source/RestfulPropertySourceBase.php
 files[] = includes/property/source/RestfulPropertySourceInterface.php
 files[] = includes/property/source/RestfulPropertySourceObject.php
 files[] = includes/RestfulEntityViewMode.php

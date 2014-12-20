@@ -5,9 +5,7 @@
  * Contains \RestfulPropertySourceArray.
  */
 
-class RestfulPropertySourceArray implements \RestfulPropertySourceInterface {
-
-  protected $source;
+class RestfulPropertySourceArray extends \RestfulPropertySourceBase implements \RestfulPropertySourceInterface {
 
   /**
    * Constructor.
@@ -24,20 +22,6 @@ class RestfulPropertySourceArray implements \RestfulPropertySourceInterface {
    */
   public function get($key) {
     return $this->source[$key];
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getSource() {
-    return $this->source;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setSource($source) {
-    return $this->source = $source;
   }
 
 }

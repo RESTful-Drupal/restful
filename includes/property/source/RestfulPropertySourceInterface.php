@@ -10,7 +10,7 @@ interface RestfulPropertySourceInterface {
   /**
    * Simple key value getter.
    *
-   * @param mixed $key
+   * @param string $key
    *   The key to get.
    *
    * @return mixed
@@ -33,5 +33,21 @@ interface RestfulPropertySourceInterface {
    *   The data source.
    */
   public function setSource($source);
+
+  /**
+   * Gets the source context.
+   *
+   * @return mixed
+   *   The context.
+   */
+  public function getContext();
+
+  /**
+   * Sets the context.
+   *
+   * @param mixed $context
+   *   The context.
+   */
+  public function setContext($context);
 
 }
