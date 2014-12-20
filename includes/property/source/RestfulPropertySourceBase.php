@@ -45,11 +45,4 @@ abstract class RestfulPropertySourceBase implements RestfulPropertySourceInterfa
     return FALSE;
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  public function iterator() {
-    throw new \RestfulNotImplementedException('No iterator returned.');
-  }
-
 }

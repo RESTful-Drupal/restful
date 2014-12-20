@@ -58,12 +58,4 @@ interface RestfulPropertySourceInterface {
    */
   public function isMultiple();
 
-  /**
-   * Get the iterator to traverse multiple elements.
-   *
-   * @return Iterator
-   *   The iterator.
-   */
-  public function iterator();
-
 }
