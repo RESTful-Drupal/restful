@@ -35,7 +35,14 @@ abstract class RestfulPropertySourceBase implements RestfulPropertySourceInterfa
    * {@inheritdoc}
    */
   public function setSource($source) {
-    return $this->source = $source;
+    $this->source = $source;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isMultiple() {
+    return FALSE;
   }
 
 }

@@ -50,4 +50,11 @@ interface RestfulPropertySourceInterface {
    */
   public function setContext($context);
 
+  /**
+   * Property is multiple.
+   *
+   * @return boolean
+   *   Returns TRUE if the property is multiple (cardinality > 1).
+   */
+  public function isMultiple();
 }
