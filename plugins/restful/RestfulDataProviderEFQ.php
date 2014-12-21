@@ -56,6 +56,7 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
     $this->entityType = $plugin['entity_type'];
     $this->bundle = $plugin['bundle'];
     $this->retriever = new \RestfulPropertyValueRetrieverEntity();
+    $this->metadataRetriever = new \RestfulPropertyMetadataRetrieverEntity();
   }
 
   /**

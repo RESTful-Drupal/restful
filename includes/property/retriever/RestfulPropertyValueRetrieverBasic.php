@@ -18,7 +18,16 @@ class RestfulPropertyValueRetrieverBasic implements \RestfulPropertyValueRetriev
     }
     // Map row names to public properties.
     elseif ($info['property']) {
-      $value = $source->get($info['property']);
+      if ($source->isMultiple()) {
+        // Multiple values.
+        for ($index = 0; $index < $source->count(); $index++) {
+          $value[] = $source->get($info['property'], $index);
+        }
+      }
+      else {
+        // Single value.
+        $value = $source->get($info['property']);
+      }
     }
 
     // Execute the process callbacks.

@@ -97,6 +97,13 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
   public $retriever;
 
   /**
+   * Property value retriever.
+   *
+   * @var \RestfulPropertyValueRetrieverInterface
+   */
+  public $metadataRetriever;
+
+  /**
    * Get the cache id parameters based on the keys.
    *
    * @param $keys
@@ -1317,6 +1324,24 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
       return TRUE;
     }
     return strpos($referer, $origin) === 0;
+  }
+
+  /**
+   * Helper method to determine if an array is numeric.
+   *
+   * @param array $input
+   *   The input array.
+   *
+   * @return boolean
+   *   TRUE if the array is numeric, false otherwise.
+   */
+  public final static function isArrayNumeric(array $input) {
+    foreach (array_keys($input) as $key) {
+      if (!ctype_digit((string) $key)) {
+        return FALSE;
+      }
+    }
+    return TRUE;
   }
 
   /**

@@ -76,7 +76,7 @@ class RestfulExampleArticlesResource__1_5 extends RestfulEntityBaseNode {
    *   A cleaned image array.
    */
   protected function imageProcess($value) {
-    if (static::isArrayNumeric($value)) {
+    if (\RestfulBase::isArrayNumeric($value)) {
       $output = array();
       foreach ($value as $item) {
         $output[] = $this->imageProcess($item);

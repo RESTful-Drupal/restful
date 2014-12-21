@@ -33,6 +33,7 @@ files[] = plugins/restful/RestfulFilesUpload.php
 files[] = plugins/restful/RestfulInterface.php
 
 ; Includes
+files[] = includes/property/retriever/RestfulPropertyMetadataRetrieverEntity.php
 files[] = includes/property/retriever/RestfulPropertyValueRetrieverBasic.php
 files[] = includes/property/retriever/RestfulPropertyValueRetrieverEntity.php
 files[] = includes/property/retriever/RestfulPropertyValueRetrieverInterface.php

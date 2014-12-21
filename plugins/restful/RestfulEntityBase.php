@@ -310,6 +310,11 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       $property_source = new \RestfulPropertySourceEMW($wrapper);
       $property_source->setContext($info + array('public_field_name' => $public_field_name));
       $values[$public_field_name] = $this->retriever->retrieve($info, $property_source);
+
+      // Get metadata for HATEOAS.
+      if ($metadata = $this->metadataRetriever->retrieve($info, $property_source)) {
+        $this->valueMetadata[$wrapper->getIdentifier()][$public_field_name] = $metadata;
+      }
     }
 
     $this->setRenderedCache($values, array(
@@ -360,98 +365,6 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     }
 
     return $value;
-  }
-
-  /**
-   * Get the "target_type" property from an field or property reference.
-   *
-   * @param \EntityMetadataWrapper $wrapper
-   *   The wrapped property.
-   * @param $property
-   *   The public field name.
-   *
-   * @return string
-   *   The target type of the referenced entity.
-   *
-   * @throws \RestfulException
-   */
-  protected function getTargetTypeFromEntityReference(\EntityMetadataWrapper $wrapper, $property) {
-    $params = array('@property' => $property);
-
-    if ($field = field_info_field($property)) {
-      if ($field['type'] == 'entityreference') {
-        return $field['settings']['target_type'];
-      }
-      elseif ($field['type'] == 'taxonomy_term_reference') {
-        return 'taxonomy_term';
-      }
-
-      throw new \RestfulException(format_string('Field @property is not an entity reference or taxonomy reference field.', $params));
-    }
-    else {
-      // This is a property referencing another entity (e.g. the "uid" on the
-      // node object).
-      $info = $wrapper->info();
-      if (entity_get_info($info['type'])) {
-        return $info['type'];
-      }
-
-      throw new \RestfulException(format_string('Property @property is not defined as reference in the EntityMetadataWrapper definition.', $params));
-    }
-  }
-
-  /**
-   * Get value from an entity reference field with "resource" property.
-   *
-   * @param EntityMetadataWrapper $wrapper
-   *   The wrapped object.
-   * @param string $property
-   *   The property name (i.e. the field name).
-   * @param array $resource
-   *   Array with resource names, keyed by the bundle name.
-   * @param string $public_field_name
-   *   Field name in the output. This is used to store additional metadata
-   *   useful for the formatter.
-   * @param int $host_id
-   *   Host entity ID. Used to structure the value metadata.
-   *
-   * @return mixed
-   *   The value if found, or NULL if bundle not defined.
-   */
-  protected function getValueFromResource(EntityMetadataWrapper $wrapper, $property, $resource, $public_field_name = NULL, $host_id = NULL) {
-    $handlers = $this->staticCache->get(__CLASS__ . '::' . __FUNCTION__, array());
-
-    if (!$entity = $wrapper->value()) {
-      return;
-    }
-
-    $target_type = $this->getTargetTypeFromEntityReference($wrapper, $property);
-    list($id,, $bundle) = entity_extract_ids($target_type, $entity);
-
-    if (empty($resource[$bundle])) {
-      // Bundle not mapped to a resource.
-      return;
-    }
-
-    if (!$resource[$bundle]['full_view']) {
-      // Show only the ID(s) of the referenced resource.
-      return $wrapper->value(array('identifier' => TRUE));
-    }
-
-    if ($public_field_name) {
-      $this->valueMetadata[$host_id][$public_field_name][] = array(
-        'id' => $id,
-        'entity_type' => $target_type,
-        'bundle' => $bundle,
-        'resource_name' => $resource[$bundle]['name'],
-      );
-    }
-
-    if (empty($handlers[$bundle])) {
-      $handlers[$bundle] = restful_get_restful_handler($resource[$bundle]['name'], $resource[$bundle]['major_version'], $resource[$bundle]['minor_version']);
-    }
-    $bundle_handler = $handlers[$bundle];
-    return $bundle_handler->viewEntity($id);
   }
 
   /**
@@ -1363,7 +1276,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     }
     // If $file_array is an array of file arrays. Then call recursively for each
     // item and return the result.
-    if (static::isArrayNumeric($file_array)) {
+    if (\RestfulBase::isArrayNumeric($file_array)) {
       $output = array();
       foreach ($file_array as $item) {
         $output[] = $this->getImageUris($item, $image_styles);
@@ -1375,24 +1288,6 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       $file_array['image_styles'][$style] = image_style_url($style, $file_array['uri']);
     }
     return $file_array;
-  }
-
-  /**
-   * Helper method to determine if an array is numeric.
-   *
-   * @param array $input
-   *   The input array.
-   *
-   * @return boolean
-   *   TRUE if the array is numeric, false otherwise.
-   */
-  protected final static function isArrayNumeric(array $input) {
-    foreach (array_keys($input) as $key) {
-      if (!ctype_digit((string) $key)) {
-        return FALSE;
-      }
-    }
-    return TRUE;
   }
 
   /**
