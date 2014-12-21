@@ -296,13 +296,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
         // Limit fields doesn't include this property.
         continue;
       }
-
-      $value = NULL;
-
-      if ($info['callback']) {
-        $value = static::executeCallback($info['callback'], array($wrapper));
-      }
-      else {
+      if (!$info['callback'] && $info['property']) {
         // Exposing an entity field.
         $property = $info['property'];
         $sub_wrapper = $info['wrapper_method_on_entity'] ? $wrapper : $wrapper->{$property};
@@ -311,32 +305,16 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
         if ($property && !$this->checkPropertyAccess('view', $public_field_name, $sub_wrapper, $wrapper)) {
           continue;
         }
-
-        if (empty($info['formatter'])) {
-          if ($sub_wrapper instanceof EntityListWrapper) {
-            // Multiple values.
-            foreach ($sub_wrapper as $item_wrapper) {
-              $value[] = $this->getValueFromProperty($wrapper, $item_wrapper, $info, $public_field_name);
-            }
-          }
-          else {
-            // Single value.
-            $value = $this->getValueFromProperty($wrapper, $sub_wrapper, $info, $public_field_name);
-          }
-        }
-        else {
-          // Get value from field formatter.
-          $value = $this->getValueFromFieldFormatter($wrapper, $sub_wrapper, $info);
-        }
       }
 
-      if ($value && $info['process_callbacks']) {
-        foreach ($info['process_callbacks'] as $process_callback) {
-          $value = static::executeCallback($process_callback, array($value));
-        }
-      }
+      $property_source = new \RestfulPropertySourceEMW($wrapper);
+      $property_source->setContext($info + array('public_field_name' => $public_field_name));
+      $values[$public_field_name] = $this->retriever->retrieve($info, $property_source);
 
-      $values[$public_field_name] = $value;
+      // Get metadata for HATEOAS.
+      if ($metadata = $this->metadataRetriever->retrieve($info, $property_source)) {
+        $this->valueMetadata[$wrapper->getIdentifier()][$public_field_name] = $metadata;
+      }
     }
 
     $this->setRenderedCache($values, array(
@@ -344,176 +322,6 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       'ei' => $entity_id,
     ));
     return $values;
-  }
-
-  /**
-   * Get value from a property.
-   *
-   * @param EntityMetadataWrapper $wrapper
-   *   The wrapped entity.
-   * @param EntityMetadataWrapper $sub_wrapper
-   *   The wrapped property.
-   * @param array $info
-   *   The public field info array.
-   * @param $public_field_name
-   *   The field name.
-   *
-   * @return mixed
-   *   A single or multiple values.
-   */
-  protected function getValueFromProperty(\EntityMetadataWrapper $wrapper, \EntityMetadataWrapper $sub_wrapper, array $info, $public_field_name) {
-    $property = $info['property'];
-    $method = $info['wrapper_method'];
-    $resource = $info['resource'] ?: NULL;
-
-    if ($info['sub_property'] && $sub_wrapper->value()) {
-      $sub_wrapper = $sub_wrapper->{$info['sub_property']};
-    }
-
-    if ($resource) {
-      $value = $this->getValueFromResource($sub_wrapper, $property, $resource, $public_field_name, $wrapper->getIdentifier());
-    }
-    else {
-      // Wrapper method.
-      $value = $sub_wrapper->{$method}();
-    }
-
-    return $value;
-  }
-
-  /**
-   * Get value from a field rendered by Drupal field API's formatter.
-   *
-   * @param EntityMetadataWrapper $wrapper
-   *   The wrapped entity.
-   * @param EntityMetadataWrapper $sub_wrapper
-   *   The wrapped property.
-   * @param array $info
-   *   The public field info array.
-   *
-   * @return mixed
-   *   A single or multiple values.
-   */
-  protected function getValueFromFieldFormatter(\EntityMetadataWrapper $wrapper, \EntityMetadataWrapper $sub_wrapper, array $info) {
-    $property = $info['property'];
-
-    if (!field_info_field($property)) {
-      // Property is not a field.
-      throw new \RestfulServerConfigurationException(format_string('@property is not a configurable field, so it cannot be processed using field API formatter', array('@property' => $property)));
-    }
-
-    // Get values from the formatter.
-    $output = field_view_field($this->getEntityType(), $wrapper->value(), $property, $info['formatter']);
-
-    // Unset the theme, as we just want to get the value from the formatter,
-    // without the wrapping HTML.
-    unset($output['#theme']);
-
-
-    if ($sub_wrapper instanceof EntityListWrapper) {
-      // Multiple values.
-      foreach (element_children($output) as $delta) {
-        $value[] = drupal_render($output[$delta]);
-      }
-    }
-    else {
-      // Single value.
-      $value = drupal_render($output);
-    }
-
-    return $value;
-  }
-
-  /**
-   * Get the "target_type" property from an field or property reference.
-   *
-   * @param \EntityMetadataWrapper $wrapper
-   *   The wrapped property.
-   * @param $property
-   *   The public field name.
-   *
-   * @return string
-   *   The target type of the referenced entity.
-   *
-   * @throws \RestfulException
-   */
-  protected function getTargetTypeFromEntityReference(\EntityMetadataWrapper $wrapper, $property) {
-    $params = array('@property' => $property);
-
-    if ($field = field_info_field($property)) {
-      if ($field['type'] == 'entityreference') {
-        return $field['settings']['target_type'];
-      }
-      elseif ($field['type'] == 'taxonomy_term_reference') {
-        return 'taxonomy_term';
-      }
-
-      throw new \RestfulException(format_string('Field @property is not an entity reference or taxonomy reference field.', $params));
-    }
-    else {
-      // This is a property referencing another entity (e.g. the "uid" on the
-      // node object).
-      $info = $wrapper->info();
-      if (entity_get_info($info['type'])) {
-        return $info['type'];
-      }
-
-      throw new \RestfulException(format_string('Property @property is not defined as reference in the EntityMetadataWrapper definition.', $params));
-    }
-  }
-
-  /**
-   * Get value from an entity reference field with "resource" property.
-   *
-   * @param EntityMetadataWrapper $wrapper
-   *   The wrapped object.
-   * @param string $property
-   *   The property name (i.e. the field name).
-   * @param array $resource
-   *   Array with resource names, keyed by the bundle name.
-   * @param string $public_field_name
-   *   Field name in the output. This is used to store additional metadata
-   *   useful for the formatter.
-   * @param int $host_id
-   *   Host entity ID. Used to structure the value metadata.
-   *
-   * @return mixed
-   *   The value if found, or NULL if bundle not defined.
-   */
-  protected function getValueFromResource(EntityMetadataWrapper $wrapper, $property, $resource, $public_field_name = NULL, $host_id = NULL) {
-    $handlers = $this->staticCache->get(__CLASS__ . '::' . __FUNCTION__, array());
-
-    if (!$entity = $wrapper->value()) {
-      return;
-    }
-
-    $target_type = $this->getTargetTypeFromEntityReference($wrapper, $property);
-    list($id,, $bundle) = entity_extract_ids($target_type, $entity);
-
-    if (empty($resource[$bundle])) {
-      // Bundle not mapped to a resource.
-      return;
-    }
-
-    if (!$resource[$bundle]['full_view']) {
-      // Show only the ID(s) of the referenced resource.
-      return $wrapper->value(array('identifier' => TRUE));
-    }
-
-    if ($public_field_name) {
-      $this->valueMetadata[$host_id][$public_field_name][] = array(
-        'id' => $id,
-        'entity_type' => $target_type,
-        'bundle' => $bundle,
-        'resource_name' => $resource[$bundle]['name'],
-      );
-    }
-
-    if (empty($handlers[$bundle])) {
-      $handlers[$bundle] = restful_get_restful_handler($resource[$bundle]['name'], $resource[$bundle]['major_version'], $resource[$bundle]['minor_version']);
-    }
-    $bundle_handler = $handlers[$bundle];
-    return $bundle_handler->viewEntity($id);
   }
 
   /**
@@ -1397,14 +1205,14 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
   /**
    * Get the "self" url.
    *
-   * @param \EntityMetadataWrapper $wrapper
+   * @param \RestfulPropertySourceInterface $source
    *   The wrapped entity.
    *
    * @return string
    *   The self URL.
    */
-  protected function getEntitySelf(\EntityMetadataWrapper $wrapper) {
-    return $this->versionedUrl($wrapper->getIdentifier());
+  protected function getEntitySelf(\RestfulPropertySourceInterface $source) {
+    return $this->versionedUrl($source->getSource()->getIdentifier());
   }
 
   /**
@@ -1425,7 +1233,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     }
     // If $file_array is an array of file arrays. Then call recursively for each
     // item and return the result.
-    if (static::isArrayNumeric($file_array)) {
+    if (\RestfulBase::isArrayNumeric($file_array)) {
       $output = array();
       foreach ($file_array as $item) {
         $output[] = $this->getImageUris($item, $image_styles);
@@ -1437,24 +1245,6 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       $file_array['image_styles'][$style] = image_style_url($style, $file_array['uri']);
     }
     return $file_array;
-  }
-
-  /**
-   * Helper method to determine if an array is numeric.
-   *
-   * @param array $input
-   *   The input array.
-   *
-   * @return boolean
-   *   TRUE if the array is numeric, false otherwise.
-   */
-  protected final static function isArrayNumeric(array $input) {
-    foreach (array_keys($input) as $key) {
-      if (!ctype_digit((string) $key)) {
-        return FALSE;
-      }
-    }
-    return TRUE;
   }
 
   /**

@@ -90,6 +90,20 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
   public $staticCache;
 
   /**
+   * Property value retriever.
+   *
+   * @var \RestfulPropertyValueRetrieverInterface
+   */
+  public $retriever;
+
+  /**
+   * Property value retriever.
+   *
+   * @var \RestfulPropertyValueRetrieverInterface
+   */
+  public $metadataRetriever;
+
+  /**
    * Get the cache id parameters based on the keys.
    *
    * @param $keys
@@ -375,6 +389,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
     parent::__construct($plugin);
     $this->authenticationManager = $auth_manager ? $auth_manager : new \RestfulAuthenticationManager();
     $this->cacheController = $cache_controller ? $cache_controller : $this->newCacheObject();
+    $this->retriever = new \RestfulPropertyValueRetrieverBasic();
     if ($rate_limit = $this->getPluginKey('rate_limit')) {
       $this->setRateLimitManager(new \RestfulRateLimitManager($this->getPluginKey('resource'), $rate_limit));
     }
@@ -1312,6 +1327,24 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
   }
 
   /**
+   * Helper method to determine if an array is numeric.
+   *
+   * @param array $input
+   *   The input array.
+   *
+   * @return boolean
+   *   TRUE if the array is numeric, false otherwise.
+   */
+  public final static function isArrayNumeric(array $input) {
+    foreach (array_keys($input) as $key) {
+      if (!ctype_digit((string) $key)) {
+        return FALSE;
+      }
+    }
+    return TRUE;
+  }
+
+  /**
    * Return the last version for a given resource.
    *
    * @param string $resource_name
@@ -1563,6 +1596,21 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
   protected static function notImplementedCrudOperation($operation) {
     // The default behavior is to not support the crud action.
     throw new \RestfulNotImplementedException(format_string('The "@method" method is not implemented in class @class.', array('@method' => $operation, '@class' => __CLASS__)));
+  }
+
+  /**
+   * Takes the public field configuration and returns the value ready to render.
+   *
+   * @param array $info
+   *   The configuration on how to get the field value.
+   * @param \RestfulPropertySourceInterface $source
+   *   The object containing the source data to get.
+   *
+   * @return mixed
+   *   The value.
+   */
+  public function retrievePropertyValue(array $info, \RestfulPropertySourceInterface $source) {
+    return $this->retriever->retrieve($info, $source);
   }
 
   /**

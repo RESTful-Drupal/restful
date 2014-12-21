@@ -69,13 +69,14 @@ class RestfulCToolsPluginsDiscovery extends \RestfulDataProviderCToolsPlugins {
   /**
    * Returns the URL to the endpoint result.
    *
-   * @param array $plugin
-   *   The unprocessed plugin definition.
+   * @param RestfulPropertySourceInterface $source
+   *   Property source with the unprocessed plugin definition.
    *
    * @return string
    *   The RESTful endpoint.
    */
-  protected function getSelf($plugin) {
+  protected function getSelf(\RestfulPropertySourceInterface $source) {
+    $plugin = $source->getSource();
     if ($plugin['menu_item']) {
       return url($plugin['menu_item'], array('absolute' => TRUE));
     }
