@@ -325,49 +325,6 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
   }
 
   /**
-   * Get value from a field rendered by Drupal field API's formatter.
-   *
-   * @param EntityMetadataWrapper $wrapper
-   *   The wrapped entity.
-   * @param EntityMetadataWrapper $sub_wrapper
-   *   The wrapped property.
-   * @param array $info
-   *   The public field info array.
-   *
-   * @return mixed
-   *   A single or multiple values.
-   */
-  protected function getValueFromFieldFormatter(\EntityMetadataWrapper $wrapper, \EntityMetadataWrapper $sub_wrapper, array $info) {
-    $property = $info['property'];
-
-    if (!field_info_field($property)) {
-      // Property is not a field.
-      throw new \RestfulServerConfigurationException(format_string('@property is not a configurable field, so it cannot be processed using field API formatter', array('@property' => $property)));
-    }
-
-    // Get values from the formatter.
-    $output = field_view_field($this->getEntityType(), $wrapper->value(), $property, $info['formatter']);
-
-    // Unset the theme, as we just want to get the value from the formatter,
-    // without the wrapping HTML.
-    unset($output['#theme']);
-
-
-    if ($sub_wrapper instanceof EntityListWrapper) {
-      // Multiple values.
-      foreach (element_children($output) as $delta) {
-        $value[] = drupal_render($output[$delta]);
-      }
-    }
-    else {
-      // Single value.
-      $value = drupal_render($output);
-    }
-
-    return $value;
-  }
-
-  /**
    * Update an entity using PUT.
    *
    * Non existing properties are assumed to be equal to NULL.

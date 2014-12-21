@@ -28,10 +28,10 @@ class RestfulPropertyValueRetrieverEntity implements \RestfulPropertyValueRetrie
         $value = $source->get($info['property']);
       }
     }
-//    else {
-//      // Get value from field formatter.
-//      $value = $this->getValueFromFieldFormatter($wrapper, $sub_wrapper, $info);
-//    }
+    else {
+      // The getter will return all values, even if it's multiple.
+      $value = $source->get($info['property']);
+    }
 
 
     // Execute the process callbacks.

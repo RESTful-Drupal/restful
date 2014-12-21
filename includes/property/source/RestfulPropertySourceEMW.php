@@ -24,10 +24,14 @@ class RestfulPropertySourceEMW extends \RestfulPropertySourceBase implements \Re
     $context = $this->getContext();
     $method = $context['wrapper_method'];
     $resource = $context['resource'] ?: NULL;
+    $formatter = $context['formatter'] ?: NULL;
     $item_wrapper = $this->itemWrapper($key, $delta);
 
     if ($resource) {
       $value = $this->getValueFromResource($item_wrapper, $key, $resource);
+    }
+    elseif ($formatter) {
+      $value = $this->getValueFromFieldFormatter($this->itemWrapper($key));
     }
     else {
       // Wrapper method.
@@ -46,11 +50,6 @@ class RestfulPropertySourceEMW extends \RestfulPropertySourceBase implements \Re
    *   The property name (i.e. the field name).
    * @param array $resource
    *   Array with resource names, keyed by the bundle name.
-   * @param string $public_field_name
-   *   Field name in the output. This is used to store additional metadata
-   *   useful for the formatter.
-   * @param int $host_id
-   *   Host entity ID. Used to structure the value metadata.
    *
    * @return mixed
    *   The value if found, or NULL if bundle not defined.
@@ -121,6 +120,50 @@ class RestfulPropertySourceEMW extends \RestfulPropertySourceBase implements \Re
 
       throw new \RestfulException(format_string('Property @property is not defined as reference in the EntityMetadataWrapper definition.', $params));
     }
+  }
+
+  /**
+   * Get value from a field rendered by Drupal field API's formatter.
+   *
+   * @param EntityMetadataWrapper $item_wrapper
+   *   The wrapped property.
+   *
+   * @throws RestfulServerConfigurationException
+   *
+   * @return mixed
+   *   A single or multiple values.
+   */
+  protected function getValueFromFieldFormatter(\EntityMetadataWrapper $item_wrapper) {
+    $wrapper = $this->getSource();
+    $context = $this->getContext();
+    $property = $context['property'];
+    $value = NULL;
+
+    if (!field_info_field($property)) {
+      // Property is not a field.
+      throw new \RestfulServerConfigurationException(format_string('@property is not a configurable field, so it cannot be processed using field API formatter', array('@property' => $property)));
+    }
+
+    // Get values from the formatter.
+    $entity_info = $this->getSource()->info();
+    $output = field_view_field($entity_info['type'], $wrapper->value(), $property, $context['formatter']);
+
+    // Unset the theme, as we just want to get the value from the formatter,
+    // without the wrapping HTML.
+    unset($output['#theme']);
+
+    if ($this->isMultiple()) {
+      // Multiple values.
+      foreach (element_children($output) as $delta) {
+        $value[] = drupal_render($output[$delta]);
+      }
+    }
+    else {
+      // Single value.
+      $value = drupal_render($output);
+    }
+
+    return $value;
   }
 
   /**
