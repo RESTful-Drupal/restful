@@ -86,7 +86,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
         // POST
         \RestfulInterface::POST => 'createEntity',
       ),
-      '^(\d+,)*\d+$' => array(
+      '^.*$' => array(
         \RestfulInterface::GET => 'viewEntities',
         \RestfulInterface::HEAD => 'viewEntities',
         \RestfulInterface::PUT => 'putEntity',
@@ -271,7 +271,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    * {@inheritdoc}
    */
   public function viewEntity($id) {
-    $entity_id = $this->entityID($id);
+    $entity_id = $this->entityId($id);
     $request = $this->getRequest();
 
     $cached_data = $this->getRenderedCache(array(
@@ -566,7 +566,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    * {@inheritdoc}
    */
   protected function updateEntity($id, $null_missing_fields = FALSE) {
-    $entity_id = $this->entityID($id);
+    $entity_id = $this->entityId($id);
     $this->isValidEntity('update', $entity_id);
 
     $wrapper = entity_metadata_wrapper($this->entityType, $entity_id);
@@ -1484,7 +1484,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    * @return int
    *   The entity ID.
    */
-  protected function entityID($id) {
+  protected function entityId($id) {
     $request = $this->getRequest();
     if (empty($request['loadByFieldName'])) {
       // The regular entity ID was provided.
@@ -1510,7 +1510,11 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     // Execute the query and gather the results.
     $results = $query->execute();
     if (empty($results[$this->getEntityType()])) {
-      return NULL;
+      throw new RestfulUnprocessableEntityException(format_string('The entity ID @id for @resource does not exist loaded by @name.', array(
+        '@id' => $id,
+        '@resource' => $this->getPluginKey('label'),
+        '@name' => $public_property_name,
+      )));
     }
 
     // There is nothing that guarantees that there is only one result, since
