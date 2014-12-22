@@ -145,12 +145,12 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
   /**
    * {@inheritdoc}
    */
-  public function viewEntities($entity_ids_string) {
-    $entity_ids = array_unique(array_filter(explode(',', $entity_ids_string)));
+  public function viewEntities($ids_string) {
+    $ids = array_unique(array_filter(explode(',', $ids_string)));
     $output = array();
 
-    foreach ($entity_ids as $entity_id) {
-      $output[] = $this->viewEntity($entity_id);
+    foreach ($ids as $id) {
+      $output[] = $this->viewEntity($id);
     }
     return $output;
   }
@@ -270,8 +270,8 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
   /**
    * {@inheritdoc}
    */
-  public function viewEntity($entity_id) {
-    $entity_id = $this->entityID($entity_id);
+  public function viewEntity($id) {
+    $entity_id = $this->entityID($id);
     $request = $this->getRequest();
 
     $cached_data = $this->getRenderedCache(array(
@@ -565,8 +565,8 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
   /**
    * {@inheritdoc}
    */
-  protected function updateEntity($entity_id, $null_missing_fields = FALSE) {
-    $entity_id = $this->entityID($entity_id);
+  protected function updateEntity($id, $null_missing_fields = FALSE) {
+    $entity_id = $this->entityID($id);
     $this->isValidEntity('update', $entity_id);
 
     $wrapper = entity_metadata_wrapper($this->entityType, $entity_id);
