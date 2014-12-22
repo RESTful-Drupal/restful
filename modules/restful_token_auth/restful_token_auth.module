@@ -54,7 +54,6 @@ function restful_token_auth_restful_parse_request_alter(&$request) {
   );
 }
 
-
 /**
  * Implements hook_ctools_plugin_directory().
  */

@@ -240,6 +240,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
           'q',
           'range',
           'sort',
+          'fields',
         ))) {
         continue;
       }
