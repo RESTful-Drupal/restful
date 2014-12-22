@@ -106,6 +106,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
       if (in_array($param, array(
         '__application',
         'filter',
+        'loadByFieldName',
         'page',
         'q',
         'range',
@@ -314,6 +315,21 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
    */
   public function getHttpHeaders() {
     return $this->httpHeaders;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function addHttpHeaders($key, $value) {
+    $headers = $this->getHttpHeaders();
+    // Add a value to the (potentially) existing header.
+    $values = array();
+    if (!empty($headers[$key])) {
+      $values[] = $headers[$key];
+    }
+    $values[] = $value;
+    $header = implode(', ', $values);
+    $this->setHttpHeaders($key, $header);
   }
 
   /**
@@ -1383,13 +1399,15 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
    *   The path for the resource
    * @param array $options
    *   Array of options as in url().
+   * @param boolean $version_string
+   *   TRUE to add the version string to the URL. FALSE otherwise.
    *
    * @return string
    *   The fully qualified URL.
    *
    * @see url().
    */
-  public function versionedUrl($path = '', $options = array()) {
+  public function versionedUrl($path = '', $options = array(), $version_string = TRUE) {
     // Make the URL absolute by default.
     $options += array('absolute' => TRUE);
     $plugin = $this->getPlugin();
@@ -1399,7 +1417,11 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
     }
 
     $base_path = variable_get('restful_hook_menu_base_path', 'api');
-    $url = $base_path . '/v' . $plugin['major_version'] . '.' . $plugin['minor_version'] . '/' . $plugin['resource'] . '/' . $path;
+    $url = $base_path;
+    if ($version_string) {
+      $url .= '/v' . $plugin['major_version'] . '.' . $plugin['minor_version'];
+    }
+    $url .= '/' . $plugin['resource'] . '/' . $path;
     return url(rtrim($url, '/'), $options);
   }
 

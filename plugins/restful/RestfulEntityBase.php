@@ -271,6 +271,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    * {@inheritdoc}
    */
   public function viewEntity($entity_id) {
+    $entity_id = $this->entityID($entity_id);
     $request = $this->getRequest();
 
     $cached_data = $this->getRenderedCache(array(
@@ -397,7 +398,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
   protected function getValueFromFieldFormatter(\EntityMetadataWrapper $wrapper, \EntityMetadataWrapper $sub_wrapper, array $info) {
     $property = $info['property'];
 
-    if (!field_info_field($property)) {
+    if (!static::propertyIsField($property)) {
       // Property is not a field.
       throw new \RestfulServerConfigurationException(format_string('@property is not a configurable field, so it cannot be processed using field API formatter', array('@property' => $property)));
     }
@@ -565,6 +566,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    * {@inheritdoc}
    */
   protected function updateEntity($entity_id, $null_missing_fields = FALSE) {
+    $entity_id = $this->entityID($entity_id);
     $this->isValidEntity('update', $entity_id);
 
     $wrapper = entity_metadata_wrapper($this->entityType, $entity_id);
@@ -580,7 +582,6 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
 
     return array($this->viewEntity($wrapper->getIdentifier()));
   }
-
 
   /**
    * {@inheritdoc}
@@ -1470,6 +1471,85 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     $cid .= $this->getEntityType();
     $cid .= '::ei:' . $id;
     $this->cacheInvalidate($cid);
+  }
+
+  /**
+   * Get the entity ID based on the ID provided in the request.
+   *
+   * @param mixed $id
+   *   The provided ID.
+   *
+   * @throws RestfulBadRequestException
+   *
+   * @return int
+   *   The entity ID.
+   */
+  protected function entityID($id) {
+    $request = $this->getRequest();
+    if (empty($request['loadByFieldName'])) {
+      // The regular entity ID was provided.
+      return $id;
+    }
+    $public_property_name = $request['loadByFieldName'];
+    // We need to get the internal field/property from the public name.
+    $public_fields = $this->getPublicFields();
+    if ((!$public_field_info = $public_fields[$public_property_name]) || empty($public_field_info['property'])) {
+      throw new \RestfulBadRequestException(format_string('Cannot load an entity using the field "@name"', array(
+        '@name' => $public_property_name,
+      )));
+    }
+    $query = $this->initEntityQuery();
+    // Find out if the provided ID is a Drupal field or an entity property.
+    if (static::propertyIsField($public_field_info['property'])) {
+      $query->fieldCondition($public_field_info['property'], $public_field_info['column'], $id);
+    }
+    else {
+      $query->propertyCondition($public_field_info['property'], $id);
+    }
+
+    // Execute the query and gather the results.
+    $results = $query->execute();
+    if (empty($results[$this->getEntityType()])) {
+      return NULL;
+    }
+
+    // There is nothing that guarantees that there is only one result, since
+    // this is user input data. Return the first ID.
+    $entity_id = key($results[$this->getEntityType()]);
+
+    // REST requires a canonical URL for every resource.
+    $this->addHttpHeaders('Link', $this->versionedUrl($entity_id, array(), FALSE) . '; rel="canonical"');
+
+    return $entity_id;
+  }
+
+  /**
+   * Initialize an EntityFieldQuery (or extending class).
+   *
+   * @return \EntityFieldQuery
+   *   The initialized query with the basics filled in.
+   */
+  protected function initEntityQuery() {
+    $query  = new \EntityFieldQuery();
+    $query->entityCondition('entity_type', $this->getEntityType());
+    if ($bundle = $this->getBundle()) {
+      $query->entityCondition('bundle', $bundle);
+    }
+    return $query;
+  }
+
+  /**
+   * Checks if a given string represents a Field API field.
+   *
+   * @param string $name
+   *   The name of the field/property.
+   *
+   * @return bool
+   *   TRUE if it's a field. FALSE otherwise.
+   */
+  public static function propertyIsField($name) {
+    $field_info = field_info_field($name);
+    return !empty($field_info);
   }
 
 }
