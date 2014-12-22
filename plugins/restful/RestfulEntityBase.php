@@ -515,8 +515,8 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     $bundle_handler = $handlers[$bundle];
 
     // Pipe the parent request to the sub-request.
-    $request = $this->getRequest();
-    $bundle_handler->setRequest($request);
+    $piped_request = $this->getRequestForSubRequest();
+    $bundle_handler->setRequest($piped_request);
     return $bundle_handler->viewEntity($id);
   }
 
