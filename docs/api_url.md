@@ -97,6 +97,35 @@ articles after a certain date:
 curl https://example.com/api/articles?filter[created][value]=1417591992&filter[created][operator]=">="
 ```
 
+## Loading by an alternate ID.
+Some times you need to load an entity by an alternate ID that is not the regular
+entity ID. All that you need to do is provide the alternate ID as the regular
+resource ID and inform that the passed in ID is not the regular entity ID but a
+different field. To do so use the `loadByFieldName` query parameter.
+
+```
+curl -H 'X-API-version: v1.5' https://www.example.org/articles/1234-abcd-5678-efg0?loadByFieldName=uuid
+```
+
+That will load the article node and output it as usual. Since every REST
+resource object has a canonical URL, but we are using a different one, a _Link_
+header will be added to the response with the canonical URL so the consumer can
+use it in future requests.
+
+```
+HTTP/1.1 200 OK
+Date: Mon, 22 Dec 2014 08:08:53 GMT
+Content-Type: application/hal+json; charset=utf-8
+...
+Link: https://www.example.org/articles/12; rel="canonical"
+
+{
+  ...
+}
+```
+
+The only requirement to use this feature is that the value for your
+`loadByFieldName` field needs to be one of your exposed fields.
 
 ## Working with authentication providers
 Restful comes with ``cookie``, ``base_auth`` (user name and password in the HTTP
