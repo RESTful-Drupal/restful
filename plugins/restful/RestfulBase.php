@@ -219,15 +219,6 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
   }
 
   /**
-   * Get the language code.
-   *
-   * @return string
-   */
-  public function getLangCode() {
-    return $this->langcode;
-  }
-
-  /**
    * Gets a request array with the data that should be piped to sub requests.
    */
   protected function getRequestForSubRequest() {
@@ -252,6 +243,14 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
   }
 
 
+  /**
+   * Get the language code.
+   *
+   * @return string
+   */
+  public function getLangCode() {
+    return $this->langcode;
+  }
 
   /**
    * Sets the language code.
