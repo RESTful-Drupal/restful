@@ -273,28 +273,28 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
   /**
    * View an entity.
    *
-   * @param int $entity_id
-   *   The entity ID.
+   * @param $id
+   *   The ID to load the entity.
    *
    * @return array
    *   Array with the public fields populated.
    *
    * @throws Exception
    */
-  abstract public function viewEntity($entity_id);
+  abstract public function viewEntity($id);
 
   /**
    * Get a list of entities based on a list of IDs.
    *
-   * @param string $entity_ids_string
-   *   Coma separated list of entities.
+   * @param string $ids_string
+   *   Coma separated list of ids.
    *
    * @return array
    *   Array of entities, as passed to RestfulEntityBase::viewEntity().
    *
    * @throws RestfulBadRequestException
    */
-  abstract public function viewEntities($entity_ids_string);
+  abstract public function viewEntities($ids_string);
 
   /**
    * Create a new entity.
@@ -310,8 +310,8 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
   /**
    * Update an entity.
    *
-   * @param $entity_id
-   *   The entity ID.
+   * @param $id
+   *   The ID to load the entity.
    * @param bool $null_missing_fields
    *   Determine if properties that are missing form the request array should
    *   be treated as NULL, or should be skipped. Defaults to FALSE, which will
@@ -321,16 +321,16 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
    *   Array with the output of the new entity, passed to
    *   RestfulEntityInterface::viewEntity().
    */
-  abstract protected function updateEntity($entity_id, $null_missing_fields = FALSE);
+  abstract protected function updateEntity($id, $null_missing_fields = FALSE);
 
   /**
    * Delete an entity using DELETE.
    *
    * No result is returned, just the HTTP header is set to 204.
    *
-   * @param $entity_id
-   *   The entity ID.
+   * @param $id
+   *   The ID to load the entity.
    */
-  abstract public function deleteEntity($entity_id);
+  abstract public function deleteEntity($id);
 
 }

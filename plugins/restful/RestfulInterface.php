@@ -113,6 +113,16 @@ interface RestfulInterface {
   public function setHttpHeaders($key, $value);
 
   /**
+   * Add the a value to a multi-value HTTP header.
+   *
+   * @param string $key
+   *   The HTTP header key.
+   * @param string $value
+   *   The HTTP header value.
+   */
+  public function addHttpHeaders($key, $value);
+
+  /**
    * Determine if user can access the handler.
    *
    * @return bool

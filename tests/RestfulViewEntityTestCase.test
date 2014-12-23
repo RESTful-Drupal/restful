@@ -158,6 +158,21 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
     $this->assertEqual($result, $expected_result, 'Entity view has correct result for "main" resource v1.1 with empty entity reference.');
 
 
+    // Load an entity by an alternate field.
+    $entity4 = entity_create('entity_test', array('name' => 'main', 'uid' => $user1->uid));
+    $wrapper = entity_metadata_wrapper('entity_test', $entity4);
+    $text = $this->randomName();
+    $wrapper->text_single->set($text);
+    $wrapper->save();
+
+    $request = array('loadByFieldName' => 'text_single');
+    $result = $handler->get($text, $request);
+    $this->assertNotNull($result[0]);
+
+    // Make sure canonical header is added.
+    $headers = $handler->getHttpHeaders();
+    $this->assertEqual($headers['Link'], $handler->versionedUrl($wrapper->getIdentifier(), array(), FALSE) . '; rel="canonical"');
+
     // v1.2 - "callback" and "process callback".
     $handler = restful_get_restful_handler('main', 1, 2);
     $base_expected_result['self'] = $handler->versionedUrl($id);

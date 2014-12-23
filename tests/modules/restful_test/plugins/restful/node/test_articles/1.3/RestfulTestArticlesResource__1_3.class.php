@@ -12,11 +12,11 @@ class RestfulTestArticlesResource__1_3 extends RestfulEntityBaseNode {
    */
   public static function controllersInfo() {
     $info = parent::controllersInfo();
-    $info['^(\d+,)*\d+$'][\RestfulInterface::GET] = array(
+    $info['^.*$'][\RestfulInterface::GET] = array(
       'callback' => 'viewEntities',
       'access callback' => 'accessViewEntityFalse',
     );
-    $info['^(\d+,)*\d+$'][\RestfulInterface::HEAD] = array(
+    $info['^.*$'][\RestfulInterface::HEAD] = array(
       'callback' => 'viewEntities',
       'access callback' => 'accessViewEntityTrue',
     );
