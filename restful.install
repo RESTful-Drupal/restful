@@ -89,4 +89,5 @@ function restful_uninstall() {
   variable_del('restful_enable_users_resource');
 
   variable_del('restful_render_cache');
+  variable_del('restful_skip_basic_auth');
 }

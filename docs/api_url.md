@@ -143,6 +143,9 @@ GET request.
 See [this](https://github.com/Gizra/angular-restful-auth) AngularJs example that shows a login from a fully decoupled web app
 to a Drupal backend.
 
+Note: If you use basic auth under .htaccess password you might hit a flood exception, as the server is sending the .htaccess user name and password
+ as the authentication. In such a case you may set the ``restful_skip_basic_auth`` to TRUE, in order to avoid using it. This will allow
+ enabling and disabling the basic auth on different environments.
 
 ```bash
 # (Change username and password)
