@@ -271,7 +271,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    * {@inheritdoc}
    */
   public function viewEntity($id) {
-    $entity_id = $this->entityId($id);
+    $entity_id = $this->getEntityIdByFieldId($id);
     $request = $this->getRequest();
 
     $cached_data = $this->getRenderedCache(array(
@@ -566,7 +566,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    * {@inheritdoc}
    */
   protected function updateEntity($id, $null_missing_fields = FALSE) {
-    $entity_id = $this->entityId($id);
+    $entity_id = $this->getEntityIdByFieldId($id);
     $this->isValidEntity('update', $entity_id);
 
     $wrapper = entity_metadata_wrapper($this->entityType, $entity_id);
@@ -1476,15 +1476,19 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
   /**
    * Get the entity ID based on the ID provided in the request.
    *
+   * As any field may be used as the ID, we convert it to the numeric internal
+   * ID of the entity
+   *
    * @param mixed $id
    *   The provided ID.
    *
    * @throws RestfulBadRequestException
+   * @throws RestfulUnprocessableEntityException
    *
    * @return int
    *   The entity ID.
    */
-  protected function entityId($id) {
+  protected function getEntityIdByFieldId($id) {
     $request = $this->getRequest();
     if (empty($request['loadByFieldName'])) {
       // The regular entity ID was provided.
@@ -1498,7 +1502,8 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
         '@name' => $public_property_name,
       )));
     }
-    $query = $this->initEntityQuery();
+    $query = $this->getEntityFieldQuery();
+    $query->range(0, 1);
     // Find out if the provided ID is a Drupal field or an entity property.
     if (static::propertyIsField($public_field_info['property'])) {
       $query->fieldCondition($public_field_info['property'], $public_field_info['column'], $id);
@@ -1508,9 +1513,9 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     }
 
     // Execute the query and gather the results.
-    $results = $query->execute();
-    if (empty($results[$this->getEntityType()])) {
-      throw new RestfulUnprocessableEntityException(format_string('The entity ID @id for @resource does not exist loaded by @name.', array(
+    $result = $query->execute();
+    if (empty($result[$this->getEntityType()])) {
+      throw new RestfulUnprocessableEntityException(format_string('The entity ID @id by @name for @resource cannot be loaded.', array(
         '@id' => $id,
         '@resource' => $this->getPluginKey('label'),
         '@name' => $public_property_name,
@@ -1519,7 +1524,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
 
     // There is nothing that guarantees that there is only one result, since
     // this is user input data. Return the first ID.
-    $entity_id = key($results[$this->getEntityType()]);
+    $entity_id = key($result[$this->getEntityType()]);
 
     // REST requires a canonical URL for every resource.
     $this->addHttpHeaders('Link', $this->versionedUrl($entity_id, array(), FALSE) . '; rel="canonical"');
@@ -1533,7 +1538,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    * @return \EntityFieldQuery
    *   The initialized query with the basics filled in.
    */
-  protected function initEntityQuery() {
+  protected function getEntityFieldQuery() {
     $query  = new \EntityFieldQuery();
     $query->entityCondition('entity_type', $this->getEntityType());
     if ($bundle = $this->getBundle()) {
