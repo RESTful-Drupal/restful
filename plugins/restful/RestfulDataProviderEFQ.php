@@ -364,8 +364,8 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
    *   The object that inherits from \EntityFieldQuery.
    */
   protected function EFQObject() {
-    $ef_class = $this->EFQClass;
-    return new $ef_class();
+    $efq_class = $this->EFQClass;
+    return new $efq_class();
   }
 
 }
