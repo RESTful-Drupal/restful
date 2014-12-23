@@ -137,11 +137,19 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
     $public_fields = $this->getPublicFields();
     foreach ($this->parseRequestForListFilter() as $filter) {
       // Determine if filtering is by field or property.
-      if (empty($public_fields[$filter['public_field']]['column'])) {
-        $query->propertyCondition($public_fields[$filter['public_field']]['property'], $filter['value'], $filter['operator']);
+      $property_name = $public_fields[$filter['public_field']]['property'];
+      if (field_info_field($property_name)) {
+        $query->fieldCondition($public_fields[$filter['public_field']]['property'], $public_fields[$filter['public_field']]['column'], $filter['value'], $filter['operator']);
       }
       else {
-        $query->fieldCondition($public_fields[$filter['public_field']]['property'], $public_fields[$filter['public_field']]['column'], $filter['value'], $filter['operator']);
+        // The "property" defined in the public field is actually the property
+        // of the entity metadata wrapper. Sometimes that property can be a
+        // different name than the column in the DB. For example, for nodes the
+        // "uid" property is mapped in entity metadata wrapper as "author", so
+        // we make sure to get the real column name.
+        $property_info = entity_get_property_info($this->getEntityType());
+        $column = $property_info['properties'][$property_name]['schema field'];
+        $query->propertyCondition($column, $filter['value'], $filter['operator']);
       }
     }
   }
