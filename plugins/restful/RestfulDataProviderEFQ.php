@@ -186,6 +186,13 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
 
     $this->queryForListFilter($query);
 
+    // Add custom filters.
+    if($conditions = $this->getQueryForList()->fieldConditions) {
+      foreach($conditions as $condition) {
+        $query->fieldCondition($condition['field']['field_name'], $condition['column'], $condition['value']);
+      }
+    }
+
     return $query->count();
   }
 
