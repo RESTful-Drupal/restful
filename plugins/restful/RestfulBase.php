@@ -76,6 +76,13 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
   protected $valueMetadata = array();
 
   /**
+   * Determines the language of the items that should be returned.
+   *
+   * @var string
+   */
+  protected $langcode;
+
+  /**
    * Static cache controller.
    *
    * @var \RestfulStaticCacheController
@@ -99,6 +106,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
       if (in_array($param, array(
         '__application',
         'filter',
+        'loadByFieldName',
         'page',
         'q',
         'range',
@@ -212,6 +220,53 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
   }
 
   /**
+   * Gets a request array with the data that should be piped to sub requests.
+   *
+   * @return array
+   *   The request array to be piped.
+   */
+  protected function getRequestForSubRequest() {
+    $piped_request = array();
+
+    foreach ($this->getRequest() as $key => $value) {
+      if (in_array($key, array(
+          'filter',
+          'page',
+          'q',
+          'range',
+          'sort',
+          'fields',
+        ))) {
+        continue;
+      }
+
+      $piped_request[$key] = $value;
+    }
+
+    return $piped_request;
+  }
+
+
+  /**
+   * Get the language code.
+   *
+   * @return string
+   */
+  public function getLangCode() {
+    return $this->langcode;
+  }
+
+  /**
+   * Sets the language code.
+   *
+   * @param string $langcode
+   *   The language code.
+   */
+  public function setLangCode($langcode) {
+    $this->langcode = $langcode;
+  }
+
+  /**
    * Set the request array.
    *
    * @param array $request
@@ -291,6 +346,21 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function addHttpHeaders($key, $value) {
+    $headers = $this->getHttpHeaders();
+    // Add a value to the (potentially) existing header.
+    $values = array();
+    if (!empty($headers[$key])) {
+      $values[] = $headers[$key];
+    }
+    $values[] = $value;
+    $header = implode(', ', $values);
+    $this->setHttpHeaders($key, $header);
+  }
+
+  /**
    * Setter for $authenticationManager.
    *
    * @param \RestfulAuthenticationManager $authenticationManager
@@ -345,7 +415,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
    * @param DrupalCacheInterface $cache_controller
    *   (optional) Injected cache backend.
    */
-  public function __construct(array $plugin, \RestfulAuthenticationManager $auth_manager = NULL, \DrupalCacheInterface $cache_controller = NULL) {
+  public function __construct(array $plugin, \RestfulAuthenticationManager $auth_manager = NULL, \DrupalCacheInterface $cache_controller = NULL, $langcode = NULL) {
     parent::__construct($plugin);
     $this->authenticationManager = $auth_manager ? $auth_manager : new \RestfulAuthenticationManager();
     $this->cacheController = $cache_controller ? $cache_controller : $this->newCacheObject();
@@ -353,6 +423,13 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
       $this->setRateLimitManager(new \RestfulRateLimitManager($this->getPluginKey('resource'), $rate_limit));
     }
     $this->staticCache = new \RestfulStaticCacheController();
+    if (is_null($langcode)) {
+      global $language;
+      $this->langcode = $language->language;
+    }
+    else {
+      $this->langcode = $langcode;
+    }
   }
 
   /**
@@ -1267,7 +1344,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
   protected function accessByAllowOrigin() {
     // Check the referrer header and return false if it does not match the
     // Access-Control-Allow-Origin
-    $referer = empty($_SERVER['HTTP_REFERER']) ? '' : $_SERVER['HTTP_REFERER'];
+    $referer = \RestfulManager::getRequestHttpHeader('Referer', '');
     // If there is no allow_origin assume that it is allowed. Also, if there is
     // no referer then grant access since the request probably was not
     // originated from a browser.
@@ -1333,10 +1410,11 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
       return $version;
     }
     // If there is no version in the URL check the header.
-    if (!empty($_SERVER['HTTP_X_API_VERSION'])) {
-      $version =  static::parseVersionString($_SERVER['HTTP_X_API_VERSION'], $resource_name);
+    if ($api_version = \RestfulManager::getRequestHttpHeader('X-API-Version')) {
+      $version =  static::parseVersionString($api_version, $resource_name);
       return $version;
     }
+
     // If there is no version negotiation information return the latest version.
     $version = static::getResourceLastVersion($resource_name);
     return $version;
@@ -1349,13 +1427,15 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
    *   The path for the resource
    * @param array $options
    *   Array of options as in url().
+   * @param boolean $version_string
+   *   TRUE to add the version string to the URL. FALSE otherwise.
    *
    * @return string
    *   The fully qualified URL.
    *
    * @see url().
    */
-  public function versionedUrl($path = '', $options = array()) {
+  public function versionedUrl($path = '', $options = array(), $version_string = TRUE) {
     // Make the URL absolute by default.
     $options += array('absolute' => TRUE);
     $plugin = $this->getPlugin();
@@ -1365,7 +1445,11 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
     }
 
     $base_path = variable_get('restful_hook_menu_base_path', 'api');
-    $url = $base_path . '/v' . $plugin['major_version'] . '.' . $plugin['minor_version'] . '/' . $plugin['resource'] . '/' . $path;
+    $url = $base_path;
+    if ($version_string) {
+      $url .= '/v' . $plugin['major_version'] . '.' . $plugin['minor_version'];
+    }
+    $url .= '/' . $plugin['resource'] . '/' . $path;
     return url(rtrim($url, '/'), $options);
   }
 

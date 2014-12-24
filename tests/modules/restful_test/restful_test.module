@@ -391,6 +391,33 @@ function restful_test_create_vocabulary_and_terms($machine_name = 'test_vocab', 
 }
 
 /**
+ * Helper function; Create a node with taxonomy terms.
+ *
+ * @return object
+ *   The saved node.
+ */
+function restful_test_create_node_with_tags() {
+  $values = array('type' => 'article');
+  $node = entity_create('node', $values);
+
+  $vocabulary = taxonomy_vocabulary_machine_name_load('tags');
+
+  // Create a random number of tags for the created node.
+  for ($index = 0; $index < mt_rand(1, 10); $index++) {
+    $term = (object) array(
+      'vid' => $vocabulary->vid,
+      'name' => 'term ' . $vocabulary->vid . '::' . $index,
+    );
+    taxonomy_term_save($term);
+    $terms[] = $term;
+    $node->field_tags[LANGUAGE_NONE][$index]['tid'] = $term->tid;
+  }
+  node_save($node);
+
+  return $node;
+}
+
+/**
  * Instead of implementing hook_schema use this helper function.
  *
  * In order to not to delay all tests using the test module. Only create the
@@ -432,4 +459,41 @@ function _restful_test_schema() {
     'primary key' => array('id'),
   );
   return $schema;
+}
+
+/**
+ * Implements hook_entity_info().
+ */
+function restful_test_entity_info() {
+  return array(
+    'restful_test_translatable_entity' => array(
+      'label' => t('Translatable Test Entity'),
+      'plural label' => t('Translatable Test Entities'),
+      'description' => t('An entity type used by the Restful tests.'),
+      'entity class' => 'Entity',
+      'controller class' => 'EntityAPIController',
+      'base table' => 'restful_test_translatable_entity',
+      'fieldable' => TRUE,
+      'entity keys' => array(
+        'id' => 'pid',
+        'bundle' => 'name',
+        'label' => 'label',
+      ),
+      // Make use the class' label() and uri() implementation by default.
+      'label callback' => 'entity_class_label',
+      'uri callback' => 'entity_class_uri',
+      'bundles' => array(
+        'restful_test_translatable_entity' => array(
+          'label' => 'Translatable Test Entity'
+        )
+      ),
+      'bundle keys' => array(
+        'bundle' => 'name',
+      ),
+      'module' => 'restful_test',
+      'translation' => array(
+        'locale' => TRUE,
+      ),
+    ),
+  );
 }

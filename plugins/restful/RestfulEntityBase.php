@@ -30,6 +30,9 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    *   content. This can be used for example on a text field with filtered text
    *   input format where we would need to do $wrapper->body->value->value().
    *   Defaults to FALSE.
+   * - "formatter": Used for rendering the value of a configurable field using
+   *   Drupal field API's formatter. The value is the $display value that is
+   *   passed to field_view_field().
    * - "wrapper_method": The wrapper's method name to perform on the field.
    *   This can be used for example to get the entity label, by setting the
    *   value to "label". Defaults to "value".
@@ -83,7 +86,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
         // POST
         \RestfulInterface::POST => 'createEntity',
       ),
-      '^(\d+,)*\d+$' => array(
+      '^.*$' => array(
         \RestfulInterface::GET => 'viewEntities',
         \RestfulInterface::HEAD => 'viewEntities',
         \RestfulInterface::PUT => 'putEntity',
@@ -142,12 +145,12 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
   /**
    * {@inheritdoc}
    */
-  public function viewEntities($entity_ids_string) {
-    $entity_ids = array_unique(array_filter(explode(',', $entity_ids_string)));
+  public function viewEntities($ids_string) {
+    $ids = array_unique(array_filter(explode(',', $ids_string)));
     $output = array();
 
-    foreach ($entity_ids as $entity_id) {
-      $output[] = $this->viewEntity($entity_id);
+    foreach ($ids as $id) {
+      $output[] = $this->viewEntity($id);
     }
     return $output;
   }
@@ -214,7 +217,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     $string = drupal_strtolower($request['autocomplete']['string']);
     $operator = !empty($request['autocomplete']['operator']) ? $request['autocomplete']['operator'] : $autocomplete_options['operator'];
 
-    $query = new EntityFieldQuery();
+    $query = $this->EFQObject();
 
     $query->entityCondition('entity_type', $entity_type);
     if ($bundles = $this->getBundlesForAutocomplete()) {
@@ -267,7 +270,8 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
   /**
    * {@inheritdoc}
    */
-  public function viewEntity($entity_id) {
+  public function viewEntity($id) {
+    $entity_id = $this->getEntityIdByFieldId($id);
     $request = $this->getRequest();
 
     $cached_data = $this->getRenderedCache(array(
@@ -283,6 +287,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     }
 
     $wrapper = entity_metadata_wrapper($this->entityType, $entity_id);
+    $wrapper->language($this->getLangCode());
     $values = array();
 
     $limit_fields = !empty($request['fields']) ? explode(',', $request['fields']) : array();
@@ -301,7 +306,6 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       else {
         // Exposing an entity field.
         $property = $info['property'];
-
         $sub_wrapper = $info['wrapper_method_on_entity'] ? $wrapper : $wrapper->{$property};
 
         // Check user has access to the property.
@@ -309,40 +313,21 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
           continue;
         }
 
-        $method = $info['wrapper_method'] ? $info['wrapper_method'] : NULL;
-        $resource = $info['resource'] ? $info['resource'] : NULL;
-
-        if ($sub_wrapper instanceof EntityListWrapper) {
-          // Multiple value.
-          foreach ($sub_wrapper as $item_wrapper) {
-            if ($info['sub_property'] && $item_wrapper->value()) {
-              $item_wrapper = $item_wrapper->{$info['sub_property']};
+        if (empty($info['formatter'])) {
+          if ($sub_wrapper instanceof EntityListWrapper) {
+            // Multiple values.
+            foreach ($sub_wrapper as $item_wrapper) {
+              $value[] = $this->getValueFromProperty($wrapper, $item_wrapper, $info, $public_field_name);
             }
-
-            if ($resource) {
-              if ($value_from_resource = $this->getValueFromResource($item_wrapper, $property, $resource, $public_field_name, $wrapper->getIdentifier())) {
-                $value[] = $value_from_resource;
-              }
-            }
-            else {
-              // Wrapper method.
-              $value[] = $item_wrapper->{$method}();
-            }
+          }
+          else {
+            // Single value.
+            $value = $this->getValueFromProperty($wrapper, $sub_wrapper, $info, $public_field_name);
           }
         }
         else {
-          // Single value.
-          if ($info['sub_property'] && $sub_wrapper->value()) {
-            $sub_wrapper = $sub_wrapper->{$info['sub_property']};
-          }
-
-          if ($resource) {
-            $value = $this->getValueFromResource($sub_wrapper, $property, $resource, $public_field_name, $wrapper->getIdentifier());
-          }
-          else {
-            // Wrapper method.
-            $value = $sub_wrapper->{$method}();
-          }
+          // Get value from field formatter.
+          $value = $this->getValueFromFieldFormatter($wrapper, $sub_wrapper, $info);
         }
       }
 
@@ -360,6 +345,84 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       'ei' => $entity_id,
     ));
     return $values;
+  }
+
+  /**
+   * Get value from a property.
+   *
+   * @param EntityMetadataWrapper $wrapper
+   *   The wrapped entity.
+   * @param EntityMetadataWrapper $sub_wrapper
+   *   The wrapped property.
+   * @param array $info
+   *   The public field info array.
+   * @param $public_field_name
+   *   The field name.
+   *
+   * @return mixed
+   *   A single or multiple values.
+   */
+  protected function getValueFromProperty(\EntityMetadataWrapper $wrapper, \EntityMetadataWrapper $sub_wrapper, array $info, $public_field_name) {
+    $property = $info['property'];
+    $method = $info['wrapper_method'];
+    $resource = $info['resource'] ?: NULL;
+
+    if ($info['sub_property'] && $sub_wrapper->value()) {
+      $sub_wrapper = $sub_wrapper->{$info['sub_property']};
+    }
+
+    if ($resource) {
+      $value = $this->getValueFromResource($sub_wrapper, $property, $resource, $public_field_name, $wrapper->getIdentifier());
+    }
+    else {
+      // Wrapper method.
+      $value = $sub_wrapper->{$method}();
+    }
+
+    return $value;
+  }
+
+  /**
+   * Get value from a field rendered by Drupal field API's formatter.
+   *
+   * @param EntityMetadataWrapper $wrapper
+   *   The wrapped entity.
+   * @param EntityMetadataWrapper $sub_wrapper
+   *   The wrapped property.
+   * @param array $info
+   *   The public field info array.
+   *
+   * @return mixed
+   *   A single or multiple values.
+   */
+  protected function getValueFromFieldFormatter(\EntityMetadataWrapper $wrapper, \EntityMetadataWrapper $sub_wrapper, array $info) {
+    $property = $info['property'];
+
+    if (!static::propertyIsField($property)) {
+      // Property is not a field.
+      throw new \RestfulServerConfigurationException(format_string('@property is not a configurable field, so it cannot be processed using field API formatter', array('@property' => $property)));
+    }
+
+    // Get values from the formatter.
+    $output = field_view_field($this->getEntityType(), $wrapper->value(), $property, $info['formatter']);
+
+    // Unset the theme, as we just want to get the value from the formatter,
+    // without the wrapping HTML.
+    unset($output['#theme']);
+
+
+    if ($sub_wrapper instanceof EntityListWrapper) {
+      // Multiple values.
+      foreach (element_children($output) as $delta) {
+        $value[] = drupal_render($output[$delta]);
+      }
+    }
+    else {
+      // Single value.
+      $value = drupal_render($output);
+    }
+
+    return $value;
   }
 
   /**
@@ -451,6 +514,10 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       $handlers[$bundle] = restful_get_restful_handler($resource[$bundle]['name'], $resource[$bundle]['major_version'], $resource[$bundle]['minor_version']);
     }
     $bundle_handler = $handlers[$bundle];
+
+    // Pipe the parent request to the sub-request.
+    $piped_request = $this->getRequestForSubRequest();
+    $bundle_handler->setRequest($piped_request);
     return $bundle_handler->viewEntity($id);
   }
 
@@ -502,7 +569,8 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
   /**
    * {@inheritdoc}
    */
-  protected function updateEntity($entity_id, $null_missing_fields = FALSE) {
+  protected function updateEntity($id, $null_missing_fields = FALSE) {
+    $entity_id = $this->getEntityIdByFieldId($id);
     $this->isValidEntity('update', $entity_id);
 
     $wrapper = entity_metadata_wrapper($this->entityType, $entity_id);
@@ -518,7 +586,6 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
 
     return array($this->viewEntity($wrapper->getIdentifier()));
   }
-
 
   /**
    * {@inheritdoc}
@@ -1130,6 +1197,16 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       ),
     );
 
+    if ($view_mode_info = $this->getPluginKey('view_mode')) {
+      if (empty($view_mode_info['name'])) {
+        throw new \RestfulServerConfigurationException('View mode not found.');
+      }
+      $view_mode_handler = new \RestfulEntityViewMode($this->getEntityType(), $this->getBundle());
+
+      $public_fields += $view_mode_handler->mapFields($view_mode_info['name'], $view_mode_info['field_map']);
+      return $public_fields;
+    }
+
     if (!empty($entity_info['entity keys']['label'])) {
       $public_fields['label']['property'] = $entity_info['entity keys']['label'];
     }
@@ -1163,6 +1240,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
         'sub_property' => FALSE,
         'wrapper_method' => 'value',
         'wrapper_method_on_entity' => FALSE,
+        'formatter' => FALSE,
       );
 
       if ($field = field_info_field($info['property'])) {
@@ -1397,6 +1475,79 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     $cid .= $this->getEntityType();
     $cid .= '::ei:' . $id;
     $this->cacheInvalidate($cid);
+  }
+
+  /**
+   * Get the entity ID based on the ID provided in the request.
+   *
+   * As any field may be used as the ID, we convert it to the numeric internal
+   * ID of the entity
+   *
+   * @param mixed $id
+   *   The provided ID.
+   *
+   * @throws RestfulBadRequestException
+   * @throws RestfulUnprocessableEntityException
+   *
+   * @return int
+   *   The entity ID.
+   */
+  protected function getEntityIdByFieldId($id) {
+    $request = $this->getRequest();
+    if (empty($request['loadByFieldName'])) {
+      // The regular entity ID was provided.
+      return $id;
+    }
+    $public_property_name = $request['loadByFieldName'];
+    // We need to get the internal field/property from the public name.
+    $public_fields = $this->getPublicFields();
+    if ((!$public_field_info = $public_fields[$public_property_name]) || empty($public_field_info['property'])) {
+      throw new \RestfulBadRequestException(format_string('Cannot load an entity using the field "@name"', array(
+        '@name' => $public_property_name,
+      )));
+    }
+    $query = $this->getEntityFieldQuery();
+    $query->range(0, 1);
+    // Find out if the provided ID is a Drupal field or an entity property.
+    if (static::propertyIsField($public_field_info['property'])) {
+      $query->fieldCondition($public_field_info['property'], $public_field_info['column'], $id);
+    }
+    else {
+      $query->propertyCondition($public_field_info['property'], $id);
+    }
+
+    // Execute the query and gather the results.
+    $result = $query->execute();
+    if (empty($result[$this->getEntityType()])) {
+      throw new RestfulUnprocessableEntityException(format_string('The entity ID @id by @name for @resource cannot be loaded.', array(
+        '@id' => $id,
+        '@resource' => $this->getPluginKey('label'),
+        '@name' => $public_property_name,
+      )));
+    }
+
+    // There is nothing that guarantees that there is only one result, since
+    // this is user input data. Return the first ID.
+    $entity_id = key($result[$this->getEntityType()]);
+
+    // REST requires a canonical URL for every resource.
+    $this->addHttpHeaders('Link', $this->versionedUrl($entity_id, array(), FALSE) . '; rel="canonical"');
+
+    return $entity_id;
+  }
+
+  /**
+   * Checks if a given string represents a Field API field.
+   *
+   * @param string $name
+   *   The name of the field/property.
+   *
+   * @return bool
+   *   TRUE if it's a field. FALSE otherwise.
+   */
+  public static function propertyIsField($name) {
+    $field_info = field_info_field($name);
+    return !empty($field_info);
   }
 
 }

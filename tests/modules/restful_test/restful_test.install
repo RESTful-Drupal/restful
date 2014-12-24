@@ -1,0 +1,58 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the entity_test module.
+ */
+
+/**
+ * Implements hook_uninstall().
+ */
+function restful_test_uninstall() {
+  field_attach_delete_bundle('restful_test_translatable_entity', 'restful_test_translatable_entity');
+}
+
+/**
+ * Implements hook_schema().
+ */
+function restful_test_schema() {
+  $schema['restful_test_translatable_entity'] = array(
+    'description' => 'Stores restful_test_translatable_entity items.',
+    'fields' => array(
+      'pid' => array(
+        'type' => 'serial',
+        'not null' => TRUE,
+        'description' => 'Primary Key: Unique restful_test_translatable_entity item ID.',
+      ),
+      'name' => array(
+        'description' => 'The name of the restful_test_translatable_entity.',
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'uid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+        'default' => NULL,
+        'description' => "The {users}.uid of the associated user.",
+      ),
+      'label' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+    ),
+    'indexes' => array(
+      'uid' => array('uid'),
+    ),
+    'foreign keys' => array(
+      'uid' => array('users' => 'uid'),
+    ),
+    'primary key' => array('pid'),
+  );
+
+  return $schema;
+}

@@ -300,7 +300,7 @@ function restful_get_restful_handler_by_name($plugin_name) {
   ctools_include('plugins');
   $plugin = ctools_get_plugins('restful', 'restful', $plugin_name);
   if (!$class = ctools_plugin_load_class('restful', 'restful', $plugin_name, 'class')) {
-    throw new \RestfulServiceUnavailable('Restful plugin class not found.');
+    throw new \RestfulServiceUnavailable(format_string('Restful plugin class (@plugin) was not found.', array('@plugin' => $plugin_name)));
   }
   $handler = new $class($plugin);
   // If the restful plugin needs authentication load the corresponding
@@ -335,7 +335,7 @@ function restful_get_restful_handler_by_name($plugin_name) {
 function restful_get_authentication_handler($auth_plugin_name) {
   $auth_plugin = restful_get_authentication_plugin($auth_plugin_name);
   if (!$auth_class = ctools_plugin_get_class($auth_plugin, 'class')) {
-    throw new \RestfulServiceUnavailable('Authentication plugin class not found.');
+    throw new \RestfulServiceUnavailable(format_string('Authentication plugin class (@plugin) was not found.', array('@plugin' => $auth_plugin_name)));
   }
   return new $auth_class($auth_plugin);
 }
@@ -357,7 +357,7 @@ function restful_get_authentication_handler($auth_plugin_name) {
 function restful_get_formatter_handler($formatter_plugin_name, $restful_handler) {
   $formatter_plugin = restful_get_formatter_plugin($formatter_plugin_name);
   if (!$formatter_class = ctools_plugin_get_class($formatter_plugin, 'class')) {
-    throw new \RestfulServiceUnavailable('Formatter plugin class not found.');
+    throw new \RestfulServiceUnavailable(format_string('Formatter plugin class (@plugin) was not found.', array('@plugin' => $formatter_plugin_name)));
   }
   return new $formatter_class($formatter_plugin, $restful_handler);
 }
@@ -417,8 +417,8 @@ function restful_menu_access_callback($resource_name, $version = NULL) {
   }
 
   $method = strtoupper($_SERVER['REQUEST_METHOD']);
-  if ($method == \RestfulInterface::POST && !empty($_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE'])) {
-    $method = strtoupper($_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE']);
+  if ($method == \RestfulInterface::POST && \RestfulManager::getRequestHttpHeader('X-HTTP-Method-Override')) {
+    $method = strtoupper(\RestfulManager::getRequestHttpHeader('X-HTTP-Method-Override'));
   }
 
   if (!\RestfulBase::isValidMethod($method, FALSE)) {
@@ -460,7 +460,7 @@ function restful_menu_process_callback($resource_name, $version = NULL) {
   $headers = $handler->getHttpHeaders();
   $vary = empty($headers['Vary']) ? '' : $headers['Vary'];
   $additional_variations = array($vary, 'Accept');
-  if (!empty($_SERVER['HTTP_X_API_VERSION'])) {
+  if (\RestfulManager::getRequestHttpHeader('X-API-Version')) {
     $additional_variations[] = 'X-API-Version';
   }
   if ($additional_variations) {
@@ -476,8 +476,8 @@ function restful_menu_process_callback($resource_name, $version = NULL) {
 
   $method = strtoupper($_SERVER['REQUEST_METHOD']);
 
-  if ($method == \RestfulInterface::POST && !empty($_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE'])) {
-    $method = strtoupper($_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE']);
+  if ($method == \RestfulInterface::POST && \RestfulManager::getRequestHttpHeader('X-HTTP-Method-Override')) {
+    $method = strtoupper(\RestfulManager::getRequestHttpHeader('X-HTTP-Method-Override'));
   }
 
   $method = strtolower($method);
@@ -553,7 +553,7 @@ function restful_parse_request() {
   // CURL";
   $request['__application'] = array(
     'rest_call' => TRUE,
-    'csrf_token' => !empty($_SERVER['HTTP_X_CSRF_TOKEN']) ? $_SERVER['HTTP_X_CSRF_TOKEN'] : NULL,
+    'csrf_token' => \RestfulManager::getRequestHttpHeader('X-CSRF-Token'),
   );
 
   // Allow implemeting modules to alter the request.

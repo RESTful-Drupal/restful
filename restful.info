@@ -33,6 +33,7 @@ files[] = plugins/restful/RestfulFilesUpload.php
 files[] = plugins/restful/RestfulInterface.php
 
 ; Includes
+files[] = includes/RestfulEntityViewMode.php
 files[] = includes/RestfulManager.php
 files[] = includes/RestfulPluginBase.php
 files[] = includes/RestfulPluginInterface.php
@@ -80,4 +81,6 @@ files[] = tests/RestfulUpdateEntityTestCase.test
 files[] = tests/RestfulSubResourcesCreateEntityTestCase.test
 files[] = tests/RestfulUpdateEntityCurlTestCase.test
 files[] = tests/RestfulUserLoginCookieTestCase.test
+files[] = tests/RestfulViewEntityMultiLingualTestCase.test
 files[] = tests/RestfulViewEntityTestCase.test
+files[] = tests/RestfulViewModeAndFormatterTestCase.test

@@ -11,6 +11,11 @@ class RestfulAuthenticationBasic extends RestfulAuthenticationBase implements Re
    * {@inheritdoc}
    */
   public function applies(array $request = array(), $method = \RestfulInterface::GET) {
+    if (variable_get('restful_skip_basic_auth', FALSE)) {
+      // Skip basic auth. The variable may be set if .htaccess password is set
+      // on the server.
+      return;
+    }
     list($username, $password) = $this->getCredentials();
     return isset($username) && isset($password);
   }

@@ -104,6 +104,10 @@ class RestfulManager {
    * - url_params: Associative array to configure if the "sort", "filter" and
    *   "range" url parameters should be allowed. Defaults to TRUE in all of
    *   them.
+   * - view_mode: Associative array that contains two keys:
+   *   - name: The name of the view mode to read from to add the public fields.
+   *   - field_map: An associative array that pairs the name of the Drupal field
+   *     with the name of the exposed (public) field.
    */
   public static function pluginProcessRestful($plugin, $info) {
     $plugin += array(
@@ -300,6 +304,34 @@ class RestfulManager {
         $handler->cacheInvalidate($version_cid . '::' . $cid);
       }
     }
+  }
+
+  /**
+   * Get the value from an HTTP header.
+   *
+   * As Apache may be strict with variables with underscore, we check also
+   * the headers directly from Apache, if they are not present in the $_SEVER
+   *
+   * @param string $key
+   *   The key to use.
+   * @param string $default_value
+   *   The default value to return if no value exists. Defaults to NULL.
+   *
+   * @return string
+   *   The value in the HTTP header if exists, other the value of the given
+   *   "default value".
+   */
+  public static function getRequestHttpHeader($key, $default_value = NULL) {
+    $capital_name = 'HTTP_' . strtoupper(str_replace('-', '_', $key));
+
+    $value = !empty($_SERVER[$capital_name]) ? $_SERVER[$capital_name] : $default_value;
+
+    if (!$value && function_exists('apache_request_headers')) {
+      $headers = apache_request_headers();
+      $value = !empty($headers[$key]) ? $headers[$key] : $default_value;
+    }
+
+    return $value;
   }
 
   /**

@@ -76,6 +76,8 @@ interface RestfulInterface {
   /**
    * Return the properties that should be public.
    *
+   * @throws \RestfulEntityViewMode
+   *
    * @return array
    */
   public function publicFieldsInfo();
@@ -109,6 +111,16 @@ interface RestfulInterface {
    *   The HTTP header value.
    */
   public function setHttpHeaders($key, $value);
+
+  /**
+   * Add the a value to a multi-value HTTP header.
+   *
+   * @param string $key
+   *   The HTTP header key.
+   * @param string $value
+   *   The HTTP header value.
+   */
+  public function addHttpHeaders($key, $value);
 
   /**
    * Determine if user can access the handler.

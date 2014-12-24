@@ -51,8 +51,8 @@ class RestfulDataProviderCToolsPluginsTestCase extends DrupalWebTestCase {
     );
     $result = $handler->get('', $request);
 
-    $this->assertEqual(count($result), 3, 'Discovery filtered resources correctly.');
-    $this->assertTrue($result[0]['name'] = 'articles_1_6' && $result[1]['name'] = 'articles_1_5' && $result[2]['name'] = 'articles_1_4', 'Discovery sorted resources correctly.');
+    $this->assertEqual(count($result), 4, 'Discovery filtered resources correctly.');
+    $this->assertTrue($result[0]['name'] = 'articles_1_7' && $result[1]['name'] = 'articles_1_6' && $result[2]['name'] = 'articles_1_5' && $result[2]['name'] = 'articles_1_4', 'Discovery sorted resources correctly.');
 
     // Assert only latest resources are shown by default.
     $handler = restful_get_restful_handler('discovery');
