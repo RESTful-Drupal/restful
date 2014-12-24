@@ -359,6 +359,27 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     $result = $this->httpRequest('api/v1.0/articles/1', \RestfulInterface::GET, $query);
     $this->assertEqual($result['code'], '200', 'Invalid filter key was ignored on non-list query.');
 
+    // Test multiple filters on the same field.
+    $request = array('filter' => array('integer_single' => array(
+      'value' => array(1, 4),
+      'operator' => array('>', '<>'),
+    )));
+    $result = $handler->get('', $request);
+    $this->assertEqual($nodes['another abc'], $result[0]['id']);
+
+    $request = array('filter' => array('integer_single' => array(
+      'value' => array(1, 5),
+      'operator' => array('>', '<>'),
+    )));
+    $result = $handler->get('', $request);
+    $this->assertEqual($result, array());
+
+    $request = array('filter' => array('integer_multiple' => array(
+      'value' => array(3, 4),
+    )));
+    $result = $handler->get('', $request);
+    $this->assertEqual($nodes['another abc'], $result[0]['id']);
+
     // Test valid filter with filter params disabled.
     $handler->setPluginKey('url_params', array(
       'filter' => FALSE,
