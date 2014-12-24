@@ -217,7 +217,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     $string = drupal_strtolower($request['autocomplete']['string']);
     $operator = !empty($request['autocomplete']['operator']) ? $request['autocomplete']['operator'] : $autocomplete_options['operator'];
 
-    $query = new EntityFieldQuery();
+    $query = $this->EFQObject();
 
     $query->entityCondition('entity_type', $entity_type);
     if ($bundles = $this->getBundlesForAutocomplete()) {
@@ -1534,21 +1534,6 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     $this->addHttpHeaders('Link', $this->versionedUrl($entity_id, array(), FALSE) . '; rel="canonical"');
 
     return $entity_id;
-  }
-
-  /**
-   * Initialize an EntityFieldQuery (or extending class).
-   *
-   * @return \EntityFieldQuery
-   *   The initialized query with the basics filled in.
-   */
-  protected function getEntityFieldQuery() {
-    $query  = new \EntityFieldQuery();
-    $query->entityCondition('entity_type', $this->getEntityType());
-    if ($bundle = $this->getBundle()) {
-      $query->entityCondition('bundle', $bundle);
-    }
-    return $query;
   }
 
   /**
