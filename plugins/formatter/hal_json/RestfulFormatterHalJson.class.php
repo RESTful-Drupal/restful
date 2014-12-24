@@ -228,40 +228,59 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
    */
   protected function moveReferencesToEmbeds(array &$output, array &$row, $public_field, $public_field_name) {
     $value_metadata = $this->handler->getValueMetadata($row['id'], $public_field_name);
-    foreach ($row[$public_field_name] as $index => $resource_row) {
-      if (empty($value_metadata[$index])) {
-        // No metadata.
-        continue;
-      }
-      $metadata = $value_metadata[$index];
-
-      // If there is no resource name in the metadata for this particular value,
-      // assume that we are referring to the first resource in the field
-      // definition.
-      $resource_name = NULL;
-      if (!empty($metadata['resource_name'])) {
-        // Make sure that the resource in the metadata exists in the list of
-        // resources available for this particular public field.
-        foreach ($public_field['resource'] as $resource) {
-          if ($resource['name'] != $metadata['resource_name']) {
-            continue;
-          }
-          $resource_name = $metadata['resource_name'];
+    if (\RestfulBase::isArrayNumeric($row[$public_field_name])) {
+      foreach ($row[$public_field_name] as $index => $resource_row) {
+        if (empty($value_metadata[$index])) {
+          // No metadata.
+          continue;
         }
+        $metadata = $value_metadata[$index];
+        $this->moveMetadataResource($output, $public_field, $metadata, $resource_row);
       }
-      if (empty($resource_name)) {
-        $resource = reset($public_field['resource']);
-        $resource_name = $resource['name'];
-      }
-
-      $curies_resource = $this->withCurie($resource_name);
-      $resource_row = $this->prepareRow($resource_row, $output);
-      $output['_embedded'][$curies_resource][] = $resource_row;
+    }
+    else {
+      $this->moveMetadataResource($output, $public_field, $value_metadata, $row[$public_field_name]);
     }
 
     // Remove the original reference.
     unset($row[$public_field_name]);
   }
 
-}
+  /**
+   * Moves a single instance to the embeds.
+   *
+   * @param array $output
+   *   Output array to be modified.
+   * @param array $public_field
+   *   The public field configuration array.
+   * @param $metadata
+   *   The metadata to add.
+   * @param $resource_row
+   *   The resource row.
+   */
+  protected function moveMetadataResource(array &$output, $public_field, $metadata, $resource_row) {
+    // If there is no resource name in the metadata for this particular value,
+    // assume that we are referring to the first resource in the field
+    // definition.
+    $resource_name = NULL;
+    if (!empty($metadata['resource_name'])) {
+      // Make sure that the resource in the metadata exists in the list of
+      // resources available for this particular public field.
+      foreach ($public_field['resource'] as $resource) {
+        if ($resource['name'] != $metadata['resource_name']) {
+          continue;
+        }
+        $resource_name = $metadata['resource_name'];
+      }
+    }
+    if (empty($resource_name)) {
+      $resource = reset($public_field['resource']);
+      $resource_name = $resource['name'];
+    }
 
+    $curies_resource = $this->withCurie($resource_name);
+    $resource_row = $this->prepareRow($resource_row, $output);
+    $output['_embedded'][$curies_resource][] = $resource_row;
+  }
+
+}
