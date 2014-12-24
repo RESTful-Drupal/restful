@@ -22,10 +22,8 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
   protected $idColumn;
 
   /**
-   * The separator used to divide a key into its table columns
-   * when there is more than one column.
-   *
-   * @var string
+   * The separator used to divide a key into its table columns when there is
+   * more than one column.
    */
   const COLUMN_IDS_SEPARATOR = '::';
 
@@ -386,17 +384,22 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
     $public_fields = $this->getPublicFields();
     $fields = array();
     $id_values = array_fill(0, count($this->getIdColumn()), FALSE);
+
     foreach ($public_fields as $public_property => $info) {
+
       // Check if the public property is set in the payload.
       if (($index = array_search($info['property'], $this->getIdColumn())) !== FALSE) {
         $id_values[$index] = $request[$public_property];
       }
+
       if (isset($request[$public_property])) {
         $fields[$info['property']] = $request[$public_property];
       }
     }
+
     $passed_id = NULL;
-    //If we have the full primary key passed use it.
+
+    // If we have the full primary key passed use it.
     if (count(array_filter($id_values)) == count($id_values)) {
       $passed_id = implode(self::COLUMN_IDS_SEPARATOR, $id_values);
     }
@@ -405,10 +408,12 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
     if ($id = $query->fields($fields)->execute()) {
       return $this->view($id, TRUE);
     }
+
     // Some times db_insert does not know how to get the ID.
     if ($passed_id) {
       return $this->view($passed_id);
     }
+
     return;
   }
 
@@ -424,6 +429,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
     foreach ($this->getIdColumn() as $index => $column) {
       $query->condition($column, current($this->getColumnFromIds(array($id), $index)));
     }
+
     $query->execute();
   }
 
@@ -442,6 +448,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
       // Clear the cache if the request is not GET.
       $this->staticCache->clear(__CLASS__ . '::' . __FUNCTION__ . '::' . $this->getUniqueId($row));
     }
+    $output = array();
     // Loop over all the defined public fields.
     foreach ($this->getPublicFields() as $public_field_name => $info) {
       $value = NULL;
