@@ -22,6 +22,13 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
   protected $bundle;
 
   /**
+   * The bundle.
+   *
+   * @var string
+   */
+  protected $EFQClass = '\EntityFieldQuery';
+
+  /**
    * Getter for $bundle.
    *
    * @return string
@@ -50,11 +57,24 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
    *   (optional) Injected cache backend.
    * @param string $language
    *   (optional) The language to return items in.
+   *
+   * @throws RestfulServerConfigurationException
    */
   public function __construct(array $plugin, \RestfulAuthenticationManager $auth_manager = NULL, \DrupalCacheInterface $cache_controller = NULL, $language = NULL) {
     parent::__construct($plugin, $auth_manager, $cache_controller, $language);
     $this->entityType = $plugin['entity_type'];
     $this->bundle = $plugin['bundle'];
+
+    // Allow providing an alternative to \EntityFieldQuery.
+    $data_provider_options = $this->getPluginKey('data_provider_options');
+    if (!empty($data_provider_options['efq_class'])) {
+      if (!is_subclass_of($data_provider_options['efq_class'], '\EntityFieldQuery')) {
+        throw new \RestfulServerConfigurationException(format_string('The provided class @class does not extend from \EntityFieldQuery.', array(
+          '@class' => $data_provider_options['efq_class'],
+        )));
+      }
+      $this->EFQClass = $data_provider_options['efq_class'];
+    }
   }
 
   /**
@@ -72,13 +92,7 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
    */
   public function getQueryForList() {
     $entity_type = $this->getEntityType();
-    $entity_info = entity_get_info($entity_type);
-    $query = new EntityFieldQuery();
-    $query->entityCondition('entity_type', $this->getEntityType());
-
-    if ($this->bundle && $entity_info['entity keys']['bundle']) {
-      $query->entityCondition('bundle', $this->getBundle());
-    }
+    $query = $this->getEntityFieldQuery();
     if ($path = $this->getPath()) {
       $ids = explode(',', $path);
       if (!empty($ids)) {
@@ -168,14 +182,7 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
    * {@inheritdoc}
    */
   public function getQueryCount() {
-    $entity_type = $this->getEntityType();
-    $entity_info = entity_get_info($entity_type);
-    $query = new EntityFieldQuery();
-    $query->entityCondition('entity_type', $this->getEntityType());
-
-    if ($this->bundle && $entity_info['entity keys']['bundle']) {
-      $query->entityCondition('bundle', $this->getBundle());
-    }
+    $query = $this->getEntityFieldQuery();
     if ($path = $this->getPath()) {
       $ids = explode(',', $path);
       $query->entityCondition('entity_id', $ids, 'IN');
@@ -332,5 +339,33 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
    *   The ID to load the entity.
    */
   abstract public function deleteEntity($id);
+
+  /**
+   * Initialize an EntityFieldQuery (or extending class).
+   *
+   * @return \EntityFieldQuery
+   *   The initialized query with the basics filled in.
+   */
+  protected function getEntityFieldQuery() {
+    $query = $this->EFQObject();
+    $entity_type = $this->getEntityType();
+    $query->entityCondition('entity_type', $entity_type);
+    $entity_info = entity_get_info($entity_type);
+    if ($this->getBundle() && $entity_info['entity keys']['bundle']) {
+      $query->entityCondition('bundle', $this->getBundle());
+    }
+    return $query;
+  }
+
+  /**
+   * Gets a EFQ object.
+   *
+   * @return \EntityFieldQuery
+   *   The object that inherits from \EntityFieldQuery.
+   */
+  protected function EFQObject() {
+    $efq_class = $this->EFQClass;
+    return new $efq_class();
+  }
 
 }
