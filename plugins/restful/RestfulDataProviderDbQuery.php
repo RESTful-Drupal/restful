@@ -486,11 +486,13 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
    *   The ID
    */
   public function getUniqueId($row) {
-    $key = $this->getTableName();
+    $keys = array($this->getTableName());
+
     foreach ($this->getIdColumn() as $column) {
-      $key .= self::COLUMN_IDS_SEPARATOR . $row->{$column};
+      $keys[] = $row->{$column};
     }
-    return  $key;
+
+    return implode(self::COLUMN_IDS_SEPARATOR, $keys);
   }
 
   /**
@@ -522,7 +524,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
   protected function getColumnFromIds(array $ids, $column = 0) {
     // Get a single column.
     return array_map(function($id) use ($column) {
-      $parts = explode(static::COLUMN_IDS_SEPARATOR, $id);
+      $parts = explode(RestfulDataProviderDbQuery::COLUMN_IDS_SEPARATOR, $id);
       if (!isset($parts[$column])) {
         throw new \RestfulServerConfigurationException('Invalid ID provided.');
       }
