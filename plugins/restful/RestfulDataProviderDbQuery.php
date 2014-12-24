@@ -522,7 +522,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
   protected function getColumnFromIds(array $ids, $column = 0) {
     // Get a single column.
     return array_map(function($id) use ($column) {
-      $parts = explode(self::COLUMN_IDS_SEPARATOR, $id);
+      $parts = explode(RestfulDataProviderDbQuery::COLUMN_IDS_SEPARATOR, $id);
       if (!isset($parts[$column])) {
         throw new \RestfulServerConfigurationException('Invalid ID provided.');
       }
