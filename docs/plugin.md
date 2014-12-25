@@ -193,6 +193,12 @@ public function publicFieldsInfo() {
 }
 ```
 
+Note that when you use the ``resource`` property, behind the scenes RESTful  
+initializes a second handler and calls that resource. In order to pass information  
+to the second handler (e.g. the access token), we pipe the original request  
+array with some parameters removed. If you need to strip further parameters you can
+override ``\RestfulBase::getRequestForSubRequest``.
+
 ## Output formats
 The RESTful module outputs all resources by using HAL+JSON encoding by default.
 That means that when you have the following data:

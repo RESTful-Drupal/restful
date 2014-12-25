@@ -220,6 +220,34 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
   }
 
   /**
+   * Gets a request array with the data that should be piped to sub requests.
+   *
+   * @return array
+   *   The request array to be piped.
+   */
+  protected function getRequestForSubRequest() {
+    $piped_request = array();
+
+    foreach ($this->getRequest() as $key => $value) {
+      if (in_array($key, array(
+          'filter',
+          'page',
+          'q',
+          'range',
+          'sort',
+          'fields',
+        ))) {
+        continue;
+      }
+
+      $piped_request[$key] = $value;
+    }
+
+    return $piped_request;
+  }
+
+
+  /**
    * Get the language code.
    *
    * @return string
