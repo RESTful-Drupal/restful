@@ -22,7 +22,7 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
   /**
    * Test the sorting of entities.
    */
-  function testSort() {
+  function __testSort() {
     $settings = array('type' => 'article');
 
     $titles = array(
@@ -265,22 +265,28 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
    * Test filtering.
    */
   function testFilter() {
+    $user1 = $this->drupalCreateUser();
+    $user2 = $this->drupalCreateUser();
+
     $this->addIntegerFields();
     $info = array(
       array(
         'title' => 'abc',
         'integer_single' => 1,
         'integer_multiple' => array(1, 2, 3),
+        'uid' => $user1->uid,
       ),
       array(
         'title' => 'another abc',
         'integer_single' => 5,
         'integer_multiple' => array(3, 4, 5),
+        'uid' => $user1->uid,
       ),
       array(
         'title' => 'last',
         'integer_single' => NULL,
         'integer_multiple' => array(),
+        'uid' => $user2->uid,
       ),
     );
 
@@ -299,6 +305,8 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
       foreach ($row['integer_multiple'] as $key => $value) {
         $settings['integer_multiple'][LANGUAGE_NONE][$key]['value'] = $value;
       }
+
+      $settings['uid'] = $row['uid'];
 
       $node = $this->drupalCreateNode($settings);
       $nodes[$title] = $node->nid;
@@ -373,12 +381,26 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     catch (\RestfulBadRequestException $e) {
       $this->pass('Exception raised for disabled filter parameter.');
     }
+
+    // Filter by a entity metadata wrapper property that is different from the
+    // DB column name.
+    $handler = restful_get_restful_handler('articles', 1, 5);
+    $request = array(
+      'filter' => array(
+        'user' => array(
+          'value' => $user1->uid,
+        ),
+      ),
+    );
+
+    $result = $handler->get('', $request);
+    debug($result);
   }
 
   /**
    * Test pagination.
    */
-  function testPagination() {
+  function __testPagination() {
     foreach(range(1, 9) as $key) {
       $settings = array(
         'type' => 'article',
@@ -499,7 +521,7 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
   /**
    * Test error handeling when no access is granted to an entity in a list.
    */
-  function testAccessHandeling() {
+  function __testAccessHandeling() {
     $settings = array(
       'type' => 'article',
     );
