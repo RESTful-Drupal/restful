@@ -264,19 +264,12 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
       $this->assertTrue(in_array($role_name, $roles), format_string('%role role found in content list.', array('%role' => $role_name)));
     }
 
-    // Filter by a entity metadata wrapper property that is different from the
+    // Sort by an entity metadata wrapper property that is different from the
     // DB column name.
     $handler = restful_get_restful_handler('articles', 1, 5);
-    $request = array(
-      'sort' => array(
-        'user' => array(
-          'value' => $user2->uid,
-        ),
-      ),
-    );
-
+    $request = array('sort' => '-user',);
     $result = $handler->get('', $request);
-    // $this->assertTrue($result[0], 2);
+    $this->assertEqual($result[0]['user']['id'], 3, 'List sorted by the "author" entity metadata wrapper property, which maps to the "uid" DB column name.');
   }
 
   /**
@@ -400,7 +393,7 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
       $this->pass('Exception raised for disabled filter parameter.');
     }
 
-    // Filter by a entity metadata wrapper property that is different from the
+    // Filter by an entity metadata wrapper property that is different from the
     // DB column name.
     $handler = restful_get_restful_handler('articles', 1, 5);
     $request = array(
