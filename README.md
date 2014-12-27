@@ -21,8 +21,7 @@ consuming client doesn't need to know if an entity is a node or a term, nor will
 * Resource versioning is built-in, so that resources can be reused with multiple
 consumers.  The versions are at the resource level, for more flexibility and
 control.
-* It has configurable output formats. It ships with JSON and XML as examples.
-HAL+JSON is the recommended default.
+* It has configurable output formats. It ships with JSON (the default one), JSON+HAL and as an example also XML.
 * Audience is developers and not site builders.
 * Provide a key tool for a headless Drupal. See the [AngularJs form](https://github.com/Gizra/restful/blob/7.x-1.x/modules/restful_angular_example/README.md) example module.
 
