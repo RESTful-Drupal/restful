@@ -1445,24 +1445,6 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
   }
 
   /**
-   * Helper method to determine if an array is numeric.
-   *
-   * @param array $input
-   *   The input array.
-   *
-   * @return boolean
-   *   TRUE if the array is numeric, false otherwise.
-   */
-  protected final static function isArrayNumeric(array $input) {
-    foreach (array_keys($input) as $key) {
-      if (!ctype_digit((string) $key)) {
-        return FALSE;
-      }
-    }
-    return TRUE;
-  }
-
-  /**
    * Clear all caches corresponding to the current resource for a given entity.
    *
    * @param int $id

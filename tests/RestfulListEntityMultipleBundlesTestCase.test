@@ -11,7 +11,7 @@ class RestfulListEntityMultipleBundlesTestCase extends DrupalWebTestCase {
     return array(
       'name' => 'List entity with multiple bundles',
       'description' => 'Test listing an entity with multiple bundles.',
-      'group' => 'Restful',
+      'group' => 'RESTful',
     );
   }
 

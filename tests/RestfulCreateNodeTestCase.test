@@ -11,7 +11,7 @@ class RestfulCreateNodeTestCase extends DrupalWebTestCase {
     return array(
       'name' => 'Node integration',
       'description' => 'Test the creation of a node entity type.',
-      'group' => 'Restful',
+      'group' => 'RESTful',
     );
   }
 

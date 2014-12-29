@@ -11,7 +11,7 @@ class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
     return array(
       'name' => 'Create entity',
       'description' => 'Test the creation of an entity.',
-      'group' => 'Restful',
+      'group' => 'RESTful',
     );
   }
 
