@@ -97,6 +97,23 @@ articles after a certain date:
 curl https://example.com/api/articles?filter[created][value]=1417591992&filter[created][operator]=">="
 ```
 
+Additionally you can provide multiple filters for the same field. That is
+specially useful when filtering on multiple value fields. The following example
+will get all the articles with the integer multiple field that contains all 1, 3
+and 5.
+
+```
+curl https://example.com/api/articles?filter[integer_multiple][value][0]=1&filter[integer_multiple][value][1]=3&filter[integer_multiple][value][2]=5
+```
+
+You can do more advanced filtering by providing values and operators. The
+following example will get all the articles with an integer value less than 5
+and another equal to 10.
+
+```
+curl https://example.com/api/articles?filter[integer_multiple][value][0]=5&filter[integer_multiple][value][1]=10&filter[integer_multiple][operator][0]=">"&filter[integer_multiple][operator][0]="="
+```
+
 ## Loading by an alternate ID.
 Some times you need to load an entity by an alternate ID that is not the regular
 entity ID, for example a unique ID title. All that you need to do is provide the

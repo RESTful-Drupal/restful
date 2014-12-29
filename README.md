@@ -33,6 +33,10 @@ HAL+JSON is the recommended default.
   * [$wrapper->access() might be wrong for single entity reference field](https://www.drupal.org/node/2264079#comment-8911637)
   * [Prevent notice in entity_metadata_no_hook_node_access() when node is not saved](https://drupal.org/node/2086225#comment-8768373)
 
+## Recipes
+Read even more examples on how to use the RESTful module in the [module documentation
+node](https://www.drupal.org/node/2380679) in Drupal.org. Make sure you read the _Recipes_
+section. If you have any to share, feel free to add your own recipes.
 
 ## Declaring a REST Endpoint
 

@@ -155,11 +155,19 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
       // Determine if filtering is by field or property.
       $property_name = $public_fields[$filter['public_field']]['property'];
       if (field_info_field($property_name)) {
-        $query->fieldCondition($public_fields[$filter['public_field']]['property'], $public_fields[$filter['public_field']]['column'], $filter['value'], $filter['operator']);
+        if (in_array(strtoupper($filter['operator'][0]), array('IN', 'BETWEEN'))) {
+          $query->fieldCondition($public_fields[$filter['public_field']]['property'], $public_fields[$filter['public_field']]['column'], $filter['value'], $filter['operator'][0]);
+          continue;
+        }
+        for ($index = 0; $index < count($filter['value']); $index++) {
+          $query->fieldCondition($public_fields[$filter['public_field']]['property'], $public_fields[$filter['public_field']]['column'], $filter['value'][$index], $filter['operator'][$index]);
+        }
       }
       else {
         $column = $this->getColumnFromProperty($property_name);
-        $query->propertyCondition($column, $filter['value'], $filter['operator']);
+        for ($index = 0; $index < count($filter['value']); $index++) {
+          $query->propertyCondition($column, $filter['value'][$index], $filter['operator'][$index]);
+        }
       }
     }
   }
@@ -182,6 +190,22 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
   protected function getColumnFromProperty($property_name) {
     $property_info = entity_get_property_info($this->getEntityType());
     return $property_info['properties'][$property_name]['schema field'];
+  }
+
+  /**
+   * Overrides \RestfulBase::isValidConjuctionForFilter().
+   */
+  protected static function isValidConjuctionForFilter($conjunction) {
+    $allowed_conjunctions = array(
+      'AND',
+    );
+
+    if (!in_array(strtoupper($conjunction), $allowed_conjunctions)) {
+      throw new \RestfulBadRequestException(format_string('Conjunction "@conjunction" is not allowed for filtering on this resource. Allowed conjunctions are: !allowed', array(
+        '@conjunction' => $conjunction,
+        '!allowed' => implode(', ', $allowed_conjunctions),
+      )));
+    }
   }
 
   /**

@@ -72,14 +72,30 @@ abstract class RestfulDataProviderCToolsPlugins extends \RestfulBase implements 
 
     foreach ($this->parseRequestForListFilter() as $filter) {
       foreach ($plugins as $plugin_name => $plugin) {
-        $property = $public_fields[$filter['public_field']]['property'];
+        // Initialize to TRUE for AND and FALSE for OR (neutral value).
+        $match = $filter['conjunction'] == 'AND';
+        for ($index = 0; $index < count($filter['value']); $index++) {
+          $property = $public_fields[$filter['public_field']]['property'];
 
-        if (empty($plugin[$property])) {
-          // Property doesn't exist on the plugin, so filter it out.
-          unset($plugins[$plugin_name]);
+          if (empty($plugin[$property])) {
+            // Property doesn't exist on the plugin, so filter it out.
+            unset($plugins[$plugin_name]);
+          }
+
+          if ($filter['conjunction'] == 'OR') {
+            $match = $match || $this->evaluateExpression($plugin[$property], $filter['value'][$index], $filter['operator'][$index]);
+            if ($match) {
+              break;
+            }
+          }
+          else {
+            $match = $match && $this->evaluateExpression($plugin[$property], $filter['value'][$index], $filter['operator'][$index]);
+            if (!$match) {
+              break;
+            }
+          }
         }
-
-        if (!$this->evaluateExpression($plugin[$property], $filter['value'], $filter['operator'])) {
+        if (!$match) {
           // Property doesn't match the filter.
           unset($plugins[$plugin_name]);
         }
@@ -92,6 +108,23 @@ abstract class RestfulDataProviderCToolsPlugins extends \RestfulBase implements 
     }
 
     return $plugins;
+  }
+
+  /**
+   * Overrides \RestfulBase::isValidConjuctionForFilter().
+   */
+  protected static function isValidConjuctionForFilter($conjunction) {
+    $allowed_conjunctions = array(
+      'AND',
+      'OR',
+    );
+
+    if (!in_array(strtoupper($conjunction), $allowed_conjunctions)) {
+      throw new \RestfulBadRequestException(format_string('Conjunction "@conjunction" is not allowed for filtering on this resource. Allowed conjunctions are: !allowed', array(
+        '@conjunction' => $conjunction,
+        '!allowed' => implode(', ', $allowed_conjunctions),
+      )));
+    }
   }
 
   /**
