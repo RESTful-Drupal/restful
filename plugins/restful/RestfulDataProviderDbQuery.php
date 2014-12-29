@@ -15,11 +15,17 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
   protected $tableName;
 
   /**
-   * The name of the column in the table to be used as the unique key.
+   * The name of the column(s) in the table to be used as the unique key.
    *
-   * @var string
+   * @var array
    */
   protected $idColumn;
+
+  /**
+   * The separator used to divide a key into its table columns when there is
+   * more than one column.
+   */
+  const COLUMN_IDS_SEPARATOR = '::';
 
   /**
    * Holds the primary field.
