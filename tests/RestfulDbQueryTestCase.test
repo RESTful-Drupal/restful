@@ -103,6 +103,38 @@ class RestfulDbQueryTestCase extends DrupalWebTestCase {
     // Testing list.
     $result = $handler->get();
     $this->assertEqual($result, array($mock_data4), 'All the content listed successfully.');
+
+    // Testing filters.
+    $mock_data5 = array(
+      'str_field' => $this->randomName(),
+      'int_field' => 101,
+    );
+    $mock_data5['serialized_field'] = serialize($mock_data5);
+    db_insert($this->tableName)
+      ->fields($mock_data5)
+      ->execute();
+    $mock_data6 = array(
+      'str_field' => $this->randomName(),
+      'int_field' => 102,
+    );
+    $mock_data6['serialized_field'] = serialize($mock_data6);
+    db_insert($this->tableName)
+      ->fields($mock_data6)
+      ->execute();
+
+    $request = array('filter' => array('integer' => array(
+      'value' => array(101, 102),
+      'conjunction' => 'OR',
+    )));
+    $result = $handler->get('', $request);
+    $this->assertEqual(count($result), 2);
+    $request = array('filter' => array('integer' => array(
+      'value' => array(101, 102),
+      'operator' => array('=', '>='),
+      'conjunction' => 'OR',
+    )));
+    $result = $handler->get('', $request);
+    $this->assertEqual(count($result), 2);
   }
 
   /**

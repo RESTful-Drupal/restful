@@ -51,12 +51,41 @@ array(
 
 
 ### Filter
-Use the `'filter'` key to filter the list.
+Use the `'filter'` key to filter the list. You can provide as many filters as
+you need.
 
 ```php
 $handler = restful_get_restful_handler('articles');
 // Single value property.
 $request['filter'] = array('label' => 'abc');
+$result = $handler->get('', $request);
+```
+
+Additionally you can provide multiple filters for the same field. That is
+specially useful when filtering on multiple value fields. The following example
+will get all the articles with the integer multiple field that contains all 1, 3
+and 5.
+
+```php
+$handler = restful_get_restful_handler('articles');
+// Single value property.
+$request['filter'] = array('integer_multiple' => array(
+  'values' => array(1, 3, 5),
+));
+$result = $handler->get('', $request);
+```
+
+You can do more advanced filtering by providing values and operators. The
+following example will get all the articles with an integer value less than 5
+and another equal to 10.
+
+```php
+$handler = restful_get_restful_handler('articles');
+// Single value property.
+$request['filter'] = array('integer_multiple' => array(
+  'values' => array(5, 10),
+  'operator' => array('>', '='),
+));
 $result = $handler->get('', $request);
 ```
 

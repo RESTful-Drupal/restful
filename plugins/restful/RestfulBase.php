@@ -980,21 +980,41 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
         throw new RestfulBadRequestException(format_string('The filter @filter is not allowed for this path.', array('@filter' => $public_field)));
       }
 
+      // Filtering can be achieved in different ways:
+      //   1. filter[foo]=bar
+      //   2. filter[foo][0]=bar&filter[foo][1]=baz
+      //   3. filter[foo][value]=bar
+      //   4. filter[foo][value][0]=bar&filter[foo][value][1]=baz
       if (!is_array($value)) {
         // Request uses the shorthand form for filter. For example
         // filter[foo]=bar would be converted to filter[foo][value] = bar.
         $value = array('value' => $value);
       }
+      if (!is_array($value['value'])) {
+        $value['value'] = array($value['value']);
+      }
       // Add the property
       $value['public_field'] = $public_field;
+
       // Set default operator.
-      $value += array('operator' => '=');
+      $value += array('operator' => array_fill(0, count($value['value']), '='));
+      if (!is_array($value['operator'])) {
+        $value['operator'] = array($value['operator']);
+      }
+
+      // Make sure that we have the same amount of operators than values.
+      if (!in_array(strtoupper($value['operator'][0]), array('IN', 'BETWEEN')) && count($value['value']) != count($value['operator'])) {
+        throw new RestfulBadRequestException('The number of operators and values has to be the same.');
+      }
+
+      $value += array('conjunction' => 'AND');
 
       // Clean the operator in case it came from the URL.
       // e.g. filter[minor_version][operator]=">="
       $value['operator'] = str_replace(array('"', "'"), '', $value['operator']);
 
-      $this->isValidOperatorForFilter($value['operator']);
+      static::isValidOperatorsForFilter($value['operator']);
+      static::isValidConjuctionForFilter($value['conjunction']);
 
       $filters[] = $value;
     }
@@ -1005,12 +1025,12 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
   /**
    * Check if an operator is valid for filtering.
    *
-   * @param string $operator
-   *   The operator.
+   * @param array $operators
+   *   The array of operators.
    *
    * @throws RestfulBadRequestException
    */
-  protected function isValidOperatorForFilter($operator) {
+  protected static function isValidOperatorsForFilter(array $operators) {
     $allowed_operators = array(
       '=',
       '>',
@@ -1023,10 +1043,35 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
       'BETWEEN',
     );
 
-    if (!in_array($operator, $allowed_operators)) {
-      throw new \RestfulBadRequestException(format_string('Operator "@operator" is not allowed for filtering on this resource. Allowed operators are: !allowed', array(
-        '@operator' => $operator,
-        '!allowed' => implode(', ', $allowed_operators),
+    foreach ($operators as $operator) {
+      if (!in_array($operator, $allowed_operators)) {
+        throw new \RestfulBadRequestException(format_string('Operator "@operator" is not allowed for filtering on this resource. Allowed operators are: !allowed', array(
+          '@operator' => $operators,
+          '!allowed' => implode(', ', $allowed_operators),
+        )));
+      }
+    }
+  }
+
+  /**
+   * Check if a conjunction is valid for filtering.
+   *
+   * @param string $conjunction
+   *   The operator.
+   *
+   * @throws RestfulBadRequestException
+   */
+  protected static function isValidConjuctionForFilter($conjunction) {
+    $allowed_conjunctions = array(
+      'AND',
+      'OR',
+      'XOR',
+    );
+
+    if (!in_array(strtoupper($conjunction), $allowed_conjunctions)) {
+      throw new \RestfulBadRequestException(format_string('Conjunction "@conjunction" is not allowed for filtering on this resource. Allowed conjunctions are: !allowed', array(
+        '@conjunction' => $conjunction,
+        '!allowed' => implode(', ', $allowed_conjunctions),
       )));
     }
   }
