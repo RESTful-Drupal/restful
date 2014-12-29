@@ -11,7 +11,7 @@ class RestfulEntityUserAccessTestCase extends DrupalWebTestCase {
     return array(
       'name' => 'User resource access',
       'description' => 'Test access to the base "users" resource.',
-      'group' => 'Restful',
+      'group' => 'RESTful',
     );
   }
 

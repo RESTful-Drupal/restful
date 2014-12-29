@@ -11,7 +11,7 @@ class RestfulRateLimitTestCase extends DrupalWebTestCase {
     return array(
       'name' => 'Rate limits',
       'description' => 'Test the rate limit feature.',
-      'group' => 'Restful',
+      'group' => 'RESTful',
     );
   }
 

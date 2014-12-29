@@ -11,7 +11,7 @@ class RestfulHookMenuTestCase extends RestfulCurlBaseTestCase {
     return array(
       'name' => 'Menu API',
       'description' => 'Test the hook_menu() and delivery callback implementations.',
-      'group' => 'Restful',
+      'group' => 'RESTful',
     );
   }
 

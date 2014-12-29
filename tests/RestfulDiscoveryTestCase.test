@@ -11,7 +11,7 @@ class RestfulDiscoveryTestCase extends RestfulCurlBaseTestCase {
     return array(
       'name' => 'Discovery',
       'description' => 'Test the discovery features.',
-      'group' => 'Restful',
+      'group' => 'RESTful',
     );
   }
 

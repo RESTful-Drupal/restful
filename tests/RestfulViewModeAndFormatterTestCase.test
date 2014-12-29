@@ -11,7 +11,7 @@ class RestfulViewModeAndFormatterTestCase extends DrupalWebTestCase {
     return array(
       'name' => 'View mode and formatter',
       'description' => 'Test the integration with entity view mode and field API formatters.',
-      'group' => 'Restful',
+      'group' => 'RESTful',
     );
   }
 

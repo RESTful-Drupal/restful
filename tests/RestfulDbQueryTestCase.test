@@ -21,7 +21,7 @@ class RestfulDbQueryTestCase extends DrupalWebTestCase {
     return array(
       'name' => 'DB Query',
       'description' => 'Test the DB Query data provider.',
-      'group' => 'Restful',
+      'group' => 'RESTful',
     );
   }
 

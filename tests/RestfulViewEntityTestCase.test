@@ -11,7 +11,7 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
     return array(
       'name' => 'View entity',
       'description' => 'Test the viewing of an entity.',
-      'group' => 'Restful',
+      'group' => 'RESTful',
     );
   }
 

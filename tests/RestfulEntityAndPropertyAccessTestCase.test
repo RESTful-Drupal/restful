@@ -11,7 +11,7 @@ class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
     return array(
       'name' => 'Entity and property access',
       'description' => 'Test access for the entity and the properties.',
-      'group' => 'Restful',
+      'group' => 'RESTful',
     );
   }
 
