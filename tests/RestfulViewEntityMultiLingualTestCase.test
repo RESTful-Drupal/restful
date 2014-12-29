@@ -16,7 +16,7 @@ class RestfulViewEntityMultiLingualTestCase extends RestfulCurlBaseTestCase {
     return array(
       'name' => 'View multilingual entity',
       'description' => 'Test the viewing of a multilingual entity.',
-      'group' => 'Restful',
+      'group' => 'RESTful',
     );
   }
 

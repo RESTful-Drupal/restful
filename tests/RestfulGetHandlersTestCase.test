@@ -11,7 +11,7 @@ class RestfulGetHandlersTestCase extends DrupalWebTestCase {
     return array(
       'name' => 'Get handlers',
       'description' => 'Test getting handlers by version (major and minor).',
-      'group' => 'Restful',
+      'group' => 'RESTful',
     );
   }
 

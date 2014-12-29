@@ -11,7 +11,7 @@ class RestfulDataProviderCToolsPluginsTestCase extends DrupalWebTestCase {
     return array(
       'name' => 'CTools plugins',
       'description' => 'Test the CTools plugins data provider.',
-      'group' => 'Restful',
+      'group' => 'RESTful',
     );
   }
 

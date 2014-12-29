@@ -11,7 +11,7 @@ class RestfulAutoCompleteTestCase extends DrupalWebTestCase {
     return array(
       'name' => 'Autocomplete',
       'description' => 'Test the autocomplete functionality.',
-      'group' => 'Restful',
+      'group' => 'RESTful',
     );
   }
 

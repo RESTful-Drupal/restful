@@ -11,7 +11,7 @@ class RestfulRenderCacheTestCase extends DrupalWebTestCase {
     return array(
       'name' => 'Render Cache',
       'description' => 'Test the render cache capabilities.',
-      'group' => 'Restful',
+      'group' => 'RESTful',
     );
   }
 

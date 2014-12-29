@@ -25,7 +25,7 @@ class RestfulAuthenticationTestCase extends RestfulCurlBaseTestCase {
     return array(
       'name' => 'Authentication',
       'description' => 'Test the request authentication.',
-      'group' => 'Restful',
+      'group' => 'RESTful',
     );
   }
 

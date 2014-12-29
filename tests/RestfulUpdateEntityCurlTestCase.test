@@ -18,7 +18,7 @@ class RestfulUpdateEntityCurlTestCase extends RestfulCurlBaseTestCase {
     return array(
       'name' => 'Update entity with CURL',
       'description' => 'Test the updating of an entity using PUT and PATCH methods using CURL.',
-      'group' => 'Restful',
+      'group' => 'RESTful',
     );
   }
 

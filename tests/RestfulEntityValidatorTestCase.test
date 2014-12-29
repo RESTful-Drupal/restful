@@ -11,7 +11,7 @@ class RestfulEntityValidatorTestCase extends RestfulCurlBaseTestCase {
     return array(
       'name' => 'Entity validator',
       'description' => 'Test integration with entity validator module.',
-      'group' => 'Restful',
+      'group' => 'RESTful',
     );
   }
 
