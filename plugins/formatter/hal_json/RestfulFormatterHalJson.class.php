@@ -247,10 +247,10 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
   }
 
   /**
-   * Moves a single instance to the embeds.
+   * Move a single "embedded resource" to be under the "_embedded" property.
    *
    * @param array $output
-   *   Output array to be modified.
+   *   Output array to be modified. Passed by reference.
    * @param array $public_field
    *   The public field configuration array.
    * @param $metadata

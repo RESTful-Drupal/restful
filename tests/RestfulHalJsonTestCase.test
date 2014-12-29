@@ -1,0 +1,59 @@
+<?php
+
+/**
+ * @file
+ * Contains RestfulHalJsonTestCase
+ */
+
+class RestfulHalJsonTestCase extends RestfulCurlBaseTestCase {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'View HAL+JSON',
+      'description' => 'Test the viewing of an entity in HAL+JSON format.',
+      'group' => 'RESTful',
+    );
+  }
+
+  function setUp() {
+    parent::setUp('restful_example', 'restful_test', 'entityreference');
+
+    restful_test_add_fields();
+  }
+
+  /**
+   * Test embedded resources.
+   */
+  function testHalEmbeddedResources() {
+    $user1 = $this->drupalCreateUser();
+    $entity1 = entity_create('entity_test', array('name' => 'main', 'uid' => $user1->uid));
+    $entity1->save();
+
+    $entity2 = entity_create('entity_test', array('name' => 'main', 'uid' => $user1->uid));
+    $entity2->save();
+
+    $entity3 = entity_create('entity_test', array('name' => 'main', 'uid' => $user1->uid));
+    $wrapper = entity_metadata_wrapper('entity_test', $entity3);
+
+    $text1 = $this->randomName();
+    $text2 = $this->randomName();
+
+
+    $wrapper->text_single->set($text1);
+    $wrapper->text_multiple->set(array($text1, $text2));
+
+    $wrapper->entity_reference_single->set($entity1);
+    $wrapper->entity_reference_multiple[] = $entity1;
+    $wrapper->entity_reference_multiple[] = $entity2;
+
+    $wrapper->save();
+
+    $response = $this->httpRequest('api/main/' . $wrapper->getIdentifier(), \RestfulInterface::GET, NULL, array(
+      'X-API-Version' => 'v1.1',
+      'Accept' => 'application/hal+json',
+    ));
+    $results = drupal_json_decode($response['body']);
+    $this->assertEqual($wrapper->entity_reference_multiple->count() + 1, count($results['_embedded']['hal:main']));
+  }
+
+}
