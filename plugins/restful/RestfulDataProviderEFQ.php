@@ -152,11 +152,35 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
     foreach ($this->parseRequestForListFilter() as $filter) {
       // Determine if filtering is by field or property.
       if (empty($public_fields[$filter['public_field']]['column'])) {
-        $query->propertyCondition($public_fields[$filter['public_field']]['property'], $filter['value'], $filter['operator']);
+        for ($index = 0; $index < count($filter['value']); $index++) {
+          $query->propertyCondition($public_fields[$filter['public_field']]['property'], $filter['value'][$index], $filter['operator'][$index]);
+        }
       }
       else {
-        $query->fieldCondition($public_fields[$filter['public_field']]['property'], $public_fields[$filter['public_field']]['column'], $filter['value'], $filter['operator']);
+        if (in_array(strtoupper($filter['operator'][0]), array('IN', 'BETWEEN'))) {
+          $query->fieldCondition($public_fields[$filter['public_field']]['property'], $public_fields[$filter['public_field']]['column'], $filter['value'], $filter['operator'][0]);
+          continue;
+        }
+        for ($index = 0; $index < count($filter['value']); $index++) {
+          $query->fieldCondition($public_fields[$filter['public_field']]['property'], $public_fields[$filter['public_field']]['column'], $filter['value'][$index], $filter['operator'][$index]);
+        }
       }
+    }
+  }
+
+  /**
+   * Overrides \RestfulBase::isValidConjuctionForFilter().
+   */
+  protected static function isValidConjuctionForFilter($conjunction) {
+    $allowed_conjunctions = array(
+      'AND',
+    );
+
+    if (!in_array(strtoupper($conjunction), $allowed_conjunctions)) {
+      throw new \RestfulBadRequestException(format_string('Conjunction "@conjunction" is not allowed for filtering on this resource. Allowed conjunctions are: !allowed', array(
+        '@conjunction' => $conjunction,
+        '!allowed' => implode(', ', $allowed_conjunctions),
+      )));
     }
   }
 

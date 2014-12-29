@@ -170,7 +170,15 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
   protected function queryForListFilter(\SelectQuery $query) {
     $public_fields = $this->getPublicFields();
     foreach ($this->parseRequestForListFilter() as $filter) {
-      $query->condition($public_fields[$filter['public_field']]['property'], $filter['value'], $filter['operator']);
+      if (in_array(strtoupper($filter['operator'][0]), array('IN', 'BETWEEN'))) {
+        $query->condition($public_fields[$filter['public_field']]['property'], $filter['value'], $filter['operator'][0]);
+        continue;
+      }
+      $condition = db_condition($filter['conjunction']);
+      for ($index = 0; $index < count($filter['value']); $index++) {
+        $condition->condition($public_fields[$filter['public_field']]['property'], $filter['value'][$index], $filter['operator'][$index]);
+      }
+      $query->condition($condition);
     }
   }
 
