@@ -197,16 +197,6 @@ function restful_menu() {
 }
 
 /**
- * Implements hook_entity_info_alter().
- *
- * Define the name property as the label of the user. We need this inorder for
- * users endpoint to be able to autocomplete users.
- */
-function restful_entity_info_alter(&$entity_info) {
-  $entity_info['user']['entity keys']['label'] = 'name';
-}
-
-/**
  *  Implements hook_permission().
  */
 function restful_permission() {

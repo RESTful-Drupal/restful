@@ -47,6 +47,18 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
   }
 
   /**
+   * Get the entity info for the current entity the endpoint handling.
+   *
+   * @param null $type
+   *   The entity type. Optional.
+   * @return array
+   *   The entity info.
+   */
+  public function getEntityInfo($type = NULL) {
+    return entity_get_info($type ? $type : $this->getEntityType());
+  }
+
+  /**
    * Constructs a RestfulDataProviderEFQ object.
    *
    * @param array $plugin
@@ -350,7 +362,7 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
     $query = $this->EFQObject();
     $entity_type = $this->getEntityType();
     $query->entityCondition('entity_type', $entity_type);
-    $entity_info = entity_get_info($entity_type);
+    $entity_info = $this->getEntityInfo();
     if ($this->getBundle() && $entity_info['entity keys']['bundle']) {
       $query->entityCondition('bundle', $this->getBundle());
     }
