@@ -199,7 +199,10 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    *   Array with the bundle name(s).
    */
   protected function getBundlesForAutocomplete() {
-    return array($this->getBundle());
+    $info = entity_get_info($this->getEntityType());
+    // When a bundle key wasn't defined return false in order to make the
+    // autocomplete support entities without bundle key. i.e: user, vocabulary.
+    return !empty($info['entity keys']['bundle']) ? array($this->getBundle()) : FALSE;
   }
 
   /**
