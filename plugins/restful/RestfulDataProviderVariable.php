@@ -179,7 +179,6 @@ abstract class RestfulDataProviderVariable extends \RestfulBase implements \Rest
    */
   public function viewVariables($name_string) {
     $names = array_unique(array_filter(explode(',', $name_string)));
-
     return $this->viewMultiple($names);
   }
 
@@ -192,6 +191,7 @@ abstract class RestfulDataProviderVariable extends \RestfulBase implements \Rest
     }
     $variables = array_keys($this->getVariablesForList());
     $output = array();
+
     // Build output according to filtered/sorted list of variables.
     foreach ($variables as $variable) {
       if (in_array($variable, $names)) {
@@ -206,11 +206,7 @@ abstract class RestfulDataProviderVariable extends \RestfulBase implements \Rest
    * {@inheritdoc}
    */
   public function view($name) {
-    // Check user has access to the property.
-    if (user_access('administer site configuration')) {
-      return;
-    }
-
+    xdebug_break();
     $cache_id = array(
       'tb' => 'variable',
       'id' => $name,
