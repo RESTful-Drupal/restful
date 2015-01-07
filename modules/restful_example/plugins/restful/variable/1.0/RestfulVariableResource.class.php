@@ -5,17 +5,17 @@
  * Contains \RestfulQueryVariable
  */
 
-class RestfulQueryVariable extends \RestfulDataProviderDbQuery implements \RestfulDataProviderDbQueryInterface, \RestfulDataProviderInterface {
+class RestfulVariableResource extends \RestfulDataProviderVariable {
 
   /**
    * {@inheritdoc}
    */
   public function publicFieldsInfo() {
     return array(
-      'name' => array(
+      'variable_name' => array(
         'property' => 'name',
       ),
-      'value' => array(
+      'variable_value' => array(
         'property' => 'value',
       ),
     );
