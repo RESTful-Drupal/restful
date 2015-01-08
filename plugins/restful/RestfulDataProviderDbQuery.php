@@ -341,37 +341,33 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
    * {@inheritdoc}
    */
   public function update($id, $full_replace = FALSE) {
-    $query = db_update($this->getTableName());
-    foreach ($this->getIdColumn() as $index => $column) {
-      $query->condition($column, current($this->getColumnFromIds(array($id), $index)));
-    }
-
     // Build the update array.
     $request = $this->getRequest();
     static::cleanRequest($request);
     $public_fields = $this->getPublicFields();
-    $fields = array();
+    $id_columns = $this->getIdColumn();
+
+    $record = array();
     foreach ($public_fields as $public_property => $info) {
       // If this is the primary field, skip.
       if ($this->isPrimaryField($info['property'])) {
         continue;
       }
-      // Check if the public property is set in the payload.
-      if (!isset($request[$public_property])) {
-        if ($full_replace) {
-          $fields[$info['property']] = NULL;
-        }
-      }
-      else {
-        $fields[$info['property']] = $request[$public_property];
+      if (isset($request[$public_property])) {
+        $record[$info['property']] = $request[$public_property];
       }
     }
-    if (empty($fields)) {
+    if (empty($record)) {
       return $this->view($id);
     }
 
-    // Once the update array is built, execute the query.
-    $query->fields($fields)->execute();
+    // Add the id column values into the record.
+    foreach ($this->getIdColumn() as $index => $column) {
+      $record[$column] = current($this->getColumnFromIds(array($id), $index));
+    }
+
+    // Once the record is built, write it.
+    $test = drupal_write_record($this->getTableName(), $record, $id_columns);
 
     // Clear the rendered cache before calling the view method.
     $this->clearRenderedCache(array(
@@ -379,6 +375,8 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
       'cl' => implode(',', $this->getIdColumn()),
       'id' => $id,
     ));
+
+    // @todo: do we need to re-form $id in case some of the values have changed?
     return $this->view($id, TRUE);
   }
 
@@ -386,44 +384,29 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
    * {@inheritdoc}
    */
   public function create() {
-    $query = db_insert($this->getTableName());
-
-    // Build the update array.
     $request = $this->getRequest();
     static::cleanRequest($request);
     $public_fields = $this->getPublicFields();
-    $fields = array();
-    $id_values = array_fill(0, count($this->getIdColumn()), FALSE);
+    $id_columns = $this->getIdColumn();
 
+    $record = array();
     foreach ($public_fields as $public_property => $info) {
-
-      // Check if the public property is set in the payload.
-      if (($index = array_search($info['property'], $this->getIdColumn())) !== FALSE) {
-        $id_values[$index] = $request[$public_property];
-      }
-
       if (isset($request[$public_property])) {
-        $fields[$info['property']] = $request[$public_property];
+        $record[$info['property']] = $request[$public_property];
       }
     }
 
-    $passed_id = NULL;
+    // Once the record is built, write it and view it.
+    if (drupal_write_record($this->getTableName(), $record)) {
+      // Handle multiple id columns.
+      $id_values = array();
+      foreach ($id_columns as $id_column) {
+        $id_values[$id_column] = $record[$id_column];
+      }
+      $id = implode(self::COLUMN_IDS_SEPARATOR, $id_values);
 
-    // If we have the full primary key passed use it.
-    if (count(array_filter($id_values)) == count($id_values)) {
-      $passed_id = implode(self::COLUMN_IDS_SEPARATOR, $id_values);
-    }
-
-    // Once the update array is built, execute the query.
-    if ($id = $query->fields($fields)->execute()) {
       return $this->view($id, TRUE);
     }
-
-    // Some times db_insert does not know how to get the ID.
-    if ($passed_id) {
-      return $this->view($passed_id);
-    }
-
     return;
   }
 

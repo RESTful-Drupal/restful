@@ -59,6 +59,8 @@ class RestfulDbQueryTestCase extends DrupalWebTestCase {
     // Testing read
     $result = $handler->get($id);
     $result = $result[0];
+    debug($result);
+
     $this->assertEqual($result['string'], $mock_data['str_field'], 'The record was retrieved successfully.');
     $this->assertEqual($result['integer'], $mock_data['int_field'], 'The record was retrieved successfully.');
     $this->assertEqual($result['serialized'], $mock_data['serialized_field'], 'The record was retrieved successfully.');
@@ -72,6 +74,8 @@ class RestfulDbQueryTestCase extends DrupalWebTestCase {
     $result = $handler->get($id);
     // Remove nullified fields.
     $result = array_filter($result[0]);
+    debug($result);
+
     $this->assertEqual($result, $mock_data2, 'The record was updated with PUT successfully.');
 
     $mock_data3 = $mock_data2;
