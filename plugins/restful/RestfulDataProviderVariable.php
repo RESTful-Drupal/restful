@@ -206,7 +206,6 @@ abstract class RestfulDataProviderVariable extends \RestfulBase implements \Rest
    * {@inheritdoc}
    */
   public function view($name) {
-    xdebug_break();
     $cache_id = array(
       'tb' => 'variable',
       'id' => $name,

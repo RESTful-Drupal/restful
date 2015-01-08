@@ -104,7 +104,6 @@ class RestfulDbQueryTestCase extends DrupalWebTestCase {
 
     // Manually serialize data for the expected result.
     $mock_data4['serialized'] = serialize($mock_data);
-    xdebug_break();
     $this->assertEqual($result[0], $mock_data4, 'All the content listed successfully.');
 
     // Testing filters.
