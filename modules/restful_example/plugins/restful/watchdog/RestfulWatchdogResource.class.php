@@ -25,7 +25,6 @@ class RestFulWatchdogResource extends \RestfulDataProviderDbQuery implements \Re
 
     $public_fields['log_variables'] = array(
       'property' => 'variables',
-      // Needs a process function for write contexts to serialize the data.
     );
 
     $public_fields['log_level'] = array(
@@ -37,5 +36,13 @@ class RestFulWatchdogResource extends \RestfulDataProviderDbQuery implements \Re
     );
 
     return $public_fields;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function access() {
+    $account = $this->getAccount();
+    return user_access('view site reports', $account);
   }
 }

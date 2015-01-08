@@ -30,10 +30,6 @@ class RestfulDbQueryTestCase extends DrupalWebTestCase {
    */
   function setUp() {
     parent::setUp('restful_test');
-
-    // Create the table to pupulate / query.
-    $schema = _restful_test_schema();
-    db_create_table($this->tableName, $schema[$this->tableName]);
   }
 
   /**
@@ -59,7 +55,6 @@ class RestfulDbQueryTestCase extends DrupalWebTestCase {
     // Testing read
     $result = $handler->get($id);
     $result = $result[0];
-    debug($result);
 
     $this->assertEqual($result['string'], $mock_data['str_field'], 'The record was retrieved successfully.');
     $this->assertEqual($result['integer'], $mock_data['int_field'], 'The record was retrieved successfully.');
@@ -70,21 +65,20 @@ class RestfulDbQueryTestCase extends DrupalWebTestCase {
       'integer' => $mock_data['int_field'],
       'string' => $this->randomName(),
     );
+
     $handler->put($id, $mock_data2);
     $result = $handler->get($id);
-    // Remove nullified fields.
-    $result = array_filter($result[0]);
-    debug($result);
+    // Make mock data resemble the intended response.
+    $mock_data2['serialized'] = $mock_data['serialized_field'];
 
-    $this->assertEqual($result, $mock_data2, 'The record was updated with PUT successfully.');
+    $this->assertEqual($result[0], $mock_data2, 'The record was updated with PUT successfully.');
 
-    $mock_data3 = $mock_data2;
-    $mock_data3['string'] = $this->randomName();
-    unset($mock_data3['integer']);
+    $mock_data3 = array(
+      'string' => $this->randomName(),
+    );
     $handler->patch($id, $mock_data3);
     $result = $handler->get($id);
-    $result = array_filter($result[0]);
-    $this->assertEqual($result, array_merge($mock_data2, $mock_data3), 'The record was updated with PATCH successfully.');
+    $this->assertEqual($result[0], array_merge($mock_data2, $mock_data3), 'The record was updated with PATCH successfully.');
 
     // Testing delete
     $handler->delete($id);
@@ -96,7 +90,8 @@ class RestfulDbQueryTestCase extends DrupalWebTestCase {
 
     // Testing create
     $mock_data4 = $mock_data2;
-    $mock_data4['serialized'] = serialize($mock_data4);
+    // Array values are automatically serialized.
+    $mock_data4['serialized'] = $mock_data;
     $handler->post('', $mock_data4);
     $count = db_select($this->tableName)
       ->countQuery()
@@ -106,7 +101,11 @@ class RestfulDbQueryTestCase extends DrupalWebTestCase {
 
     // Testing list.
     $result = $handler->get();
-    $this->assertEqual($result, array($mock_data4), 'All the content listed successfully.');
+
+    // Manually serialize data for the expected result.
+    $mock_data4['serialized'] = serialize($mock_data);
+    xdebug_break();
+    $this->assertEqual($result[0], $mock_data4, 'All the content listed successfully.');
 
     // Testing filters.
     $mock_data5 = array(

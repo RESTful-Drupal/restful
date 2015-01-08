@@ -21,4 +21,12 @@ class RestfulVariableResource extends \RestfulDataProviderVariable {
     );
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function access() {
+    $account = $this->getAccount();
+    return user_access('adminsiter site configuration', $account);
+  }
+
 }

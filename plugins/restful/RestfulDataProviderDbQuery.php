@@ -76,6 +76,20 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
   }
 
   /**
+   * @return string
+   **/
+  public function getPrimary() {
+    return $this->primary;
+  }
+
+  /**
+   * @param string $primary
+   **/
+  public function setPrimary($primary) {
+    $this->primary = $primary;
+  }
+
+  /**
    * Constructs a RestfulDataProviderDbQuery object.
    *
    * @param array $plugin
@@ -99,7 +113,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
 
     $this->tableName = $options['table_name'];
     $this->idColumn = $options['id_column'];
-    $this->primary = empty($plugin['primary']) ? NULL : $this->primary = $plugin['primary'];
+    $this->primary = !empty($plugin['primary']) ? $options['primary'] : $options['id_column'];
   }
 
   /**
@@ -367,7 +381,9 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
     }
 
     // Once the record is built, write it.
-    $test = drupal_write_record($this->getTableName(), $record, $id_columns);
+    if (!drupal_write_record($this->getTableName(), $record, $id_columns)) {
+      throw new \RestfulServiceUnavailable('Record could not be updated to the database.');
+    }
 
     // Clear the rendered cache before calling the view method.
     $this->clearRenderedCache(array(
@@ -377,7 +393,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
     ));
 
     // @todo: do we need to re-form $id in case some of the values have changed?
-    return $this->view($id, TRUE);
+    return $this->view($id);
   }
 
   /**

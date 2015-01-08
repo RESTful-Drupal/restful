@@ -7,7 +7,6 @@ $plugin = array(
   'data_provider_options' => array(
     'table_name' => 'watchdog',
     'id_column' => 'wid',
-    'primary' => 'wid',
   ),
   'description' => t('Expose watchdog entries to the REST API.'),
   'class' => 'RestfulWatchdogResource',
