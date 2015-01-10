@@ -5,7 +5,7 @@
  * Contains \Drupal\restful\AuthenticationPluginManager.
  */
 
-namespace Drupal\restful;
+namespace Drupal\restful\Plugin;
 
 use Drupal\Core\Plugin\DefaultPluginManager;
 use Drupal\Core\Plugin\Factory\ContainerFactory;
@@ -13,7 +13,7 @@ use Drupal\Core\Plugin\Discovery\YamlDiscovery;
 use Drupal\plug\Util\Module;
 
 /**
- * Name plugin manager.
+ * Authentication plugin manager.
  */
 class AuthenticationPluginManager extends DefaultPluginManager {
 
@@ -26,8 +26,6 @@ class AuthenticationPluginManager extends DefaultPluginManager {
     // A description of the plugin.
     'description' => '',
     'settings' => array(),
-    // Default class for authentication implementations.
-    'class' => 'Drupal\restful\Plugin\authentication\Authentication',
     'id' => '',
   );
 

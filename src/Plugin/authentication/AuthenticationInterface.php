@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains Drupal\restful\Plugin\authentication\Authentication
+ * Contains \Drupal\restful\Plugin\authentication\Authentication
  */
 
 namespace Drupal\restful\Plugin\authentication;

@@ -7,6 +7,8 @@
 
 include_once __DIR__ . '/restful.entity.inc';
 
+use Drupal\restful\Plugin\AuthenticationPluginManager;
+
 /**
  * Implements hook_ctools_plugin_directory().
  */
@@ -306,13 +308,14 @@ function restful_get_restful_handler_by_name($plugin_name) {
   // If the restful plugin needs authentication load the corresponding
   // authentication plugin.
 
-  // Handler set explicitly to allow all authentication types.
-  $auth_plugins = $plugin['authentication_types'] === TRUE ? array_keys(restful_get_authentication_plugins()) : $plugin['authentication_types'];
-
-  // We can have multiple authentication plugins.
-  foreach ($auth_plugins as $auth_plugin_name) {
-    $auth_handler = restful_get_authentication_handler($auth_plugin_name);
-    $handler->getAuthenticationManager()->addAuthenticationProvider($auth_handler);
+  if ($plugin['authentication_types'] === TRUE) {
+    $handler->getAuthenticationManager()->addAllAuthenticationProviders();
+  }
+  else {
+    // We can have multiple authentication plugins.
+    foreach ($plugin['authentication_types'] as $auth_plugin_name) {
+      $handler->getAuthenticationManager()->addAuthenticationProvider($auth_plugin_name);
+    }
   }
 
   // Set the "optional" flag of the authentication manager.
