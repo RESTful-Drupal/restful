@@ -59,17 +59,6 @@ function restful_get_restful_plugins() {
 }
 
 /**
- * Include CTools plugins and get all authentication plugins.
- *
- * @return array
- *   All plugins for restful authentication.
- */
-function restful_get_authentication_plugins() {
-  ctools_include('plugins');
-  return ctools_get_plugins('restful', 'authentication');
-}
-
-/**
  * Include CTools plugins and get all rate_limit plugins.
  *
  * @return array
@@ -322,25 +311,6 @@ function restful_get_restful_handler_by_name($plugin_name) {
   $handler->getAuthenticationManager()->setIsOptional($plugin['authentication_optional']);
 
   return $handler;
-}
-
-/**
- * Return the authentication handler based on the authentication plugin name.
- *
- * @param string $auth_plugin_name
- *   Name of the authentication plugin.
- *
- * @return \RestfulAuthenticationInterface
- *   The authentication provider object.
- *
- * @throws \RestfulException if the authentication provider does not exist.
- */
-function restful_get_authentication_handler($auth_plugin_name) {
-  $auth_plugin = restful_get_authentication_plugin($auth_plugin_name);
-  if (!$auth_class = ctools_plugin_get_class($auth_plugin, 'class')) {
-    throw new \RestfulServiceUnavailable(format_string('Authentication plugin class (@plugin) was not found.', array('@plugin' => $auth_plugin_name)));
-  }
-  return new $auth_class($auth_plugin);
 }
 
 /**
