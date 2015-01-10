@@ -30,10 +30,10 @@ interface AuthenticationManagerInterface {
   /**
    * Adds the auth provider to the list.
    *
-   * @param string $instance_id
+   * @param string $plugin_id
    *   The authentication plugin id.
    */
-  public function addAuthenticationProvider($instance_id);
+  public function addAuthenticationProvider($plugin_id);
 
   /**
    * Adds all the auth providers to the list.

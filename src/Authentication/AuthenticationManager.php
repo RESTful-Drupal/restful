@@ -41,7 +41,8 @@ class AuthenticationManager implements AuthenticationManagerInterface {
    *   The authentication plugin manager.
    */
   public function __construct(AuthenticationPluginManager $manager = NULL) {
-    $this->plugins = new AuthenticationPluginCollection($manager ?: AuthenticationPluginManager::create());
+    $manager = $manager ?: AuthenticationPluginManager::create();
+    $this->plugins = new AuthenticationPluginCollection($manager, $manager->getDefinitions());
   }
 
   /**
@@ -61,9 +62,11 @@ class AuthenticationManager implements AuthenticationManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function addAuthenticationProvider($instance_id) {
+  public function addAuthenticationProvider($plugin_id) {
+    $manager = AuthenticationPluginManager::create();
+    $instance = $manager->createInstance($plugin_id);
     // The get method will instantiate a plugin if not there.
-    $this->plugins->get($instance_id);
+    $this->plugins->set($plugin_id, $instance);
   }
 
   /**
