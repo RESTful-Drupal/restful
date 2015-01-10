@@ -24,6 +24,15 @@ class RestfulEntityBaseUser extends \RestfulEntityBase {
   }
 
   /**
+   * Overrides parent::getEntityInfo().
+   */
+  public function getEntityInfo($type = NULL) {
+    $info = parent::getEntityInfo($type);
+    $info['entity keys']['label'] = 'name';
+    return $info;
+  }
+
+  /**
    * Overrides \RestfulEntityBase::getList().
    *
    * Make sure only privileged users may see a list of users.
@@ -46,4 +55,5 @@ class RestfulEntityBaseUser extends \RestfulEntityBase {
     $query->entityCondition('entity_id', 0, '>');
     return $query;
   }
+
 }

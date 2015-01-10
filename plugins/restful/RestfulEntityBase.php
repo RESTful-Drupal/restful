@@ -168,7 +168,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    * @throws \Exception
    */
   protected function getListForAutocomplete() {
-    $entity_info = entity_get_info($this->getEntityType());
+    $entity_info = $this->getEntityInfo();
     if (empty($entity_info['entity keys']['label'])) {
       // Entity is invalid for autocomplete, as it doesn't have a "label"
       // property.
@@ -199,7 +199,10 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    *   Array with the bundle name(s).
    */
   protected function getBundlesForAutocomplete() {
-    return array($this->getBundle());
+    $info = $this->getEntityInfo();
+    // When a bundle key wasn't defined return false in order to make the
+    // autocomplete support entities without bundle key. i.e: user, vocabulary.
+    return !empty($info['entity keys']['bundle']) ? array($this->getBundle()) : FALSE;
   }
 
   /**
@@ -211,7 +214,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
   protected function getQueryForAutocomplete() {
     $autocomplete_options = $this->getPluginKey('autocomplete');
     $entity_type = $this->getEntityType();
-    $entity_info = entity_get_info($entity_type);
+    $entity_info = $this->getEntityInfo();
     $request = $this->getRequest();
 
     $string = drupal_strtolower($request['autocomplete']['string']);
@@ -455,7 +458,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       // This is a property referencing another entity (e.g. the "uid" on the
       // node object).
       $info = $wrapper->info();
-      if (entity_get_info($info['type'])) {
+      if ($this->getEntityInfo($info['type'])) {
         return $info['type'];
       }
 
@@ -591,7 +594,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    * {@inheritdoc}
    */
   public function createEntity() {
-    $entity_info = entity_get_info($this->entityType);
+    $entity_info = $this->getEntityInfo();
     $bundle_key = $entity_info['entity keys']['bundle'];
     $values = $bundle_key ? array($bundle_key => $this->bundle) : array();
 
@@ -1151,7 +1154,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    * {@inheritdoc}
    */
   public function publicFieldsInfo() {
-    $entity_info = entity_get_info($this->getEntityType());
+    $entity_info = $this->getEntityInfo();
     $id_key = $entity_info['entity keys']['id'];
 
     $public_fields = array(
@@ -1348,7 +1351,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
 
     // Mock an entity.
     $values = array();
-    $entity_info = entity_get_info($entity_type);
+    $entity_info = $this->getEntityInfo();
 
     if (!empty($entity_info['entity keys']['bundle'])) {
       // Set the bundle of the entity.
