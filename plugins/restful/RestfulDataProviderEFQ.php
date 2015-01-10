@@ -138,13 +138,15 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
 
     $sorts = $sorts ? $sorts : $this->defaultSortInfo();
 
-    foreach ($sorts as $sort => $direction) {
+    foreach ($sorts as $public_field_name => $direction) {
       // Determine if sorting is by field or property.
-      if (empty($public_fields[$sort]['column'])) {
-        $query->propertyOrderBy($public_fields[$sort]['property'], $direction);
+      $property_name = $public_fields[$public_field_name]['property'];
+      if (field_info_field($property_name)) {
+        $query->fieldOrderBy($public_fields[$public_field_name]['property'], $public_fields[$public_field_name]['column'], $direction);
       }
       else {
-        $query->fieldOrderBy($public_fields[$sort]['property'], $public_fields[$sort]['column'], $direction);
+        $column = $this->getColumnFromProperty($property_name);
+        $query->propertyOrderBy($column, $direction);
       }
     }
   }
@@ -163,12 +165,8 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
     $public_fields = $this->getPublicFields();
     foreach ($this->parseRequestForListFilter() as $filter) {
       // Determine if filtering is by field or property.
-      if (empty($public_fields[$filter['public_field']]['column'])) {
-        for ($index = 0; $index < count($filter['value']); $index++) {
-          $query->propertyCondition($public_fields[$filter['public_field']]['property'], $filter['value'][$index], $filter['operator'][$index]);
-        }
-      }
-      else {
+      $property_name = $public_fields[$filter['public_field']]['property'];
+      if (field_info_field($property_name)) {
         if (in_array(strtoupper($filter['operator'][0]), array('IN', 'BETWEEN'))) {
           $query->fieldCondition($public_fields[$filter['public_field']]['property'], $public_fields[$filter['public_field']]['column'], $filter['value'], $filter['operator'][0]);
           continue;
@@ -177,7 +175,33 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
           $query->fieldCondition($public_fields[$filter['public_field']]['property'], $public_fields[$filter['public_field']]['column'], $filter['value'][$index], $filter['operator'][$index]);
         }
       }
+      else {
+        $column = $this->getColumnFromProperty($property_name);
+        for ($index = 0; $index < count($filter['value']); $index++) {
+          $query->propertyCondition($column, $filter['value'][$index], $filter['operator'][$index]);
+        }
+      }
     }
+  }
+
+  /**
+   * Get the DB column name from a property.
+   *
+   * The "property" defined in the public field is actually the property
+   * of the entity metadata wrapper. Sometimes that property can be a
+   * different name than the column in the DB. For example, for nodes the
+   * "uid" property is mapped in entity metadata wrapper as "author", so
+   * we make sure to get the real column name.
+   *
+   * @param string $property_name
+   *   The property name.
+   *
+   * @return string
+   *   The column name.
+   */
+  protected function getColumnFromProperty($property_name) {
+    $property_info = entity_get_property_info($this->getEntityType());
+    return $property_info['properties'][$property_name]['schema field'];
   }
 
   /**

@@ -23,15 +23,19 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
    * Test the sorting of entities.
    */
   function testSort() {
+    $user1 = $this->drupalCreateUser();
+    $user2 = $this->drupalCreateUser();
+
     $settings = array('type' => 'article');
 
-    $titles = array(
-      'abc',
-      'xyz',
-      'efg',
+    $info = array(
+      'abc' => $user1->uid,
+      'xyz' => $user1->uid,
+      'efg' => $user2->uid,
     );
-    foreach ($titles as $title) {
+    foreach ($info as $title => $uid) {
       $settings['title'] = $title;
+      $settings['uid'] = $uid;
       $node = $this->drupalCreateNode($settings);
       $nodes[$title] = $node->nid;
     }
@@ -259,28 +263,41 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
       $roles = array_map('trim', explode(',', $item['roles']));
       $this->assertTrue(in_array($role_name, $roles), format_string('%role role found in content list.', array('%role' => $role_name)));
     }
+
+    // Sort by an entity metadata wrapper property that is different from the
+    // DB column name.
+    $handler = restful_get_restful_handler('articles', 1, 5);
+    $request = array('sort' => '-user',);
+    $result = $handler->get('', $request);
+    $this->assertEqual($result[0]['user']['id'], 3, 'List sorted by the "author" entity metadata wrapper property, which maps to the "uid" DB column name.');
   }
 
   /**
    * Test filtering.
    */
   function testFilter() {
+    $user1 = $this->drupalCreateUser();
+    $user2 = $this->drupalCreateUser();
+
     $this->addIntegerFields();
     $info = array(
       array(
         'title' => 'abc',
         'integer_single' => 1,
         'integer_multiple' => array(1, 2, 3),
+        'uid' => $user1->uid,
       ),
       array(
         'title' => 'another abc',
         'integer_single' => 5,
         'integer_multiple' => array(3, 4, 5),
+        'uid' => $user1->uid,
       ),
       array(
         'title' => 'last',
         'integer_single' => NULL,
         'integer_multiple' => array(),
+        'uid' => $user2->uid,
       ),
     );
 
@@ -299,6 +316,8 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
       foreach ($row['integer_multiple'] as $key => $value) {
         $settings['integer_multiple'][LANGUAGE_NONE][$key]['value'] = $value;
       }
+
+      $settings['uid'] = $row['uid'];
 
       $node = $this->drupalCreateNode($settings);
       $nodes[$title] = $node->nid;
@@ -394,6 +413,20 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     catch (\RestfulBadRequestException $e) {
       $this->pass('Exception raised for disabled filter parameter.');
     }
+
+    // Filter by an entity metadata wrapper property that is different from the
+    // DB column name.
+    $handler = restful_get_restful_handler('articles', 1, 5);
+    $request = array(
+      'filter' => array(
+        'user' => array(
+          'value' => $user1->uid,
+        ),
+      ),
+    );
+
+    $result = $handler->get('', $request);
+    $this->assertEqual(count($result), 2, 'List filtered by the "author" entity metadata wrapper property, which maps to the "uid" DB column name.');
   }
 
   /**
