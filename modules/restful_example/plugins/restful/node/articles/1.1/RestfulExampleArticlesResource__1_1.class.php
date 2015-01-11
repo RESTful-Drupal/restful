@@ -13,11 +13,6 @@ class RestfulExampleArticlesResource__1_1 extends RestfulExampleArticlesResource
   public function publicFieldsInfo() {
     $public_fields = parent::publicFieldsInfo();
     unset($public_fields['self']);
-
-    $public_fields['foo'] = array(
-      'create_or_update_passthrough' => TRUE,
-    );
-
     return $public_fields;
   }
 }
