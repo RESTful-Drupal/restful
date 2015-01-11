@@ -41,7 +41,7 @@ class RestfulUserLoginCookie extends \RestfulEntityBase {
    * Log the user.
    *
    * @param $account
-   *   The user object that was retrieved by the \RestfulAuthenticationManager.
+   *   The user object that was retrieved by the AuthenticationManager.
    */
   public function loginUser($account) {
     global $user;

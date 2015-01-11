@@ -2,10 +2,14 @@
 
 /**
  * @file
- * Contains RestfulAuthenticationBase.
+ * Contains \Drupal\restful\Plugin\authentication\Authentication
  */
 
-abstract class RestfulAuthenticationBase extends \RestfulPluginBase implements \RestfulAuthenticationInterface {
+namespace Drupal\restful\Plugin\authentication;
+
+use Drupal\Component\Plugin\PluginBase;
+
+abstract class Authentication extends PluginBase implements AuthenticationInterface {
 
   /**
    * Settings from the plugin definition.
@@ -13,14 +17,6 @@ abstract class RestfulAuthenticationBase extends \RestfulPluginBase implements \
    * @var array
    */
   protected $settings;
-
-  /**
-   * Constructor.
-   */
-  public function __construct($plugin) {
-    $this->setPlugin($plugin);
-    $this->settings = $this->getPluginKey('settings');
-  }
 
   /**
    * {@inheritdoc}
@@ -34,7 +30,7 @@ abstract class RestfulAuthenticationBase extends \RestfulPluginBase implements \
    * {@inheritdoc}
    */
   public function getName() {
-    return $this->getPluginKey('name');
+    return $this->getPluginId();
   }
 
 }
