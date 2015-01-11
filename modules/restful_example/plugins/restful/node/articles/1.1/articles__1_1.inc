@@ -10,5 +10,4 @@ $plugin = array(
   'class' => 'RestfulExampleArticlesResource__1_1',
   // Set the minor version.
   'minor_version' => 1,
-  'authentication_types' => TRUE,
 );
