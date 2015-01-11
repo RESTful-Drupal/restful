@@ -1080,7 +1080,39 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
    * {@inheritdoc}
    */
   public function getPublicFields() {
+    if ($this->publicFields) {
+      // Return early.
+      return $this->publicFields;
+    }
+
     $public_fields = $this->publicFieldsInfo();
+
+    // Cache the processed fields.
+    $this->setPublicFields($public_fields);
+
+    return $public_fields;
+  }
+
+  /**
+   * Set the public fields.
+   *
+   * @param array $public_fields
+   *   The unprocessed public fields array.
+   */
+  public function setPublicFields(array $public_fields = array()) {
+    $this->publicFields = $this->addDefaultValuesToPublicFields($public_fields);
+  }
+
+  /**
+   * Add default values to the public fields array.
+   *
+   * @param array $public_fields
+   *   The unprocessed public fields array.
+   *
+   * @return array
+   *   The processed public fields array.
+   */
+  protected function addDefaultValuesToPublicFields(array $public_fields = array()) {
     // Set defaults values.
     foreach (array_keys($public_fields) as $key) {
       // Set default values.
@@ -1092,6 +1124,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
         'create_or_update_passthrough_required' => FALSE,
       );
     }
+
     return $public_fields;
   }
 

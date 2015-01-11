@@ -313,7 +313,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
         $value = static::executeCallback($info['callback'], array($wrapper));
       }
       else {
-        if (empty($info['property']) && !empty($info['create_or_update_passthrough'])) {
+        if (!$info['property'] && $info['create_or_update_passthrough']) {
           // The public field is a dummy one, meant only for passing data upon
           // create or update.
           continue;
@@ -1241,15 +1241,8 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
   /**
    * {@inheritdoc}
    */
-  public function getPublicFields() {
-    if ($this->publicFields) {
-      // Return early.
-      return $this->publicFields;
-    }
-
-    // Get the public fields that were defined by the user.
-    $public_fields = parent::getPublicFields();
-
+  protected function addDefaultValuesToPublicFields(array $public_fields = array()) {
+    $public_fields = parent::addDefaultValuesToPublicFields($public_fields);
     // Set defaults values.
     foreach (array_keys($public_fields) as $key) {
       // Set default values specific for entities.
@@ -1300,9 +1293,6 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
         }
       }
     }
-
-    // Cache the processed fields.
-    $this->setPublicFields($public_fields);
 
     return $public_fields;
   }
@@ -1409,16 +1399,6 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     );
 
     return !in_array($field['type'], $field_types) || !in_array($instance['widget']['type'], $widget_types);
-  }
-
-  /**
-   * Set the public fields.
-   *
-   * @param array $public_fields
-   *   The processed public fields array.
-   */
-  public function setPublicFields(array $public_fields = array()) {
-    $this->publicFields = $public_fields;
   }
 
   /**
