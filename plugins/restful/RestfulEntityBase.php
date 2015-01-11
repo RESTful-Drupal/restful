@@ -632,6 +632,15 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     $original_request = $request;
 
     foreach ($this->getPublicFields() as $public_field_name => $info) {
+      if (!empty($info['create_or_update_passthrough'])) {
+        // Allow passing the value in the request.
+        if (!empty($info['create_or_update_passthrough_required']) && !isset($request[$public_field_name])) {
+          throw new \RestfulBadRequestException(format_string('Property @name is required.', array('@name' => $public_field_name)));
+        }
+
+        unset($original_request[$public_field_name]);
+        continue;
+      }
       if (empty($info['property'])) {
         // We may have for example an entity with no label property, but with a
         // label callback. In that case the $info['property'] won't exist, so
@@ -650,7 +659,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       }
 
       if (!$this->checkPropertyAccess('edit', $public_field_name, $wrapper->{$property_name}, $wrapper)) {
-        throw new RestfulBadRequestException(format_string('Property @name cannot be set.', array('@name' => $public_field_name)));
+        throw new \RestfulBadRequestException(format_string('Property @name cannot be set.', array('@name' => $public_field_name)));
       }
 
       $field_value = $this->propertyValuesPreprocess($property_name, $request[$public_field_name], $public_field_name);
@@ -662,7 +671,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
 
     if (!$save) {
       // No request was sent.
-      throw new RestfulBadRequestException('No values were sent with the request');
+      throw new \RestfulBadRequestException('No values were sent with the request');
     }
 
     if ($original_request) {
@@ -1227,17 +1236,15 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     }
 
     // Get the public fields that were defined by the user.
-    $public_fields = $this->publicFieldsInfo();
+    $public_fields = parent::getPublicFields();
 
     // Set defaults values.
     foreach (array_keys($public_fields) as $key) {
-      // Set default values.
+      // Set default values specific for entities.
       $info = &$public_fields[$key];
       $info += array(
         'access_callbacks' => array(),
-        'callback' => FALSE,
         'column' => FALSE,
-        'process_callbacks' => array(),
         'property' => FALSE,
         'resource' => array(),
         'sub_property' => FALSE,
