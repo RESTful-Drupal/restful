@@ -30,7 +30,7 @@ class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
   protected $account;
 
   function setUp() {
-    parent::setUp('restful_test', 'entityreference');
+    parent::setUp('restful_test', 'restful_example', 'entityreference');
 
     // Add common fields, vocabulary and terms.
     restful_test_add_fields();
@@ -210,7 +210,7 @@ class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
   }
 
   public function testPassThrough() {
-    $handler = restful_get_restful_handler('main', 1, 1);
+    $handler = restful_get_restful_handler('articles', 1, 1);
 
     $public_fields = $handler->getPublicFields();
     $public_fields['foo'] = array(
