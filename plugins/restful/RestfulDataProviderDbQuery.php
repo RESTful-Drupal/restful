@@ -5,6 +5,8 @@
  * Contains \RestfulDataProviderDbQuery
  */
 
+use Drupal\restful\Authentication\AuthenticationManager;
+
 abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \RestfulDataProviderDbQueryInterface, \RestfulDataProviderInterface {
 
   /**
@@ -80,14 +82,14 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
    *
    * @param array $plugin
    *   Plugin definition.
-   * @param RestfulAuthenticationManager $auth_manager
+   * @param AuthenticationManager $auth_manager
    *   (optional) Injected authentication manager.
    * @param DrupalCacheInterface $cache_controller
    *   (optional) Injected cache backend.
    * @param string $language
    *   (optional) The language to return items in.
    */
-  public function __construct(array $plugin, \RestfulAuthenticationManager $auth_manager = NULL, \DrupalCacheInterface $cache_controller = NULL, $language = NULL) {
+  public function __construct(array $plugin, AuthenticationManager $auth_manager = NULL, \DrupalCacheInterface $cache_controller = NULL, $language = NULL) {
     parent::__construct($plugin, $auth_manager, $cache_controller, $language);
 
     // Validate keys exist in the plugin's "data provider options".

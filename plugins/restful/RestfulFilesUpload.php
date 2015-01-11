@@ -5,6 +5,8 @@
  * Contains RestfulFilesUpload.
  */
 
+use Drupal\restful\Authentication\AuthenticationManager;
+
 class RestfulFilesUpload extends \RestfulEntityBase {
 
   /**
@@ -27,7 +29,7 @@ class RestfulFilesUpload extends \RestfulEntityBase {
    *   file size.
    * - "scheme": By default the default scheme (e.g. public, private) is used.
    */
-  public function __construct(array $plugin, \RestfulAuthenticationManager $auth_manager = NULL, \DrupalCacheInterface $cache_controller = NULL, $language = NULL) {
+  public function __construct(array $plugin, AuthenticationManager $auth_manager = NULL, \DrupalCacheInterface $cache_controller = NULL, $language = NULL) {
     parent::__construct($plugin, $auth_manager, $cache_controller, $language);
 
     if (!$options = $this->getPluginKey('options')) {

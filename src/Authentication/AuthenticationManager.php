@@ -2,18 +2,29 @@
 
 /**
  * @file
- * Contains RestfulAuthenticationManager.
+ * Contains \Drupal\restful\Authentication\AuthenticationManager
  */
 
-class RestfulAuthenticationManager extends \ArrayObject {
+namespace Drupal\restful\Authentication;
+
+use Drupal\restful\Plugin\AuthenticationPluginManager;
+use Drupal\restful\Plugin\authentication\AuthenticationInterface;
+
+class AuthenticationManager implements AuthenticationManagerInterface {
 
   /**
    * The resolved user object.
    *
-   * @var \stdClass
+   * @var object
    */
   protected $account;
 
+  /**
+   * The authentication plugins.
+   *
+   * @var AuthenticationPluginCollection
+   */
+  protected $plugins;
 
   /**
    * Determines if authentication is optional.
@@ -26,48 +37,50 @@ class RestfulAuthenticationManager extends \ArrayObject {
   protected $isOptional = FALSE;
 
   /**
-   * Set the authentications' "optional" flag.
-   *
-   * @param boolean $is_optional
-   *   Determines if the authentication is optional.
+   * @param AuthenticationPluginManager $manager
+   *   The authentication plugin manager.
+   */
+  public function __construct(AuthenticationPluginManager $manager = NULL) {
+    $manager = $manager ?: AuthenticationPluginManager::create();
+    $this->plugins = new AuthenticationPluginCollection($manager, $manager->getDefinitions());
+  }
+
+  /**
+   * {@inheritdoc}
    */
   public function setIsOptional($is_optional) {
     $this->isOptional = $is_optional;
   }
 
   /**
-   * Get the authentications' "optional" flag.
-   *
-   * @return boolean
-   *   TRUE if the authentication is optional.
+   * {@inheritdoc}
    */
   public function getIsOptional() {
     return $this->isOptional;
   }
 
   /**
-   * Adds the auth provider to the list.
-   *
-   * @param \RestfulAuthenticationInterface $provider
-   *   The authentication plugin object.
+   * {@inheritdoc}
    */
-  public function addAuthenticationProvider(RestfulAuthenticationInterface $provider) {
-    $this->offsetSet($provider->getName(), $provider);
+  public function addAuthenticationProvider($plugin_id) {
+    $manager = AuthenticationPluginManager::create();
+    $instance = $manager->createInstance($plugin_id);
+    // The get method will instantiate a plugin if not there.
+    $this->plugins->set($plugin_id, $instance);
   }
 
   /**
-   * Get the user account for the request.
-   *
-   * @param array $request
-   *   The request.
-   * @param string $method
-   *   The HTTP method.
-   * @param boolean $cache
-   *   Boolean indicating if the resolved user should be cached for next calls.
-   *
-   * @throws RestfulUnauthorizedException
-   * @return \stdClass
-   *   The user object.
+   * {@inheritdoc}
+   */
+  public function addAllAuthenticationProviders() {
+    $manager = AuthenticationPluginManager::create();
+    foreach ($manager->getDefinitions() as $id => $plugin) {
+      $this->addAuthenticationProvider($id);
+    }
+  }
+
+  /**
+   * {@inheritdoc}
    */
   public function getAccount(array $request = array(), $method = \RestfulInterface::GET, $cache = TRUE) {
     global $user;
@@ -77,7 +90,7 @@ class RestfulAuthenticationManager extends \ArrayObject {
     }
     // Resolve the user based on the providers in the manager.
     $account = NULL;
-    foreach ($this as $provider) {
+    foreach ($this->plugins as $provider) {
       if ($provider->applies($request, $method) && $account = $provider->authenticate($request, $method)) {
         // The account has been loaded, we can stop looking.
         break;
@@ -86,7 +99,7 @@ class RestfulAuthenticationManager extends \ArrayObject {
 
     if (!$account) {
 
-      if ($this->count() && !$this->getIsOptional()) {
+      if ($this->plugins->count() && !$this->getIsOptional()) {
         // User didn't authenticate against any provider, so we throw an error.
         throw new \RestfulUnauthorizedException('Bad credentials');
       }
@@ -109,12 +122,9 @@ class RestfulAuthenticationManager extends \ArrayObject {
   }
 
   /**
-   * Setter method for the account property.
-   *
-   * @param \stdClass $account
-   *   The account to set.
+   * {@inheritdoc}
    */
-  public function setAccount(\stdClass $account) {
+  public function setAccount($account) {
     $this->account = $account;
   }
 
