@@ -90,6 +90,11 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
   public $staticCache;
 
   /**
+   * The public fields that are exposed to the API.
+   */
+  protected $publicFields;
+
+  /**
    * Get the cache id parameters based on the keys.
    *
    * @param $keys
