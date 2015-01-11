@@ -69,6 +69,12 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    *       'full_view' => FALSE,
    *     ),
    *   );
+   * - "create_or_update_passthrough": Determines if a public field that isn't
+   *   mapped to any property or field, may be passed upon create or update
+   *   of an entity. Defaults to FALSE.
+   * - "create_or_update_passthrough_required": Determines if the passthrough
+   *   public field, passed upon create or update of an entity is required.
+   *   Defaults to FALSE.
    *
    * @var array
    */
