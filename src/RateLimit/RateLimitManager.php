@@ -75,10 +75,10 @@ class RateLimitManager implements RateLimitManagerInterface {
       // Set the instance id to articles::request and specify the plugin id.
       $instance_id = $resource->getResourceName() . '::' . $plugin_id;
       $options[$instance_id] = array(
-        'name' => $plugin_id,
+        'id' => $plugin_id,
         'resource' => $resource,
       );
-      $options += $rate_options;
+      $options[$instance_id] += $rate_options;
     }
     $this->plugins = new RateLimitPluginCollection($manager, $options);
   }

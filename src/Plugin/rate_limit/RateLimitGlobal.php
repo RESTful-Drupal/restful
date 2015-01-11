@@ -12,7 +12,7 @@ namespace Drupal\restful\Plugin\rate_limit;
  * @package Drupal\restful\Plugin\rate_limit
  *
  * @RateLimit(
- *   name = "global",
+ *   id = "global",
  *   label = "Global limitation",
  *   description = "This keeps a count across all the handlers.",
  * )

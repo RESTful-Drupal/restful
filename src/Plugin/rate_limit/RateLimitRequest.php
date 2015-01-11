@@ -12,7 +12,7 @@ namespace Drupal\restful\Plugin\rate_limit;
  * @package Drupal\restful\Plugin\rate_limit
  *
  * @RateLimit(
- *   name = "request",
+ *   id = "request",
  *   label = "Any request",
  *   description = "The basic rate limit plugin. Every call to a resource is counted.",
  * )
