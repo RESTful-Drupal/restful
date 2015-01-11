@@ -239,9 +239,11 @@ class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
     );
     $handler->setPublicFields($public_fields);
     $result = $handler->post('', $request);
+    $this->assertTrue($result['id'], 'Entity was created without a pass-through public field.');
 
     $request['foo'] = 'bar';
     $result = $handler->post('', $request);
+    $this->assertTrue($result['id'], 'Entity was created with a pass-through public field.');
   }
 
   /**
