@@ -307,6 +307,11 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
         $value = static::executeCallback($info['callback'], array($wrapper));
       }
       else {
+        if (empty($info['property']) && !empty($info['create_or_update_passthrough'])) {
+          // The public field is a dummy one, meant only for passing data upon
+          // create or update.
+          continue;
+        }
         // Exposing an entity field.
         $property = $info['property'];
         $sub_wrapper = $info['wrapper_method_on_entity'] ? $wrapper : $wrapper->{$property};
@@ -641,6 +646,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
         unset($original_request[$public_field_name]);
         continue;
       }
+
       if (empty($info['property'])) {
         // We may have for example an entity with no label property, but with a
         // label callback. In that case the $info['property'] won't exist, so
