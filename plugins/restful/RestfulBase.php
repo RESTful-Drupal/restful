@@ -91,6 +91,8 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
 
   /**
    * The public fields that are exposed to the API.
+   *
+   * @var array
    */
   protected $publicFields;
 
