@@ -1,5 +1,7 @@
 <?php
 
+use Drupal\restful\RateLimit\RateLimitManager;
+
 $plugin = array(
   'label' => t('Articles'),
   'resource' => 'articles',
@@ -19,7 +21,7 @@ $plugin = array(
       'limits' => array(
         'authenticated user' => 3,
         'anonymous user' => 2,
-        'administrator' => \RestfulRateLimitManager::UNLIMITED_RATE_LIMIT,
+        'administrator' => RateLimitManager::UNLIMITED_RATE_LIMIT,
       ),
     ),
   ),
