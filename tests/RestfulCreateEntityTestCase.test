@@ -30,7 +30,7 @@ class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
   protected $account;
 
   function setUp() {
-    parent::setUp('restful_test', 'restful_example', 'entityreference');
+    parent::setUp('restful_test', 'entityreference');
 
     // Add common fields, vocabulary and terms.
     restful_test_add_fields();
@@ -207,43 +207,6 @@ class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
     variable_set('restful_file_upload', FALSE);
     $return = $this->uploadFile();
     $this->assertEqual($return['code'], 403, 'File upload is denied to authenticated users.');
-  }
-
-  public function testPassThrough() {
-    $handler = restful_get_restful_handler('articles', 1, 1);
-
-    $public_fields = $handler->getPublicFields();
-    $public_fields['foo'] = array(
-      'create_or_update_passthrough' => TRUE,
-      'create_or_update_passthrough_required' => TRUE,
-    );
-    $handler->setPublicFields($public_fields);
-
-
-    $request = array('label' => $this->randomName());
-
-    try {
-      $handler->post('', $request);
-      $this->fail('Create entity did not fail with required pass-through public field');
-    }
-    catch (\RestfulBadRequestException $e) {
-      $this->pass('Correct exception thrown upon create entity with required pass-through public field');
-    }
-    catch (\Exception $e) {
-      $this->fail('Wrong exception thrown upon create entity with required pass-through public field');
-    }
-
-    $public_fields['foo'] = array(
-      'create_or_update_passthrough' => TRUE,
-      'create_or_update_passthrough_required' => FALSE,
-    );
-    $handler->setPublicFields($public_fields);
-    $result = $handler->post('', $request);
-    $this->assertTrue($result[0]['id'], 'Entity was created without a pass-through public field.');
-
-    $request['foo'] = 'bar';
-    $result = $handler->post('', $request);
-    $this->assertTrue($result[0]['id'], 'Entity was created with a pass-through public field.');
   }
 
   /**

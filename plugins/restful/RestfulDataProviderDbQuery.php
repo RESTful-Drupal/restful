@@ -349,25 +349,43 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
     // Build the update array.
     $request = $this->getRequest();
     static::cleanRequest($request);
+    $save = FALSE;
+    $original_request = $request;
+
     $public_fields = $this->getPublicFields();
     $fields = array();
-    foreach ($public_fields as $public_property => $info) {
+    foreach ($public_fields as $public_field_name => $info) {
+      if (!empty($info['create_or_update_passthrough'])) {
+        // Allow passing the value in the request.
+        if (!empty($info['create_or_update_passthrough_required']) && !isset($request[$public_field_name])) {
+          throw new \RestfulBadRequestException(format_string('Property @name is required.', array('@name' => $public_field_name)));
+        }
+
+        unset($original_request[$public_field_name]);
+        continue;
+      }
+
       // If this is the primary field, skip.
       if ($this->isPrimaryField($info['property'])) {
         continue;
       }
       // Check if the public property is set in the payload.
-      if (!isset($request[$public_property])) {
+      if (!isset($request[$public_field_name])) {
         if ($full_replace) {
           $fields[$info['property']] = NULL;
         }
       }
       else {
-        $fields[$info['property']] = $request[$public_property];
+        $fields[$info['property']] = $request[$public_field_name];
       }
+
+      unset($original_request[$public_field_name]);
+      $save = TRUE;
     }
-    if (empty($fields)) {
-      return $this->view($id);
+
+    if (!$save) {
+      // No request was sent.
+      throw new \RestfulBadRequestException('No values were sent with the request.');
     }
 
     // Once the update array is built, execute the query.
@@ -424,7 +442,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
 
     if (!$save) {
       // No request was sent.
-      throw new \RestfulBadRequestException('No values were sent with the request');
+      throw new \RestfulBadRequestException('No values were sent with the request.');
     }
 
     $passed_id = NULL;
@@ -439,12 +457,10 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
       return $this->view($id, TRUE);
     }
 
-    // Some times db_insert does not know how to get the ID.
+    // Some times db_insert() does not know how to get the ID.
     if ($passed_id) {
       return $this->view($passed_id);
     }
-
-    return;
   }
 
   /**

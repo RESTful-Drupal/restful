@@ -31,7 +31,7 @@ class RestfulDbQueryTestCase extends DrupalWebTestCase {
   function setUp() {
     parent::setUp('restful_test');
 
-    // Create the table to pupulate / query.
+    // Create the table to populate and query.
     $schema = _restful_test_schema();
     db_create_table($this->tableName, $schema[$this->tableName]);
   }
