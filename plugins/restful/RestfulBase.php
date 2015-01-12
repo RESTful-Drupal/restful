@@ -1097,7 +1097,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
     // Cache the processed fields.
     $this->setPublicFields($public_fields);
 
-    return $public_fields;
+    return $this->publicFields;
   }
 
   /**

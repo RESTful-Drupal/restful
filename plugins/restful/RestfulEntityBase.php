@@ -309,15 +309,16 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
 
       $value = NULL;
 
+      if ($info['create_or_update_passthrough']) {
+        // The public field is a dummy one, meant only for passing data upon
+        // create or update.
+        continue;
+      }
+
       if ($info['callback']) {
         $value = static::executeCallback($info['callback'], array($wrapper));
       }
       else {
-        if (!$info['property'] && $info['create_or_update_passthrough']) {
-          // The public field is a dummy one, meant only for passing data upon
-          // create or update.
-          continue;
-        }
         // Exposing an entity field.
         $property = $info['property'];
         $sub_wrapper = $info['wrapper_method_on_entity'] ? $wrapper : $wrapper->{$property};
