@@ -391,20 +391,40 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
     // Build the update array.
     $request = $this->getRequest();
     static::cleanRequest($request);
+    $save = FALSE;
+    $original_request = $request;
+
     $public_fields = $this->getPublicFields();
     $fields = array();
     $id_values = array_fill(0, count($this->getIdColumn()), FALSE);
 
-    foreach ($public_fields as $public_property => $info) {
+    foreach ($public_fields as $public_field_name => $info) {
+      if (!empty($info['create_or_update_passthrough'])) {
+        // Allow passing the value in the request.
+        if (!empty($info['create_or_update_passthrough_required']) && !isset($request[$public_field_name])) {
+          throw new \RestfulBadRequestException(format_string('Property @name is required.', array('@name' => $public_field_name)));
+        }
+
+        unset($original_request[$public_field_name]);
+        continue;
+      }
 
       // Check if the public property is set in the payload.
       if (($index = array_search($info['property'], $this->getIdColumn())) !== FALSE) {
-        $id_values[$index] = $request[$public_property];
+        $id_values[$index] = $request[$public_field_name];
       }
 
-      if (isset($request[$public_property])) {
-        $fields[$info['property']] = $request[$public_property];
+      if (isset($request[$public_field_name])) {
+        $fields[$info['property']] = $request[$public_field_name];
       }
+
+      unset($original_request[$public_field_name]);
+      $save = TRUE;
+    }
+
+    if (!$save) {
+      // No request was sent.
+      throw new \RestfulBadRequestException('No values were sent with the request');
     }
 
     $passed_id = NULL;
