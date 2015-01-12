@@ -58,10 +58,8 @@ class RestfulPassThroughTestCase extends RestfulCurlBaseTestCase {
    *   The handler object.
    * @param array $base_request
    *   The base request to create or update.
-   * @param bool $check_update
-   *   Determines if update should be tested as-well. Defaults to FALSE.
    */
-  protected function validatePassThrough(\RestfulInterface $handler, array $base_request = array(), $check_update = FALSE) {
+  protected function validatePassThrough(\RestfulInterface $handler, array $base_request = array()) {
     $request = $base_request;
     $public_fields = $handler->getPublicFields();
     $public_fields['foo'] = array(
@@ -87,18 +85,16 @@ class RestfulPassThroughTestCase extends RestfulCurlBaseTestCase {
     );
     $handler->setPublicFields($public_fields);
     $result = $handler->post('', $request);
-    $this->assertTrue($result, 'Object was created without a pass-through public field.');
+    $this->assertTrue($result[0]['id'], 'Object was created without a pass-through public field.');
 
     $request['foo'] = 'bar';
     $result = $handler->post('', $request);
-    $this->assertTrue($result, 'Object was created with a pass-through public field.');
+    $this->assertTrue($result[0]['id'], 'Object was created with a pass-through public field.');
 
-    if ($check_update) {
-      // Assert update.
-      $id = $result[0]['id'];
-      $result = $handler->put($id, $request);
-      $this->assertTrue($result[0]['id'], 'Object was updated with a pass-through public field.');
-    }
+    // Assert update.
+    $id = $result[0]['id'];
+    $result = $handler->put($id, $request);
+    $this->assertTrue($result[0]['id'], 'Object was updated with a pass-through public field.');
   }
 
 }
