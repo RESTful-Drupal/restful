@@ -93,7 +93,7 @@ class RestfulPassThroughTestCase extends RestfulCurlBaseTestCase {
 
     // Assert update.
     $id = $result[0]['id'];
-    $result = $handler->patch($id, $request);
+    $result = $handler->put($id, $request);
     $this->assertTrue($result[0]['id'], 'Object was updated with a pass-through public field.');
   }
 
