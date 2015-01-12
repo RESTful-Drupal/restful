@@ -8,6 +8,7 @@
 namespace Drupal\restful\Plugin\rate_limit;
 
 use Drupal\Component\Plugin\PluginBase;
+use Drupal\restful\RateLimit\RateLimitManager;
 
 abstract class RateLimit extends PluginBase implements RateLimitInterface {
 
@@ -66,7 +67,7 @@ abstract class RateLimit extends PluginBase implements RateLimitInterface {
         continue;
       }
       if ($this->limits[$role] < $max_limit &&
-        $this->limits[$role] != \RestfulRateLimitManager::UNLIMITED_RATE_LIMIT) {
+        $this->limits[$role] != RateLimitManager::UNLIMITED_RATE_LIMIT) {
         // The limit is smaller than one previously found.
         continue;
       }

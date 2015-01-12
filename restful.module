@@ -697,7 +697,7 @@ function restful_deliver_menu_not_found($page_callback_result) {
  * Implements hook_cron().
  */
 function restful_cron() {
-  \RestfulRateLimitManager::deleteExpired();
+  \Drupal\restful\RateLimit\RateLimitManager::deleteExpired();
 }
 
 /**
