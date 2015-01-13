@@ -6,6 +6,18 @@
  */
 
 class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulFormatterInterface {
+
+  /**
+   * Determine whether this is an associative array.
+   *
+   * @param array $array
+   *
+   * @return boolean
+   */
+  static function is_assoc(array $array) {
+    return (bool)count(array_filter(array_keys($array), 'is_string'));
+  }
+
   /**
    * Content Type
    *
@@ -25,14 +37,12 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
     }
     // Here we get the data after calling the backend storage for the resources.
 
-    $curies_resource = $this->withCurie($this->handler->getResourceName());
-    $output = array();
-
     foreach ($data as &$row) {
-      $row = $this->prepareRow($row, $output);
+      $row = $this->prepareRow($row);
     }
 
-    $output[$curies_resource] = $data;
+    $curies_resource = $this->withCurie($this->handler->getResourceName());
+    $output = array($curies_resource => $data);
 
     if (!empty($this->handler)) {
       if (
@@ -126,13 +136,11 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
    *
    * @param array $row
    *   A single row array.
-   * @param array $output
-   *   The output array, passed by reference.
    *
    * @return array
    *   The massaged data of a single row.
    */
-  public function prepareRow(array $row, array &$output) {
+  public function prepareRow(array $row) {
     $this->addHateoasRow($row);
 
     if (!$curie = $this->getCurie()) {
@@ -140,20 +148,24 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
       return $row;
     }
 
-    foreach ($this->handler->getPublicFields() as $pubilc_field_name => $public_field) {
+    $embedded = array();
+
+    foreach ($this->handler->getPublicFields() as $public_field_name => $public_field) {
       if (empty($public_field['resource'])) {
         // Not a resource.
         continue;
       }
 
-      if (empty($row[$pubilc_field_name])) {
+      if (empty($row[$public_field_name])) {
         // No value.
         continue;
       }
 
-      $output += array('_embedded' => array());
+      $this->moveReferencesToEmbeds($embedded, $row, $public_field, $public_field_name);
+    }
 
-      $this->moveReferencesToEmbeds($output, $row, $public_field, $pubilc_field_name);
+    if (!empty($embedded)) {
+      $row['_embedded'] = $embedded;
     }
 
     return $row;
@@ -217,6 +229,9 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
   /**
    * Move the fields referencing other resources to the _embed key.
    *
+   * Note that for multiple value entityreference fields $row[$public_field_name]
+   * will be an array of values rather than a single value.
+   *
    * @param array $output
    *   Output array to be modified.
    * @param array $row
@@ -226,61 +241,50 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
    * @param $public_field_name
    *   The name of the public field.
    */
-  protected function moveReferencesToEmbeds(array &$output, array &$row, $public_field, $public_field_name) {
-    $value_metadata = $this->handler->getValueMetadata($row['id'], $public_field_name);
-    if (\RestfulBase::isArrayNumeric($row[$public_field_name])) {
-      foreach ($row[$public_field_name] as $index => $resource_row) {
+  protected function moveReferencesToEmbeds(array &$embedded, array &$row, $public_field, $public_field_name) {
+    $values_metadata = $this->handler->getValueMetadata($row['id'], $public_field_name);
+
+    // Wrap the row in an array if it isn't.
+    $rows = self::is_assoc($row[$public_field_name]) ? array($row[$public_field_name]) : $row[$public_field_name];
+
+    foreach ($rows as $subindex => $subrow) {
+      $value_metadata = $values_metadata[$subindex];
+
+      foreach ($subrow as $index => $resource_row) {
         if (empty($value_metadata[$index])) {
           // No metadata.
           continue;
         }
-        $metadata = $value_metadata[$index];
-        $this->moveMetadataResource($output, $public_field, $metadata, $resource_row);
+        $metadata = $value_metadata;
+
+        // If there is no resource name in the metadata for this particular value,
+        // assume that we are referring to the first resource in the field
+        // definition.
+        $resource_name = NULL;
+        if (!empty($metadata['resource_name'])) {
+          // Make sure that the resource in the metadata exists in the list of
+          // resources available for this particular public field.
+          foreach ($public_field['resource'] as $resource) {
+            if ($resource['name'] != $metadata['resource_name']) {
+              continue;
+            }
+            $resource_name = $metadata['resource_name'];
+          }
+        }
+        if (empty($resource_name)) {
+          $resource = reset($public_field['resource']);
+          $resource_name = $resource['name'];
+        }
+
+        $curies_resource = $this->withCurie($resource_name);
+        $preparedRow = $this->prepareRow($subrow);
+        $embedded[$curies_resource][] = $preparedRow;
       }
-    }
-    else {
-      $this->moveMetadataResource($output, $public_field, $value_metadata, $row[$public_field_name]);
     }
 
     // Remove the original reference.
     unset($row[$public_field_name]);
   }
 
-  /**
-   * Move a single "embedded resource" to be under the "_embedded" property.
-   *
-   * @param array $output
-   *   Output array to be modified. Passed by reference.
-   * @param array $public_field
-   *   The public field configuration array.
-   * @param $metadata
-   *   The metadata to add.
-   * @param $resource_row
-   *   The resource row.
-   */
-  protected function moveMetadataResource(array &$output, $public_field, $metadata, $resource_row) {
-    // If there is no resource name in the metadata for this particular value,
-    // assume that we are referring to the first resource in the field
-    // definition.
-    $resource_name = NULL;
-    if (!empty($metadata['resource_name'])) {
-      // Make sure that the resource in the metadata exists in the list of
-      // resources available for this particular public field.
-      foreach ($public_field['resource'] as $resource) {
-        if ($resource['name'] != $metadata['resource_name']) {
-          continue;
-        }
-        $resource_name = $metadata['resource_name'];
-      }
-    }
-    if (empty($resource_name)) {
-      $resource = reset($public_field['resource']);
-      $resource_name = $resource['name'];
-    }
-
-    $curies_resource = $this->withCurie($resource_name);
-    $resource_row = $this->prepareRow($resource_row, $output);
-    $output['_embedded'][$curies_resource][] = $resource_row;
-  }
-
 }
+
