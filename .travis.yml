@@ -28,6 +28,10 @@ before_script:
   # reference and enable restful in build site
   - ln -s $(readlink -e $(cd -)) restful/drupal/sites/all/modules/restful
   - cd restful/drupal
+
+  - drush dl --yes composer-8.x plug
+  - drush en --yes plug
+  - drush composer update
   - drush --yes pm-enable restful restful_token_auth restful_test
 
   # Download entity validator.
@@ -39,9 +43,6 @@ before_script:
 
   - curl -O https://www.drupal.org/files/issues/2264079-entity-wrapper-access-single-entity-reference-2.patch
   - patch -p1 /home/travis/build/restful/drupal/sites/all/modules/entity/includes/entity.wrapper.inc < 2264079-entity-wrapper-access-single-entity-reference-2.patch
-
-  - drush dl --yes composer-8.x
-  - drush composer update
 
   # start a web server on port 8080, run in the background; wait for initialization
   - drush runserver 127.0.0.1:8080 &
