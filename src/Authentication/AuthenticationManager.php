@@ -41,6 +41,7 @@ class AuthenticationManager implements AuthenticationManagerInterface {
    */
   public function __construct(AuthenticationPluginManager $manager = NULL) {
     $manager = $manager ?: AuthenticationPluginManager::create();
+    $manager->clearCachedDefinitions();
     $this->plugins = new AuthenticationPluginCollection($manager, $manager->getDefinitions());
   }
 
