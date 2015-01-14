@@ -248,14 +248,14 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
     $rows = self::is_assoc($row[$public_field_name]) ? array($row[$public_field_name]) : $row[$public_field_name];
 
     foreach ($rows as $subindex => $subrow) {
-      $value_metadata = $values_metadata[$subindex];
+      $metadata = $values_metadata[$subindex];
 
+      // Loop through each value for the field.
       foreach ($subrow as $index => $resource_row) {
-        if (empty($value_metadata[$index])) {
+        if (empty($metadata[$index])) {
           // No metadata.
           continue;
         }
-        $metadata = $value_metadata;
 
         // If there is no resource name in the metadata for this particular value,
         // assume that we are referring to the first resource in the field
