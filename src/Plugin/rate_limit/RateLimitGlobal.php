@@ -2,16 +2,28 @@
 
 /**
  * @file
- * Contains RestfulRateLimitGlobal
+ * Contains \Drupal\restful\Plugin\rate_limit\RateLimitGlobal
  */
 
-class RestfulRateLimitGlobal extends \RestfulRateLimitBase {
+namespace Drupal\restful\Plugin\rate_limit;
+
+/**
+ * Class RateLimitGlobal
+ * @package Drupal\restful\Plugin\rate_limit
+ *
+ * @RateLimit(
+ *   id = "global",
+ *   label = "Global limitation",
+ *   description = "This keeps a count across all the handlers.",
+ * )
+ */
+class RateLimitGlobal extends RateLimit {
 
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $plugin_info, $resource = NULL) {
-    parent::__construct($plugin_info, $resource);
+  public function __construct(array $configuration, $plugin_id, $plugin_definition) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
     $limit = variable_get('restful_global_rate_limit', 0);
     foreach (user_roles() as $rid => $role_info) {
       $this->limits[$rid] = $limit;
@@ -22,9 +34,9 @@ class RestfulRateLimitGlobal extends \RestfulRateLimitBase {
   /**
    * {@inheritdoc}
    */
-  public function generateIdentifier(\stdClass $account = NULL) {
+  public function generateIdentifier($account = NULL) {
     $identifier = '';
-    $identifier .= $this->name . '::';
+    $identifier .= $this->getPluginId() . '::';
     $identifier .= empty($account->uid) ? ip_address() : $account->uid;
     return $identifier;
   }
@@ -34,7 +46,7 @@ class RestfulRateLimitGlobal extends \RestfulRateLimitBase {
    *
    * All limits are the same for the global limit. Return the first one.
    */
-  public function getLimit(\stdClass $account = NULL) {
+  public function getLimit($account = NULL) {
     return reset($this->limits);
   }
 

@@ -1,25 +1,39 @@
 <?php
 
 /**
- * Contains RestfulRateLimitManager
+ * @file
+ * Contains \Drupal\restful\RateLimit\RateLimitManager
  */
 
-class RestfulRateLimitManager extends \RestfulPluginBase {
+namespace Drupal\restful\RateLimit;
+
+use Drupal\restful\Plugin\RateLimitPluginManager;
+use Drupal\restful\Plugin\rate_limit\RateLimit;
+
+class RateLimitManager implements RateLimitManagerInterface {
+
   const UNLIMITED_RATE_LIMIT = -1;
 
   /**
-   * @var \stdClass
-   *
    * The identified user account for the request.
+   *
+   * @var object
    */
   protected $account;
 
   /**
-   * @var string
-   *
    * Resource name being checked.
+   *
+   * @var string
    */
   protected $resource;
+
+  /**
+   * The rate limit plugins.
+   *
+   * @var RateLimitPluginCollection
+   */
+  protected $plugins;
 
   /**
    * Set the account.
@@ -41,29 +55,32 @@ class RestfulRateLimitManager extends \RestfulPluginBase {
   }
 
   /**
-   * Set the plugin info.
+   * Constructor for RateLimitManager.
    *
-   * @param array $pluginInfo
-   */
-  public function setPluginInfo($pluginInfo) {
-    $this->pluginInfo = $pluginInfo;
-  }
-
-  /**
-   * Constructor for RestfulRateLimitManager.
-   *
-   * @param string $resource
-   *   Resource name being checked.
-   * @param array $plugin
-   *   The plugin info array for the rate limit.
-   * @param \stdClass $account
+   * @param \RestfulBase $resource
+   *   Resource being checked.
+   * @param array $plugin_options
+   *   Array of options keyed by plugin id.
+   * @param object $account
    *   The identified user account for the request.
+   * @param RateLimitPluginManager $manager
+   *   The plugin manager.
    */
-  public function __construct($resource, array $plugin, $account = NULL) {
-    parent::__construct($plugin);
+  public function __construct(\RestfulBase $resource, $plugin_options, $account = NULL, RateLimitPluginManager $manager = NULL) {
     $this->resource = $resource;
-    $this->setPluginInfo($plugin);
     $this->account = $account ? $account : drupal_anonymous_user();
+    $manager = $manager ?: RateLimitPluginManager::create();
+    $options = array();
+    foreach ($plugin_options as $plugin_id => $rate_options) {
+      // Set the instance id to articles::request and specify the plugin id.
+      $instance_id = $resource->getResourceName() . '::' . $plugin_id;
+      $options[$instance_id] = array(
+        'id' => $plugin_id,
+        'resource' => $resource,
+      );
+      $options[$instance_id] += $rate_options;
+    }
+    $this->plugins = new RateLimitPluginCollection($manager, $options);
   }
 
   /**
@@ -84,34 +101,29 @@ class RestfulRateLimitManager extends \RestfulPluginBase {
     $now = new \DateTime();
     $now->setTimestamp(REQUEST_TIME);
     // Check all rate limits configured for this handler.
-    foreach ($this->getPlugin() as $event_name => $info) {
-      // Check if there is a rate_limit plugin for the event.
-      // There are no error checks on purpose, let the exceptions bubble up.
-      $rate_limit_plugin = restful_get_rate_limit_plugin($info['event']);
-      $rate_limit_class = ctools_plugin_get_class($rate_limit_plugin, 'class');
-
-      $handler = new $rate_limit_class($info, $this->resource);
+    foreach ($this->plugins as $instance_id => $plugin) {
       // If the limit is unlimited then skip everything.
-      $limit = $handler->getLimit($this->account);
-      $period = $handler->getPeriod();
+      /** @var RateLimit $plugin */
+      $limit = $plugin->getLimit($this->account);
+      $period = $plugin->getPeriod();
       if ($limit == static::UNLIMITED_RATE_LIMIT) {
         // User has unlimited access to the resources.
         continue;
       }
       // If the current request matches the configured event then check if the
       // limit has been reached.
-      if (!$handler->isRequestedEvent($request)) {
+      if (!$plugin->isRequestedEvent($request)) {
         continue;
       }
-      if (!$rate_limit_entity = $handler->loadRateLimitEntity($this->account)) {
+      if (!$rate_limit_entity = $plugin->loadRateLimitEntity($this->account)) {
         // If there is no entity, then create one.
         // We don't need to save it since it will be saved upon hit.
         $rate_limit_entity = entity_create('rate_limit', array(
           'timestamp' => REQUEST_TIME,
           'expiration' => $now->add($period)->format('U'),
           'hits' => 0,
-          'event' => $event_name,
-          'identifier' => $handler->generateIdentifier($this->account),
+          'event' => $plugin->getPluginId(),
+          'identifier' => $plugin->generateIdentifier($this->account),
         ));
       }
       // When the new rate limit period starts.
@@ -163,4 +175,5 @@ class RestfulRateLimitManager extends \RestfulPluginBase {
       entity_delete_multiple('rate_limit', $rlids);
     }
   }
+
 }

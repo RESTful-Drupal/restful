@@ -9,5 +9,6 @@ $plugin = array(
   'description' => t('Export the article content type.'),
   'class' => 'RestfulExampleArticlesResource__1_1',
   // Set the minor version.
+  'authentication_optional' => TRUE,
   'minor_version' => 1,
 );
