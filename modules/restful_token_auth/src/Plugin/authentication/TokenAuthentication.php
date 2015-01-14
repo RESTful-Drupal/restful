@@ -9,6 +9,19 @@ namespace Drupal\restful_token_auth\Plugin\authentication;
 
 use Drupal\restful\Plugin\authentication\Authentication;
 
+/**
+ * Class TokenAuthentication
+ * @package Drupal\restful\Plugin\authentication
+ *
+ * @Authentication(
+ *   id = "token",
+ *   label = "Token based authentication",
+ *   description = "Authenticate requests based on the token sent in the request.",
+ *   options = {
+ *     "param_name" = "access_token",
+ *   },
+ * )
+ */
 class TokenAuthentication extends Authentication {
 
   /**

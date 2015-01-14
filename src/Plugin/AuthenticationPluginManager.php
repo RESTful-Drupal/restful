@@ -39,10 +39,9 @@ class AuthenticationPluginManager extends DefaultPluginManager {
    *   Cache backend instance to use.
    */
   public function __construct(\Traversable $namespaces, \DrupalCacheInterface $cache_backend) {
-    $this->discovery = new YamlDiscovery('authentication', Module::getDirectories());
-    $this->factory = new ContainerFactory($this);
-    $this->alterInfo('authentication_plugin');
+    parent::__construct('Plugin/authentication', $namespaces, 'Drupal\restful\Plugin\authentication\AuthenticationInterface', '\Drupal\restful\Annotation\Authentication');
     $this->setCacheBackend($cache_backend, 'authentication_plugins');
+    $this->alterInfo('authentication_plugin');
   }
 
   /**
