@@ -349,7 +349,7 @@ a configuration array. The following is taken from the example resource articles
       'limits' => array(
         'authenticated user' => 3,
         'anonymous user' => 2,
-        'administrator' => \RestfulRateLimitManager::UNLIMITED_RATE_LIMIT,
+        'administrator' => \Drupal\restful\RateLimit\RateLimitManager::UNLIMITED_RATE_LIMIT,
       ),
     ),
   ),

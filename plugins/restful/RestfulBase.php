@@ -6,6 +6,7 @@
  */
 
 use Drupal\restful\Authentication\AuthenticationManager;
+use Drupal\restful\RateLimit\RateLimitManager;
 
 /**
  * Class \RestfulBase
@@ -51,7 +52,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
   /**
    * Rate limit manager.
    *
-   * @var \RestfulRateLimitManager
+   * @var RateLimitManager
    */
   protected $rateLimitManager = NULL;
 
@@ -392,7 +393,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
   /**
    * Setter for rateLimitManager.
    *
-   * @param \RestfulRateLimitManager $rateLimitManager
+   * @param RateLimitManager $rateLimitManager
    */
   public function setRateLimitManager($rateLimitManager) {
     $this->rateLimitManager = $rateLimitManager;
@@ -401,7 +402,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
   /**
    * Getter for rateLimitManager.
    *
-   * @return \RestfulRateLimitManager
+   * @return RateLimitManager
    */
   public function getRateLimitManager() {
     return $this->rateLimitManager;
@@ -422,7 +423,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
     $this->authenticationManager = $auth_manager ? $auth_manager : new AuthenticationManager();
     $this->cacheController = $cache_controller ? $cache_controller : $this->newCacheObject();
     if ($rate_limit = $this->getPluginKey('rate_limit')) {
-      $this->setRateLimitManager(new \RestfulRateLimitManager($this->getPluginKey('resource'), $rate_limit));
+      $this->setRateLimitManager(new RateLimitManager($this, $rate_limit));
     }
     $this->staticCache = new \RestfulStaticCacheController();
     if (is_null($langcode)) {
