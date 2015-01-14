@@ -4,6 +4,7 @@ core = 7.x
 php = 5.4
 dependencies[] = entity
 dependencies[] = plug
+dependencies[] = ctools
 configure = admin/config/services/restful
 
 ; Plugins

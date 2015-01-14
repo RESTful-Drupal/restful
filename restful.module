@@ -7,8 +7,6 @@
 
 include_once __DIR__ . '/restful.entity.inc';
 
-use Drupal\restful\Plugin\AuthenticationPluginManager;
-
 /**
  * Implements hook_ctools_plugin_directory().
  */

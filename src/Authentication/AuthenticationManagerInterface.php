@@ -7,8 +7,6 @@
 
 namespace Drupal\restful\Authentication;
 
-use Drupal\restful\Plugin\authentication\AuthenticationInterface;
-
 interface AuthenticationManagerInterface {
 
   /**

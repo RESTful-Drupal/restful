@@ -9,7 +9,7 @@ class RestfulSimpleJsonTestCase extends RestfulCurlBaseTestCase {
 
   public static function getInfo() {
     return array(
-      'name' => 'View HAL+JSON',
+      'name' => 'View Simple JSON',
       'description' => 'Test the viewing of an entity in HAL+JSON format.',
       'group' => 'RESTful',
     );

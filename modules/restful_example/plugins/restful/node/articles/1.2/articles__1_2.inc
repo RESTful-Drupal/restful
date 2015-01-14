@@ -7,7 +7,7 @@ $plugin = array(
   'entity_type' => 'node',
   'bundle' => 'article',
   'description' => t('Export the article content type with "cookie" authentication.'),
-  'class' => 'RestfulExampleArticlesResource',
+  'class' => 'RestfulExampleArticlesResource__1_2',
   // Set the minor version.
   'minor_version' => 2,
   // Set the authentication to "cookie".

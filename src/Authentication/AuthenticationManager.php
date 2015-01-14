@@ -8,7 +8,6 @@
 namespace Drupal\restful\Authentication;
 
 use Drupal\restful\Plugin\AuthenticationPluginManager;
-use Drupal\restful\Plugin\authentication\AuthenticationInterface;
 
 class AuthenticationManager implements AuthenticationManagerInterface {
 
