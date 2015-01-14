@@ -9,7 +9,7 @@ $plugin = array(
   'entity_type' => 'node',
   'bundle' => 'article',
   'description' => t('Export the article content type with rate limit for anonymous users.'),
-  'class' => 'RestfulExampleArticlesResource',
+  'class' => 'RestfulExampleArticlesResource__1_4',
   // Set the minor version.
   'minor_version' => 4,
   'rate_limit' => array(

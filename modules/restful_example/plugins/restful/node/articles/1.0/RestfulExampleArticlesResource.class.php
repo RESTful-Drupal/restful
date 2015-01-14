@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains RestfulExampleArticlesResource.
+ * Contains \RestfulExampleArticlesResource.
  */
 
 class RestfulExampleArticlesResource extends RestfulEntityBaseNode {}

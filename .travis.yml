@@ -23,11 +23,15 @@ before_script:
 
   # create new site, stubbing sendmail path with true to prevent delivery errors and manually resolving drush path
   - mysql -e 'create database restful'
-  - php -d sendmail_path=`which true` `pear config-get php_dir`/drush/drush.php --yes core-quick-drupal --profile=testing --no-server --db-url=mysql://root:@127.0.0.1/restful --enable=simpletest restful
+  - php -d sendmail_path=`which true` `pear config-get php_dir`/drush/drush.php --yes core-quick-drupal --profile=testing --no-server --db-url=mysql://root:@127.0.0.1/restful --enable=simpletest
 
   # reference and enable restful in build site
   - ln -s $(readlink -e $(cd -)) restful/drupal/sites/all/modules/restful
   - cd restful/drupal
+
+  - drush dl --yes composer-8.x plug
+  - drush en --yes plug
+  - drush composer update -d ./sites/default/files/composer
   - drush --yes pm-enable restful restful_token_auth restful_test
 
   # Download entity validator.

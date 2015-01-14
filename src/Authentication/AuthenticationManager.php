@@ -8,7 +8,6 @@
 namespace Drupal\restful\Authentication;
 
 use Drupal\restful\Plugin\AuthenticationPluginManager;
-use Drupal\restful\Plugin\authentication\AuthenticationInterface;
 
 class AuthenticationManager implements AuthenticationManagerInterface {
 
@@ -41,8 +40,7 @@ class AuthenticationManager implements AuthenticationManagerInterface {
    *   The authentication plugin manager.
    */
   public function __construct(AuthenticationPluginManager $manager = NULL) {
-    $manager = $manager ?: AuthenticationPluginManager::create();
-    $this->plugins = new AuthenticationPluginCollection($manager, $manager->getDefinitions());
+    $this->plugins = new AuthenticationPluginCollection($manager ?: AuthenticationPluginManager::create());
   }
 
   /**
@@ -66,6 +64,7 @@ class AuthenticationManager implements AuthenticationManagerInterface {
     $manager = AuthenticationPluginManager::create();
     $instance = $manager->createInstance($plugin_id);
     // The get method will instantiate a plugin if not there.
+    $this->plugins->setInstanceConfiguration($plugin_id, $manager->getDefinition($plugin_id));
     $this->plugins->set($plugin_id, $instance);
   }
 
