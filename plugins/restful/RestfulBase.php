@@ -5,6 +5,8 @@
  * Contains RestfulBase.
  */
 
+use Drupal\restful\Authentication\AuthenticationManager;
+
 /**
  * Class \RestfulBase
  *
@@ -42,7 +44,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
   /**
    * Authentication manager.
    *
-   * @var \RestfulAuthenticationManager
+   * @var AuthenticationManager
    */
   protected $authenticationManager;
 
@@ -363,16 +365,16 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
   /**
    * Setter for $authenticationManager.
    *
-   * @param \RestfulAuthenticationManager $authenticationManager
+   * @param AuthenticationManager $authenticationManager
    */
-  public function setAuthenticationManager($authenticationManager) {
+  public function setAuthenticationManager(AuthenticationManager $authenticationManager) {
     $this->authenticationManager = $authenticationManager;
   }
 
   /**
    * Getter for $authenticationManager.
    *
-   * @return \RestfulAuthenticationManager
+   * @return AuthenticationManager
    */
   public function getAuthenticationManager() {
     return $this->authenticationManager;
@@ -410,14 +412,14 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
    *
    * @param array $plugin
    *   Plugin definition.
-   * @param RestfulAuthenticationManager $auth_manager
+   * @param AuthenticationManager $auth_manager
    *   (optional) Injected authentication manager.
    * @param DrupalCacheInterface $cache_controller
    *   (optional) Injected cache backend.
    */
-  public function __construct(array $plugin, \RestfulAuthenticationManager $auth_manager = NULL, \DrupalCacheInterface $cache_controller = NULL, $langcode = NULL) {
+  public function __construct(array $plugin, AuthenticationManager $auth_manager = NULL, \DrupalCacheInterface $cache_controller = NULL, $langcode = NULL) {
     parent::__construct($plugin);
-    $this->authenticationManager = $auth_manager ? $auth_manager : new \RestfulAuthenticationManager();
+    $this->authenticationManager = $auth_manager ? $auth_manager : new AuthenticationManager();
     $this->cacheController = $cache_controller ? $cache_controller : $this->newCacheObject();
     if ($rate_limit = $this->getPluginKey('rate_limit')) {
       $this->setRateLimitManager(new \RestfulRateLimitManager($this->getPluginKey('resource'), $rate_limit));

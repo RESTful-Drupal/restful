@@ -5,6 +5,8 @@
  * Contains RestfulEntityBaseMultipleBundles.
  */
 
+use Drupal\restful\Authentication\AuthenticationManager;
+
 class RestfulEntityBaseMultipleBundles extends RestfulEntityBase {
 
   /**
@@ -27,13 +29,12 @@ class RestfulEntityBaseMultipleBundles extends RestfulEntityBase {
     );
   }
 
-  public function __construct(array $plugin, \RestfulAuthenticationManager $auth_manager = NULL, \DrupalCacheInterface $cache_controller = NULL, $language = NULL) {
+  public function __construct(array $plugin, AuthenticationManager $auth_manager = NULL, \DrupalCacheInterface $cache_controller = NULL, $language = NULL) {
     parent::__construct($plugin, $auth_manager, $cache_controller, $language);
 
     if (!empty($plugin['bundles'])) {
       $this->bundles = $plugin['bundles'];
     }
-    $this->authenticationManager = $auth_manager ? $auth_manager : new \RestfulAuthenticationManager();
     $this->cacheController = $cache_controller ? $cache_controller : $this->newCacheObject();
   }
 

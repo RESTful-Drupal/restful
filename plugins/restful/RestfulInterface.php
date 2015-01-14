@@ -6,6 +6,8 @@
  * Contains RestfulInterface.
  */
 
+use Drupal\restful\Authentication\AuthenticationManager;
+
 interface RestfulInterface {
 
   /**
@@ -46,12 +48,12 @@ interface RestfulInterface {
    *
    * @param $plugin
    *   The restful plugin object.
-   * @param RestfulAuthenticationManager $auth_manager
+   * @param AuthenticationManager $auth_manager
    *   Injected authentication manager.
    * @param DrupalCacheInterface $cache_controller
    *   Injected cache controller.
    */
-  public function __construct(array $plugin, \RestfulAuthenticationManager $auth_manager = NULL, \DrupalCacheInterface $cache_controller = NULL);
+  public function __construct(array $plugin, AuthenticationManager $auth_manager = NULL, \DrupalCacheInterface $cache_controller = NULL);
 
   /**
    * Entry point to process a request.

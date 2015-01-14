@@ -2,10 +2,12 @@
 
 /**
  * @file
- * Contains RestfulAuthenticationInterface.
+ * Contains \Drupal\restful\Plugin\authentication\Authentication
  */
 
-interface RestfulAuthenticationInterface {
+namespace Drupal\restful\Plugin\authentication;
+
+interface AuthenticationInterface {
 
   /**
    * Authenticate the request by trying to match a user.
