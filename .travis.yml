@@ -3,49 +3,83 @@ language: php
 php:
   - 5.4
 
+env:
+  - PATH=$PATH:/home/travis/.composer/vendor/bin
+
+# This will create the database
 mysql:
-  database: restful
+  database: drupal
   username: root
   encoding: utf8
 
-before_script:
-  # navigate out of module directory to prevent blown stack by recursive module lookup
-  - cd ../..
-
-  # install drush
+install:
+  # Grab Drush
   - pear channel-discover pear.drush.org
   - pear install drush/drush-5.8.0
   - phpenv rehash
+  # Make sure we don't fail when checking out projects
+  - echo -e "Host github.com\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
+  # LAMP package installation (mysql is already started)
+  - sudo apt-get update
+  - sudo apt-get install apache2 libapache2-mod-fastcgi
+  # enable php-fpm, travis does not support any other method with php and apache
+  - sudo cp ~/.phpenv/versions/$(phpenv version-name)/etc/php-fpm.conf.default ~/.phpenv/versions/$(phpenv version-name)/etc/php-fpm.conf
+  - sudo a2enmod rewrite actions fastcgi alias
+  - echo "cgi.fix_pathinfo = 1" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
+  - ~/.phpenv/versions/$(phpenv version-name)/sbin/php-fpm
+  # Make sure the apache root is in our wanted directory
+  - echo "$(curl -fsSL https://gist.githubusercontent.com/nickveenhof/11386315/raw/b8abaf9304fe12b5cc7752d39c29c1edae8ac2e6/gistfile1.txt)" | sed -e "s,PATH,$TRAVIS_BUILD_DIR/../drupal,g" | sudo tee /etc/apache2/sites-available/default > /dev/null
+  # Set sendmail so drush doesn't throw an error during site install.
+  - echo "sendmail_path='true'" >> `php --ini | grep "Loaded Configuration" | awk '{print $4}'`
+  # Forward the errors to the syslog so we can print them
+  - echo "error_log=syslog" >> `php --ini | grep "Loaded Configuration" | awk '{print $4}'`
+  # Get latest drupal 8 core
+  - cd $TRAVIS_BUILD_DIR/..
+  - git clone --depth 1 --branch 7.x http://git.drupal.org/project/drupal.git
+  # Restart apache and test it
+  - sudo service apache2 restart
+  - curl -v "http://localhost"
+  # Re-enable when trying to get CodeSniffer doesn't return a 403 anymore.
+  #- composer global require drupal/coder:\>7
 
-  # install php packages required for running a web server from drush on php 5.3
-  - sudo apt-get update > /dev/null
-  - sudo apt-get install -y --force-yes php5-cgi php5-mysql
+before_script:
+  - cd $TRAVIS_BUILD_DIR/../drupal
+  # Update drupal core
+  - git pull origin 7.x
+  # Install the site
+  - drush -v site-install minimal --db-url=mysql://root:@localhost/drupal --yes
+  - drush en --yes simpletest
+  # Set variable to 0 to avoid automatic composer build
+  - drush vset composer_manager_autobuild_packages 0 -y
+  # Increase max_allowed_packet to avoid MySQL errors
+  - echo -e "[server]\nmax_allowed_packet=64M" | sudo tee -a /etc/mysql/conf.d/drupal.cnf
+  - sudo service mysql restart
+  - phpenv rehash
 
-  # create new site, stubbing sendmail path with true to prevent delivery errors and manually resolving drush path
-  - mysql -e 'create database restful'
-  - php -d sendmail_path=`which true` `pear config-get php_dir`/drush/drush.php --yes core-quick-drupal --profile=testing --no-server --db-url=mysql://root:@127.0.0.1/restful --enable=simpletest
+script:
+  # Go to our Drupal module directory
+  - mkdir $TRAVIS_BUILD_DIR/../drupal/sites/all/modules/restful
+  - cp -R $TRAVIS_BUILD_DIR/* $TRAVIS_BUILD_DIR/../drupal/sites/all/modules/restful/
+  # Go to our Drupal main directory
+  - cd $TRAVIS_BUILD_DIR/../drupal
+  # Download and enable module and its dependencies
+  - drush --yes dl composer-8.x-1.x
+  - drush --yes dl composer_manager
+  - drush --yes dl xautoload
+  - drush --yes dl entity_validator --dev
+  - drush --yes dl composer-8.x
+  - drush --yes dl plug
 
-  # reference and enable restful in build site
-  - ln -s $(readlink -e $(cd -)) restful/drupal/sites/all/modules/restful
-  - cd restful/drupal
-
-  - drush dl --yes composer-8.x plug
-  - drush en --yes plug
-  - drush composer update -d ./sites/default/files/composer
-  - drush --yes pm-enable restful restful_token_auth restful_test
-
-  # Download entity validator.
-  - drush dl entity_validator --dev --yes
 
   # Patch Entity API.
   - curl -O https://www.drupal.org/files/issues/2086225-entity-access-check-node-create-3.patch
-  - patch -p1 /home/travis/build/restful/drupal/sites/all/modules/entity/modules/callbacks.inc  < 2086225-entity-access-check-node-create-3.patch
+  - patch -p1 $TRAVIS_BUILD_DIR/../drupal/sites/all/modules/entity/modules/callbacks.inc  < 2086225-entity-access-check-node-create-3.patch
 
   - curl -O https://www.drupal.org/files/issues/2264079-entity-wrapper-access-single-entity-reference-2.patch
-  - patch -p1 /home/travis/build/restful/drupal/sites/all/modules/entity/includes/entity.wrapper.inc < 2264079-entity-wrapper-access-single-entity-reference-2.patch
+  - patch -p1 $TRAVIS_BUILD_DIR/../drupal/sites/all/modules/entity/includes/entity.wrapper.inc < 2264079-entity-wrapper-access-single-entity-reference-2.patch
 
-  # start a web server on port 8080, run in the background; wait for initialization
-  - drush runserver 127.0.0.1:8080 &
-  - until netstat -an 2>/dev/null | grep '8080.*LISTEN'; do true; done
-
-script: drush test-run RESTful --uri=http://127.0.0.1:8080
+  # Enable the RESTful modules
+  - drush --yes pm-enable restful restful_token_auth restful_test
+  - drush --yes composer-manager update --no-interaction --prefer-source
+  # Run the tests
+  - drush test-run RESTful --uri=http://localhost
