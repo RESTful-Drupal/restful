@@ -91,6 +91,7 @@ script:
   - drush --yes pm-enable restful restful_token_auth restful_test
   # Run the tests
   - php core/scripts/run-tests.sh --verbose --color --concurrency 4 --php `which php` --url http://localhost "RESTful" | tee /tmp/test.txt
+  - cat /tmp/test.txt
   - TEST_EXIT=${PIPESTATUS[0]}
   - echo $TEST_EXIT
   # Check if we had fails in the run-tests.sh script
