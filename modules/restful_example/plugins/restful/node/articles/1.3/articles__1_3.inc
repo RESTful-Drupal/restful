@@ -9,7 +9,7 @@ $plugin = array(
   'entity_type' => 'node',
   'bundle' => 'article',
   'description' => t('Export the article content type with "token" authentication.'),
-  'class' => 'RestfulExampleArticlesResource',
+  'class' => 'RestfulExampleArticlesResource__1_3',
   // Set the minor version.
   'minor_version' => 3,
   // Set the authentication to token.

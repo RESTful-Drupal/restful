@@ -1,16 +1,35 @@
 <?php
+
 /**
  * @file
- * Contains RestfulAuthenticationToken.
+ * Contains \Drupal\restful_token_auth\Plugin\authentication\TokenAuthentication
  */
 
-class RestfulAuthenticationToken extends \RestfulAuthenticationBase {
+namespace Drupal\restful_token_auth\Plugin\authentication;
+
+use Drupal\restful\Plugin\authentication\Authentication;
+
+/**
+ * Class TokenAuthentication
+ * @package Drupal\restful\Plugin\authentication
+ *
+ * @Authentication(
+ *   id = "token",
+ *   label = "Token based authentication",
+ *   description = "Authenticate requests based on the token sent in the request.",
+ *   options = {
+ *     "param_name" = "access_token",
+ *   },
+ * )
+ */
+class TokenAuthentication extends Authentication {
 
   /**
    * {@inheritdoc}
    */
   public function applies(array $request = array(), $method = \RestfulInterface::GET) {
-    $options = $this->getPluginKey('options');
+    $plugin_definition = $this->getPluginDefinition();
+    $options = $plugin_definition['options'];
     $key_name = !empty($options['param_name']) ? $options['param_name'] : 'access_token';
 
     // Access token may be on the request, or in the headers.
@@ -21,13 +40,14 @@ class RestfulAuthenticationToken extends \RestfulAuthenticationBase {
    * {@inheritdoc}
    */
   public function authenticate(array $request = array(), $method = \RestfulInterface::GET) {
-    $options = $this->getPluginKey('options');
+    $plugin_definition = $this->getPluginDefinition();
+    $options = $plugin_definition['options'];
     $key_name = !empty($options['param_name']) ? $options['param_name'] : 'access_token';
     $token = !empty($request['__application'][$key_name]) ? $request['__application'][$key_name] : $request[$key_name];
 
     // Check if there is a token that did not expire yet.
 
-    $query = new EntityFieldQuery();
+    $query = new \EntityFieldQuery();
     $result = $query
       ->entityCondition('entity_type', 'restful_token_auth')
       ->propertyCondition('token', $token)
@@ -56,4 +76,5 @@ class RestfulAuthenticationToken extends \RestfulAuthenticationBase {
 
     return user_load($auth_token->uid);
   }
+
 }

@@ -5,12 +5,15 @@
  * Contains RestfulAuthenticationTestCase.
  */
 
+use Drupal\restful\Plugin\AuthenticationPluginManager;
+use Drupal\Component\Plugin\PluginManagerInterface;
+
 class RestfulAuthenticationTestCase extends RestfulCurlBaseTestCase {
 
   /**
    * Holds the generated account.
    *
-   * @var stdClass
+   * @var object
    */
   protected $account;
 
@@ -20,6 +23,13 @@ class RestfulAuthenticationTestCase extends RestfulCurlBaseTestCase {
    * @var array
    */
   protected $originalServer;
+
+  /**
+   * The plugin manager.
+   *
+   * @var PluginManagerInterface
+   */
+  protected $pluginManager;
 
   public static function getInfo() {
     return array(
@@ -35,6 +45,7 @@ class RestfulAuthenticationTestCase extends RestfulCurlBaseTestCase {
     $this->account = $this->drupalCreateUser();
 
     $this->originalServer = $_SERVER;
+    $this->pluginManager = AuthenticationPluginManager::create();
   }
 
   function tearDown() {
@@ -51,7 +62,7 @@ class RestfulAuthenticationTestCase extends RestfulCurlBaseTestCase {
     $handler = restful_get_restful_handler('main', 1, 5);
 
     // Case 1. Check that the handler has the expected authentication providers.
-    $providers = array_keys($handler->getAuthenticationManager()->getArrayCopy());
+    $providers = array_keys($this->pluginManager->getDefinitions());
     foreach ($handler->getPluginKey('authentication_types') as $provider_name) {
       $this->assertTrue(in_array($provider_name, $providers), format_string('The %name authorization type was found.', array(
         '%name' => $provider_name,
@@ -66,7 +77,7 @@ class RestfulAuthenticationTestCase extends RestfulCurlBaseTestCase {
     $user = $this->account;
     $this->assertEqual($this->account->uid, $handler->getAccount()->uid, 'The authentication manager resolved the currently logged in user.');
 
-    $cookie_provider = restful_get_authentication_handler('cookie');
+    $cookie_provider = $this->pluginManager->createInstance('cookie');
 
     // Case 3. Test the 'cookie_auth' authentication provider.
     $this->assertEqual($this->account->uid, $cookie_provider->authenticate()->uid, 'The cookie provider resolved the currently logged in user.');
@@ -75,7 +86,7 @@ class RestfulAuthenticationTestCase extends RestfulCurlBaseTestCase {
     // Case 4. Test that the 'cookie_auth' resolves the anonymous user.
     $this->assertEqual(0, $cookie_provider->authenticate()->uid, 'The cookie provider resolved the anonymous user.');
 
-    $basic_auth_provider = restful_get_authentication_handler('basic_auth');
+    $basic_auth_provider = $this->pluginManager->createInstance('basic_auth');
 
     // Case 5. Valid login using basic auth.
     $_SERVER['PHP_AUTH_USER'] = $this->account->name;

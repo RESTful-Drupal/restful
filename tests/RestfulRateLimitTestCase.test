@@ -44,17 +44,6 @@ class RestfulRateLimitTestCase extends DrupalWebTestCase {
 
     $account = $this->drupalCreateUser();
     $this->roleExecute($account, 1, array('articles', 1, 0));
-
-    // Test invalid 'restful_global_rate_period' format.
-    try {
-      variable_set('restful_global_rate_period', 'fail');
-
-      $this->roleExecute($account, 1, array('articles', 1, 0));
-      $this->fail('Invalid \DateInterval format in restful_global_rate_period did not raise an error');
-    }
-    catch (Exception $e) {
-      $this->pass('Invalid \DateInterval format in restful_global_rate_period raises an error');
-    }
   }
 
   /**

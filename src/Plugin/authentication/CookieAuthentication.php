@@ -1,13 +1,26 @@
 <?php
+
 /**
  * @file
- * Contains RestfulAuthenticationCookie.
+ * Contains \Drupal\restful\Plugin\authentication\CookieAuthentication
  */
 
-class RestfulAuthenticationCookie extends RestfulAuthenticationBase implements RestfulAuthenticationInterface {
+namespace Drupal\restful\Plugin\authentication;
+
+/**
+ * Class CookieAuthentication
+ * @package Drupal\restful\Plugin\authentication
+ *
+ * @Authentication(
+ *   id = "cookie",
+ *   label = "Cookie based authentication",
+ *   description = "Authenticate requests based on the user cookie.",
+ * )
+ */
+class CookieAuthentication extends Authentication {
 
   /**
-   * Implements RestfulAuthenticationInterface::authenticate().
+   * {@inheritdoc}
    */
   public function authenticate(array $request = array(), $method = \RestfulInterface::GET) {
     if (!drupal_session_started() && !$this->isCli()) {

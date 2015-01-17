@@ -77,7 +77,7 @@ class RestfulManager {
    *         'limits' => array(
    *           'authenticated user' => 100,
    *           'anonymous user' => 10,
-   *           'administrator' => \RestfulRateLimitManager::UNLIMITED_RATE_LIMIT,
+   *           'administrator' => \Drupal\restful\RateLimit\RateLimitManager::UNLIMITED_RATE_LIMIT,
    *         ),
    *       ),
    *     ),

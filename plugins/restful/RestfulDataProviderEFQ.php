@@ -5,6 +5,8 @@
  * Contains \RestfulDataProviderEFQ
  */
 
+use Drupal\restful\Authentication\AuthenticationManager;
+
 abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDataProviderEFQInterface, \RestfulDataProviderInterface {
 
   /**
@@ -63,7 +65,7 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
    *
    * @param array $plugin
    *   Plugin definition.
-   * @param RestfulAuthenticationManager $auth_manager
+   * @param AuthenticationManager $auth_manager
    *   (optional) Injected authentication manager.
    * @param DrupalCacheInterface $cache_controller
    *   (optional) Injected cache backend.
@@ -72,7 +74,7 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
    *
    * @throws RestfulServerConfigurationException
    */
-  public function __construct(array $plugin, \RestfulAuthenticationManager $auth_manager = NULL, \DrupalCacheInterface $cache_controller = NULL, $language = NULL) {
+  public function __construct(array $plugin, AuthenticationManager $auth_manager = NULL, \DrupalCacheInterface $cache_controller = NULL, $language = NULL) {
     parent::__construct($plugin, $auth_manager, $cache_controller, $language);
     $this->entityType = $plugin['entity_type'];
     $this->bundle = $plugin['bundle'];
