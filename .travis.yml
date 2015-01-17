@@ -48,7 +48,6 @@ before_script:
   - git pull origin 7.x
   # Install the site
   - drush -v site-install minimal --db-url=mysql://root:@localhost/drupal --yes
-  - drush en --yes simpletest
   # Set variable to 0 to avoid automatic composer build
   - drush vset composer_manager_autobuild_packages 0 -y
   # Increase max_allowed_packet to avoid MySQL errors
@@ -81,6 +80,7 @@ script:
   - patch -p1 $TRAVIS_BUILD_DIR/../drupal/sites/all/modules/entity/includes/entity.wrapper.inc < 2264079-entity-wrapper-access-single-entity-reference-2.patch
 
   # Enable the RESTful modules
+  - drush en --yes simpletest
   - drush --yes pm-enable restful restful_token_auth restful_test
   - drush --yes composer-manager update --no-interaction --prefer-source
   # Run the tests
