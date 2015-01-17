@@ -99,3 +99,11 @@ script:
   # bit.
   # Also make the grep case insensitive and fail on run-tests.sh regular fails as well on fatal errors.
   - TEST_OUTPUT=$(! egrep -i "([0-9]+ fails)|(PHP Fatal error)|([0-9]+ exceptions)" /tmp/test.txt > /dev/null)$?
+  - echo $TEST_OUTPUT
+  # if the TEST_EXIT status is 0 AND the TEST_OUTPUT status is also 0 it means we succeeded, in all other cases we
+  # failed.
+  - php -i | grep 'php.ini'
+  - sudo cat /var/log/apache2/error.log
+  - sudo cat /var/log/syslog | grep 'php'
+  # Exit the build
+  - if [ $TEST_EXIT -eq 0 ] && [ $TEST_OUTPUT -eq 0 ]; then exit 0; else exit 1; fi
