@@ -70,7 +70,6 @@ script:
   # Download and enable module and its dependencies
   - drush --yes dl xautoload
   - drush --yes dl entity_validator --dev
-  - drush --yes dl composer-8.x
   - drush --yes dl plug
   - drush --yes dl ctools
   - drush --yes dl entity
