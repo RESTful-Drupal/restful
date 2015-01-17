@@ -69,7 +69,9 @@ script:
   - drush --yes dl entity_validator --dev
   - drush --yes dl composer-8.x
   - drush --yes dl plug
-
+  - drush --yes dl ctools
+  - drush --yes dl entity
+  - drush --yes dl entityreference
 
   # Patch Entity API.
   - curl -O https://www.drupal.org/files/issues/2086225-entity-access-check-node-create-3.patch
