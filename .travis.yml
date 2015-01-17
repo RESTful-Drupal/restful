@@ -48,8 +48,6 @@ before_script:
   - git pull origin 7.x
   # Install the site
   - drush -v site-install minimal --db-url=mysql://root:@localhost/drupal --yes
-  # Set variable to 0 to avoid automatic composer build
-  - drush vset composer_manager_autobuild_packages 0 -y
   # Increase max_allowed_packet to avoid MySQL errors
   - echo -e "[server]\nmax_allowed_packet=64M" | sudo tee -a /etc/mysql/conf.d/drupal.cnf
   - sudo service mysql restart
@@ -61,9 +59,15 @@ script:
   - cp -R $TRAVIS_BUILD_DIR/* $TRAVIS_BUILD_DIR/../drupal/sites/all/modules/restful/
   # Go to our Drupal main directory
   - cd $TRAVIS_BUILD_DIR/../drupal
-  # Download and enable module and its dependencies
+
+  # Download the composer pieces.
   - drush --yes dl composer-8.x-1.x
   - drush --yes dl composer_manager
+  - drush --yes pm-enable composer_manager
+  # Set variable to 0 to avoid automatic composer build
+  - drush --yes vset --exact composer_manager_autobuild_packages 0
+
+  # Download and enable module and its dependencies
   - drush --yes dl xautoload
   - drush --yes dl entity_validator --dev
   - drush --yes dl composer-8.x
@@ -71,6 +75,10 @@ script:
   - drush --yes dl ctools
   - drush --yes dl entity
   - drush --yes dl entityreference
+
+  # Enable plug and run composer.
+  - drush --yes pm-enable plug
+  - drush --yes composer-manager update --no-interaction --prefer-source
 
   # Patch Entity API.
   - curl -O https://www.drupal.org/files/issues/2086225-entity-access-check-node-create-3.patch
@@ -82,6 +90,5 @@ script:
   # Enable the RESTful modules
   - drush en --yes simpletest
   - drush --yes pm-enable restful restful_token_auth restful_test
-  - drush --yes composer-manager update --no-interaction --prefer-source
   # Run the tests
   - drush test-run RESTful --uri=http://localhost
