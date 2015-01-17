@@ -91,7 +91,6 @@ script:
   - drush --yes pm-enable restful restful_token_auth restful_test
   # Run the tests
   - php $TRAVIS_BUILD_DIR/../drupal/scripts/run-tests.sh --verbose --color --concurrency 4 --php `which php` --url http://localhost "RESTful" | tee /tmp/test.txt
-  - cat /tmp/test.txt
   - TEST_EXIT=${PIPESTATUS[0]}
   - echo $TEST_EXIT
   # Check if we had fails in the run-tests.sh script
@@ -100,4 +99,3 @@ script:
   # bit.
   # Also make the grep case insensitive and fail on run-tests.sh regular fails as well on fatal errors.
   - TEST_OUTPUT=$(! egrep -i "([0-9]+ fails)|(PHP Fatal error)|([0-9]+ exceptions)" /tmp/test.txt > /dev/null)$?
-  - echo $TEST_OUTPUT
