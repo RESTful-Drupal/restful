@@ -1,7 +1,0 @@
-token:
-  label: 'Token based authentication'
-  description: 'Authenticate requests based on the token sent in the request.'
-  class: 'Drupal\restful_token_auth\Plugin\authentication\TokenAuthentication'
-  options:
-    - param_name: 'access_token'
-

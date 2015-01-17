@@ -7,6 +7,16 @@
 
 namespace Drupal\restful\Plugin\authentication;
 
+/**
+ * Class BasicAuthentication
+ * @package Drupal\restful\Plugin\authentication
+ *
+ * @Authentication(
+ *   id = "basic_auth",
+ *   label = "Basic authentication",
+ *   description = "Authenticate requests based on basic auth.",
+ * )
+ */
 class BasicAuthentication extends Authentication {
 
   /**

@@ -1,8 +1,0 @@
-basic_auth:
-  label: 'Basic authentication'
-  description: 'Authenticate requests based on basic auth.'
-  class: 'Drupal\restful\Plugin\authentication\BasicAuthentication'
-cookie:
-  label: 'Cookie based authentication'
-  description: 'Authenticate requests based on the user cookie.'
-  class: 'Drupal\restful\Plugin\authentication\CookieAuthentication'

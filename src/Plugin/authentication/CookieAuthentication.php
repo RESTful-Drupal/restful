@@ -7,6 +7,16 @@
 
 namespace Drupal\restful\Plugin\authentication;
 
+/**
+ * Class CookieAuthentication
+ * @package Drupal\restful\Plugin\authentication
+ *
+ * @Authentication(
+ *   id = "cookie",
+ *   label = "Cookie based authentication",
+ *   description = "Authenticate requests based on the user cookie.",
+ * )
+ */
 class CookieAuthentication extends Authentication {
 
   /**
