@@ -427,6 +427,12 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
         continue;
       }
 
+      // If this is the primary field, skip.
+      if ($this->isPrimaryField($info['property'])) {
+        unset($original_request[$public_field_name]);
+        continue;
+      }
+
       // Check if the public property is set in the payload.
       if (($index = array_search($info['property'], $this->getIdColumn())) !== FALSE) {
         $id_values[$index] = $request[$public_field_name];
