@@ -99,7 +99,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
 
     $this->tableName = $options['table_name'];
     $this->idColumn = $options['id_column'];
-    $this->primary = $options['primary'];
+    $this->primary = empty($plugin['data_provider_options']['primary']) ? NULL : $this->primary = $plugin['data_provider_options']['primary'];
   }
 
   /**
