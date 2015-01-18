@@ -388,6 +388,12 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
       throw new \RestfulBadRequestException('No values were sent with the request.');
     }
 
+    if ($original_request) {
+      // Request had illegal values.
+      $error_message = format_plural(count($original_request), 'Property @names is invalid.', 'Property @names are invalid.', array('@names' => implode(', ', array_keys($original_request))));
+      throw new \RestfulBadRequestException($error_message);
+    }
+
     // Once the update array is built, execute the query.
     $query->fields($fields)->execute();
 
@@ -449,6 +455,12 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
     if (!$save) {
       // No request was sent.
       throw new \RestfulBadRequestException('No values were sent with the request.');
+    }
+
+    if ($original_request) {
+      // Request had illegal values.
+      $error_message = format_plural(count($original_request), 'Property @names is invalid.', 'Property @names are invalid.', array('@names' => implode(', ', array_keys($original_request))));
+      throw new \RestfulBadRequestException($error_message);
     }
 
     $passed_id = NULL;
