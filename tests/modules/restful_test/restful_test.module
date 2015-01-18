@@ -435,7 +435,6 @@ function _restful_test_schema() {
         'description' => 'The primary identifier for a record.',
         'type' => 'serial',
         'unsigned' => TRUE,
-        'not null' => TRUE,
       ),
       'str_field' => array(
         'description' => 'String piece of data.',
