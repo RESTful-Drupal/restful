@@ -97,4 +97,20 @@ script:
   - drush en --yes simpletest
   - drush --yes pm-enable restful restful_token_auth restful_test
   # Run the tests
-  - drush test-run RESTful --uri=http://localhost
+  - php $TRAVIS_BUILD_DIR/../drupal/scripts/run-tests.sh --verbose --color --concurrency 4 --php `which php` --url http://localhost "RESTful" | tee /tmp/test.txt
+  - TEST_EXIT=${PIPESTATUS[0]}
+  - echo $TEST_EXIT
+  # Check if we had fails in the run-tests.sh script
+  # Exit with the inverted value, because if there are no fails found, it will exit with 1 and for us that\
+  # is a good thing so invert it to 0. Travis has some issues with the exclamation mark in front so we have to fiddle a
+  # bit.
+  # Also make the grep case insensitive and fail on run-tests.sh regular fails as well on fatal errors.
+  - TEST_OUTPUT=$(! egrep -i "([0-9]+ fails)|(PHP Fatal error)|([0-9]+ exceptions)" /tmp/test.txt > /dev/null)$?
+  - echo $TEST_OUTPUT
+  # if the TEST_EXIT status is 0 AND the TEST_OUTPUT status is also 0 it means we succeeded, in all other cases we
+  # failed.
+  - php -i | grep 'php.ini'
+  - sudo cat /var/log/apache2/error.log
+  - sudo cat /var/log/syslog | grep 'php'
+  # Exit the build
+  - if [ $TEST_EXIT -eq 0 ] && [ $TEST_OUTPUT -eq 0 ]; then exit 0; else exit 1; fi
