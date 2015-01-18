@@ -640,6 +640,11 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       }
 
       $property_name = $info['property'];
+      $sub_property_name = FALSE;
+      // Set sub-property name, in case of nid bypass, since is is not required.
+      if (isset($info['sub_property']) && $info['sub_property'] != 'nid') {
+        $sub_property_name = $info['sub_property'];
+      }
       if (!isset($request[$public_field_name])) {
         // No property to set in the request.
         if ($null_missing_fields && $this->checkPropertyAccess('edit', $public_field_name, $wrapper->{$property_name}, $wrapper)) {
@@ -655,7 +660,19 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
 
       $field_value = $this->propertyValuesPreprocess($property_name, $request[$public_field_name], $public_field_name);
 
-      $wrapper->{$property_name}->set($field_value);
+      // Support sub property saving.
+      if ($sub_property_name) {
+        if (!$wrapper->{$property_name}->value()) {
+          // Init field.
+         $wrapper->{$property_name}->set(array($sub_property_name => ''));
+        }
+        // Save sub_field.
+        $wrapper->{$property_name}->{$sub_property_name}->set($field_value);
+      }
+      else {
+        $wrapper->{$property_name}->set($field_value);
+      }
+
       unset($original_request[$public_field_name]);
       $save = TRUE;
     }
