@@ -653,19 +653,16 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
         throw new RestfulBadRequestException(format_string('Property @name cannot be set.', array('@name' => $public_field_name)));
       }
 
-      // Get a wrapper copy that would be used for setting the value.
-      $set_wrapper = $wrapper;
-      if ($info['sub_property']) {
-        // The set wrapper is the parent property.
-        $set_wrapper = $wrapper->{$property_name};
-
-        // Change the property name to be the sub-property.
-        $property_name = $info['sub_property'];
-      }
-
       $field_value = $this->propertyValuesPreprocess($property_name, $request[$public_field_name], $public_field_name);
 
-      $set_wrapper->{$property_name}->set($field_value);
+      if (!$info['sub_property'] || is_array($field_value)) {
+        $wrapper->{$property_name}->set($field_value);
+      }
+      else {
+        // Set the sub property.
+        $wrapper->{$property_name}->{$info['sub_property']}->set($field_value);
+      }
+
       unset($original_request[$public_field_name]);
       $save = TRUE;
     }
