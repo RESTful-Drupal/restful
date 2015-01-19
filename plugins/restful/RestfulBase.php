@@ -7,6 +7,7 @@
 
 use Drupal\restful\Authentication\AuthenticationManager;
 use Drupal\restful\RateLimit\RateLimitManager;
+use Drupal\restful\Formatter\FormatterManager;
 
 /**
  * Class \RestfulBase
@@ -55,6 +56,13 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
    * @var RateLimitManager
    */
   protected $rateLimitManager = NULL;
+
+  /**
+   * Rate limit manager.
+   *
+   * @var FormatterManager
+   */
+  protected $formatterManager = NULL;
 
   /**
    * The HTTP method used for the request.
@@ -425,6 +433,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
     if ($rate_limit = $this->getPluginKey('rate_limit')) {
       $this->setRateLimitManager(new RateLimitManager($this, $rate_limit));
     }
+    $this->formatterManager = new FormatterManager($this);
     $this->staticCache = new \RestfulStaticCacheController();
     if (is_null($langcode)) {
       global $language;
@@ -536,17 +545,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
    *   The formatted output.
    */
   public function format(array $data) {
-    return $this->formatter()->format($data);
-  }
-
-  /**
-   * Get the formatter handler for the current restful formatter.
-   *
-   * @return \RestfulFormatterInterface
-   *   The formatter handler.
-   */
-  protected function formatter() {
-    return \RestfulManager::outputFormat($this);
+    return $this->formatterManager->format($data, $this->getPluginKey('formatter'));
   }
 
   /**

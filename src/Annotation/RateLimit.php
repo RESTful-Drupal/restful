@@ -19,13 +19,6 @@ use Drupal\Component\Annotation\Plugin;
 class RateLimit extends Plugin {
 
   /**
-   * The plugin ID. Machine name.
-   *
-   * @var string
-   */
-  public $name;
-
-  /**
    * The human readable name.
    *
    * @var string

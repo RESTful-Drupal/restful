@@ -2,10 +2,12 @@
 
 /**
  * @file
- * Contains RestfulFormatterJson.
+ * Contains \Drupal\restful\Plugin\formatter\FormatterJson.
  */
 
-class RestfulFormatterJson extends \RestfulFormatterBase implements \RestfulFormatterInterface {
+namespace Drupal\restful\Plugin\formatter;
+
+class FormatterJson extends Formatter implements FormatterInterface {
 
   /**
    * Content Type
@@ -27,17 +29,17 @@ class RestfulFormatterJson extends \RestfulFormatterBase implements \RestfulForm
 
     $output = array('data' => $data);
 
-    if (!empty($this->handler)) {
+    if (!empty($this->resource)) {
       if (
-        method_exists($this->handler, 'getTotalCount') &&
-        method_exists($this->handler, 'isListRequest') &&
-        $this->handler->isListRequest()
+        method_exists($this->resource, 'getTotalCount') &&
+        method_exists($this->resource, 'isListRequest') &&
+        $this->resource->isListRequest()
       ) {
         // Get the total number of items for the current request without pagination.
-        $output['count'] = $this->handler->getTotalCount();
+        $output['count'] = $this->resource->getTotalCount();
       }
-      if (method_exists($this->handler, 'additionalHateoas')) {
-        $output = array_merge($output, $this->handler->additionalHateoas());
+      if (method_exists($this->resource, 'additionalHateoas')) {
+        $output = array_merge($output, $this->resource->additionalHateoas());
       }
 
       // Add HATEOAS to the output.
@@ -54,15 +56,15 @@ class RestfulFormatterJson extends \RestfulFormatterBase implements \RestfulForm
    *   The data array after initial massaging.
    */
   protected function addHateoas(array &$data) {
-    if (!$this->handler) {
+    if (!$this->resource) {
       return;
     }
-    $request = $this->handler->getRequest();
+    $request = $this->resource->getRequest();
 
     // Get self link.
     $data['self'] = array(
       'title' => 'Self',
-      'href' => $this->handler->versionedUrl($this->handler->getPath()),
+      'href' => $this->resource->versionedUrl($this->resource->getPath()),
     );
 
     $page = !empty($request['page']) ? $request['page'] : 1;
@@ -71,20 +73,20 @@ class RestfulFormatterJson extends \RestfulFormatterBase implements \RestfulForm
       $request['page'] = $page - 1;
       $data['previous'] = array(
         'title' => 'Previous',
-        'href' => $this->handler->getUrl($request),
+        'href' => $this->resource->getUrl($request),
       );
     }
 
     // We know that there are more pages if the total count is bigger than the
     // number of items of the current request plus the number of items in
     // previous pages.
-    $items_per_page = $this->handler->getRange();
+    $items_per_page = $this->resource->getRange();
     $previous_items = ($page - 1) * $items_per_page;
     if (isset($data['count']) && $data['count'] > count($data['data']) + $previous_items) {
       $request['page'] = $page + 1;
       $data['next'] = array(
         'title' => 'Next',
-        'href' => $this->handler->getUrl($request),
+        'href' => $this->resource->getUrl($request),
       );
     }
 

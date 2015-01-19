@@ -19,13 +19,6 @@ use Drupal\Component\Annotation\Plugin;
 class Formatter extends Plugin {
 
   /**
-   * The plugin ID. Machine name.
-   *
-   * @var string
-   */
-  public $name;
-
-  /**
    * The human readable name.
    *
    * @var string
@@ -38,5 +31,12 @@ class Formatter extends Plugin {
    * @var string
    */
   public $description;
+
+  /**
+   * Information about the curie
+   *
+   * @var array
+   */
+  public $curie;
 
 }

@@ -8,70 +8,51 @@
 namespace Drupal\restful\Plugin\formatter;
 
 interface FormatterInterface {
+
+
   /**
-   * Checks if the current request meets the event for the implementing class.
+   * Massages the raw data to create a structured array to pass to the renderer.
    *
-   * @param array $request
-   *   (optional) The request array.
+   * @param array $data
+   *   The raw data to return.
    *
-   * @return boolean
-   *   TRUE if the event is met and the rate limit hits counter should be
-   *   incremented.
+   * @return array
+   *   The data prepared to be rendered.
    */
-  public function isRequestedEvent(array $request = array());
-
-
-  /**
-   * Set the rate limit.
-   *
-   * @param array $limits
-   *   The limits to set.
-   */
-  public function setLimit($limits);
+  public function prepare(array $data);
 
   /**
-   * Get the rate limit. Returns the highest rate limit for the current account.
+   * Renders an array in the selected format.
    *
-   * @param object $account
-   *   The account object for the user making the request.
-   *
-   * @return int
-   */
-  public function getLimit($account = NULL);
-
-  /**
-   * Set the rate limit period.
-   *
-   * @param \DateInterval $period
-   */
-  public function setPeriod(\DateInterval $period);
-
-  /**
-   * Get the rate limit period.
-   *
-   * @return \DateInterval
-   */
-  public function getPeriod();
-
-  /**
-   * Generates an identifier for the event and the request.
-   *
-   * @param object $account
-   *   The account object for the user making the request.
+   * @param array $structured_data
+   *   The data prepared to be rendered as returned by
+   *   \RestfulFormatterInterface::prepare().
    *
    * @return string
+   *   The body contents for the HTTP response.
    */
-  public function generateIdentifier($account = NULL);
+  public function render(array $structured_data);
 
   /**
-   * Load rate limit entity.
+   * Formats the un-structured data into the output format.
    *
-   * @param object $account
-   *   The account object for the user making the request.
+   * @param array $data
+   *   The raw data to return.
    *
-   * @return \RestfulFormatter
-   *   The loaded entity or NULL if none found.
+   * @return string
+   *   The body contents for the HTTP response.
+   *
+   * @see \RestfulFormatterInterface::prepare()
+   * @see \RestfulFormatterInterface::render()
    */
-  public function loadFormatterEntity($account = NULL);
+  public function format(array $data);
+
+  /**
+   * Returns the content type for the selected output format.
+   *
+   * @return string
+   *   The contents for the ContentType header in the response.
+   */
+  public function getContentTypeHeader();
 
 }

@@ -8,28 +8,13 @@
 namespace Drupal\restful\Plugin\formatter;
 
 use Drupal\Component\Plugin\PluginBase;
-use Drupal\restful\Formatter\FormatterManager;
 
 abstract class Formatter extends PluginBase implements FormatterInterface {
 
   /**
-   * @var array
+   * The resource handler containing more info about the request.
    *
-   * Array of maximum limit of requests across all endpoints per role.
-   */
-  protected $limits = array();
-
-  /**
-   * @var \DateInterval
-   *
-   * Period after which the rate limit is expired.
-   */
-  protected $period;
-
-  /**
    * @var \RestfulBase
-   *
-   * The resource this object is limiting access to.
    */
   protected $resource;
 
@@ -38,88 +23,22 @@ abstract class Formatter extends PluginBase implements FormatterInterface {
    */
   public function __construct(array $configuration, $plugin_id, $plugin_definition) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
-    $this->period = $configuration['period'];
-    $this->limits = $configuration['limits'];
     $this->resource = $configuration['resource'];
   }
 
   /**
    * {@inheritdoc}
    */
-  public function setLimit($limits) {
-    $this->limits = $limits;
+  public function format(array $data) {
+    return $this->render($this->prepare($data));
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getLimit($account = NULL) {
-    // If the user is anonymous.
-    if (empty($account->roles)) {
-      return $this->limits['anonymous user'];
-    }
-    // If the user is logged then return the best limit for all the roles the
-    // user has.
-    $max_limit = 0;
-    foreach ($account->roles as $rid => $role) {
-      if (!isset($this->limits[$role])) {
-        // No limit configured for this role.
-        continue;
-      }
-      if ($this->limits[$role] < $max_limit &&
-        $this->limits[$role] != FormatterManager::UNLIMITED_RATE_LIMIT) {
-        // The limit is smaller than one previously found.
-        continue;
-      }
-      // This is the highest limit for the current user given all their roles.
-      $max_limit = $this->limits[$role];
-    }
-    return $max_limit;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setPeriod(\DateInterval $period) {
-    $this->period = $period;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getPeriod() {
-    return $this->period;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function generateIdentifier($account = NULL) {
-    $identifier = $this->resource->getResourceName() . '::';
-    if ($this->getPluginId() == 'global') {
-      // Don't split the id by resource if the event is global.
-      $identifier = '';
-    }
-    $identifier .= $this->getPluginId() . '::';
-    $identifier .= empty($account->uid) ? ip_address() : $account->uid;
-    return $identifier;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function loadFormatterEntity($account = NULL) {
-    $query = new \EntityFieldQuery();
-    $results = $query
-      ->entityCondition('entity_type', 'formatter')
-      ->entityCondition('bundle', $this->getPluginId())
-      ->propertyCondition('identifier', $this->generateIdentifier($account))
-      ->execute();
-    if (empty($results['formatter'])) {
-      return;
-    }
-    $rlid = key($results['formatter']);
-    return entity_load_single('formatter', $rlid);
+  public function getContentTypeHeader() {
+    // Default to the most generic content type.
+    return 'application/hal+json; charset=utf-8';
   }
 
 }
