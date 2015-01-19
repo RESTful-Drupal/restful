@@ -655,12 +655,17 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
 
       $field_value = $this->propertyValuesPreprocess($property_name, $request[$public_field_name], $public_field_name);
 
-      if (!$info['sub_property'] || is_array($field_value)) {
-        $wrapper->{$property_name}->set($field_value);
+      if ($info['sub_property']) {
+        if (is_array($field_value)) {
+          $wrapper->{$property_name}->set($field_value);
+        }
+        else {
+          $wrapper->{$property_name}->{$info['sub_property']}->set($field_value);
+        }
+
       }
       else {
-        // Set the sub property.
-        $wrapper->{$property_name}->{$info['sub_property']}->set($field_value);
+        $wrapper->{$property_name}->set($field_value);
       }
 
       unset($original_request[$public_field_name]);
