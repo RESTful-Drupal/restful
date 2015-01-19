@@ -357,10 +357,6 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
     foreach ($public_fields as $public_field_name => $info) {
       if (!empty($info['create_or_update_passthrough'])) {
         // Allow passing the value in the request.
-        if (!empty($info['create_or_update_passthrough_required']) && !isset($request[$public_field_name])) {
-          throw new \RestfulBadRequestException(format_string('Property @name is required.', array('@name' => $public_field_name)));
-        }
-
         unset($original_request[$public_field_name]);
         continue;
       }
@@ -425,10 +421,6 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
     foreach ($public_fields as $public_field_name => $info) {
       if (!empty($info['create_or_update_passthrough'])) {
         // Allow passing the value in the request.
-        if (!empty($info['create_or_update_passthrough_required']) && !isset($request[$public_field_name])) {
-          throw new \RestfulBadRequestException(format_string('Property @name is required.', array('@name' => $public_field_name)));
-        }
-
         unset($original_request[$public_field_name]);
         continue;
       }

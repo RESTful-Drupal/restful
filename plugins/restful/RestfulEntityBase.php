@@ -72,9 +72,6 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    * - "create_or_update_passthrough": Determines if a public field that isn't
    *   mapped to any property or field, may be passed upon create or update
    *   of an entity. Defaults to FALSE.
-   * - "create_or_update_passthrough_required": Determines if the passthrough
-   *   public field, passed upon create or update of an entity is required.
-   *   Defaults to FALSE.
    *
    * @var array
    */
@@ -646,10 +643,6 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     foreach ($this->getPublicFields() as $public_field_name => $info) {
       if (!empty($info['create_or_update_passthrough'])) {
         // Allow passing the value in the request.
-        if (!empty($info['create_or_update_passthrough_required']) && !isset($request[$public_field_name])) {
-          throw new \RestfulBadRequestException(format_string('Property @name is required.', array('@name' => $public_field_name)));
-        }
-
         unset($original_request[$public_field_name]);
         continue;
       }

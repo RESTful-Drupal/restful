@@ -1128,7 +1128,6 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
         'process_callbacks' => array(),
         'callback' => FALSE,
         'create_or_update_passthrough' => FALSE,
-        'create_or_update_passthrough_required' => FALSE,
       );
     }
 

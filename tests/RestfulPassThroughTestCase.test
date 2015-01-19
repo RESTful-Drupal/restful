@@ -64,26 +64,9 @@ class RestfulPassThroughTestCase extends RestfulCurlBaseTestCase {
     $public_fields = $handler->getPublicFields();
     $public_fields['foo'] = array(
       'create_or_update_passthrough' => TRUE,
-      'create_or_update_passthrough_required' => TRUE,
     );
     $handler->setPublicFields($public_fields);
 
-    try {
-      $handler->post('', $request);
-      $this->fail('Create object did not fail with required pass-through public field');
-    }
-    catch (\RestfulBadRequestException $e) {
-      $this->pass('Correct exception thrown upon create object with required pass-through public field');
-    }
-    catch (\Exception $e) {
-      $this->fail('Wrong exception thrown upon create object with required pass-through public field');
-    }
-
-    $public_fields['foo'] = array(
-      'create_or_update_passthrough' => TRUE,
-      'create_or_update_passthrough_required' => FALSE,
-    );
-    $handler->setPublicFields($public_fields);
     $result = $handler->post('', $request);
     $this->assertTrue($result[0]['id'], 'Object was created without a pass-through public field.');
 
