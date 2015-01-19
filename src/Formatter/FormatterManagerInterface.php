@@ -7,6 +7,8 @@
 
 namespace Drupal\restful\Formatter;
 
+use Drupal\restful\Plugin\formatter\FormatterInterface;
+
 interface FormatterManagerInterface {
 
   /**
@@ -22,5 +24,18 @@ interface FormatterManagerInterface {
    *   The formatted output.
    */
   public function format(array $data, $formatter_name = NULL);
+
+  /**
+   * Helper function to get the default output format from the current request.
+   *
+   * @param string $accept
+   *   The Accept header.
+   * @param string $formatter_name
+   *   The name of the formatter for the current resource.
+   *
+   * @return FormatterInterface
+   *   The formatter plugin to use.
+   */
+  public function negotiateFormatter($accept, $formatter_name = NULL);
 
 }

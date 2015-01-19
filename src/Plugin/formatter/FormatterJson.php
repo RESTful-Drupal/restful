@@ -7,6 +7,16 @@
 
 namespace Drupal\restful\Plugin\formatter;
 
+/**
+ * Class FormatterHalJson
+ * @package Drupal\restful\Plugin\formatter
+ *
+ * @Formatter(
+ *   id = "json",
+ *   label = "Simple JSON",
+ *   description = "Output in using the JSON format."
+ * )
+ */
 class FormatterJson extends Formatter implements FormatterInterface {
 
   /**

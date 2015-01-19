@@ -11,7 +11,7 @@ namespace Drupal\restful\Plugin\formatter;
  * Class FormatterHalJson
  * @package Drupal\restful\Plugin\formatter
  *
- * @RateLimit(
+ * @Formatter(
  *   id = "hal_json",
  *   label = "HAL+JSON",
  *   description = "Output in using the HAL conventions and JSON format.",

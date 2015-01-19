@@ -7,6 +7,8 @@
 
 include_once __DIR__ . '/restful.entity.inc';
 
+use Drupal\restful\Formatter\FormatterManager;
+
 /**
  * Implements hook_ctools_plugin_directory().
  */
@@ -572,7 +574,9 @@ function restful_delivery($var = NULL, $method = 'format') {
   }
 
   try {
-    $formatter_handler = \RestfulManager::outputFormat($restful_handler);
+    // Get a new formatter manager.
+    $formatter_manager = new FormatterManager($restful_handler);
+    $formatter_handler = $formatter_manager->negotiateFormatter($GLOBALS['_SERVER']['HTTP_ACCEPT'], $restful_handler->getPluginKey('format'));
     $output = $formatter_handler->{$method}($var);
     // The content type header is modified after the massaging if there is
     // an error code. Therefore we need to set the content type header after
