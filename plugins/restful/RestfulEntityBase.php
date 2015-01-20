@@ -69,6 +69,9 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    *       'full_view' => FALSE,
    *     ),
    *   );
+   * - "create_or_update_passthrough": Determines if a public field that isn't
+   *   mapped to any property or field, may be passed upon create or update
+   *   of an entity. Defaults to FALSE.
    *
    * @var array
    */
@@ -302,6 +305,12 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       }
 
       $value = NULL;
+
+      if ($info['create_or_update_passthrough']) {
+        // The public field is a dummy one, meant only for passing data upon
+        // create or update.
+        continue;
+      }
 
       if ($info['callback']) {
         $value = static::executeCallback($info['callback'], array($wrapper));
@@ -632,6 +641,12 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     $original_request = $request;
 
     foreach ($this->getPublicFields() as $public_field_name => $info) {
+      if (!empty($info['create_or_update_passthrough'])) {
+        // Allow passing the value in the request.
+        unset($original_request[$public_field_name]);
+        continue;
+      }
+
       if (empty($info['property'])) {
         // We may have for example an entity with no label property, but with a
         // label callback. In that case the $info['property'] won't exist, so
@@ -650,7 +665,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       }
 
       if (!$this->checkPropertyAccess('edit', $public_field_name, $wrapper->{$property_name}, $wrapper)) {
-        throw new RestfulBadRequestException(format_string('Property @name cannot be set.', array('@name' => $public_field_name)));
+        throw new \RestfulBadRequestException(format_string('Property @name cannot be set.', array('@name' => $public_field_name)));
       }
 
       $field_value = $this->propertyValuesPreprocess($property_name, $request[$public_field_name], $public_field_name);
@@ -662,7 +677,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
 
     if (!$save) {
       // No request was sent.
-      throw new RestfulBadRequestException('No values were sent with the request');
+      throw new \RestfulBadRequestException('No values were sent with the request');
     }
 
     if ($original_request) {
@@ -1220,24 +1235,15 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
   /**
    * {@inheritdoc}
    */
-  public function getPublicFields() {
-    if ($this->publicFields) {
-      // Return early.
-      return $this->publicFields;
-    }
-
-    // Get the public fields that were defined by the user.
-    $public_fields = $this->publicFieldsInfo();
-
+  protected function addDefaultValuesToPublicFields(array $public_fields = array()) {
+    $public_fields = parent::addDefaultValuesToPublicFields($public_fields);
     // Set defaults values.
     foreach (array_keys($public_fields) as $key) {
-      // Set default values.
+      // Set default values specific for entities.
       $info = &$public_fields[$key];
       $info += array(
         'access_callbacks' => array(),
-        'callback' => FALSE,
         'column' => FALSE,
-        'process_callbacks' => array(),
         'property' => FALSE,
         'resource' => array(),
         'sub_property' => FALSE,
@@ -1281,9 +1287,6 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
         }
       }
     }
-
-    // Cache the processed fields.
-    $this->setPublicFields($public_fields);
 
     return $public_fields;
   }
@@ -1390,16 +1393,6 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     );
 
     return !in_array($field['type'], $field_types) || !in_array($instance['widget']['type'], $widget_types);
-  }
-
-  /**
-   * Set the public fields.
-   *
-   * @param array $public_fields
-   *   The processed public fields array.
-   */
-  public function setPublicFields(array $public_fields = array()) {
-    $this->publicFields = $public_fields;
   }
 
   /**

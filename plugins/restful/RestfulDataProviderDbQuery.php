@@ -99,7 +99,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
 
     $this->tableName = $options['table_name'];
     $this->idColumn = $options['id_column'];
-    $this->primary = empty($plugin['primary']) ? NULL : $this->primary = $plugin['primary'];
+    $this->primary = empty($plugin['data_provider_options']['primary']) ? NULL : $this->primary = $plugin['data_provider_options']['primary'];
   }
 
   /**
@@ -349,25 +349,45 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
     // Build the update array.
     $request = $this->getRequest();
     static::cleanRequest($request);
+    $save = FALSE;
+    $original_request = $request;
+
     $public_fields = $this->getPublicFields();
     $fields = array();
-    foreach ($public_fields as $public_property => $info) {
+    foreach ($public_fields as $public_field_name => $info) {
+      if (!empty($info['create_or_update_passthrough'])) {
+        // Allow passing the value in the request.
+        unset($original_request[$public_field_name]);
+        continue;
+      }
+
       // If this is the primary field, skip.
       if ($this->isPrimaryField($info['property'])) {
         continue;
       }
       // Check if the public property is set in the payload.
-      if (!isset($request[$public_property])) {
+      if (!isset($request[$public_field_name])) {
         if ($full_replace) {
           $fields[$info['property']] = NULL;
         }
       }
       else {
-        $fields[$info['property']] = $request[$public_property];
+        $fields[$info['property']] = $request[$public_field_name];
       }
+
+      unset($original_request[$public_field_name]);
+      $save = TRUE;
     }
-    if (empty($fields)) {
-      return $this->view($id);
+
+    if (!$save) {
+      // No request was sent.
+      throw new \RestfulBadRequestException('No values were sent with the request.');
+    }
+
+    if ($original_request) {
+      // Request had illegal values.
+      $error_message = format_plural(count($original_request), 'Property @names is invalid.', 'Property @names are invalid.', array('@names' => implode(', ', array_keys($original_request))));
+      throw new \RestfulBadRequestException($error_message);
     }
 
     // Once the update array is built, execute the query.
@@ -391,20 +411,48 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
     // Build the update array.
     $request = $this->getRequest();
     static::cleanRequest($request);
+    $save = FALSE;
+    $original_request = $request;
+
     $public_fields = $this->getPublicFields();
     $fields = array();
     $id_values = array_fill(0, count($this->getIdColumn()), FALSE);
 
-    foreach ($public_fields as $public_property => $info) {
+    foreach ($public_fields as $public_field_name => $info) {
+      if (!empty($info['create_or_update_passthrough'])) {
+        // Allow passing the value in the request.
+        unset($original_request[$public_field_name]);
+        continue;
+      }
+
+      // If this is the primary field, skip.
+      if ($this->isPrimaryField($info['property'])) {
+        unset($original_request[$public_field_name]);
+        continue;
+      }
 
       // Check if the public property is set in the payload.
       if (($index = array_search($info['property'], $this->getIdColumn())) !== FALSE) {
-        $id_values[$index] = $request[$public_property];
+        $id_values[$index] = $request[$public_field_name];
       }
 
-      if (isset($request[$public_property])) {
-        $fields[$info['property']] = $request[$public_property];
+      if (isset($request[$public_field_name])) {
+        $fields[$info['property']] = $request[$public_field_name];
       }
+
+      unset($original_request[$public_field_name]);
+      $save = TRUE;
+    }
+
+    if (!$save) {
+      // No request was sent.
+      throw new \RestfulBadRequestException('No values were sent with the request.');
+    }
+
+    if ($original_request) {
+      // Request had illegal values.
+      $error_message = format_plural(count($original_request), 'Property @names is invalid.', 'Property @names are invalid.', array('@names' => implode(', ', array_keys($original_request))));
+      throw new \RestfulBadRequestException($error_message);
     }
 
     $passed_id = NULL;
@@ -419,12 +467,10 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
       return $this->view($id, TRUE);
     }
 
-    // Some times db_insert does not know how to get the ID.
+    // Some times db_insert() does not know how to get the ID.
     if ($passed_id) {
       return $this->view($passed_id);
     }
-
-    return;
   }
 
   /**
@@ -462,6 +508,13 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
     // Loop over all the defined public fields.
     foreach ($this->getPublicFields() as $public_field_name => $info) {
       $value = NULL;
+
+      if ($info['create_or_update_passthrough']) {
+        // The public field is a dummy one, meant only for passing data upon
+        // create or update.
+        continue;
+      }
+
       // If there is a callback defined execute it instead of a direct mapping.
       if ($info['callback']) {
         $value = static::executeCallback($info['callback'], array($row));

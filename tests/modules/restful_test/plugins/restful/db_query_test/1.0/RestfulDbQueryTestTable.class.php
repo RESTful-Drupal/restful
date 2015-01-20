@@ -12,6 +12,9 @@ class RestfulDbQueryTestTable extends \RestfulDataProviderDbQuery implements \Re
    */
   public function publicFieldsInfo() {
     return array(
+      'id' => array(
+        'property' => 'id',
+      ),
       'string' => array(
         'property' => 'str_field',
       ),
