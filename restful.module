@@ -289,7 +289,7 @@ function restful_get_restful_handler_by_name($plugin_name) {
   ctools_include('plugins');
   $plugin = ctools_get_plugins('restful', 'restful', $plugin_name);
   if (!$class = ctools_plugin_load_class('restful', 'restful', $plugin_name, 'class')) {
-    throw new \RestfulServiceUnavailable(format_string('Restful plugin class (@plugin) was not found.', array('@plugin' => $plugin_name)));
+    throw new \RestfulServiceUnavailable(format_string('RESTful plugin class (@plugin) was not found.', array('@plugin' => $plugin_name)));
   }
   $handler = new $class($plugin);
   // If the restful plugin needs authentication load the corresponding

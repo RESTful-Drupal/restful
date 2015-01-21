@@ -148,7 +148,7 @@ you to make sure that that field is unique. Note that in case that more tha one
 entity matches the provided ID the first record will be loaded.
 
 ## Working with authentication providers
-Restful comes with ``cookie``, ``base_auth`` (user name and password in the HTTP
+RESTful comes with ``cookie``, ``base_auth`` (user name and password in the HTTP
 header) authentications providers, as well as a "RESTful token auth" module that
  has a `token` authentication provider.
 
@@ -171,7 +171,7 @@ curl -u "username:password" https://example.com/api/login
 # Response has access token.
 {"access_token":"YOUR_TOKEN"}
 
-# Call a "protected" with token resource (Articles resource version 1.3 in "Restful example")
+# Call a "protected" with token resource (Articles resource version 1.3 in "RESTful example")
 curl https://example.com/api/v1.3/articles/1?access_token=YOUR_TOKEN
 ```
 
