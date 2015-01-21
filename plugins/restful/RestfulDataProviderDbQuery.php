@@ -368,15 +368,15 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
     $id_columns = $this->getIdColumn();
 
     $record = array();
-    foreach ($public_fields as $public_property => $info) {
+    foreach ($public_fields as $public_field_name => $info) {
 
       // If this is the primary field, skip.
       if ($this->isPrimaryField($info['property'])) {
         continue;
       }
 
-      if (isset($request[$public_property])) {
-        $record[$info['property']] = $request[$public_property];
+      if (isset($request[$public_field_name])) {
+        $record[$info['property']] = $request[$public_field_name];
       }
       // For unset fields on full updates, pass NULL to drupal_write_record().
       elseif ($full_replace) {
@@ -425,9 +425,9 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
 
 
     $record = array();
-    foreach ($public_fields as $public_property => $info) {
-      if (isset($request[$public_property])) {
-        $record[$info['property']] = $request[$public_property];
+    foreach ($public_fields as $public_field_name => $info) {
+      if (isset($request[$public_field_name])) {
+        $record[$info['property']] = $request[$public_field_name];
       }
 
       unset($original_request[$public_field_name]);

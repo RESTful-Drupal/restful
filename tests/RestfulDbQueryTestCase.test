@@ -76,6 +76,8 @@ class RestfulDbQueryTestCase extends DrupalWebTestCase {
     $result = $handler->get($id);
 
     $expected = array(
+      // ID should be unchanged.
+      'id' => $id,
       // String should be the string that we updated.
       'string' => $mock_data2['string'],
       // Serialized value should be unchanged.
@@ -96,6 +98,8 @@ class RestfulDbQueryTestCase extends DrupalWebTestCase {
     $result = $handler->get($id);
 
     $expected = array(
+      // ID should be unchanged.
+      'id' => $id,
       // String should be the string that we PUT.
       'string' => $mock_data3['string'],
       // Serialized field should be null.
@@ -139,6 +143,8 @@ class RestfulDbQueryTestCase extends DrupalWebTestCase {
     $expected = $mock_data4;
     // Account for serialization.
     $expected['serialized'] = $randomSerialized;
+    // Account for not knowing the ID of the new entity beforehand.
+    unset($result[0]['id']);
 
     $this->assertEqual($result[0], $expected, 'All the content listed successfully.');
 
