@@ -246,7 +246,8 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
   public function getTotalCount() {
     return intval($this
       ->getQueryCount()
-      ->execute());
+      ->execute()
+      ->fetchField());
   }
 
   /**
