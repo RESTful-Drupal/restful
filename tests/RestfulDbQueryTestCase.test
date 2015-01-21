@@ -21,7 +21,7 @@ class RestfulDbQueryTestCase extends DrupalWebTestCase {
     return array(
       'name' => 'DB Query',
       'description' => 'Test the DB Query data provider.',
-      'group' => 'Restful',
+      'group' => 'RESTful',
     );
   }
 
@@ -74,6 +74,7 @@ class RestfulDbQueryTestCase extends DrupalWebTestCase {
 
     $handler->patch($id, $mock_data2);
     $result = $handler->get($id);
+<<<<<<< HEAD
 
     $expected = array(
       // String should be the string that we updated.
@@ -94,6 +95,21 @@ class RestfulDbQueryTestCase extends DrupalWebTestCase {
     );
     $handler->put($id, $mock_data3);
     $result = $handler->get($id);
+=======
+    // Remove nullified fields.
+    $result = array_filter($result[0]);
+    unset($result['id']);
+    $this->assertEqual($result, $mock_data2, 'The record was updated with PUT successfully.');
+
+    $mock_data3 = $mock_data2;
+    $mock_data3['string'] = $this->randomName();
+    unset($mock_data3['integer']);
+    $handler->patch($id, $mock_data3);
+    $result = $handler->get($id);
+    $result = array_filter($result[0]);
+    unset($result['id']);
+    $this->assertEqual($result, array_merge($mock_data2, $mock_data3), 'The record was updated with PATCH successfully.');
+>>>>>>> fdc195abfb7b5b98d530ee89d51ea51c67f5fff8
 
     $expected = array(
       // String should be the string that we PUT.
@@ -134,6 +150,7 @@ class RestfulDbQueryTestCase extends DrupalWebTestCase {
 
     // Testing listing for read context.
     $result = $handler->get();
+<<<<<<< HEAD
 
     // The created record should match our input.
     $expected = $mock_data4;
@@ -141,6 +158,10 @@ class RestfulDbQueryTestCase extends DrupalWebTestCase {
     $expected['serialized'] = $randomSerialized;
 
     $this->assertEqual($result[0], $expected, 'All the content listed successfully.');
+=======
+    unset($result[0]['id']);
+    $this->assertEqual($result, array($mock_data4), 'All the content listed successfully.');
+>>>>>>> fdc195abfb7b5b98d530ee89d51ea51c67f5fff8
 
     // Testing filters.
     $mock_data5 = array(

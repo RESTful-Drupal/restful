@@ -11,7 +11,7 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     return array(
       'name' => 'List entities',
       'description' => 'Test the listing of entities.',
-      'group' => 'Restful',
+      'group' => 'RESTful',
     );
   }
 

@@ -25,7 +25,7 @@ class RestfulUserLoginCookieTestCase extends RestfulCurlBaseTestCase {
     return array(
       'name' => 'Login endpoint',
       'description' => 'Test the "/api/login "endpoint.',
-      'group' => 'Restful',
+      'group' => 'RESTful',
     );
   }
 

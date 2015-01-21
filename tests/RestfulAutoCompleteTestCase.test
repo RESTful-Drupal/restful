@@ -11,12 +11,21 @@ class RestfulAutoCompleteTestCase extends DrupalWebTestCase {
     return array(
       'name' => 'Autocomplete',
       'description' => 'Test the autocomplete functionality.',
-      'group' => 'Restful',
+      'group' => 'RESTful',
     );
   }
 
+  /**
+   * @var \stdClass.
+   *
+   * The user object.
+   */
+  protected $user;
+
   function setUp() {
     parent::setUp('restful_test');
+
+    $this->user = $this->drupalCreateUser();
   }
 
   /**
@@ -65,5 +74,15 @@ class RestfulAutoCompleteTestCase extends DrupalWebTestCase {
     );
     $result = $handler->get('', $request);
     $this->assertFalse($result, 'No values returned from empty query.');
+
+    // Test autocomplete for users.
+    $handler = restful_get_restful_handler('users');
+    $request = array(
+      'autocomplete' => array(
+        'string' => substr($this->user->name, 0, 3),
+      ),
+    );
+    $result = $handler->get('', $request);
+    $this->assertTrue($result, 'Results has returned for entity without a bundle key.');
   }
 }

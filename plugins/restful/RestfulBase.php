@@ -90,6 +90,13 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
   public $staticCache;
 
   /**
+   * The public fields that are exposed to the API.
+   *
+   * @var array
+   */
+  protected $publicFields;
+
+  /**
    * Get the cache id parameters based on the keys.
    *
    * @param $keys
@@ -1080,7 +1087,39 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
    * {@inheritdoc}
    */
   public function getPublicFields() {
+    if ($this->publicFields) {
+      // Return early.
+      return $this->publicFields;
+    }
+
     $public_fields = $this->publicFieldsInfo();
+
+    // Cache the processed fields.
+    $this->setPublicFields($public_fields);
+
+    return $this->publicFields;
+  }
+
+  /**
+   * Set the public fields.
+   *
+   * @param array $public_fields
+   *   The unprocessed public fields array.
+   */
+  public function setPublicFields(array $public_fields = array()) {
+    $this->publicFields = $this->addDefaultValuesToPublicFields($public_fields);
+  }
+
+  /**
+   * Add default values to the public fields array.
+   *
+   * @param array $public_fields
+   *   The unprocessed public fields array.
+   *
+   * @return array
+   *   The processed public fields array.
+   */
+  protected function addDefaultValuesToPublicFields(array $public_fields = array()) {
     // Set defaults values.
     foreach (array_keys($public_fields) as $key) {
       // Set default values.
@@ -1088,8 +1127,10 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
       $info += array(
         'process_callbacks' => array(),
         'callback' => FALSE,
+        'create_or_update_passthrough' => FALSE,
       );
     }
+
     return $public_fields;
   }
 
@@ -1681,6 +1722,24 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
         $this->setRange($request['range']);
       }
     }
+  }
+
+  /**
+   * Helper method to determine if an array is numeric.
+   *
+   * @param array $input
+   *   The input array.
+   *
+   * @return boolean
+   *   TRUE if the array is numeric, false otherwise.
+   */
+  public final static function isArrayNumeric(array $input) {
+    foreach (array_keys($input) as $key) {
+      if (!ctype_digit((string) $key)) {
+        return FALSE;
+      }
+    }
+    return TRUE;
   }
 
 }

@@ -11,7 +11,7 @@ class RestfulExceptionHandleTestCase extends DrupalWebTestCase {
     return array(
       'name' => 'Exception handling',
       'description' => 'Test converting exceptions into JSON with code, message and description.',
-      'group' => 'Restful',
+      'group' => 'RESTful',
     );
   }
 

@@ -11,7 +11,7 @@ class RestfulReferenceTestCase extends RestfulCurlBaseTestCase {
     return array(
       'name' => 'Referenced resources',
       'description' => 'Test defining a public field as a resource for base properties (e.g. the UID on the node entity) and fields.',
-      'group' => 'Restful',
+      'group' => 'RESTful',
     );
   }
 

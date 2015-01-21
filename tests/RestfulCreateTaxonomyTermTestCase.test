@@ -11,7 +11,7 @@ class RestfulCreateTaxonomyTermTestCase extends DrupalWebTestCase {
     return array(
       'name' => 'Taxonomy term integration',
       'description' => 'Test the creation of a taxonomy term entity type.',
-      'group' => 'Restful',
+      'group' => 'RESTful',
     );
   }
 

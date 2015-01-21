@@ -18,7 +18,7 @@ class RestfulCsrfTokenTestCase extends RestfulCurlBaseTestCase {
     return array(
       'name' => 'CSRF token',
       'description' => 'Test the validation of a CSRF token for write operations.',
-      'group' => 'Restful',
+      'group' => 'RESTful',
     );
   }
 

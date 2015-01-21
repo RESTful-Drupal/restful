@@ -18,7 +18,7 @@ class RestfulSubResourcesCreateEntityTestCase extends DrupalWebTestCase {
     return array(
       'name' => 'Sub requests',
       'description' => 'Test the creation of sub-resources (referenced entities) via sub requests.',
-      'group' => 'Restful',
+      'group' => 'RESTful',
     );
   }
 

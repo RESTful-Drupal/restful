@@ -11,7 +11,7 @@ class RestfulUpdateEntityTestCase extends DrupalWebTestCase {
     return array(
       'name' => 'Update entity',
       'description' => 'Test the updating of an entity using PUT and PATCH methods.',
-      'group' => 'Restful',
+      'group' => 'RESTful',
     );
   }
 
