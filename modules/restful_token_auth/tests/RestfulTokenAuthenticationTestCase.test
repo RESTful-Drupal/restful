@@ -11,7 +11,7 @@ class RestfulTokenAuthenticationTestCase extends DrupalWebTestCase {
     return array(
       'name' => 'Token Authentication',
       'description' => 'Test the request authentication with a token.',
-      'group' => 'Restful',
+      'group' => 'RESTful',
     );
   }
 

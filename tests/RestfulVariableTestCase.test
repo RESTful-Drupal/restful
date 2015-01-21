@@ -21,7 +21,7 @@ class RestfulVariableTestCase extends DrupalWebTestCase {
     return array(
       'name' => 'Variable',
       'description' => 'Test the variable data provider.',
-      'group' => 'Restful',
+      'group' => 'RESTful',
     );
   }
 
