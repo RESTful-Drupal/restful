@@ -6,97 +6,37 @@
  */
 
 abstract class RestfulDataProviderVariable extends \RestfulBase implements \RestfulDataProviderInterface {
-
-  /**
-   * Constructs a RestfulDataProviderVariable object.
-   *
-   * @param array $plugin
-   *   Plugin definition.
-   * @param RestfulAuthenticationManager $auth_manager
-   *   (optional) Injected authentication manager.
-   * @param DrupalCacheInterface $cache_controller
-   *   (optional) Injected cache backend.
-   * @param string $language
-   *   (optional) The language to return items in.
-   */
-  public function __construct(array $plugin, \RestfulAuthenticationManager $auth_manager = NULL, \DrupalCacheInterface $cache_controller = NULL, $language = NULL) {
-    parent::__construct($plugin, $auth_manager, $cache_controller, $language);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function controllersInfo() {
-    return array(
-      '' => array(
-        // GET returns a list of entities.
-        \RestfulInterface::GET => 'index',
-        \RestfulInterface::HEAD => 'index',
-        // POST
-        \RestfulInterface::POST => 'setVariable',
-      ),
-      // We don't know what the ID looks like, assume that everything is the ID.
-      '^.*$' => array(
-        \RestfulInterface::GET => 'viewVariables',
-        \RestfulInterface::HEAD => 'viewVariables',
-        \RestfulInterface::PUT => 'setVariable',
-        \RestfulInterface::PATCH => 'setVariable',
-        \RestfulInterface::DELETE => 'remove',
-      ),
-    );
-  }
-
   /**
    * Defines default sort for variable names.
    *
    * By default, the array of variables returned by Drupal is already sorted
-   * in ascending order by variable name.
+   * by variable name in ascending order, so we are returning a default sort
+   * here just for clarity.
    *
    * @return array
    *   Array keyed by the sort field, with the order ('ASC' or 'DESC') as value.
    */
   public function defaultSortInfo() {
-    return array();
+    return array('name' => 'ASC');
   }
 
   /**
    * {@inheritdoc}
    */
   public function getVariablesForList() {
-    global $conf;
-    $variables = $conf;
+    // Map name and value to an indexed array structure.
+    foreach ($GLOBALS['conf'] as $variable_name => $variable_value) {
+      $variables[] = array(
+        'name' => $variable_name,
+        'value' => $variable_value,
+      );
+    }
 
+    // Apply pagination and sorting.
     $this->applyListSort($variables);
     $this->applyListPagination($variables);
 
     return $variables;
-  }
-
-  /**
-   * Sort the list of variables by name.
-   *
-   * @param string $a
-   *   The first variable name for the comparison.
-   * @param string $b
-   *   The second variable name for the comparison.
-   */
-  public function nameSort($a, $b) {
-    return strcasecmp($a, $b);
-  }
-
-  /**
-   * Sort the list of variables by value.
-   *
-   * If you are comparing variables with the same value, note that the PHP
-   * sorting algorithm is not stable, and their order may be changed.
-   *
-   * @param mixed $a
-   *   The first data structure for the comparison.
-   * @param mixed $b
-   *   The second data structure for the comparison.
-   */
-  public function valueSort($a, $b) {
-    return;
   }
 
   /**
@@ -106,9 +46,8 @@ abstract class RestfulDataProviderVariable extends \RestfulBase implements \Rest
    * will be the one to take effect.
    *
    * @param array $variables
-   *   An array keyed by variable name, valued by unserialized variable value.
-   *
-   * @throws \RestfulBadRequestException
+   *   An indexed array containing elements that represent each variable, each
+   *   containing a name and a value.
    */
   protected function applyListSort(array &$variables) {
     $public_fields = $this->getPublicFields();
@@ -121,15 +60,10 @@ abstract class RestfulDataProviderVariable extends \RestfulBase implements \Rest
     foreach ($sorts as $public_field_name => $direction) {
       if (isset($public_fields[$public_field_name]['property'])) {
         $property_name = $public_fields[$public_field_name]['property'];
-        if ($property_name == 'name') {
-          uksort($variables, array(__CLASS__, 'nameSort'));
+        // Only sort by name if it's different than Drupal's default.
+        if ($property_name == 'name' && $direction == 'DESC') {
+          $variables = array_reverse($variables);
         }
-        elseif ($property_name == 'value') {
-          uasort($variables, array(__CLASS__, 'valueSort'));
-        }
-      }
-      if ($direction == 'DESC') {
-        $variables = array_reverse($variables, TRUE);
       }
     }
 
@@ -152,10 +86,10 @@ abstract class RestfulDataProviderVariable extends \RestfulBase implements \Rest
   }
 
   /**
-   * {@inheritdoc}
+   * Returns the total count of all variables.
    */
   public function getTotalCount() {
-    return array('restful_count' => count($this->getVariablesForList()));
+    return count($GLOBALS['conf']);
   }
 
   /**
@@ -164,48 +98,38 @@ abstract class RestfulDataProviderVariable extends \RestfulBase implements \Rest
   public function index() {
     $variables = $this->getVariablesForList();
     $return = array();
-    foreach ($variables as $variable => $value) {
-      $return[] = $this->view($variable);
+    foreach ($variables as $variable) {
+      $return[] = $this->mapVariableToPublicFields($variable);
     }
 
     return $return;
   }
 
   /**
-   * Helper function to feed an array into viewMultiple().
+   * View a variable or multiple variables.
    *
    * @param string $name_string
    *  A string of variable names, separated by commas.
    */
-  public function viewVariables($name_string) {
+  public function view($name_string) {
     $names = array_unique(array_filter(explode(',', $name_string)));
-    return $this->viewMultiple($names);
-  }
 
-  /**
-   * {@inheritdoc}
-   */
-  public function viewMultiple(array $names) {
-    if (empty($names)) {
-      return array();
-    }
-    $variables = array_keys($this->getVariablesForList());
     $output = array();
-
-    // Build output according to filtered/sorted list of variables.
-    foreach ($variables as $variable) {
-      if (in_array($variable, $names)) {
-        $output[] = $this->view($variable);
-      }
+    foreach ($names as $name) {
+      $output[] = $this->viewVariable($name);
     }
 
     return $output;
   }
 
   /**
-   * {@inheritdoc}
+   * View a single variable.
+   *
+   * @param string $name_string
+   *  A string of variable names, separated by commas.
    */
-  public function view($name) {
+  public function viewVariable($name) {
+    // Caching is done on the individual variables.
     $cache_id = array(
       'tb' => 'variable',
       'id' => $name,
@@ -215,20 +139,134 @@ abstract class RestfulDataProviderVariable extends \RestfulBase implements \Rest
       return $cached_data->data;
     }
 
-    $return = array();
-    foreach ($this->getPublicFields() as $public_field_name => $info) {
-      if ($info['property'] == 'name') {
-        $public_field_value = $name;
-      }
-      elseif ($info['property'] == 'value') {
-        $public_field_value = variable_get($name);
-      }
-      else {
-        continue;
-      }
+    $variable['name'] = $name;
+    $variable['value'] = variable_get($name);
 
-      // Modify the public field value using a callback, if supplied.
-      $public_field_value = $info['callback'] ? static::executeCallback($info['callback'], array($value)) : $public_field_value;
+    $return = $this->mapVariableToPublicFields($variable);
+    $this->setRenderedCache($return, $cache_id);
+
+    return $return;
+  }
+
+  /**
+   * Alias for $this->variableSet().
+   *
+   * @param string $name
+   *  The name of the variable to set a value for.
+   */
+  public function replace($name) {
+    return $this->variableSet($name, TRUE);
+  }
+
+  /**
+   * Alias for $this->variableSet().
+   *
+   * The data structures of variable values are all different, therefore it's
+   * impossible to do a partial update in a generic way.
+   *
+   * @param string $name
+   *  The name of the variable to set a value for.
+   * @param boolean $full_replace
+   *  Completely replace variable values with supplied values.
+   */
+  public function update($name, $full_replace = FALSE) {
+    return $this->variableSet($name, FALSE);
+  }
+
+  /**
+   * Alias for $this->variableSet().
+   */
+  public function create() {
+    return $this->variableSet();
+  }
+
+  /**
+   * Sets a variable value.
+   *
+   * If no variable name is provided in the function call, such as for POST
+   * requests, then this method will get the name from the request body.
+   *
+   * @param string $name
+   *  The name of the variable to set a value for.
+   * @param boolean $full_replace
+   *  Completely replace variable values with supplied values.
+   */
+  public function variableSet($name = NULL, $full_replace = TRUE) {
+    $request = $this->getRequest();
+    static::cleanRequest($request);
+
+    // Retrieve the name and value from the request, if present.
+    $public_fields = $this->getPublicFields();
+
+    // Set initial empty value for replace and create contexts.
+    if ($full_replace) {
+      $value = '';
+    }
+
+    foreach ($public_fields as $public_property => $info) {
+      // Set the name from the request if it wasn't provided.
+      if ($info['property'] == 'name'
+        && isset($request[$public_property])
+        && empty($name)) {
+          $name = $request[$public_property];
+      }
+      // Overwrite empty $value with value from the request, if given.
+      if ($info['property'] == 'value' && isset($request[$public_property])) {
+        $value = $request[$public_property];
+      }
+    }
+
+    if (isset($name)) {
+      if (isset($value)) {
+        variable_set($name, $value);
+
+        // Clear the rendered cache before calling the view method.
+        $this->clearRenderedCache(array(
+          'tb' => 'variable',
+          'id' => $name,
+        ));
+      }
+      // Update contexts could have no value set; if so, do nothing.
+
+      return $this->view($name);
+    }
+    else {
+      // We are in a create context with no name supplied.
+      throw new RestfulBadRequestException('No name property supplied');
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function remove($name) {
+    variable_del($name);
+    $this->setHttpHeaders('Status', 204);
+  }
+
+  /**
+   * Maps variable names and values to public fields.
+   *
+   * @param array $variable
+   *   An array containing the name and value of the variable.
+   */
+  public function mapVariableToPublicFields($variable) {
+    foreach ($this->getPublicFields() as $public_field_name => $info) {
+      if (!empty($info['property'])) {
+        if (isset($info['property']) && $info['property'] == 'name') {
+          $public_field_value = $variable['name'];
+        }
+        elseif (isset($info['property']) && $info['property'] == 'value') {
+          $public_field_value = $variable['value'];
+        }
+        else {
+          throw new RestfulBadRequestException("The only possible properties for the variable resource are 'name' and 'value'.");
+        }
+      }
+      // If no property is supplied, execute a callback, if given.
+      elseif ($info['callback']) {
+        $public_field_value = static::executeCallback($info['callback'], array($name));
+      }
 
       // Modify the public field value using a process callback, if supplied.
       if ($public_field_value && $info['process_callbacks']) {
@@ -240,67 +278,6 @@ abstract class RestfulDataProviderVariable extends \RestfulBase implements \Rest
       $return[$public_field_name] = $public_field_value;
     }
 
-    $this->setRenderedCache($return, $cache_id);
-
     return $return;
-  }
-
-  /**
-   * Alias for $this->setVariable().
-   *
-   * @param string $name
-   *  The name of the variable to set a value for.
-   */
-  public function update($name, $full_update = TRUE) {
-    $this->setVariable($name);
-  }
-
-  /**
-   * Sets a variable value.
-   *
-   * This method is used for both 'create' and 'update' contexts.
-   *
-   * @param string $name
-   *  The name of the variable to set a value for.
-   *
-   * @todo: get $name from the request: make it optional for create()/update().
-   */
-  public function setVariable() {
-    $request = $this->getRequest();
-    static::cleanRequest($request);
-
-    // Retrieve the name and value from the request, if present.
-    $public_fields = $this->getPublicFields();
-    $value = '';
-    foreach ($public_fields as $public_property => $info) {
-      if ($info['property'] == 'name' && isset($request[$public_property])) {
-        $name = $request[$public_property];
-      }
-      elseif ($info['property'] == 'value' && isset($request[$public_property])) {
-        $value = $request[$public_property];
-      }
-    }
-    if (isset($name)) {
-      variable_set($name, $value);
-
-      // Clear the rendered cache before calling the view method.
-      $this->clearRenderedCache(array(
-        'tb' => 'variable',
-        'id' => $name,
-      ));
-
-      return $this->view($name);
-    }
-    else {
-      throw new Exception('No name property supplied');
-    }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function remove($name) {
-    variable_del($name);
-    $this->setHttpHeaders('Status', 204);
   }
 }

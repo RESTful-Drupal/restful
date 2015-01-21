@@ -23,6 +23,7 @@ files[] = plugins/restful/RestfulDataProviderDbQueryInterface.php
 files[] = plugins/restful/RestfulDataProviderEFQ.php
 files[] = plugins/restful/RestfulDataProviderEFQInterface.php
 files[] = plugins/restful/RestfulDataProviderVariable.php
+files[] = plugins/restful/RestfulDataProviderVariableInterface.php
 files[] = plugins/restful/RestfulDataProviderInterface.php
 files[] = plugins/restful/RestfulEntityBase.php
 files[] = plugins/restful/RestfulEntityBaseMultipleBundles.php

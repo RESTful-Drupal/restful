@@ -113,7 +113,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
 
     $this->tableName = $options['table_name'];
     $this->idColumn = $options['id_column'];
-    $this->primary = !empty($plugin['primary']) ? $options['primary'] : $options['id_column'];
+    $this->primary = empty($plugin['primary']) ? $options['id_column'] : $options['primary'];
   }
 
   /**
@@ -126,7 +126,9 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
     $sorts = array();
     foreach ($this->getIdColumn() as $column) {
       if (!empty($this->getPublicFields[$column])) {
+        // Sort by the first ID column that is a public field.
         $sorts[$column] = 'ASC';
+        break;
       }
     }
     return $sorts;
@@ -370,6 +372,10 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
       if (isset($request[$public_property])) {
         $record[$info['property']] = $request[$public_property];
       }
+      // For unset fields on full updates, pass NULL to drupal_write_record().
+      elseif ($full_replace) {
+        $record[$info['property']] = NULL;
+      }
     }
     if (empty($record)) {
       return $this->view($id);
@@ -392,7 +398,6 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
       'id' => $id,
     ));
 
-    // @todo: do we need to re-form $id in case some of the values have changed?
     return $this->view($id);
   }
 
@@ -421,7 +426,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
       }
       $id = implode(self::COLUMN_IDS_SEPARATOR, $id_values);
 
-      return $this->view($id, TRUE);
+      return $this->view($id);
     }
     return;
   }

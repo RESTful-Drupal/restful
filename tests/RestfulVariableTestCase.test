@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains RestfulDbQueryTestCase.
+ * Contains RestfulVariableTestCase.
  */
 
 class RestfulVariableTestCase extends DrupalWebTestCase {
@@ -36,25 +36,31 @@ class RestfulVariableTestCase extends DrupalWebTestCase {
    * Test authenticating a user.
    */
   function testCrudOperations() {
-    // Populate the table with some variables.
+    // Set up random content and resource handler.
+    $randomString = $this->randomName();
+    $handler = restful_get_restful_handler('variables');
+
+    // Populate the test environment with variables.
+    $random_numbers = array();
     for ($i = 0; $i < 6; $i++) {
-      variable_set('variable_' . $i, array('test_data' => intval(mt_rand(1, 100))));
+      $random_numbers[] = intval(mt_rand(1, 100));
+      variable_set('variable_' . $i, array('test_data' => $random_numbers[$i]));
     }
 
     $this->assertTrue(variable_get('variable_5'), 'The variables have been set.');
 
-    // Get the handler.
-    $handler = restful_get_restful_handler('variables');
-
-    // Testing read
+    // Testing read.
     $results = $handler->get('variable_5');
-    $result = $results[0];
-    $this->assertEqual($result['variable_name'], 'variable_5', 'The variable name was successfully retrieved.');
-    $this->assertNotNull($result['variable_value'], 'The variable value was successfully retrieved.');
 
-    // Testing list.
+    $expected = array('test_data' => $random_numbers[5]);
+
+    $this->assertEqual($results[0]['variable_name'], 'variable_5', 'The variable name was successfully retrieved.');
+    $this->assertEqual($results[0]['variable_value'], $expected, 'The variable value was successfully retrieved.');
+
+    // Testing read context listing.
     $results = $handler->get();
     $inResults = FALSE;
+
     foreach ($results as $result) {
       if ($result['variable_name'] == 'variable_5') {
         $inResults = TRUE;
@@ -62,30 +68,67 @@ class RestfulVariableTestCase extends DrupalWebTestCase {
     }
     $this->assertTrue($inResults, 'All the content listed successfully.');
 
-    // Testing sort.
-    variable_set('zzz', array('some_property' => $this->randomName()));
+
+
+    // Testing sort for read context.
+
+    // Set a variable that will probably sort last.
+    variable_set('zzzzz', 'some value');
+
+    // Find the last variable name, which will probably be the one we just set.
     $request = array(
       'sort' => '-variable_name',
     );
     $results = $handler->get('', $request);
-    $this->assertEqual($results[0]['variable_name'], 'zzz', 'List is sorted correctly.');
+    $last_variable_name = $results[0]['variable_name'];
+
+    // Generate a variable name that will always sort last.
+    $new_variable_name = 'zzz';
+    while (strcmp($new_variable_name, $last_variable_name) <= 0) {
+      $new_variable_name .= 'z';
+    }
+
+    variable_set($new_variable_name, array('key' => $randomString));
+
+    $request = array(
+      'sort' => '-variable_name',
+    );
+    $results = $handler->get('', $request);
+
+    $expected = array(
+      'variable_name' => $new_variable_name,
+      'variable_value' => array('key' => $randomString),
+    );
+
+    $this->assertEqual($results[0], $expected, 'List is sorted correctly.');
 
     // Testing create.
     $request = array(
       'variable_name' => 'created_variable',
-      'variable_value' => $this->randomName(),
+      'variable_value' => $randomString,
     );
     $handler->post('', $request);
     $results = $handler->get('created_variable');
-    $initial_value = $results[0]['variable_value'];
+
     $this->assertEqual($results[0]['variable_name'], 'created_variable', 'The variable was created.');
-    $this->assertTrue($initial_value, 'The created variable value is present.');
+    $this->assertEqual($results[0]['variable_value'], $randomString, 'The created variable value is present.');
 
     // Testing update.
-    $request['variable_value'] = $this->randomName();
+    $request = array(
+      'variable_name' => 'created_variable'
+    );
+    $handler->patch('created_variable', $request);
+    $results = $handler->get('created_variable');
+
+    // Fields that are not supplied should not be updated.
+    $this->assertEqual($results[0]['variable_value'], $randomString, 'The variable value was not updated.');
+
+    // Testing replace.
     $handler->put('created_variable', $request);
-    $updated_value = variable_get('created_variable');
-    $this->assertNotEqual($initial_value, $updated_value, 'The variable value was updated.');
+    $results = $handler->get('created_variable');
+
+    // Fields that are not supplied should be NULL.
+    $this->assertFalse($results[0]['variable_value'], 'The variable value was removed.');
 
     // Testing delete.
     $handler->delete('created_variable');

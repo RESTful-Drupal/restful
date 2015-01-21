@@ -11,5 +11,4 @@ $plugin = array(
   'description' => t('Expose watchdog entries to the REST API.'),
   'class' => 'RestfulWatchdogResource',
   'authentication_types' => TRUE,
-  'authentication_optional' => TRUE,
 );

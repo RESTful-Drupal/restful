@@ -5,9 +5,6 @@
  * Contains RestfulEntityBase.
  */
 
-/**
- * An abstract implementation of RestfulEntityInterface.
- */
 class RestFulWatchdogResource extends \RestfulDataProviderDbQuery implements \RestfulDataProviderDbQueryInterface {
   public function publicFieldsInfo() {
 
