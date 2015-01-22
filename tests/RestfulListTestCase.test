@@ -436,6 +436,19 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
 
     $result = $handler->get('', $request);
     $this->assertEqual(count($result), 2, 'List filtered by the "author" entity metadata wrapper property, which maps to the "uid" DB column name.');
+
+    $request = array('filter' => array(
+      'static' => array(
+        'value' => 0,
+      )
+    ));
+    try {
+      $handler->get('', $request);
+      $this->fail('Exception not thrown for invalid filter.');
+    }
+    catch (\RestfulBadRequestException $e) {
+      $this->pass('Exception thrown for invalid filter.');
+    }
   }
 
   /**
