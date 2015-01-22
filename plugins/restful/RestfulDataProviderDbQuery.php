@@ -370,6 +370,11 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
 
     $record = array();
     foreach ($public_fields as $public_field_name => $info) {
+      // Ignore passthrough public fields.
+      if (!empty($info['create_or_update_passthrough'])) {
+        unset($original_request[$public_field_name]);
+        continue;
+      }
 
       // If this is the primary field, skip.
       if ($this->isPrimaryField($info['property'])) {
@@ -388,8 +393,15 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
       $save = TRUE;
     }
 
-    if (empty($record)) {
-      return $this->view($id);
+    // No request was sent.
+    if (!$save) {
+      throw new \RestfulBadRequestException('No values were sent with the request.');
+    }
+
+    // If the original request is not empty, then illegal values are present.
+    if (!empty($original_request)) {
+      $error_message = format_plural(count($original_request), 'Property @names is invalid.', 'Property @names are invalid.', array('@names' => implode(', ', array_keys($original_request))));
+      throw new \RestfulBadRequestException($error_message);
     }
 
     // Add the id column values into the record.
@@ -427,6 +439,18 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
 
     $record = array();
     foreach ($public_fields as $public_field_name => $info) {
+      // Ignore passthrough public fields.
+      if (!empty($info['create_or_update_passthrough'])) {
+        unset($original_request[$public_field_name]);
+        continue;
+      }
+
+      // If this is the primary field, skip.
+      if ($this->isPrimaryField($info['property'])) {
+        unset($original_request[$public_field_name]);
+        continue;
+      }
+
       if (isset($request[$public_field_name])) {
         $record[$info['property']] = $request[$public_field_name];
       }
@@ -435,13 +459,13 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
       $save = TRUE;
     }
 
+    // No request was sent.
     if (!$save) {
-      // No request was sent.
       throw new \RestfulBadRequestException('No values were sent with the request.');
     }
 
-    if ($original_request) {
-      // Request had illegal values.
+    // If the original request is not empty, then illegal values are present.
+    if (!empty($original_request)) {
       $error_message = format_plural(count($original_request), 'Property @names is invalid.', 'Property @names are invalid.', array('@names' => implode(', ', array_keys($original_request))));
       throw new \RestfulBadRequestException($error_message);
     }
