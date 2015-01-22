@@ -113,18 +113,6 @@ class RestfulHookMenuTestCase extends RestfulCurlBaseTestCase {
   }
 
   /**
-   * Test when an entity is not found that a 4XX is returned instead of 500.
-   */
-  function testEntityNotFoundDelivery() {
-    $url = 'api/v1.0/articles/1';
-    $result = $this->httpRequest($url);
-    $body = drupal_json_decode($result['body']);
-    $this->assertEqual($result['code'], '422', format_string('422 status code sent for @url url.', array('@url' => $url)));
-    $this->assertTrue(strpos($result['headers'], 'application/problem+json;'), '"application/problem+json" found in invalid request.');
-    $this->assertEqual($body['title'], 'The entity ID 1 for Articles does not exist.', 'Correct error message.');
-  }
-
-  /**
    * Test the version negotiation.
    */
   function testVersionNegotiation() {
