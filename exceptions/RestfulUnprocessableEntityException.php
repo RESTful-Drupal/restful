@@ -5,7 +5,7 @@
  * Contains RestfulUnprocessableEntityException
  */
 
-class RestfulUnprocessableEntityException extends Exception {
+class RestfulUnprocessableEntityException extends RestfulException {
 
   /**
    * Defines the HTTP error code.
