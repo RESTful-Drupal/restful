@@ -59,9 +59,7 @@ class RestfulExampleArticlesResource__1_5 extends RestfulEntityBaseNode {
     );
 
     $public_fields['static'] = array(
-      'callback' => array(
-        array($this, 'randomNumber'),
-      ),
+      'callback' => 'static::randomNumber',
     );
 
     return $public_fields;
@@ -104,7 +102,7 @@ class RestfulExampleArticlesResource__1_5 extends RestfulEntityBaseNode {
    * @return int
    *   A random integer.
    */
-  public function randomNumber($wrapper) {
+  public static function randomNumber($wrapper) {
     return mt_rand();
   }
 
