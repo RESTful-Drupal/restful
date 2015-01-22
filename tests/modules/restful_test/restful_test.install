@@ -54,5 +54,37 @@ function restful_test_schema() {
     'primary key' => array('pid'),
   );
 
+  // Defining table via hook_install() due to drupal_write_record().
+  $schema['restful_test_db_query'] = array(
+    'description' => 'Table for DbQuery testing.',
+    'fields' => array(
+      'id' => array(
+        'description' => 'The primary identifier for a record.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'str_field' => array(
+        'description' => 'String piece of data.',
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'int_field' => array(
+        'description' => 'An int piece of data.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'serialized_field' => array(
+        'description' => 'An serialized piece of data.',
+        'type' => 'blob',
+        'serialize' => TRUE,
+      ),
+    ),
+    'primary key' => array('id'),
+  );
+
   return $schema;
 }
