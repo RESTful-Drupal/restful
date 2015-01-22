@@ -84,6 +84,10 @@ Returns:
 ## Applying a query filter
 RESTful allows applying filters to the database query used to generate the list.
 
+Bear in mind that for entity based resources, only those fields with a
+`'property'` (matching to an entity property or a Field API field) can be used
+for filtering.
+
 ```php
 # Handler v1.0
 curl https://example.com/api/v1/articles?filter[label]=abc

@@ -23,6 +23,10 @@ properties.  List every property in a comma-separated string, in the order that
 you want to sort by.  Prefixing the property name with a dash (``-``) will sort
  by that property in a descending order; the default is ascending.
 
+Bear in mind that for entity based resources, only those fields with a
+`'property'` (matching to an entity property or a Field API field) can be used
+for sorting.
+
 If no sorting is specified the default sorting is by the entity ID.
 
 ```php
@@ -60,6 +64,10 @@ $handler = restful_get_restful_handler('articles');
 $request['filter'] = array('label' => 'abc');
 $result = $handler->get('', $request);
 ```
+
+Bear in mind that for entity based resources, only those fields with a
+`'property'` (matching to an entity property or a Field API field) can be used
+for filtering.
 
 Additionally you can provide multiple filters for the same field. That is
 specially useful when filtering on multiple value fields. The following example
