@@ -17,7 +17,6 @@ class RestfulTokenAuthenticationTestCase extends DrupalWebTestCase {
 
   function setUp() {
     parent::setUp('restful_example', 'restful_token_auth', 'entityreference');
-    restful_token_auth_create_field_refresh_token();
   }
 
   /**
