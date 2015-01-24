@@ -140,7 +140,9 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
 
     foreach ($sorts as $public_field_name => $direction) {
       // Determine if sorting is by field or property.
-      $property_name = $public_fields[$public_field_name]['property'];
+      if (!$property_name = $public_fields[$public_field_name]['property']) {
+        throw new \RestfulBadRequestException('The current sort selection does not map to any entity property or Field API field.');
+      }
       if (field_info_field($property_name)) {
         $query->fieldOrderBy($public_fields[$public_field_name]['property'], $public_fields[$public_field_name]['column'], $direction);
       }
@@ -165,7 +167,9 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
     $public_fields = $this->getPublicFields();
     foreach ($this->parseRequestForListFilter() as $filter) {
       // Determine if filtering is by field or property.
-      $property_name = $public_fields[$filter['public_field']]['property'];
+      if (!$property_name = $public_fields[$filter['public_field']]['property']) {
+        throw new \RestfulBadRequestException('The current filter selection does not map to any entity property or Field API field.');
+      }
       if (field_info_field($property_name)) {
         if (in_array(strtoupper($filter['operator'][0]), array('IN', 'BETWEEN'))) {
           $query->fieldCondition($public_fields[$filter['public_field']]['property'], $public_fields[$filter['public_field']]['column'], $filter['value'], $filter['operator'][0]);

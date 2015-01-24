@@ -270,6 +270,15 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     $request = array('sort' => '-user',);
     $result = $handler->get('', $request);
     $this->assertEqual($result[0]['user']['id'], 3, 'List sorted by the "author" entity metadata wrapper property, which maps to the "uid" DB column name.');
+
+    $request = array('sort' => 'static');
+    try {
+      $handler->get('', $request);
+      $this->fail('Exception not thrown for invalid sort.');
+    }
+    catch (\RestfulBadRequestException $e) {
+      $this->pass('Exception thrown for invalid sort.');
+    }
   }
 
   /**
@@ -427,6 +436,19 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
 
     $result = $handler->get('', $request);
     $this->assertEqual(count($result), 2, 'List filtered by the "author" entity metadata wrapper property, which maps to the "uid" DB column name.');
+
+    $request = array('filter' => array(
+      'static' => array(
+        'value' => 0,
+      )
+    ));
+    try {
+      $handler->get('', $request);
+      $this->fail('Exception not thrown for invalid filter.');
+    }
+    catch (\RestfulBadRequestException $e) {
+      $this->pass('Exception thrown for invalid filter.');
+    }
   }
 
   /**
@@ -591,4 +613,5 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
       $this->fail('Exception of wrong type was thrown for un-accessible node for specific IDs list.');
     }
   }
+
 }

@@ -58,6 +58,9 @@ class RestfulExampleArticlesResource__1_5 extends RestfulEntityBaseNode {
       ),
     );
 
+    $public_fields['static'] = array(
+      'callback' => 'static::randomNumber',
+    );
 
     return $public_fields;
   }
@@ -89,4 +92,18 @@ class RestfulExampleArticlesResource__1_5 extends RestfulEntityBaseNode {
       'styles' => $value['image_styles'],
     );
   }
+
+  /**
+   * Callback, Generate a random number.
+   *
+   * @param \EntityMetadataWrapper $wrapper
+   *   The EMW.
+   *
+   * @return int
+   *   A random integer.
+   */
+  public static function randomNumber($wrapper) {
+    return mt_rand();
+  }
+
 }
