@@ -71,8 +71,8 @@ script:
   - # echo -e "\n\$conf['composer_manager_autoloader_bootstrap'] = 0;" >> $TRAVIS_BUILD_DIR/../drupal/sites/default/settings.php
   - # chmod a-w $TRAVIS_BUILD_DIR/../drupal/sites/default/settings.php
   - drush --yes pm-enable composer_manager
-  # Set variable to 0 to avoid automatic composer build
-  - drush --yes vset --exact composer_manager_autobuild_packages 0
+  # # Set variable to 0 to avoid automatic composer build
+  - # drush --yes vset --exact composer_manager_autobuild_packages 0
 
   # Download and enable module and its dependencies
   - drush --yes dl xautoload
