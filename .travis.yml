@@ -64,12 +64,12 @@ script:
   - drush --yes dl composer-8.x-1.x
   - drush --yes dl composer_manager
   - cd $TRAVIS_BUILD_DIR/../drupal/sites/all/modules/composer_manager
-  - curl -O https://www.drupal.org/files/issues/composer_manager_autoloader.patch
-  - patch -p1 < composer_manager_autoloader.patch
+  - # curl -O https://www.drupal.org/files/issues/composer_manager_autoloader.patch
+  - # patch -p1 < composer_manager_autoloader.patch
   - cd $TRAVIS_BUILD_DIR/../drupal
-  - chmod a+w $TRAVIS_BUILD_DIR/../drupal/sites/default/settings.php
-  - echo -e "\n\$conf['composer_manager_autoloader_bootstrap'] = 0;" >> $TRAVIS_BUILD_DIR/../drupal/sites/default/settings.php
-  - chmod a-w $TRAVIS_BUILD_DIR/../drupal/sites/default/settings.php
+  - # chmod a+w $TRAVIS_BUILD_DIR/../drupal/sites/default/settings.php
+  - # echo -e "\n\$conf['composer_manager_autoloader_bootstrap'] = 0;" >> $TRAVIS_BUILD_DIR/../drupal/sites/default/settings.php
+  - # chmod a-w $TRAVIS_BUILD_DIR/../drupal/sites/default/settings.php
   - drush --yes pm-enable composer_manager
   # Set variable to 0 to avoid automatic composer build
   - drush --yes vset --exact composer_manager_autobuild_packages 0
