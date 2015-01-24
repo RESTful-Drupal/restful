@@ -24,10 +24,6 @@ class RestfulPassThroughTestCase extends RestfulCurlBaseTestCase {
 
   function setUp() {
     parent::setUp('restful_test', 'restful_example');
-
-    // Create the table to populate and query.
-    $schema = _restful_test_schema();
-    db_create_table($this->tableName, $schema[$this->tableName]);
   }
 
   /**

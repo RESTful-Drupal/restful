@@ -11,13 +11,12 @@ class RestfulTokenAuthenticationTestCase extends DrupalWebTestCase {
     return array(
       'name' => 'Token Authentication',
       'description' => 'Test the request authentication with a token.',
-      'group' => 'Restful',
+      'group' => 'RESTful',
     );
   }
 
   function setUp() {
     parent::setUp('restful_example', 'restful_token_auth', 'entityreference');
-    restful_create_field_refresh_token();
   }
 
   /**
