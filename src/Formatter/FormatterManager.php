@@ -115,4 +115,18 @@ class FormatterManager implements FormatterManagerInterface {
     return (bool) preg_match($regexps[$pattern], $content_type);
   }
 
+  /**
+   * {@inheritdocs}
+   */
+  public function getPlugins() {
+    return $this->plugins;
+  }
+
+  /**
+   * {@inheritdocs}
+   */
+  public function getPlugin($instance_id) {
+    return $this->plugins->get($instance_id);
+  }
+
 }

@@ -6,8 +6,9 @@
  */
 
 use Drupal\restful\Authentication\AuthenticationManager;
-use Drupal\restful\RateLimit\RateLimitManager;
 use Drupal\restful\Formatter\FormatterManager;
+use Drupal\restful\Plugin\FormatterPluginManager;
+use Drupal\restful\RateLimit\RateLimitManager;
 
 /**
  * Class \RestfulBase
@@ -417,6 +418,15 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
   }
 
   /**
+   * Returns the formatter manager.
+   *
+   * @return FormatterManager
+   */
+  public function getFormatterManager() {
+    return $this->formatterManager;
+  }
+
+  /**
    * Constructs a RestfulEntityBase object.
    *
    * @param array $plugin
@@ -742,8 +752,9 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
     // Loop through all the formatters and add the Content-Type header to the
     // array.
     $accepted_formats = array();
-    foreach ($formatter_names as $formatter_name) {
-      $formatter = restful_get_formatter_handler($formatter_name, $this);
+    $formatters = $this->formatterManager->getPlugins();
+    foreach ($formatters as $formatter) {
+      /** @var \Drupal\restful\Plugin\formatter\FormatterInterface $formatter */
       $accepted_formats[] = $formatter->getContentTypeHeader();
     }
     if (!empty($accepted_formats)) {
@@ -1376,8 +1387,10 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
     // If there is no formatter info in the plugin definition, return a list
     // of all the formatters available.
     $formatter_names = array();
-    foreach (restful_get_formatter_plugins() as $formatter_info) {
-      $formatter_names[] = $formatter_info['name'];
+    $formatter_manager = FormatterPluginManager::create();
+
+    foreach ($formatter_manager->getDefinitions() as $formatter_info) {
+      $formatter_names[] = $formatter_info['id'];
     }
     return $formatter_names;
   }

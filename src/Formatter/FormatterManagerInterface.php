@@ -38,4 +38,18 @@ interface FormatterManagerInterface {
    */
   public function negotiateFormatter($accept, $formatter_name = NULL);
 
+  /**
+   * Returns the plugins.
+   *
+   * @return FormatterPluginCollection
+   */
+  public function getPlugins();
+
+  /**
+   * Returns the plugin instance for the given instance ID.
+   *
+   * @return FormatterInterface
+   */
+  public function getPlugin($instance_id);
+
 }

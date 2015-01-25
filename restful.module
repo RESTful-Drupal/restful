@@ -70,17 +70,6 @@ function restful_get_rate_limit_plugins() {
 }
 
 /**
- * Include CTools plugins and get all formatter plugins.
- *
- * @return array
- *   All the restful formatter plugins.
- */
-function restful_get_formatter_plugins() {
-  ctools_include('plugins');
-  return ctools_get_plugins('restful', 'formatter');
-}
-
-/**
  * Include CTools plugins and get the specified authentication plugin.
  *
  * @param string $plugin_name
@@ -92,20 +81,6 @@ function restful_get_formatter_plugins() {
 function restful_get_authentication_plugin($plugin_name) {
   ctools_include('plugins');
   return ctools_get_plugins('restful', 'authentication', $plugin_name);
-}
-
-/**
- * Include CTools plugins and get the specified formatter plugin.
- *
- * @param string $plugin_name
- *   If provided this function only returns the selected plugin.
- *
- * @return array
- *   The selected plugin for restful formatter.
- */
-function restful_get_formatter_plugin($plugin_name) {
-  ctools_include('plugins');
-  return ctools_get_plugins('restful', 'formatter', $plugin_name);
 }
 
 /**
@@ -311,28 +286,6 @@ function restful_get_restful_handler_by_name($plugin_name) {
   $handler->getAuthenticationManager()->setIsOptional($plugin['authentication_optional']);
 
   return $handler;
-}
-
-/**
- * Return the formatter handler based on the formatter plugin name.
- *
- * @param string $formatter_plugin_name
- *   Name of the formatter plugin.
- *
- * @param \RestfulBase $restful_handler
- *   The resource handler.
- *
- * @return \RestfulFormatterInterface
- *   The formatter provider object.
- *
- * @throws \RestfulException if the formatter provider does not exist.
- */
-function restful_get_formatter_handler($formatter_plugin_name, $restful_handler) {
-  $formatter_plugin = restful_get_formatter_plugin($formatter_plugin_name);
-  if (!$formatter_class = ctools_plugin_get_class($formatter_plugin, 'class')) {
-    throw new \RestfulServiceUnavailable(format_string('Formatter plugin class (@plugin) was not found.', array('@plugin' => $formatter_plugin_name)));
-  }
-  return new $formatter_class($formatter_plugin, $restful_handler);
 }
 
 /**

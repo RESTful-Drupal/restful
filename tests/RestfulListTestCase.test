@@ -335,11 +335,12 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
 
     // Single value property.
     $request['filter'] = array('label' => 'abc');
+    /** @var \RestfulBase $handler */
     $result = $handler->get('', $request);
     $this->assertEqual($result[0]['id'], $nodes['abc'], 'Filter list by single value property.');
 
     // Assert count is correct.
-    $formatter_handler = restful_get_formatter_handler('hal_json', $handler);
+    $formatter_handler = $handler->getFormatterManager()->getPlugin('hal_json');
     $output = $formatter_handler->prepare($result);
     $this->assertEqual($output['count'], 1, '"count" property is correct.');
 
