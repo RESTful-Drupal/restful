@@ -21,8 +21,6 @@ namespace Drupal\restful\Plugin\formatter;
  *     "template": "/{rel}",
  *   },
  * )
- *
- * @TODO: The CURIE definition has been changed, make sure to adapt the code.
  */
 class FormatterHalJson extends Formatter implements FormatterInterface {
   /**
@@ -133,9 +131,13 @@ class FormatterHalJson extends Formatter implements FormatterInterface {
       return;
     }
 
+    $curie += array(
+      'path' => 'doc/rels',
+      'template' => '/{rel}',
+    );
     $data['_links']['curies'] = array(
       'name' => $curie['name'],
-      'href' => $curie['href'] ? $curie['href'] : url('docs/rels', array('absolute' => TRUE)) . '/{rel}',
+      'href' => url($curie['path'], array('absolute' => TRUE)) . $curie['template'],
       'templated' => TRUE,
     );
   }
@@ -230,8 +232,7 @@ class FormatterHalJson extends Formatter implements FormatterInterface {
    *   Associative array with the curie information.
    */
   protected function getCurie() {
-    // TODO: Adapt to the new way of getting the curie.
-    return $this->getPluginKey('curie');
+    return $this->configuration['curie'];
   }
 
   /**

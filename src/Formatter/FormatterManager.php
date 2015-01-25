@@ -48,7 +48,7 @@ class FormatterManager implements FormatterManagerInterface {
    * {@inheritdoc}
    */
   public function format(array $data, $formatter_name = NULL) {
-    $this->negotiateFormatter($GLOBALS['_SERVER']['HTTP_ACCEPT'], $formatter_name)->format($data);
+    return $this->negotiateFormatter($GLOBALS['_SERVER']['HTTP_ACCEPT'], $formatter_name)->format($data);
   }
 
   /**
