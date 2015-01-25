@@ -2,10 +2,27 @@
 
 /**
  * @file
- * Contains RestfulFormatterHalJson.
+ * Contains \Drupal\restful\Plugin\formatter\FormatterHalJson.
  */
 
-class RestfulFormatterHalXml extends \RestfulFormatterHalJson implements \RestfulFormatterInterface {
+namespace Drupal\restful\Plugin\formatter;
+
+/**
+ * Class FormatterHalXml
+ * @package Drupal\restful\Plugin\formatter
+ *
+ * @Formatter(
+ *   id = "hal_xml",
+ *   label = "HAL+XML",
+ *   description = "Output in using the HAL conventions and XML format.",
+ *   curie = {
+ *     "name": "hal",
+ *     "path": "doc/rels",
+ *     "template": "/{rel}",
+ *   },
+ * )
+ */
+class FormatterHalXml extends FormatterHalJson implements FormatterInterface {
 
   /**
    * Content Type
@@ -18,7 +35,7 @@ class RestfulFormatterHalXml extends \RestfulFormatterHalJson implements \Restfu
    * {@inheritdoc}
    */
   public function render(array $structured_data) {
-    return $this->arrayToXML($structured_data, new SimpleXMLElement('<api/>'))->asXML();
+    return $this->arrayToXML($structured_data, new \SimpleXMLElement('<api/>'))->asXML();
   }
 
   /**
@@ -26,12 +43,12 @@ class RestfulFormatterHalXml extends \RestfulFormatterHalJson implements \Restfu
    *
    * @param array $data
    *   The input array.
-   * @param SimpleXMLElement $xml
+   * @param \SimpleXMLElement $xml
    *   The object that will perform the conversion.
    *
-   * @return SimpleXMLElement
+   * @return \SimpleXMLElement
    */
-  protected function arrayToXML(array $data, SimpleXMLElement $xml) {
+  protected function arrayToXML(array $data, \SimpleXMLElement $xml) {
     foreach ($data as $key => $value) {
       if(is_array($value)) {
         if(!is_numeric($key)){
@@ -51,4 +68,3 @@ class RestfulFormatterHalXml extends \RestfulFormatterHalJson implements \Restfu
   }
 
 }
-
