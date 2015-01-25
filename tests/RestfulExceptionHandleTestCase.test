@@ -5,7 +5,7 @@
  * Contains RestfulExceptionHandleTestCase
  */
 
-class RestfulExceptionHandleTestCase extends DrupalWebTestCase {
+class RestfulExceptionHandleTestCase extends \RestfulCurlBaseTestCase {
 
   public static function getInfo() {
     return array(
@@ -26,16 +26,16 @@ class RestfulExceptionHandleTestCase extends DrupalWebTestCase {
    * valid JSON.
    */
   function testExceptionHandle() {
-    $options['query'] = array('sort' => 'wrong_key');
-    $this->drupalGet('api/v1.0/articles', $options);
+    $options = array('sort' => 'wrong_key');
+    $result = $this->httpRequest('api/v1.0/articles', \RestfulInterface::GET, $options);
     $expected_result = array(
       'type' => 'http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.1',
       'title' => 'The sort wrong_key is not allowed for this path.',
       'status' => 400,
       'detail' => 'Bad Request.',
     );
-    $this->assertText(drupal_json_encode($expected_result), 'Exception was converted to JSON.');
-    $this->assertResponse('400', 'Correct HTTP code.');
+    $this->assertEqual(drupal_json_decode($result['body']), $expected_result);
+    $this->assertEqual($result['code'], 400, 'Correct HTTP code.');
   }
 
 }

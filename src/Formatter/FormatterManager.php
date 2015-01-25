@@ -72,14 +72,14 @@ class FormatterManager implements FormatterManagerInterface {
             }
           }
         }
-        // Return the default formatter.
-        return $this->plugins->get(variable_get('restful_default_output_formatter', 'json'));
       }
       catch (PluginNotFoundException $e) {
         // Catch the exception and throw one of our own.
         throw new \RestfulServerConfigurationException($e->getMessage());
       }
     }
+    // Return the default formatter.
+    return $this->plugins->get(variable_get('restful_default_output_formatter', 'json'));
   }
 
   /**
