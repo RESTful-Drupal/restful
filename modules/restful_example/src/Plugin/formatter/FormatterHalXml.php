@@ -5,7 +5,10 @@
  * Contains \Drupal\restful\Plugin\formatter\FormatterHalJson.
  */
 
-namespace Drupal\restful\Plugin\formatter;
+namespace Drupal\restful_example\Plugin\formatter;
+
+use Drupal\restful\Plugin\formatter\FormatterHalJson;
+use Drupal\restful\Plugin\formatter\FormatterInterface;
 
 /**
  * Class FormatterHalXml

@@ -753,9 +753,8 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
     // array.
     $accepted_formats = array();
     $formatters = $this->formatterManager->getPlugins();
-    foreach ($formatters as $formatter) {
-      /** @var \Drupal\restful\Plugin\formatter\FormatterInterface $formatter */
-      $accepted_formats[] = $formatter->getContentTypeHeader();
+    foreach ($formatter_names as $formatter_name) {
+      $accepted_formats[] = $formatters->get($formatter_name)->getContentTypeHeader();
     }
     if (!empty($accepted_formats)) {
       $this->setHttpHeaders('Accept', implode(',', $accepted_formats));
