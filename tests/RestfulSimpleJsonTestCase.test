@@ -34,7 +34,8 @@ class RestfulSimpleJsonTestCase extends RestfulCurlBaseTestCase {
 
     $response = $handler->get($node->nid);
     $formatter_manager = new FormatterManager($handler);
-    $formatter = $formatter_manager->negotiateFormatter($GLOBALS['_SERVER']['HTTP_ACCEPT'], 'json');
+    $accept = empty($GLOBALS['_SERVER']['HTTP_ACCEPT']) ? NULL : $GLOBALS['_SERVER']['HTTP_ACCEPT'];
+    $formatter = $formatter_manager->negotiateFormatter($accept, 'json');
 
     $result = $formatter->format($response);
     if ($decoded_json = drupal_json_decode($result)) {

@@ -529,7 +529,8 @@ function restful_delivery($var = NULL, $method = 'format') {
   try {
     // Get a new formatter manager.
     $formatter_manager = new FormatterManager($restful_handler);
-    $formatter_handler = $formatter_manager->negotiateFormatter($GLOBALS['_SERVER']['HTTP_ACCEPT'], $restful_handler->getPluginKey('formatter'));
+    $accept = empty($GLOBALS['_SERVER']['HTTP_ACCEPT']) ? NULL : $GLOBALS['_SERVER']['HTTP_ACCEPT'];
+    $formatter_handler = $formatter_manager->negotiateFormatter($accept, $restful_handler->getPluginKey('formatter'));
     $output = $formatter_handler->{$method}($var);
     // The content type header is modified after the massaging if there is
     // an error code. Therefore we need to set the content type header after
