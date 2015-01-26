@@ -11,19 +11,6 @@ use Drupal\restful\Authentication\AuthenticationManager;
 interface RestfulInterface {
 
   /**
-   * HTTP methods.
-   */
-  const GET = 'GET';
-  const PUT = 'PUT';
-  const POST = 'POST';
-  const PATCH = 'PATCH';
-  const OPTIONS = 'OPTIONS';
-  const HEAD = 'HEAD';
-  const TRACE = 'TRACE';
-  const DELETE = 'DELETE';
-  const CONNECT = 'CONNECT';
-
-  /**
    * Token value for token generation functions.
    */
   const TOKEN_VALUE = 'rest';
