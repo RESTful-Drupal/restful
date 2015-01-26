@@ -1021,7 +1021,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
       $value['operator'] = str_replace(array('"', "'"), '', $value['operator']);
 
       static::isValidOperatorsForFilter($value['operator']);
-      static::isValidConjuctionForFilter($value['conjunction']);
+      static::isValidConjunctionForFilter($value['conjunction']);
 
       $filters[] = $value;
     }
@@ -1068,7 +1068,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
    *
    * @throws RestfulBadRequestException
    */
-  protected static function isValidConjuctionForFilter($conjunction) {
+  protected static function isValidConjunctionForFilter($conjunction) {
     $allowed_conjunctions = array(
       'AND',
       'OR',

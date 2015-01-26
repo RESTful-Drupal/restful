@@ -211,7 +211,7 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
   /**
    * Overrides \RestfulBase::isValidConjuctionForFilter().
    */
-  protected static function isValidConjuctionForFilter($conjunction) {
+  protected static function isValidConjunctionForFilter($conjunction) {
     $allowed_conjunctions = array(
       'AND',
     );
