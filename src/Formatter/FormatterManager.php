@@ -77,6 +77,7 @@ class FormatterManager implements FormatterManagerInterface {
         // Catch the exception and throw one of our own.
         throw new \RestfulServerConfigurationException($e->getMessage());
       }
+      return NULL;
     }
     // Return the default formatter.
     return $this->plugins->get(variable_get('restful_default_output_formatter', 'json'));
