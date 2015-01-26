@@ -55,32 +55,34 @@ class FormatterManager implements FormatterManagerInterface {
    * {@inheritdoc}
    */
   public function negotiateFormatter($accept, $formatter_name = NULL) {
-    if ($formatter_name) {
-      return $this->plugins->get($formatter_name);
-    }
-    // Sometimes we will get a default Accept: */* in that case we want to return
-    // the default content type and not just any.
-    if (!empty($accept) && $accept != '*/*') {
-      try {
-        foreach (explode(',', $accept) as $accepted_content_type) {
-          // Loop through all the formatters and find the first one that matches the
-          // Content-Type header.
-          foreach ($this->plugins as $formatter_name => $formatter) {
-            /** @var FormatterInterface $formatter */
-            if (static::matchContentType($formatter->getContentTypeHeader(), $accepted_content_type)) {
-              return $formatter;
-            }
+    $message = 'Formatter plugin class was not found.';
+    try {
+      if ($formatter_name) {
+        return $this->plugins->get($formatter_name);
+      }
+      // Sometimes we will get a default Accept: */* in that case we want to return
+      // the default content type and not just any.
+      if (empty($accept) || $accept == '*/*') {
+        // Return the default formatter.
+        $formatter_name = variable_get('restful_default_output_formatter', 'json');
+        return $this->plugins->get($formatter_name);
+      }
+      foreach (explode(',', $accept) as $accepted_content_type) {
+        // Loop through all the formatters and find the first one that matches the
+        // Content-Type header.
+        foreach ($this->plugins as $formatter_name => $formatter) {
+          /** @var FormatterInterface $formatter */
+          if (static::matchContentType($formatter->getContentTypeHeader(), $accepted_content_type)) {
+            return $formatter;
           }
         }
       }
-      catch (PluginNotFoundException $e) {
-        // Catch the exception and throw one of our own.
-        throw new \RestfulServerConfigurationException($e->getMessage());
-      }
-      return NULL;
     }
-    // Return the default formatter.
-    return $this->plugins->get(variable_get('restful_default_output_formatter', 'json'));
+    catch (PluginNotFoundException $e) {
+      // Catch the exception and throw one of our own.
+      $message = $e->getMessage();
+    }
+    throw new \RestfulServiceUnavailable($message);
   }
 
   /**
