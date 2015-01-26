@@ -62,4 +62,15 @@ interface HttpHeaderInterface {
    */
   public function getId();
 
+  /**
+   * Generates the header ID based on the header name.
+   *
+   * @param string $name
+   *   The header name.
+   *
+   * @return string
+   *   The ID.
+   */
+  public static function generateId($name);
+
 }

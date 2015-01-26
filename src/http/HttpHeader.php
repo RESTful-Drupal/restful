@@ -98,15 +98,9 @@ class HttpHeader implements HttpHeaderInterface {
   }
 
   /**
-   * Generates the header ID based on the header name.
-   *
-   * @param string $name
-   *   The header name.
-   *
-   * @return string
-   *   The ID.
+   * {@inheritdoc}
    */
-  protected static function generateId($name) {
+  public static function generateId($name) {
     return strtolower($name);
   }
 
