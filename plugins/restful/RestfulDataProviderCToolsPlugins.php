@@ -270,6 +270,13 @@ abstract class RestfulDataProviderCToolsPlugins extends \RestfulBase implements 
     // Loop over all the defined public fields.
     foreach ($this->getPublicFields() as $public_field_name => $info) {
       $value = NULL;
+
+      if ($info['create_or_update_passthrough']) {
+        // The public field is a dummy one, meant only for passing data upon
+        // create or update.
+        continue;
+      }
+
       // If there is a callback defined execute it instead of a direct mapping.
       if ($info['callback']) {
         $value = static::executeCallback($info['callback'], array($plugin));

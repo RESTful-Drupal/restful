@@ -207,7 +207,6 @@ class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
     variable_set('restful_file_upload', FALSE);
     $return = $this->uploadFile();
     $this->assertEqual($return['code'], 403, 'File upload is denied to authenticated users.');
-
   }
 
   /**

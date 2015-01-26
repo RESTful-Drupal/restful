@@ -113,7 +113,9 @@ You can also define default sort fields in your plugin, by overriding
 
 This method should return an associative array, with each element having a key
 that matches a field from `publicFieldsInfo()`, and a value of either 'ASC' or
-'DESC'.
+'DESC'. Bear in mind that for entity based resources, only those fields with a
+`'property'` (matching to an entity property or a Field API field) can be used
+for sorting.
 
 This default sort will be ignored if the request URL contains a sort query.
 
