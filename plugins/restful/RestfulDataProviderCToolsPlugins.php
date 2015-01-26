@@ -113,7 +113,7 @@ abstract class RestfulDataProviderCToolsPlugins extends \RestfulBase implements 
   /**
    * Overrides \RestfulBase::isValidConjuctionForFilter().
    */
-  protected static function isValidConjuctionForFilter($conjunction) {
+  protected static function isValidConjunctionForFilter($conjunction) {
     $allowed_conjunctions = array(
       'AND',
       'OR',
