@@ -84,8 +84,8 @@ function restful_token_auth_schema() {
 /**
  * Implements hook_install().
  */
-function restful_install() {
-  restful_create_field_refresh_token();
+function restful_token_auth_install() {
+  restful_token_auth_create_field_refresh_token();
 }
 
 /**
@@ -98,7 +98,7 @@ function restful_token_auth_uninstall() {
 /**
  * Adds the refresh token entity reference.
  */
-function restful_update_7100(&$sandbox) {
+function restful_token_auth_update_7100(&$sandbox) {
   // Change the type column for existing tokens.
   db_update('restful_token_auth')
     ->fields(array(
@@ -107,13 +107,13 @@ function restful_update_7100(&$sandbox) {
     ->execute();
 
   // Attach the new field.
-  restful_create_field_refresh_token();
+  restful_token_auth_create_field_refresh_token();
 }
 
 /**
  * Helper function to create the refresh token entity reference.
  */
-function restful_create_field_refresh_token() {
+function restful_token_auth_create_field_refresh_token() {
   // Add an entity reference field to the access_token bundle to link to the
   // corresponding refresh token.
   $field_name = 'refresh_token_reference';

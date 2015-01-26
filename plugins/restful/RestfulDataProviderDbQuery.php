@@ -78,6 +78,20 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
   }
 
   /**
+   * @return string
+   **/
+  public function getPrimary() {
+    return $this->primary;
+  }
+
+  /**
+   * @param string $primary
+   **/
+  public function setPrimary($primary) {
+    $this->primary = $primary;
+  }
+
+  /**
    * Constructs a RestfulDataProviderDbQuery object.
    *
    * @param array $plugin
@@ -101,7 +115,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
 
     $this->tableName = $options['table_name'];
     $this->idColumn = $options['id_column'];
-    $this->primary = empty($plugin['primary']) ? NULL : $this->primary = $plugin['primary'];
+    $this->primary = empty($plugin['data_provider_options']['primary']) ? NULL : $this->primary = $plugin['data_provider_options']['primary'];
   }
 
   /**
@@ -114,7 +128,9 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
     $sorts = array();
     foreach ($this->getIdColumn() as $column) {
       if (!empty($this->getPublicFields[$column])) {
+        // Sort by the first ID column that is a public field.
         $sorts[$column] = 'ASC';
+        break;
       }
     }
     return $sorts;
@@ -232,7 +248,8 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
   public function getTotalCount() {
     return intval($this
       ->getQueryCount()
-      ->execute());
+      ->execute()
+      ->fetchField());
   }
 
   /**
@@ -343,37 +360,61 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
    * {@inheritdoc}
    */
   public function update($id, $full_replace = FALSE) {
-    $query = db_update($this->getTableName());
-    foreach ($this->getIdColumn() as $index => $column) {
-      $query->condition($column, current($this->getColumnFromIds(array($id), $index)));
-    }
-
     // Build the update array.
     $request = $this->getRequest();
     static::cleanRequest($request);
+    $save = FALSE;
+    $original_request = $request;
+
     $public_fields = $this->getPublicFields();
-    $fields = array();
-    foreach ($public_fields as $public_property => $info) {
+
+    $id_columns = $this->getIdColumn();
+
+    $record = array();
+    foreach ($public_fields as $public_field_name => $info) {
+      // Ignore passthrough public fields.
+      if (!empty($info['create_or_update_passthrough'])) {
+        unset($original_request[$public_field_name]);
+        continue;
+      }
+
       // If this is the primary field, skip.
       if ($this->isPrimaryField($info['property'])) {
         continue;
       }
-      // Check if the public property is set in the payload.
-      if (!isset($request[$public_property])) {
-        if ($full_replace) {
-          $fields[$info['property']] = NULL;
-        }
+
+      if (isset($request[$public_field_name])) {
+        $record[$info['property']] = $request[$public_field_name];
       }
-      else {
-        $fields[$info['property']] = $request[$public_property];
+      // For unset fields on full updates, pass NULL to drupal_write_record().
+      elseif ($full_replace) {
+        $record[$info['property']] = NULL;
       }
-    }
-    if (empty($fields)) {
-      return $this->view($id);
+
+      unset($original_request[$public_field_name]);
+      $save = TRUE;
     }
 
-    // Once the update array is built, execute the query.
-    $query->fields($fields)->execute();
+    // No request was sent.
+    if (!$save) {
+      throw new \RestfulBadRequestException('No values were sent with the request.');
+    }
+
+    // If the original request is not empty, then illegal values are present.
+    if (!empty($original_request)) {
+      $error_message = format_plural(count($original_request), 'Property @names is invalid.', 'Property @names are invalid.', array('@names' => implode(', ', array_keys($original_request))));
+      throw new \RestfulBadRequestException($error_message);
+    }
+
+    // Add the id column values into the record.
+    foreach ($this->getIdColumn() as $index => $column) {
+      $record[$column] = current($this->getColumnFromIds(array($id), $index));
+    }
+
+    // Once the record is built, write it.
+    if (!drupal_write_record($this->getTableName(), $record, $id_columns)) {
+      throw new \RestfulServiceUnavailable('Record could not be updated to the database.');
+    }
 
     // Clear the rendered cache before calling the view method.
     $this->clearRenderedCache(array(
@@ -381,52 +422,69 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
       'cl' => implode(',', $this->getIdColumn()),
       'id' => $id,
     ));
-    return $this->view($id, TRUE);
+
+    return $this->view($id);
   }
 
   /**
    * {@inheritdoc}
    */
   public function create() {
-    $query = db_insert($this->getTableName());
-
-    // Build the update array.
     $request = $this->getRequest();
     static::cleanRequest($request);
+    $save = FALSE;
+    $original_request = $request;
+
     $public_fields = $this->getPublicFields();
-    $fields = array();
-    $id_values = array_fill(0, count($this->getIdColumn()), FALSE);
+    $id_columns = $this->getIdColumn();
 
-    foreach ($public_fields as $public_property => $info) {
 
-      // Check if the public property is set in the payload.
-      if (($index = array_search($info['property'], $this->getIdColumn())) !== FALSE) {
-        $id_values[$index] = $request[$public_property];
+    $record = array();
+    foreach ($public_fields as $public_field_name => $info) {
+      // Ignore passthrough public fields.
+      if (!empty($info['create_or_update_passthrough'])) {
+        unset($original_request[$public_field_name]);
+        continue;
       }
 
-      if (isset($request[$public_property])) {
-        $fields[$info['property']] = $request[$public_property];
+      // If this is the primary field, skip.
+      if ($this->isPrimaryField($info['property'])) {
+        unset($original_request[$public_field_name]);
+        continue;
       }
+
+      if (isset($request[$public_field_name])) {
+        $record[$info['property']] = $request[$public_field_name];
+      }
+
+      unset($original_request[$public_field_name]);
+      $save = TRUE;
     }
 
-    $passed_id = NULL;
-
-    // If we have the full primary key passed use it.
-    if (count(array_filter($id_values)) == count($id_values)) {
-      $passed_id = implode(self::COLUMN_IDS_SEPARATOR, $id_values);
+    // No request was sent.
+    if (!$save) {
+      throw new \RestfulBadRequestException('No values were sent with the request.');
     }
 
-    // Once the update array is built, execute the query.
-    if ($id = $query->fields($fields)->execute()) {
-      return $this->view($id, TRUE);
+    // If the original request is not empty, then illegal values are present.
+    if (!empty($original_request)) {
+      $error_message = format_plural(count($original_request), 'Property @names is invalid.', 'Property @names are invalid.', array('@names' => implode(', ', array_keys($original_request))));
+      throw new \RestfulBadRequestException($error_message);
     }
 
-    // Some times db_insert does not know how to get the ID.
-    if ($passed_id) {
-      return $this->view($passed_id);
-    }
+    // Once the record is built, write it and view it.
+    if (drupal_write_record($this->getTableName(), $record)) {
+      // Handle multiple id columns.
+      $id_values = array();
+      foreach ($id_columns as $id_column) {
+        $id_values[$id_column] = $record[$id_column];
+      }
+      $id = implode(self::COLUMN_IDS_SEPARATOR, $id_values);
 
+      return $this->view($id);
+    }
     return;
+
   }
 
   /**
@@ -464,6 +522,13 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
     // Loop over all the defined public fields.
     foreach ($this->getPublicFields() as $public_field_name => $info) {
       $value = NULL;
+
+      if ($info['create_or_update_passthrough']) {
+        // The public field is a dummy one, meant only for passing data upon
+        // create or update.
+        continue;
+      }
+
       // If there is a callback defined execute it instead of a direct mapping.
       if ($info['callback']) {
         $value = static::executeCallback($info['callback'], array($row));

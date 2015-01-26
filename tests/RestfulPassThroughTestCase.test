@@ -1,0 +1,79 @@
+<?php
+
+/**
+ * @file
+ * Contains RestfulPassThroughTestCase
+ */
+
+class RestfulPassThroughTestCase extends RestfulCurlBaseTestCase {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Pass through',
+      'description' => 'Test the pass-through configuration.',
+      'group' => 'RESTful',
+    );
+  }
+
+  /**
+   * The name of the test table.
+   *
+   * @var string
+   */
+  protected $tableName = 'restful_test_db_query';
+
+  function setUp() {
+    parent::setUp('restful_test', 'restful_example');
+  }
+
+  /**
+   * Test the pass-through property for an entity.
+   */
+  public function testEntity() {
+    $handler = restful_get_restful_handler('articles', 1, 1);
+    $base_request = array('label' => $this->randomName());
+    $this->validatePassThrough($handler, $base_request, TRUE);
+  }
+
+  /**
+   * Test the pass-through property for an entity.
+   */
+  public function testDbQuery() {
+    $handler = restful_get_restful_handler('db_query_test');
+    $base_request = array(
+      'integer' => 1,
+      'string' => $this->randomName(),
+    );
+    $this->validatePassThrough($handler, $base_request);
+  }
+
+  /**
+   * Validate the pass-through for different handlers.
+   *
+   * @param RestfulInterface $handler
+   *   The handler object.
+   * @param array $base_request
+   *   The base request to create or update.
+   */
+  protected function validatePassThrough(\RestfulInterface $handler, array $base_request = array()) {
+    $request = $base_request;
+    $public_fields = $handler->getPublicFields();
+    $public_fields['foo'] = array(
+      'create_or_update_passthrough' => TRUE,
+    );
+    $handler->setPublicFields($public_fields);
+
+    $result = $handler->post('', $request);
+    $this->assertTrue($result[0]['id'], 'Object was created without a pass-through public field.');
+
+    $request['foo'] = 'bar';
+    $result = $handler->post('', $request);
+    $this->assertTrue($result[0]['id'], 'Object was created with a pass-through public field.');
+
+    // Assert update.
+    $id = $result[0]['id'];
+    $result = $handler->put($id, $request);
+    $this->assertTrue($result[0]['id'], 'Object was updated with a pass-through public field.');
+  }
+
+}
