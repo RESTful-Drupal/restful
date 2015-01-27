@@ -239,7 +239,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
    */
   protected function getPropertyColumnForQuery($public_field_name) {
     $public_fields = $this->getPublicFields();
-    return !empty($public_fields[$public_field_name]['column_for_query']) ? $public_fields[$public_field_name]['column_for_query'] : $public_fields[$public_field_name]['property'];
+    return !empty($public_fields[$public_field_name['property']]['column_for_query']) ? $public_fields[$public_field_name['property']]['column_for_query'] : $public_field_name['property'];
   }
 
 
@@ -264,8 +264,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
    */
   public function getQueryCount() {
     $table = $this->getTableName();
-    $query = db_select($table)
-      ->fields($table);
+    $query = $this->getQuery();
 
     if ($path = $this->getPath()) {
       $ids = explode(',', $path);
