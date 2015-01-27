@@ -229,7 +229,10 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
   }
 
   /**
-   * Return the column name that should be used for WHERE or ORDER BY.
+   * Return the column name that should be used for query.
+   *
+   * As MySql prevents using the column alias on WHERE or ORDER BY, we give
+   * implementers a chance to explicitly define the real coloumn for the query.
    *
    * @param $public_field_name
    *   The public field name.
@@ -241,7 +244,6 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
     $public_fields = $this->getPublicFields();
     return !empty($public_fields[$public_field_name['property']]['column_for_query']) ? $public_fields[$public_field_name['property']]['column_for_query'] : $public_field_name['property'];
   }
-
 
   /**
    * {@inheritdoc}
