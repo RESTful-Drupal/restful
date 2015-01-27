@@ -135,12 +135,21 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
   }
 
   /**
+   * Get a basic query object.
+   *
+   * @return SelectQuery
+   *   A new SelectQuery object for this connection.
+   */
+  protected function getQuery() {
+    $table = $this->getTableName();
+    return db_select($table)->fields($table);
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function getQueryForList() {
-    $table = $this->getTableName();
-    $query = db_select($table)
-      ->fields($table);
+    $query = $this->getQuery();
 
     $this->queryForListSort($query);
     $this->queryForListFilter($query);
@@ -169,7 +178,8 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
     $sorts = $sorts ? $sorts : $this->defaultSortInfo();
 
     foreach ($sorts as $sort => $direction) {
-      $query->orderBy($public_fields[$sort]['property'], $direction);
+      $column_name = $this->getPropertyColumnForQuery($public_fields[$sort]);
+      $query->orderBy($column_name, $direction);
     }
   }
 
@@ -187,12 +197,14 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
     $public_fields = $this->getPublicFields();
     foreach ($this->parseRequestForListFilter() as $filter) {
       if (in_array(strtoupper($filter['operator'][0]), array('IN', 'BETWEEN'))) {
-        $query->condition($public_fields[$filter['public_field']]['property'], $filter['value'], $filter['operator'][0]);
+        $column_name = $this->getPropertyColumnForQuery($public_fields[$filter['public_field']]);
+        $query->condition($column_name, $filter['value'], $filter['operator'][0]);
         continue;
       }
       $condition = db_condition($filter['conjunction']);
       for ($index = 0; $index < count($filter['value']); $index++) {
-        $condition->condition($public_fields[$filter['public_field']]['property'], $filter['value'][$index], $filter['operator'][$index]);
+        $column_name = $this->getPropertyColumnForQuery($public_fields[$filter['public_field']]);
+        $condition->condition($column_name, $filter['value'][$index], $filter['operator'][$index]);
       }
       $query->condition($condition);
     }
@@ -214,6 +226,37 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
   protected function queryForListPagination(\SelectQuery $query) {
     list($range, $offset) = $this->parseRequestForListPagination();
     $query->range($range, $offset);
+  }
+
+  /**
+   * Return the column name that should be used for WHERE or ORDER BY.
+   *
+   * @param $public_field_name
+   *   The public field name.
+   *
+   * @return string
+   *   The column name.
+   */
+  protected function getPropertyColumnForQuery($public_field_name) {
+    $public_fields = $this->getPublicFields();
+    return !empty($public_fields[$public_field_name]['column_for_query']) ? $public_fields[$public_field_name]['column_for_query'] : $public_fields[$public_field_name]['property'];
+  }
+
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function addDefaultValuesToPublicFields(array $public_fields = array()) {
+    // Set defaults values.
+    $public_fields = parent::addDefaultValuesToPublicFields($public_fields);
+    foreach (array_keys($public_fields) as $key) {
+      $info = &$public_fields[$key];
+      $info += array(
+        'column_for_query' => FALSE,
+      );
+    }
+
+    return $public_fields;
   }
 
   /**
