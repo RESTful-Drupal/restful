@@ -82,28 +82,4 @@ class BasicAuthentication extends Authentication {
     }
   }
 
-  /**
-   * Get the credentials based on the $_SERVER variables.
-   *
-   * @return array
-   *   A numeric array with the username and password.
-   */
-  protected function getCredentials() {
-    $username = empty($_SERVER['PHP_AUTH_USER']) ? NULL : $_SERVER['PHP_AUTH_USER'];
-    $password = empty($_SERVER['PHP_AUTH_PW']) ? NULL : $_SERVER['PHP_AUTH_PW'];
-
-    // Try to fill PHP_AUTH_USER & PHP_AUTH_PW with REDIRECT_HTTP_AUTHORIZATION
-    // for compatibility with Apache PHP CGI/FastCGI.
-    // This requires the following line in your ".htaccess"-File:
-    // RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
-    if (!empty($_SERVER['REDIRECT_HTTP_AUTHORIZATION']) && !isset($username) && !isset($password)) {
-      $authentication = base64_decode(substr($_SERVER['REDIRECT_HTTP_AUTHORIZATION'], 6));
-      list($username, $password) = explode(':', $authentication);
-      $_SERVER['PHP_AUTH_USER'] = $username;
-      $_SERVER['PHP_AUTH_PW'] = $password;
-    }
-
-    return array($username, $password);
-  }
-
 }
