@@ -1,5 +1,7 @@
 <?php
 
+use Drupal\restful\Plugin\FormatterPluginManager;
+
 /**
  * Menu callback; Admin settings form.
  */
@@ -16,7 +18,9 @@ function restful_admin_settings($form_state) {
   );
 
   $element = &$form['restful_default_output_formatter'];
-  foreach (restful_get_formatter_plugins() as $plugin_name => $plugin) {
+  $formatter_manager = FormatterPluginManager::create();
+
+  foreach ($formatter_manager->getDefinitions() as $plugin_name => $plugin) {
     $element['#options'][$plugin_name] = check_plain($plugin['label']);
 
     // Add description for each formatter.

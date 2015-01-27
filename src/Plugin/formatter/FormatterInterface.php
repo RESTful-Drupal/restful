@@ -2,10 +2,13 @@
 
 /**
  * @file
- * Contains RestfulFormatterInterface.
+ * Contains \Drupal\restful\Plugin\formatter\FormatterInterface
  */
 
-interface RestfulFormatterInterface {
+namespace Drupal\restful\Plugin\formatter;
+
+interface FormatterInterface {
+
 
   /**
    * Massages the raw data to create a structured array to pass to the renderer.
@@ -51,4 +54,5 @@ interface RestfulFormatterInterface {
    *   The contents for the ContentType header in the response.
    */
   public function getContentTypeHeader();
+
 }

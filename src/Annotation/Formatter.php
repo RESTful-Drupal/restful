@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\restful\Annotation\RateLimit.
+ * Contains \Drupal\restful\Annotation\Formatter.
  */
 
 namespace Drupal\restful\Annotation;
@@ -10,13 +10,13 @@ namespace Drupal\restful\Annotation;
 use Drupal\Component\Annotation\Plugin;
 
 /**
- * Defines a RateLimit annotation object.
+ * Defines a Formatter annotation object.
  *
  * @ingroup plug_example_api
  *
  * @Annotation
  */
-class RateLimit extends Plugin {
+class Formatter extends Plugin {
 
   /**
    * The human readable name.
@@ -31,5 +31,12 @@ class RateLimit extends Plugin {
    * @var string
    */
   public $description;
+
+  /**
+   * Information about the curie
+   *
+   * @var array
+   */
+  public $curie;
 
 }

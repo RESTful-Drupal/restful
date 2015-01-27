@@ -2,10 +2,27 @@
 
 /**
  * @file
- * Contains RestfulFormatterHalJson.
+ * Contains \Drupal\restful\Plugin\formatter\FormatterHalJson.
  */
 
-class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulFormatterInterface {
+namespace Drupal\restful\Plugin\formatter;
+
+/**
+ * Class FormatterHalJson
+ * @package Drupal\restful\Plugin\formatter
+ *
+ * @Formatter(
+ *   id = "hal_json",
+ *   label = "HAL+JSON",
+ *   description = "Output in using the HAL conventions and JSON format.",
+ *   curie = {
+ *     "name": "hal",
+ *     "path": "doc/rels",
+ *     "template": "/{rel}",
+ *   },
+ * )
+ */
+class FormatterHalJson extends Formatter implements FormatterInterface {
   /**
    * Content Type
    *
@@ -25,7 +42,7 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
     }
     // Here we get the data after calling the backend storage for the resources.
 
-    $curies_resource = $this->withCurie($this->handler->getResourceName());
+    $curies_resource = $this->withCurie($this->resource->getResourceName());
     $output = array();
 
     foreach ($data as &$row) {
@@ -34,17 +51,17 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
 
     $output[$curies_resource] = $data;
 
-    if (!empty($this->handler)) {
+    if (!empty($this->resource)) {
       if (
-        method_exists($this->handler, 'getTotalCount') &&
-        method_exists($this->handler, 'isListRequest') &&
-        $this->handler->isListRequest()
+        method_exists($this->resource, 'getTotalCount') &&
+        method_exists($this->resource, 'isListRequest') &&
+        $this->resource->isListRequest()
       ) {
         // Get the total number of items for the current request without pagination.
-        $output['count'] = $this->handler->getTotalCount();
+        $output['count'] = $this->resource->getTotalCount();
       }
-      if (method_exists($this->handler, 'additionalHateoas')) {
-        $output = array_merge($output, $this->handler->additionalHateoas());
+      if (method_exists($this->resource, 'additionalHateoas')) {
+        $output = array_merge($output, $this->resource->additionalHateoas());
       }
 
       // Add HATEOAS to the output.
@@ -72,17 +89,17 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
    *   The data array after initial massaging.
    */
   protected function addHateoas(array &$data) {
-    if (!$this->handler) {
+    if (!$this->resource) {
       return;
     }
-    $request = $this->handler->getRequest();
+    $request = $this->resource->getRequest();
 
     $data['_links'] = array();
 
     // Get self link.
     $data['_links']['self'] = array(
       'title' => 'Self',
-      'href' => $this->handler->versionedUrl($this->handler->getPath()),
+      'href' => $this->resource->versionedUrl($this->resource->getPath()),
     );
 
     $page = !empty($request['page']) ? $request['page'] : 1;
@@ -91,22 +108,22 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
       $request['page'] = $page - 1;
       $data['_links']['previous'] = array(
         'title' => 'Previous',
-        'href' => $this->handler->getUrl($request),
+        'href' => $this->resource->getUrl($request),
       );
     }
 
-    $curies_resource = $this->withCurie($this->handler->getResourceName());
+    $curies_resource = $this->withCurie($this->resource->getResourceName());
 
     // We know that there are more pages if the total count is bigger than the
     // number of items of the current request plus the number of items in
     // previous pages.
-    $items_per_page = $this->handler->getRange();
+    $items_per_page = $this->resource->getRange();
     $previous_items = ($page - 1) * $items_per_page;
     if (isset($data['count']) && $data['count'] > count($data[$curies_resource]) + $previous_items) {
       $request['page'] = $page + 1;
       $data['_links']['next'] = array(
         'title' => 'Next',
-        'href' => $this->handler->getUrl($request),
+        'href' => $this->resource->getUrl($request),
       );
     }
 
@@ -114,9 +131,13 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
       return;
     }
 
+    $curie += array(
+      'path' => 'doc/rels',
+      'template' => '/{rel}',
+    );
     $data['_links']['curies'] = array(
       'name' => $curie['name'],
-      'href' => $curie['href'] ? $curie['href'] : url('docs/rels', array('absolute' => TRUE)) . '/{rel}',
+      'href' => url($curie['path'], array('absolute' => TRUE)) . $curie['template'],
       'templated' => TRUE,
     );
   }
@@ -140,7 +161,7 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
       return $row;
     }
 
-    foreach ($this->handler->getPublicFields() as $pubilc_field_name => $public_field) {
+    foreach ($this->resource->getPublicFields() as $pubilc_field_name => $public_field) {
       if (empty($public_field['resource'])) {
         // Not a resource.
         continue;
@@ -211,7 +232,7 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
    *   Associative array with the curie information.
    */
   protected function getCurie() {
-    return $this->getPluginKey('curie');
+    return $this->configuration['curie'];
   }
 
   /**
@@ -227,7 +248,7 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
    *   The name of the public field.
    */
   protected function moveReferencesToEmbeds(array &$output, array &$row, $public_field, $public_field_name) {
-    $value_metadata = $this->handler->getValueMetadata($row['id'], $public_field_name);
+    $value_metadata = $this->resource->getValueMetadata($row['id'], $public_field_name);
     if (\RestfulBase::isArrayNumeric($row[$public_field_name])) {
       foreach ($row[$public_field_name] as $index => $resource_row) {
         if (empty($value_metadata[$index])) {
