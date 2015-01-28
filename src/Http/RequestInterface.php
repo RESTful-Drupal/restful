@@ -32,39 +32,33 @@ interface RequestInterface {
    *
    * @param string $method
    *   The method name.
-   * @param boolean $strict
-   *   TRUE if the comparisons are case sensitive.
    *
    * @return boolean
    *   TRUE if it is a write operation. FALSE otherwise.
    */
-  public static function isWriteMethod($method, $strict = TRUE);
+  public static function isWriteMethod($method);
 
   /**
    * Determines if the HTTP method represents a read operation.
    *
    * @param string $method
    *   The method name.
-   * @param boolean $strict
-   *   TRUE if the comparisons are case sensitive.
    *
    * @return boolean
    *   TRUE if it is a read operation. FALSE otherwise.
    */
-  public static function isReadMethod($method, $strict = TRUE);
+  public static function isReadMethod($method);
 
   /**
    * Determines if the HTTP method is one of the known methods.
    *
    * @param string $method
    *   The method name.
-   * @param boolean $strict
-   *   TRUE if the comparisons are case sensitive.
    *
    * @return boolean
    *   TRUE if it is a known method. FALSE otherwise.
    */
-  public static function isValidMethod($method, $strict = TRUE);
+  public static function isValidMethod($method);
 
   /**
    * Returns the user.

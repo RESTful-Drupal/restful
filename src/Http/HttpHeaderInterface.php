@@ -36,7 +36,7 @@ interface HttpHeaderInterface {
    * @return string
    *   The header value as a string.
    */
-  public function contents();
+  public function getValueString();
 
   /**
    * Sets the values.

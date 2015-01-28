@@ -65,11 +65,20 @@ class HttpHeader implements HttpHeaderInterface {
   /**
    * {@inheritdoc}
    */
-  public function contents() {
+  public function getValueString() {
     $parts = array();
     $parts[] = implode(', ', $this->values);
     $parts[] = $this->extras;
     return implode('; ', $parts);
+  }
+
+  /**
+   * Returns the string version of the header.
+   *
+   * @return string
+   */
+  public function __toString() {
+    return $this->name . ': ' . $this->getValueString();
   }
 
   /**

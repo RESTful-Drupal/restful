@@ -137,7 +137,7 @@ class Request implements RequestInterface {
     if ($method == static::METHOD_POST && $headers->get('x-http-method-override')) {
       $method = $headers->get('x-http-method-override')->contents();
     }
-    if (!static::isValidMethod($method, FALSE)) {
+    if (!static::isValidMethod($method)) {
       throw new \RestfulBadRequestException('Unrecognized HTTP method.');
     }
     return new static($path, $query, $method, $headers, $via_router, $csrf_token, $cookies, $files, $server);
@@ -163,8 +163,8 @@ class Request implements RequestInterface {
   /**
    * {@inheritdoc}
    */
-  public static function isWriteMethod($method, $strict = TRUE) {
-    $method = $strict ? $method : strtoupper($method);
+  public static function isWriteMethod($method) {
+    $method = strtoupper($method);
     return in_array($method, array(
       static::METHOD_PUT,
       static::METHOD_POST,
@@ -176,8 +176,8 @@ class Request implements RequestInterface {
   /**
    * {@inheritdoc}
    */
-  public static function isReadMethod($method, $strict = TRUE) {
-    $method = $strict ? $method : strtoupper($method);
+  public static function isReadMethod($method) {
+    $method = strtoupper($method);
     return in_array($method, array(
       static::METHOD_GET,
       static::METHOD_HEAD,
@@ -190,9 +190,9 @@ class Request implements RequestInterface {
   /**
    * {@inheritdoc}
    */
-  public static function isValidMethod($method, $strict = TRUE) {
-    $method = $strict ? $method : strtolower($method);
-    return static::isReadMethod($method, $strict) || static::isWriteMethod($method, $strict);
+  public static function isValidMethod($method) {
+    $method = strtolower($method);
+    return static::isReadMethod($method) || static::isWriteMethod($method);
   }
 
   /**
@@ -317,8 +317,8 @@ class Request implements RequestInterface {
    * {@inheritdoc}
    */
   public function getUser() {
-    list($user,) = static::getCredentials();
-    return $user;
+    list($account,) = static::getCredentials();
+    return $account;
   }
 
   /**

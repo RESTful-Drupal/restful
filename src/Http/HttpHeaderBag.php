@@ -7,7 +7,7 @@
 
 namespace Drupal\restful\Http;
 
-class HttpHeaderBag {
+class HttpHeaderBag implements HttpHeaderBagInterface {
 
   /**
    * The header objects keyed by ID.
@@ -50,21 +50,12 @@ class HttpHeaderBag {
   /**
    * Add a header to the bag.
    *
-   * @param array|HttpHeaderInterface $header
-   *   The header object or an associative array with the name and value.
+   * @param HttpHeaderInterface $header
+   *   The header object.
    *
    * @throws \RestfulServerConfigurationException
    */
-  public function bag($header) {
-    if (!$header instanceof HttpHeaderInterface) {
-      if (array_key_exists('name', $header)) {
-        throw new \RestfulServerConfigurationException('Tried to set a header without a name.');
-      }
-      if (array_key_exists('key', $header)) {
-        throw new \RestfulServerConfigurationException('Tried to set a header without a value.');
-      }
-      $header = HttpHeaderInterface::create($header['key'], $header['value']);
-    }
+  public function add(HttpHeaderInterface $header) {
     $this->values[$header->getId()] = $header;
   }
 
