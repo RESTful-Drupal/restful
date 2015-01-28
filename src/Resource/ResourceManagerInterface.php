@@ -7,4 +7,14 @@
 
 namespace Drupal\restful\Resource;
 
-interface ResourceManagerInterface {}
+interface ResourceManagerInterface {
+
+  /**
+   * Gets the major and minor version for the current request.
+   *
+   * @return array
+   *   The array with the version.
+   */
+  public function getVersionFromRequest();
+
+}

@@ -277,16 +277,27 @@ class Request implements RequestInterface {
   }
 
   /**
-   * Gets the fully qualified URL with the query params.
-   *
-   * @return string
-   *   The URL.
+   * {@inheritdoc}
+   */
+  public function getPath() {
+    return $this->path;
+  }
+
+  /**
+   * {@inheritdoc}
    */
   public function href() {
     return url($this->path, array(
       'absolute' => TRUE,
       'query' => $this->query,
     ));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getHeaders() {
+    return $this->headers;
   }
 
   /**

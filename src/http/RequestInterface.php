@@ -61,6 +61,28 @@ interface RequestInterface {
   public static function isValidMethod($method);
 
   /**
+   * Gets the request path.
+   *
+   * @return string
+   */
+  public function getPath();
+
+  /**
+   * Gets the fully qualified URL with the query params.
+   *
+   * @return string
+   *   The URL.
+   */
+  public function href();
+
+  /**
+   * Gets the headers bag.
+   *
+   * @return HttpHeaderBag
+   */
+  public function getHeaders();
+
+  /**
    * Returns the user.
    *
    * @return
