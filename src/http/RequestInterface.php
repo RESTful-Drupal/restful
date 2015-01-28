@@ -61,6 +61,14 @@ interface RequestInterface {
   public static function isValidMethod($method);
 
   /**
+   * Helper method to know if the current request is for a list.
+   *
+   * @return boolean
+   *   TRUE if the request is for a list. FALSE otherwise.
+   */
+  public function isListRequest();
+
+  /**
    * Gets the request path.
    *
    * @return string

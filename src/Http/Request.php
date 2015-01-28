@@ -196,6 +196,16 @@ class Request implements RequestInterface {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function isListRequest() {
+    if ($this->method != static::METHOD_GET) {
+      return FALSE;
+    }
+    return empty($this->path) || strpos($this->path, ',') !== FALSE;
+  }
+
+  /**
    * Parses the body string.
    *
    * @return array

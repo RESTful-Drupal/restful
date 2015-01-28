@@ -7,6 +7,7 @@
 
 namespace Drupal\restful\Resource;
 
+use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\restful\Http\Request;
 use Drupal\restful\Plugin\ResourcePluginManager;
 
@@ -29,10 +30,13 @@ class ResourceManager implements ResourceManagerInterface {
   /**
    * Constructor for ResourceManager.
    *
+   * @param Request $request
+   *   The request object.
    * @param ResourcePluginManager $manager
    *   The plugin manager.
    */
-  public function __construct(ResourcePluginManager $manager = NULL) {
+  public function __construct(Request $request, ResourcePluginManager $manager = NULL) {
+    $this->request = $request;
     $this->pluginManager = $manager ?: ResourcePluginManager::create();
     $options = array();
     foreach ($manager->getDefinitions() as $plugin_id => $plugin_definition) {
@@ -67,6 +71,39 @@ class ResourceManager implements ResourceManagerInterface {
     // If there is no version negotiation information return the latest version.
     $version = $this->getResourceLastVersion($resource_name);
     return $version;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function negotiate() {
+    $version = $this->getVersionFromRequest();
+    list($resource_name, ) = static::getPageArguments($this->request->getPath());
+    try {
+      return $this->pluginManager->createInstance($resource_name . '::' . $version[0] . '.' . $version[1]);
+    }
+    catch (PluginNotFoundException $e) {
+      throw new \RestfulServerConfigurationException($e->getMessage());
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function executeCallback($callback, array $params = array()) {
+    if (!is_callable($callback)) {
+      if (is_array($callback) && count($callback) == 2 && is_array($callback[1])) {
+        // This code deals with the third scenario in the docblock. Get the
+        // callback and the parameters from the array, merge the parameters with
+        // the existing ones and call recursively to reuse the logic for the
+        // other cases.
+        return static::executeCallback($callback[0], array_merge($params, $callback[1]));
+      }
+      $callback_name = is_array($callback) ? $callback[1] : $callback;
+      throw new \RestfulException("Callback function: $callback_name does not exists.");
+    }
+
+    return call_user_func_array($callback, $params);
   }
 
   /**
