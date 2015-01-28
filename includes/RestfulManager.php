@@ -242,34 +242,6 @@ class RestfulManager {
   }
 
   /**
-   * Get the value from an HTTP header.
-   *
-   * As Apache may be strict with variables with underscore, we check also
-   * the headers directly from Apache, if they are not present in the $_SEVER
-   *
-   * @param string $key
-   *   The key to use.
-   * @param string $default_value
-   *   The default value to return if no value exists. Defaults to NULL.
-   *
-   * @return string
-   *   The value in the HTTP header if exists, other the value of the given
-   *   "default value".
-   */
-  public static function getRequestHttpHeader($key, $default_value = NULL) {
-    $capital_name = 'HTTP_' . strtoupper(str_replace('-', '_', $key));
-
-    $value = !empty($_SERVER[$capital_name]) ? $_SERVER[$capital_name] : $default_value;
-
-    if (!$value && function_exists('apache_request_headers')) {
-      $headers = apache_request_headers();
-      $value = !empty($headers[$key]) ? $headers[$key] : $default_value;
-    }
-
-    return $value;
-  }
-
-  /**
    * Helper function to echo static strings.
    *
    * @param mixed $value
