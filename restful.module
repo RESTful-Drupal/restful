@@ -351,14 +351,14 @@ function restful() {
 function restful_menu_access_callback($resource_name, $version = NULL) {
   $manager = RestfulManager::createFromGlobals();
   xautoload()->getServiceContainer()->set('restfulManager', $manager);
-  if (!$versions = \RestfulBase::getVersionFromRequest()) {
+  $resource_manager = $manager->getResourceManager();
+  if (!$versions = $resource_manager->getVersionFromRequest()) {
     // No version could be found.
-    return;
+    return FALSE;
   }
 
   try {
-    return $manager
-      ->getResourceManager()
+    return $resource_manager
       ->negotiate($manager->getRequest())
       ->access();
   }

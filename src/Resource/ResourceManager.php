@@ -8,6 +8,7 @@
 namespace Drupal\restful\Resource;
 
 use Drupal\restful\Http\Request;
+use Drupal\restful\Plugin\ResourcePluginManager;
 
 class ResourceManager implements ResourceManagerInterface {
 
@@ -17,6 +18,30 @@ class ResourceManager implements ResourceManagerInterface {
    * @var Request
    */
   protected $request;
+
+  /**
+   * The plugin manager.
+   *
+   * @var ResourcePluginManager
+   */
+  protected $pluginManager;
+
+  /**
+   * Constructor for ResourceManager.
+   *
+   * @param ResourcePluginManager $manager
+   *   The plugin manager.
+   */
+  public function __construct(ResourcePluginManager $manager = NULL) {
+    $this->pluginManager = $manager ?: ResourcePluginManager::create();
+    $options = array();
+    foreach ($manager->getDefinitions() as $plugin_id => $plugin_definition) {
+      // Set the instance id to articles::1.5 (for example).
+      $instance_id = $plugin_id . '::' . $plugin_definition['major_version'] . '.' . $plugin_definition['minor_version'];
+      $options[$instance_id] = $plugin_definition;
+    }
+    $this->plugins = new ResourcePluginCollection($manager, $options);
+  }
 
   /**
    * {@inheritdoc}
@@ -29,18 +54,18 @@ class ResourceManager implements ResourceManagerInterface {
     }
     list($resource_name, $version) = static::getPageArguments($path);
     if (preg_match('/^v\d+(\.\d+)?$/', $version)) {
-      $version = static::parseVersionString($version, $resource_name);
+      $version = $this->parseVersionString($version, $resource_name);
       return $version;
     }
 
     // If there is no version in the URL check the header.
     if ($api_version_header = $this->request->getHeaders()->get('x-api-version')) {
-      $version =  static::parseVersionString($api_version_header->getValueString(), $resource_name);
+      $version =  $this->parseVersionString($api_version_header->getValueString(), $resource_name);
       return $version;
     }
 
     // If there is no version negotiation information return the latest version.
-    $version = static::getResourceLastVersion($resource_name);
+    $version = $this->getResourceLastVersion($resource_name);
     return $version;
   }
 
@@ -84,7 +109,7 @@ class ResourceManager implements ResourceManagerInterface {
    * @return array
    *   Numeric array with major and minor version.
    */
-  protected static function parseVersionString($version, $resource_name = NULL) {
+  protected function parseVersionString($version, $resource_name = NULL) {
     if (preg_match('/^v\d+(\.\d+)?$/', $version)) {
       // Remove the leading 'v'.
       $version = substr($version, 1);
@@ -97,7 +122,7 @@ class ResourceManager implements ResourceManagerInterface {
         return NULL;
       }
       // Get the latest version for the resource.
-      return static::getResourceLastVersion($resource_name, $major_version);
+      return $this->getResourceLastVersion($resource_name, $major_version);
     }
     // Abort if any of the versions is not numeric.
     if (!ctype_digit((string) $output[0]) || !ctype_digit((string) $output[1])) {
@@ -160,14 +185,14 @@ class ResourceManager implements ResourceManagerInterface {
    * @return array
    *   Array containing the major_version and minor_version.
    */
-  protected static function getResourceLastVersion($resource_name, $major_version = NULL) {
+  protected function getResourceLastVersion($resource_name, $major_version = NULL) {
     $resources = array();
     // Get all the resources corresponding to the resource name.
-    foreach (restful_get_restful_plugins() as $resource) {
-      if ($resource['resource'] != $resource_name || (isset($major_version) && $resource['major_version'] != $major_version)) {
+    foreach ($this->pluginManager->getDefinitions() as $plugin_id => $plugin_definition) {
+      if ($plugin_definition['id'] != $resource_name || (isset($major_version) && $plugin_definition['major_version'] != $major_version)) {
         continue;
       }
-      $resources[$resource['major_version']][$resource['minor_version']] = $resource;
+      $resources[$plugin_definition['major_version']][$plugin_definition['minor_version']] = $plugin_definition;
     }
     // Sort based on the major version.
     ksort($resources, SORT_NUMERIC);
