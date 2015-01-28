@@ -135,7 +135,7 @@ class Request implements RequestInterface {
    */
   public static function create($path, $query, $method = 'GET', HttpHeaderBag $headers, $via_router = FALSE, $csrf_token = NULL, $cookies = array(), $files = array(), $server = array()) {
     if ($method == static::METHOD_POST && $headers->get('x-http-method-override')) {
-      $method = $headers->get('x-http-method-override')->contents();
+      $method = $headers->get('x-http-method-override')->getValueString();
     }
     if (!static::isValidMethod($method)) {
       throw new \RestfulBadRequestException('Unrecognized HTTP method.');
@@ -155,7 +155,7 @@ class Request implements RequestInterface {
     // CURL";
     $via_router = TRUE;
     $headers = static::parseHeadersFromGlobals();
-    $csrf_token = $headers->get('x-csrf-Token')->contents();
+    $csrf_token = $headers->get('x-csrf-Token')->getValueString();
 
     return static::create($path, $query, $method, $headers, $via_router, $csrf_token, $_COOKIE, $_FILES, $_SERVER);
   }
@@ -271,7 +271,7 @@ class Request implements RequestInterface {
     }
     // Iterate over the headers and bag them.
     foreach ($headers as $name => $value) {
-      $bag->bag(HttpHeader::create($name, $value));
+      $bag->add(HttpHeader::create($name, $value));
     }
     return $bag;
   }
