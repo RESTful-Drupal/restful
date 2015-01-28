@@ -8,6 +8,7 @@
 include_once __DIR__ . '/restful.entity.inc';
 
 use Drupal\restful\Formatter\FormatterManager;
+use Drupal\restful\RestfulManager;
 
 /**
  * Implements hook_ctools_plugin_directory().
@@ -318,6 +319,25 @@ function restful_get_restful_handler_for_path($path = NULL) {
 }
 
 /**
+ * Get the RestfulManager.
+ *
+ * Calling restful() from anywhere in the code will give you access to the
+ * RestfulManager. That in turn will provide you access to all the elements
+ * involved.
+ *
+ * @return RestfulManager
+ *   The manager.
+ */
+function restful() {
+  static $manager;
+  if (isset($manager)) {
+    return $manager;
+  }
+  $manager = xautoload()->restfulManager;
+  return $manager;
+}
+
+/**
  * Access callback; Determine access for an API call.
  *
  * @param $version
@@ -329,30 +349,24 @@ function restful_get_restful_handler_for_path($path = NULL) {
  *   TRUE if user is allowed to access resource.
  */
 function restful_menu_access_callback($resource_name, $version = NULL) {
+  $manager = RestfulManager::createFromGlobals();
+  xautoload()->getServiceContainer()->set('restfulManager', $manager);
   if (!$versions = \RestfulBase::getVersionFromRequest()) {
     // No version could be found.
     return;
   }
 
-  if (!$handler = restful_get_restful_handler($resource_name, $versions[0], $versions[1])) {
-    return;
+  try {
+    return $manager
+      ->getResourceManager()
+      ->negotiate($manager->getRequest())
+      ->access();
   }
-
-  if (!\RestfulBase::isValidMethod($_SERVER['REQUEST_METHOD'], FALSE)) {
-    return;
+  catch (\RestfulException $e) {
+    // We can get here if the request method is not valid or if no resource can
+    // be negotiated.
+    return FALSE;
   }
-
-  $method = strtoupper($_SERVER['REQUEST_METHOD']);
-  if ($method == \RestfulInterface::POST && \RestfulManager::getRequestHttpHeader('X-HTTP-Method-Override')) {
-    $method = strtoupper(\RestfulManager::getRequestHttpHeader('X-HTTP-Method-Override'));
-  }
-
-  if (!\RestfulBase::isValidMethod($method, FALSE)) {
-    // HTTP method is invalid.
-    return;
-  }
-
-  return $handler->access();
 }
 
 /**

@@ -131,6 +131,9 @@ class RestfulManager {
 
   /**
    * Factory method.
+   *
+   * @return RestfulManager
+   *   The newly created manager.
    */
   public static function createFromGlobals() {
     $request = Request::createFromGlobals();
