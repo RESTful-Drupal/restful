@@ -252,10 +252,10 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
       $query->entityCondition('entity_id', $ids, 'IN');
     }
 
+    $this->queryForListFilter($query);
+
     $this->addExtraInfoToQuery($query);
     $query->addTag('restful_count');
-
-    $this->queryForListFilter($query);
 
     return $query->count();
   }
@@ -278,9 +278,13 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
   protected function addExtraInfoToQuery($query) {
     parent::addExtraInfoToQuery($query);
     $entity_type = $this->getEntityType();
-    // Add a generic entity access tag to the query.
-    $query->addTag($entity_type . '_access');
-    $query->addMetaData('restful_handler', $this);
+    // The only time you need to add the access tags to a EFQ is when you don't
+    // have fieldConditions.
+    if (empty($query->fieldConditions)) {
+      // Add a generic entity access tag to the query.
+      $query->addTag($entity_type . '_access');
+      $query->addMetaData('restful_handler', $this);
+    }
   }
 
   /**
