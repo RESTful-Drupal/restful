@@ -23,6 +23,30 @@ class RestfulColumnForQueryTestCase extends DrupalWebTestCase {
    * Test using joins and filters for the DB query data provider.
    */
   function testColumnForQuery() {
+    $user1 = $this->drupalCreateUser();
+    $user2 = $this->drupalCreateUser();
+
+    $settings = array(
+      'type' => 'article',
+      'uid' => $user1->uid,
+    );
+
+    $node1 = $this->drupalCreateNode($settings);
+
+    $settings['uid'] = $user2->uid;
+    $node2 = $this->drupalCreateNode($settings);
+
+
+    $handler = restful_get_restful_handler('node_user');
+    $request = array(
+      'filter' => array(
+        'author' => $user1->name,
+      ),
+    );
+    $result = $handler->get('', $request);
+
+    $this->assertEqual(count($result[0]), 1, 'Filter on a joined table returned correct items.');
+
   }
 
 }
