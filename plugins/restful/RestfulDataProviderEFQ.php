@@ -283,8 +283,8 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
     if (empty($query->fieldConditions)) {
       // Add a generic entity access tag to the query.
       $query->addTag($entity_type . '_access');
-      $query->addMetaData('restful_handler', $this);
     }
+    $query->addMetaData('restful_handler', $this);
   }
 
   /**
