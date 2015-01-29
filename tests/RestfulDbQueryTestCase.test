@@ -219,7 +219,7 @@ class RestfulDbQueryTestCase extends DrupalWebTestCase {
   /**
    * Test using joins and filters for the DB query data provider.
    */
-  function testColumnForQuery() {
+  public function testColumnForQuery() {
     $user1 = $this->drupalCreateUser();
     $user2 = $this->drupalCreateUser();
 
@@ -241,8 +241,9 @@ class RestfulDbQueryTestCase extends DrupalWebTestCase {
     );
     $result = $handler->get('', $request);
 
-    $this->assertEqual(count($result[0]), 1, 'Filter on a joined table returned correct items.');
+    $this->assertEqual(count($result), 1, 'Filter on a joined table returned correct items.');
     $this->assertEqual($result[0]['author'], $user1->name, 'Joined column appears correctly.');
+    $this->assertEqual($result[0]['id'], $node1->nid, 'Correct item was filtered.');
   }
 
 }
