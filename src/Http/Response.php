@@ -165,7 +165,7 @@ class Response implements ResponseInterface {
    *
    * @return bool
    */
-  public function isEmpty() {
+  protected function isEmpty() {
     return in_array($this->statusCode, array(204, 304));
   }
 
@@ -174,7 +174,7 @@ class Response implements ResponseInterface {
    *
    * @return bool
    */
-  public function isInformational() {
+  protected function isInformational() {
     return $this->statusCode >= 100 && $this->statusCode < 200;
   }
 
@@ -183,7 +183,7 @@ class Response implements ResponseInterface {
    *
    * @return bool
    */
-  public function isSuccessful() {
+  protected function isSuccessful() {
     return $this->statusCode >= 200 && $this->statusCode < 300;
   }
 
@@ -192,7 +192,7 @@ class Response implements ResponseInterface {
    *
    * @return bool
    */
-  public function isInvalid() {
+  protected function isInvalid() {
     return $this->statusCode < 100 || $this->statusCode >= 600;
   }
 
