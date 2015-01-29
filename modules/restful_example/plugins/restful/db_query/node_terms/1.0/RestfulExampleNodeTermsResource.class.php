@@ -20,12 +20,12 @@ class RestfulExampleNodeTermsResource extends \RestfulDataProviderDbQuery implem
     );
 
     // The terms are taken from a join query, as they exist on another table.
-    $public_fields['terms'] = array(
-      'property' => 'terms',
+    $public_fields['author'] = array(
+      'property' => 'name',
 
-      // Set the actual colun name, so WHERE and ORDER BY may work, as MySql
+      // Set the actual column name, so WHERE and ORDER BY may work, as MySql
       // doesn't allow using a column alias for those operations.
-      'column_for_query' => 'terms.field_tags_tid',
+      'column_for_query' => 'user.name',
     );
 
     return $public_fields;
@@ -39,15 +39,11 @@ class RestfulExampleNodeTermsResource extends \RestfulDataProviderDbQuery implem
   protected function getQuery() {
     $query = parent::getQuery();
 
-    $field = field_info_field('field_tags');
-    $table_name = _field_sql_storage_tablename($field);
-    $query->join($table_name, 'terms', 'node.nid = terms.entity_id');
-
-    $query->condition('terms.entity_type', 'node');
+    $query->innerJoin('users', 'user', 'node.uid = user.uid');
 
     // Explicitly set the alias of the column, so it will match the public field
     // name.
-    $query->addField('terms', 'field_tags_tid', 'terms');
+    $query->addField('user', 'name', 'name');
 
     return $query;
   }
