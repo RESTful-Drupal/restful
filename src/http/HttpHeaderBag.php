@@ -86,6 +86,22 @@ class HttpHeaderBag implements HttpHeaderBagInterface {
   /**
    * {@inheritdoc}
    */
+  public function append(HttpHeaderInterface $header) {
+    if (!$this->has($header->getId())) {
+      $this->add($header);
+      return;
+    }
+    $existing_header = $this->get($header->getId());
+    // Append all the values in the passed in header to the existing header
+    // values.
+    foreach ($header->get() as $value) {
+      $existing_header->append($value);
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function remove($key) {
     // Assume that $key is an ID.
     if (!array_key_exists($key, $this->values)) {

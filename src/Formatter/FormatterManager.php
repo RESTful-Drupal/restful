@@ -8,6 +8,7 @@
 namespace Drupal\restful\Formatter;
 
 use Drupal\restful\Exception\ServiceUnavailableException;
+use Drupal\restful\Http\HttpHeader;
 use Drupal\restful\Plugin\formatter\FormatterInterface;
 use Drupal\restful\Plugin\FormatterPluginManager;
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
@@ -49,8 +50,18 @@ class FormatterManager implements FormatterManagerInterface {
    * {@inheritdoc}
    */
   public function format(array $data, $formatter_name = NULL) {
-    $accept = empty($GLOBALS['_SERVER']['HTTP_ACCEPT']) ? NULL : $GLOBALS['_SERVER']['HTTP_ACCEPT'];
-    return $this->negotiateFormatter($accept, $formatter_name)->format($data);
+    $accept = restful()
+      ->getRequest()
+      ->getHeaders()
+      ->get('accept')
+      ->getValueString();
+    $formatter = $this->negotiateFormatter($accept, $formatter_name);
+    $content_type = $formatter->getContentTypeHeader();
+    restful()
+      ->getResponse()
+      ->getHeaders()
+      ->add(HttpHeader::create('Content-Type', $content_type));
+    return $formatter->format($data);
   }
 
   /**

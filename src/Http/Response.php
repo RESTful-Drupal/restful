@@ -10,7 +10,6 @@
 namespace Drupal\restful\Http;
 
 use Drupal\restful\Exception\InternalServerErrorException;
-use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Exception\UnprocessableEntityException;
 
 class Response implements ResponseInterface {
@@ -213,21 +212,17 @@ class Response implements ResponseInterface {
       $this->setContent(NULL);
       $headers->remove('Content-Type');
       $headers->remove('Content-Length');
-    } else {
-      // Content-type based on the Request
-      if (!$headers->has('Content-Type')) {
-        $format = $request->getRequestFormat();
-        if (NULL !== $format && $mimeType = $request->getMimeType($format)) {
-          $headers->add(HttpHeader::create('Content-Type', $mimeType));
-        }
-      }
+    }
+    else {
+      // Content-type based on the Request. The content type should have been
+      // set in the RestfulFormatter.
+
       // Fix Content-Type
       $charset = $this->charset ?: 'UTF-8';
-      if (!$headers->has('Content-Type')) {
-        $headers->add(HttpHeader::create('Content-Type', 'text/html; charset=' . $charset));
-      } elseif (0 === stripos($headers->get('Content-Type'), 'text/') && false === stripos($headers->get('Content-Type'), 'charset')) {
+      $content_type = $headers->get('Content-Type')->getValueString();
+      if (stripos($content_type, 'text/') === 0 && stripos($content_type, 'charset') === FALSE) {
         // add the charset
-        $headers->add(HttpHeader::create('Content-Type', $headers->get('Content-Type')->getValueString() . '; charset=' . $charset));
+        $headers->add(HttpHeader::create('Content-Type', $content_type . '; charset=' . $charset));
       }
       // Fix Content-Length
       if ($headers->has('Transfer-Encoding')) {
@@ -235,7 +230,7 @@ class Response implements ResponseInterface {
       }
       if ($request->getMethod() == Request::METHOD_HEAD) {
         // cf. RFC2616 14.13
-        $length = $headers->get('Content-Length');
+        $length = $headers->get('Content-Length')->getValueString();
         $this->setContent(NULL);
         if ($length) {
           $headers->add(HttpHeader::create('Content-Length', $length));
@@ -266,10 +261,11 @@ class Response implements ResponseInterface {
    * @throws InternalServerErrorException
    */
   public function setContent($content) {
-    if (NULL !== $content && !is_string($content) && !is_numeric($content) && !is_callable(array($content, '__toString'))) {
+    if ($content !== NULL && !is_string($content) && !is_numeric($content) && !is_callable(array($content, '__toString'))) {
       throw new InternalServerErrorException(sprintf('The Response content must be a string or object implementing __toString(), "%s" given.', gettype($content)));
     }
     $this->content = (string) $content;
+    $this->headers->add(HttpHeader::create('Content-Length', strlen($this->content)));
   }
 
   /**
@@ -380,6 +376,15 @@ class Response implements ResponseInterface {
    */
   public function getCharset() {
     return $this->charset;
+  }
+
+  /**
+   * Get the headers bag.
+   *
+   * @return HttpHeaderBag
+   */
+  public function getHeaders() {
+    return $this->headers;
   }
 
   /**

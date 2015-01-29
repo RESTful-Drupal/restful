@@ -164,7 +164,7 @@ class RestfulManager {
 
     // Prepares the body for the response. At this point all headers have been
     // added to the response.
-    $this->response->setBody($body);
+    $this->response->setContent($body);
 
     // The menu callback function is in charge of adding all the headers and
     // returning the body.

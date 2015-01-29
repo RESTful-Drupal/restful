@@ -51,6 +51,16 @@ interface HttpHeaderBagInterface {
   public function add(HttpHeaderInterface $header);
 
   /**
+   * Appends the values of the passed in header to if the header already exists.
+   *
+   * @param HttpHeaderInterface $header
+   *   The header object or an associative array with the name and value.
+   *
+   * @throws ServerConfigurationException
+   */
+  public function append(HttpHeaderInterface $header);
+
+  /**
    * Removes a header from the bag.
    *
    * @param string $key
