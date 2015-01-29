@@ -39,6 +39,9 @@ class RestfulExampleNodeUserResource extends \RestfulDataProviderDbQuery impleme
   protected function getQuery() {
     $query = parent::getQuery();
 
+    // Add a node access tag.
+    $query->addTag('node_access');
+
     $query->innerJoin('users', 'user', 'node.uid = user.uid');
 
     // Explicitly set the alias of the column, so it will match the public field
