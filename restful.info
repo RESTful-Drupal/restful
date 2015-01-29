@@ -60,7 +60,6 @@ files[] = exceptions/RestfulUnprocessableEntityException.php
 ; Tests
 files[] = tests/RestfulAuthenticationTestCase.test
 files[] = tests/RestfulAutoCompleteTestCase.test
-files[] = tests/RestfulColumnForQueryTestCase.test
 files[] = tests/RestfulCreateEntityTestCase.test
 files[] = tests/RestfulCreateNodeTestCase.test
 files[] = tests/RestfulCreateTaxonomyTermTestCase.test
