@@ -5,6 +5,8 @@
  * Contains \RestfulDataProviderEFQInterface
  */
 
+use Drupal\restful\Exception\BadRequestException;
+
 interface RestfulDataProviderEFQInterface {
 
   /**
@@ -21,7 +23,7 @@ interface RestfulDataProviderEFQInterface {
    * @return EntityFieldQuery
    *   The EntityFieldQuery object.
    *
-   * @throws RestfulBadRequestException
+   * @throws BadRequestException
    */
   public function getQueryCount();
 

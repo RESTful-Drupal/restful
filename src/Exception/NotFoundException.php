@@ -2,10 +2,12 @@
 
 /**
  * @file
- * Contains RestfulNotFoundException
+ * Contains \Drupal\restful\Exception\NotFoundException.
  */
 
-class RestfulNotFoundException extends RestfulException {
+namespace Drupal\restful\Exception;
+
+class NotFoundException extends RestfulException {
 
   /**
    * Defines the HTTP error code.

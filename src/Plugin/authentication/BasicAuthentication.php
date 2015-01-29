@@ -6,6 +6,8 @@
  */
 
 namespace Drupal\restful\Plugin\authentication;
+use Drupal\restful\Exception\FloodException;
+use Drupal\restful\Exception\FloodException;
 
 /**
  * Class BasicAuthentication
@@ -46,7 +48,7 @@ class BasicAuthentication extends Authentication {
     // in to many different user accounts.  We have a reasonably high limit
     // since there may be only one apparent IP for all users at an institution.
     if (!flood_is_allowed('failed_login_attempt_ip', variable_get('user_failed_login_ip_limit', 50), variable_get('user_failed_login_ip_window', 3600))) {
-      throw new \RestfulFloodException(format_string('Rejected by ip flood control.'));
+      throw new FloodException(format_string('Rejected by ip flood control.'));
     }
     if (!$uid = db_query_range("SELECT uid FROM {users} WHERE name = :name AND status = 1", 0, 1, array(':name' => $username))->fetchField()) {
       // Always register an IP-based failed login event.
@@ -78,7 +80,7 @@ class BasicAuthentication extends Authentication {
     }
     else {
       flood_register_event('failed_login_attempt_user', variable_get('user_failed_login_user_window', 3600), $identifier);
-      throw new \RestfulFloodException(format_string('Rejected by user flood control.'));
+      throw new FloodException(format_string('Rejected by user flood control.'));
     }
   }
 

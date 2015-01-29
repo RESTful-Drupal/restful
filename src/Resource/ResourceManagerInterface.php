@@ -7,6 +7,9 @@
 
 namespace Drupal\restful\Resource;
 
+use \Drupal\restful\Exception\RestfulException;
+use \Drupal\restful\Exception\ServerConfigurationException;
+
 interface ResourceManagerInterface {
 
   /**
@@ -20,7 +23,7 @@ interface ResourceManagerInterface {
   /**
    * Gets the resource plugin based on the information in the request object.
    *
-   * @throws \RestfulServerConfigurationException
+   * @throws ServerConfigurationException
    *   If the plugin could not be found.
    *
    * @return Resource
@@ -45,7 +48,7 @@ interface ResourceManagerInterface {
    * @return mixed
    *   The return value of the callback.
    *
-   * @throws \RestfulException
+   * @throws RestfulException
    */
   public static function executeCallback($callback, array $params = array());
 

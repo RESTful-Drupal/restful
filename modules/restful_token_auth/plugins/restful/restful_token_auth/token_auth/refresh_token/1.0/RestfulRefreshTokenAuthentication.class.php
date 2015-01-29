@@ -5,6 +5,8 @@
  * Contains RestfulRefreshTokenAuthentication.
  */
 
+use Drupal\restful\Exception\BadRequestException;
+
 class RestfulRefreshTokenAuthentication extends \RestfulTokenAuthenticationBase {
 
   /**
@@ -25,7 +27,7 @@ class RestfulRefreshTokenAuthentication extends \RestfulTokenAuthenticationBase 
    * @param string $token
    *   The refresh token.
    *
-   * @throws RestfulBadRequestException
+   * @throws BadRequestException
    *
    * @return \RestfulTokenAuth
    *   The new access token.
@@ -42,7 +44,7 @@ class RestfulRefreshTokenAuthentication extends \RestfulTokenAuthenticationBase 
       ->execute();
 
     if (empty($results['restful_token_auth'])) {
-      throw new \RestfulBadRequestException('Invalid refresh token.');
+      throw new BadRequestException('Invalid refresh token.');
     }
 
     // Remove the refresh token once used.

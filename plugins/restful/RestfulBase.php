@@ -6,6 +6,12 @@
  */
 
 use Drupal\restful\Authentication\AuthenticationManager;
+use Drupal\restful\Exception\BadRequestException;
+use Drupal\restful\Exception\ForbiddenException;
+use Drupal\restful\Exception\GoneException;
+use Drupal\restful\Exception\NotImplementedException;
+use Drupal\restful\Exception\RestfulException;
+use Drupal\restful\Exception\ServiceUnavailableException;
 use Drupal\restful\Formatter\FormatterManager;
 use Drupal\restful\Plugin\FormatterPluginManager;
 use Drupal\restful\RateLimit\RateLimitManager;
@@ -473,7 +479,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
    * @return array
    *   Array with data provider options populated with default values.
    *
-   * @throws \RestfulServiceUnavailable
+   * @throws ServiceUnavailableException
    */
   protected function processDataProviderOptions($required_keys = array(), $default_values = array()) {
     $options = $this->getPluginKey('data_provider_options');
@@ -482,7 +488,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
     foreach ($required_keys as $key) {
       if (empty($options[$key])) {
         $params['@key'] = $key;
-        throw new \RestfulServiceUnavailable(format_string('@class is missing "@key" property in the "data_provider_options" key of the $plugin', $params));
+        throw new ServiceUnavailableException(format_string('@class is missing "@key" property in the "data_provider_options" key of the $plugin', $params));
       }
     }
 
@@ -712,7 +718,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
     $this->setHttpHeaders('X-API-Version', 'v' . $version['major']  . '.' . $version['minor']);
 
     if (!$method_name = $this->getControllerFromPath()) {
-      throw new RestfulBadRequestException('Path does not exist');
+      throw new BadRequestException('Path does not exist');
     }
 
     if ($check_rate_limit && $this->getRateLimitManager()) {
@@ -726,10 +732,10 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
   /**
    * Return the controller from a given path.
    *
-   * @throws RestfulBadRequestException
+   * @throws BadRequestException
    * @throws RestfulException
-   * @throws RestfulForbiddenException
-   * @throws RestfulGoneException
+   * @throws ForbiddenException
+   * @throws GoneException
    *
    * @return string
    *   The appropriate method to call.
@@ -749,12 +755,12 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
       if ($controllers === FALSE) {
         // Method isn't valid anymore, due to a deprecated API endpoint.
         $params = array('@path' => $path);
-        throw new RestfulGoneException(format_string('The path @path endpoint is not valid.', $params));
+        throw new GoneException(format_string('The path @path endpoint is not valid.', $params));
       }
 
       if (!isset($controllers[$method])) {
         $params = array('@method' => strtoupper($method));
-        throw new RestfulBadRequestException(format_string('The http method @method is not allowed for this path.', $params));
+        throw new BadRequestException(format_string('The http method @method is not allowed for this path.', $params));
       }
 
       // We found the controller, so we can break.
@@ -762,7 +768,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
       if (is_array($selected_controller)) {
         // If there is a custom access method for this endpoint check it.
         if (!empty($selected_controller['access callback']) && !static::executeCallback(array($this, $selected_controller['access callback']), array($path))) {
-          throw new \RestfulForbiddenException(format_string('You do not have access to this endpoint: @method - @path', array(
+          throw new ForbiddenException(format_string('You do not have access to this endpoint: @method - @path', array(
             '@method' => $method,
             '@path' => $path,
           )));
@@ -793,7 +799,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
    * @return array
    *   With the different sorting options.
    *
-   * @throws \RestfulBadRequestException
+   * @throws BadRequestException
    */
   protected function parseRequestForListSort() {
     $request = $this->getRequest();
@@ -804,7 +810,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
     }
     $url_params = $this->getPluginKey('url_params');
     if (!$url_params['sort']) {
-      throw new \RestfulBadRequestException('Sort parameters have been disabled in server configuration.');
+      throw new BadRequestException('Sort parameters have been disabled in server configuration.');
     }
 
     $sorts = array();
@@ -813,7 +819,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
       $sort = str_replace('-', '', $sort);
       // Check the sort is on a legal key.
       if (empty($public_fields[$sort])) {
-        throw new RestfulBadRequestException(format_string('The sort @sort is not allowed for this path.', array('@sort' => $sort)));
+        throw new BadRequestException(format_string('The sort @sort is not allowed for this path.', array('@sort' => $sort)));
       }
 
       $sorts[$sort] = $direction;
@@ -827,14 +833,14 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
    * @return array
    *   A numeric array with the offset and length options.
    *
-   * @throws \RestfulBadRequestException
+   * @throws BadRequestException
    */
   protected function parseRequestForListPagination() {
     $request = $this->getRequest();
     $page = isset($request['page']) ? $request['page'] : 1;
 
     if (!ctype_digit((string) $page) || $page < 1) {
-      throw new \RestfulBadRequestException('"Page" property should be numeric and equal or higher than 1.');
+      throw new BadRequestException('"Page" property should be numeric and equal or higher than 1.');
     }
 
     $range = $this->getRange();
@@ -845,7 +851,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
   /**
    * Filter the query for list.
    *
-   * @throws \RestfulBadRequestException
+   * @throws BadRequestException
    *
    * @returns array
    *   An array of filters to apply.
@@ -867,7 +873,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
     }
     $url_params = $this->getPluginKey('url_params');
     if (!$url_params['filter']) {
-      throw new \RestfulBadRequestException('Filter parameters have been disabled in server configuration.');
+      throw new BadRequestException('Filter parameters have been disabled in server configuration.');
     }
 
     $filters = array();
@@ -875,7 +881,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
 
     foreach ($request['filter'] as $public_field => $value) {
       if (empty($public_fields[$public_field])) {
-        throw new RestfulBadRequestException(format_string('The filter @filter is not allowed for this path.', array('@filter' => $public_field)));
+        throw new BadRequestException(format_string('The filter @filter is not allowed for this path.', array('@filter' => $public_field)));
       }
 
       // Filtering can be achieved in different ways:
@@ -902,7 +908,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
 
       // Make sure that we have the same amount of operators than values.
       if (!in_array(strtoupper($value['operator'][0]), array('IN', 'BETWEEN')) && count($value['value']) != count($value['operator'])) {
-        throw new RestfulBadRequestException('The number of operators and values has to be the same.');
+        throw new BadRequestException('The number of operators and values has to be the same.');
       }
 
       $value += array('conjunction' => 'AND');
@@ -926,7 +932,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
    * @param array $operators
    *   The array of operators.
    *
-   * @throws RestfulBadRequestException
+   * @throws BadRequestException
    */
   protected static function isValidOperatorsForFilter(array $operators) {
     $allowed_operators = array(
@@ -943,7 +949,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
 
     foreach ($operators as $operator) {
       if (!in_array($operator, $allowed_operators)) {
-        throw new \RestfulBadRequestException(format_string('Operator "@operator" is not allowed for filtering on this resource. Allowed operators are: !allowed', array(
+        throw new BadRequestException(format_string('Operator "@operator" is not allowed for filtering on this resource. Allowed operators are: !allowed', array(
           '@operator' => $operators,
           '!allowed' => implode(', ', $allowed_operators),
         )));
@@ -957,7 +963,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
    * @param string $conjunction
    *   The operator.
    *
-   * @throws RestfulBadRequestException
+   * @throws BadRequestException
    */
   protected static function isValidConjuctionForFilter($conjunction) {
     $allowed_conjunctions = array(
@@ -967,7 +973,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
     );
 
     if (!in_array(strtoupper($conjunction), $allowed_conjunctions)) {
-      throw new \RestfulBadRequestException(format_string('Conjunction "@conjunction" is not allowed for filtering on this resource. Allowed conjunctions are: !allowed', array(
+      throw new BadRequestException(format_string('Conjunction "@conjunction" is not allowed for filtering on this resource. Allowed conjunctions are: !allowed', array(
         '@conjunction' => $conjunction,
         '!allowed' => implode(', ', $allowed_conjunctions),
       )));
@@ -1248,7 +1254,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
         $account_cid = '::ur' . implode(',', array_keys($account->roles));
       }
       else {
-        throw new \RestfulNotImplementedException(format_string('The selected cache granularity (@granularity) is not supported.', array(
+        throw new NotImplementedException(format_string('The selected cache granularity (@granularity) is not supported.', array(
           '@granularity' => $cache_info['granularity'],
         )));
       }
@@ -1419,28 +1425,28 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
    * @param string $operation
    *   The crud operation.
    *
-   * @throws \RestfulNotImplementedException
+   * @throws NotImplementedException
    */
   protected static function notImplementedCrudOperation($operation) {
     // The default behavior is to not support the crud action.
-    throw new \RestfulNotImplementedException(format_string('The "@method" method is not implemented in class @class.', array('@method' => $operation, '@class' => __CLASS__)));
+    throw new NotImplementedException(format_string('The "@method" method is not implemented in class @class.', array('@method' => $operation, '@class' => __CLASS__)));
   }
 
   /**
    * Overrides the range parameter with the URL value if any.
    *
-   * @throws RestfulBadRequestException
+   * @throws BadRequestException
    */
   protected function overrideRange() {
     $request = $this->getRequest();
     if (!empty($request['range'])) {
       $url_params = $this->getPluginKey('url_params');
       if (!$url_params['range']) {
-        throw new \RestfulBadRequestException('The range parameter has been disabled in server configuration.');
+        throw new BadRequestException('The range parameter has been disabled in server configuration.');
       }
 
       if (!ctype_digit((string) $request['range']) || $request['range'] < 1) {
-        throw new \RestfulBadRequestException('"Range" property should be numeric and higher than 0.');
+        throw new BadRequestException('"Range" property should be numeric and higher than 0.');
       }
       if ($request['range'] < $this->getRange()) {
         // If there is a valid range property in the request override the range.

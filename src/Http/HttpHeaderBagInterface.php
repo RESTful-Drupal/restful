@@ -7,6 +7,8 @@
 
 namespace Drupal\restful\Http;
 
+use \Drupal\restful\Exception\ServerConfigurationException;
+
 interface HttpHeaderBagInterface {
 
   /**
@@ -33,7 +35,7 @@ interface HttpHeaderBagInterface {
    * @param HttpHeaderInterface $header
    *   The header object or an associative array with the name and value.
    *
-   * @throws \RestfulServerConfigurationException
+   * @throws ServerConfigurationException
    */
   public function add(HttpHeaderInterface $header);
 

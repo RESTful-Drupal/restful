@@ -5,6 +5,8 @@
  * Contains \RestfulDataProviderDbQueryInterface
  */
 
+use Drupal\restful\Exception\BadRequestException;
+
 interface RestfulDataProviderDbQueryInterface {
 
   /**
@@ -21,7 +23,7 @@ interface RestfulDataProviderDbQueryInterface {
    * @return \SelectQuery
    *   The query object.
    *
-   * @throws RestfulBadRequestException
+   * @throws BadRequestException
    */
   public function getQueryCount();
 

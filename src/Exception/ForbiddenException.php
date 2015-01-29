@@ -2,10 +2,12 @@
 
 /**
  * @file
- * Contains RestfulForbiddenException
+ * Contains \Drupal\restful\Exception\ForbiddenException.
  */
 
-class RestfulForbiddenException extends RestfulException {
+namespace Drupal\restful\Exception;
+
+class ForbiddenException extends RestfulException {
 
   /**
    * Defines the HTTP error code.

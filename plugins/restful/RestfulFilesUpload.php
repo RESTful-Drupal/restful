@@ -6,6 +6,9 @@
  */
 
 use Drupal\restful\Authentication\AuthenticationManager;
+use Drupal\restful\Exception\BadRequestException;
+use Drupal\restful\Exception\ServiceUnavailableException;
+use Drupal\restful\Exception\UnauthorizedException;
 
 class RestfulFilesUpload extends \RestfulEntityBase {
 
@@ -58,7 +61,7 @@ class RestfulFilesUpload extends \RestfulEntityBase {
    */
   public function createEntity() {
     if (!$_FILES) {
-      throw new \RestfulBadRequestException('No files sent with the request.');
+      throw new BadRequestException('No files sent with the request.');
     }
 
     $ids = array();
@@ -98,13 +101,13 @@ class RestfulFilesUpload extends \RestfulEntityBase {
    * Defaults to authenticated user.
    */
   public function access() {
-    // The getAccount method may return a RestfulUnauthorizedException when an
+    // The getAccount method may return an UnauthorizedException when an
     // authenticated user cannot be found. Since this is called from the access
     // callback, not from the page callback we need to catch the exception.
     try {
       $account = $this->getAccount();
     }
-    catch (\RestfulUnauthorizedException $e) {
+    catch (UnauthorizedException $e) {
       // If a user is not found then load the anonymous user to check
       // permissions.
       $account = drupal_anonymous_user();
@@ -125,8 +128,8 @@ class RestfulFilesUpload extends \RestfulEntityBase {
    * @return stdClass
    *   The saved file object.
    *
-   * @throws \RestfulBadRequestException
-   * @throws \RestfulServiceUnavailable
+   * @throws BadRequestException
+   * @throws ServiceUnavailableException
    *
    * @see file_save_upload()
    */
@@ -158,12 +161,12 @@ class RestfulFilesUpload extends \RestfulEntityBase {
       case UPLOAD_ERR_INI_SIZE:
       case UPLOAD_ERR_FORM_SIZE:
         $message = format_string('The file %file could not be saved, because it exceeds %maxsize, the maximum allowed size for uploads.', array('%file' => $_FILES['files']['name'][$source], '%maxsize' => format_size(file_upload_max_size())));
-        throw new \RestfulBadRequestException($message);
+        throw new BadRequestException($message);
 
       case UPLOAD_ERR_PARTIAL:
       case UPLOAD_ERR_NO_FILE:
         $message = format_string('The file %file could not be saved, because the upload did not complete.', array('%file' => $_FILES['files']['name'][$source]));
-        throw new \RestfulBadRequestException($message);
+        throw new BadRequestException($message);
 
       case UPLOAD_ERR_OK:
         // Final check that this is a valid upload, if it isn't, use the
@@ -175,7 +178,7 @@ class RestfulFilesUpload extends \RestfulEntityBase {
       // Unknown error
       default:
         $message = format_string('The file %file could not be saved. An unknown error has occurred.', array('%file' => $_FILES['files']['name'][$source]));
-        throw new \RestfulServiceUnavailable($message);
+        throw new ServiceUnavailableException($message);
     }
 
     // Begin building file object.
@@ -242,7 +245,7 @@ class RestfulFilesUpload extends \RestfulEntityBase {
     $destination_scheme = file_uri_scheme($destination);
     if (!$destination_scheme || !file_stream_wrapper_valid_scheme($destination_scheme)) {
       $message = format_string('The file could not be uploaded, because the destination %destination is invalid.', array('%destination' => $destination));
-      throw new \RestfulServiceUnavailable($message);
+      throw new ServiceUnavailableException($message);
     }
 
     $file->source = $source;
@@ -255,7 +258,7 @@ class RestfulFilesUpload extends \RestfulEntityBase {
     // there's an existing file so we need to bail.
     if ($file->destination === FALSE) {
       $message = format_string('The file %source could not be uploaded because a file by that name already exists in the destination %directory.', array('%source' => $source, '%directory' => $destination));
-      throw new \RestfulServiceUnavailable($message);
+      throw new ServiceUnavailableException($message);
     }
 
     // Add in our check of the the file name length.
@@ -274,7 +277,7 @@ class RestfulFilesUpload extends \RestfulEntityBase {
         $message .= ' ' . array_pop($errors);
       }
 
-      throw new \RestfulServiceUnavailable($message);
+      throw new ServiceUnavailableException($message);
     }
 
     // Move uploaded files from PHP's upload_tmp_dir to Drupal's temporary
@@ -284,7 +287,7 @@ class RestfulFilesUpload extends \RestfulEntityBase {
     if (!drupal_move_uploaded_file($_FILES['files']['tmp_name'][$source], $file->uri)) {
       watchdog('file', 'Upload error. Could not move uploaded file %file to destination %destination.', array('%file' => $file->filename, '%destination' => $file->uri));
       $message = 'File upload error. Could not move uploaded file.';
-      throw new \RestfulServiceUnavailable($message);
+      throw new ServiceUnavailableException($message);
     }
 
     // Set the permissions on the new file.
@@ -307,6 +310,6 @@ class RestfulFilesUpload extends \RestfulEntityBase {
     }
 
     // Something went wrong, so throw a general exception.
-    throw new \RestfulServiceUnavailable('Unknown error has occurred.');
+    throw new ServiceUnavailableException('Unknown error has occurred.');
   }
 }

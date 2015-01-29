@@ -7,6 +7,7 @@
 
 namespace Drupal\restful\Formatter;
 
+use Drupal\restful\Exception\ServiceUnavailableException;
 use Drupal\restful\Plugin\formatter\FormatterInterface;
 use Drupal\restful\Plugin\FormatterPluginManager;
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
@@ -83,7 +84,7 @@ class FormatterManager implements FormatterManagerInterface {
       // Catch the exception and throw one of our own.
       $message = $e->getMessage();
     }
-    throw new \RestfulServiceUnavailable($message);
+    throw new ServiceUnavailableException($message);
   }
 
   /**

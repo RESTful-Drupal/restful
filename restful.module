@@ -7,6 +7,8 @@
 
 include_once __DIR__ . '/restful.entity.inc';
 
+use Drupal\restful\Exception\RestfulException;
+use Drupal\restful\Exception\ServiceUnavailableException;
 use Drupal\restful\Formatter\FormatterManager;
 use Drupal\restful\RestfulManager;
 
@@ -261,13 +263,13 @@ function restful_get_restful_handler($resource_name, $major_version = 1, $minor_
  * @return RestfulInterface
  *   The handler object if found, or NULL.
  *
- * @throws \RestfulException
+ * @throws RestfulException
  */
 function restful_get_restful_handler_by_name($plugin_name) {
   ctools_include('plugins');
   $plugin = ctools_get_plugins('restful', 'restful', $plugin_name);
   if (!$class = ctools_plugin_load_class('restful', 'restful', $plugin_name, 'class')) {
-    throw new \RestfulServiceUnavailable(format_string('RESTful plugin class (@plugin) was not found.', array('@plugin' => $plugin_name)));
+    throw new ServiceUnavailableException(format_string('RESTful plugin class (@plugin) was not found.', array('@plugin' => $plugin_name)));
   }
   $handler = new $class($plugin);
   // If the restful plugin needs authentication load the corresponding
@@ -362,7 +364,7 @@ function restful_menu_access_callback($resource_name, $version = NULL) {
       ->negotiate($manager->getRequest())
       ->access();
   }
-  catch (\RestfulException $e) {
+  catch (RestfulException $e) {
     // We can get here if the request method is not valid or if no resource can
     // be negotiated.
     return FALSE;
@@ -377,7 +379,7 @@ function restful_menu_access_callback($resource_name, $version = NULL) {
  * @param $version
  *   The version, prefixed with v (e.g. v1, v2.2).
  *
- * @throws RestfulServiceUnavailable
+ * @throws ServiceUnavailableException
  *
  * @return string
  *   JSON output with the result of the API call.
@@ -393,7 +395,7 @@ function restful_menu_process_callback($resource_name, $version = NULL) {
   list($major_version, $minor_version) = \RestfulBase::getVersionFromRequest();
   $handler = restful_get_restful_handler($resource_name, $major_version, $minor_version);
   if (!$handler instanceof \RestfulDataProviderInterface) {
-    throw new \RestfulServiceUnavailable(format_string('The selected plugin (@plugin) does not implement \RestfulDataProviderInterface.', array('@plugin' => $resource_name . ' v' . $major_version . '.' . $minor_version)));
+    throw new ServiceUnavailableException(format_string('The selected plugin (@plugin) does not implement \RestfulDataProviderInterface.', array('@plugin' => $resource_name . ' v' . $major_version . '.' . $minor_version)));
   }
 
   // Vary the response with the presence of the X-API-Version or Accept headers.
@@ -551,7 +553,7 @@ function restful_delivery($var = NULL, $method = 'format') {
     // formatting the output.
     drupal_add_http_header('Content-Type', $formatter_handler->getContentTypeHeader());
   }
-  catch (\RestfulException $e) {
+  catch (RestfulException $e) {
     // Handle if the formatter does not exist.
     drupal_add_http_header('Status', $e->getCode());
     echo $e->getMessage();
@@ -596,17 +598,17 @@ function restful_unprepared_delivery($var = NULL) {
 function _restful_get_json_from_menu_status(&$var) {
   switch ($var) {
     case MENU_NOT_FOUND:
-      $class_name = 'RestfulNotFoundException';
+      $class_name = '\Drupal\restful\Exception\NotFoundException';
       $message = 'Invalid URL path.';
       break;
 
     case MENU_ACCESS_DENIED:
-      $class_name = 'RestfulForbiddenException';
+      $class_name = '\Drupal\restful\Exception\ForbiddenException';
       $message = 'Access denied.';
       break;
 
     case MENU_SITE_OFFLINE:
-      $class_name = 'RestfulServiceUnavailable';
+      $class_name = '\Drupal\restful\Exception\ServiceUnavailable';
       $message = 'Site is offline.';
       break;
   }

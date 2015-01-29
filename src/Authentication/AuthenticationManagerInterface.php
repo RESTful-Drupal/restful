@@ -7,6 +7,8 @@
 
 namespace Drupal\restful\Authentication;
 
+use \Drupal\restful\Exception\UnauthorizedException;
+
 interface AuthenticationManagerInterface {
 
   /**
@@ -48,7 +50,7 @@ interface AuthenticationManagerInterface {
    * @param boolean $cache
    *   Boolean indicating if the resolved user should be cached for next calls.
    *
-   * @throws \RestfulUnauthorizedException
+   * @throws UnauthorizedException
    * @return \stdClass
    *   The user object.
    */

@@ -2,24 +2,26 @@
 
 /**
  * @file
- * Contains RestfulBadRequestException
+ * Contains \Drupal\restful\Exception\ServiceUnavailable.
  */
 
-class RestfulBadRequestException extends RestfulException {
+namespace Drupal\restful\Exception;
+
+class ServiceUnavailableException extends RestfulException {
 
   /**
    * Defines the HTTP error code.
    *
    * @var int
    */
-  protected $code = 400;
+  protected $code = 503;
 
   /**
    * Defines the description.
    *
    * @var string
    */
-  protected $description = 'Bad Request.';
+  protected $description = 'Service unavailable.';
 
   /**
    * Defines the problem instance.

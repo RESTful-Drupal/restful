@@ -6,6 +6,9 @@
  */
 
 use Drupal\restful\Authentication\AuthenticationManager;
+use Drupal\restful\Exception\BadRequestException;
+use Drupal\restful\Exception\ServerConfigurationException;
+use Drupal\restful\Exception\ServiceUnavailableException;
 
 abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \RestfulDataProviderDbQueryInterface, \RestfulDataProviderInterface {
 
@@ -158,7 +161,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
    * @param \SelectQuery $query
    *   The query object.
    *
-   * @throws \RestfulBadRequestException
+   * @throws BadRequestException
    *
    * @see \RestfulEntityBase::getQueryForList
    */
@@ -181,7 +184,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
    * @param \SelectQuery $query
    *   The query object.
    *
-   * @throws \RestfulBadRequestException
+   * @throws BadRequestException
    *
    * @see \RestfulEntityBase::getQueryForList
    */
@@ -209,7 +212,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
    * @param \SelectQuery $query
    *   The query object.
    *
-   * @throws \RestfulBadRequestException
+   * @throws BadRequestException
    *
    * @see \RestfulEntityBase::getQueryForList
    */
@@ -397,13 +400,13 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
 
     // No request was sent.
     if (!$save) {
-      throw new \RestfulBadRequestException('No values were sent with the request.');
+      throw new BadRequestException('No values were sent with the request.');
     }
 
     // If the original request is not empty, then illegal values are present.
     if (!empty($original_request)) {
       $error_message = format_plural(count($original_request), 'Property @names is invalid.', 'Property @names are invalid.', array('@names' => implode(', ', array_keys($original_request))));
-      throw new \RestfulBadRequestException($error_message);
+      throw new BadRequestException($error_message);
     }
 
     // Add the id column values into the record.
@@ -413,7 +416,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
 
     // Once the record is built, write it.
     if (!drupal_write_record($this->getTableName(), $record, $id_columns)) {
-      throw new \RestfulServiceUnavailable('Record could not be updated to the database.');
+      throw new ServiceUnavailableException('Record could not be updated to the database.');
     }
 
     // Clear the rendered cache before calling the view method.
@@ -463,13 +466,13 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
 
     // No request was sent.
     if (!$save) {
-      throw new \RestfulBadRequestException('No values were sent with the request.');
+      throw new BadRequestException('No values were sent with the request.');
     }
 
     // If the original request is not empty, then illegal values are present.
     if (!empty($original_request)) {
       $error_message = format_plural(count($original_request), 'Property @names is invalid.', 'Property @names are invalid.', array('@names' => implode(', ', array_keys($original_request))));
-      throw new \RestfulBadRequestException($error_message);
+      throw new BadRequestException($error_message);
     }
 
     // Once the record is built, write it and view it.
@@ -601,7 +604,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
     return array_map(function($id) use ($column) {
       $parts = explode(RestfulDataProviderDbQuery::COLUMN_IDS_SEPARATOR, $id);
       if (!isset($parts[$column])) {
-        throw new \RestfulServerConfigurationException('Invalid ID provided.');
+        throw new ServerConfigurationException('Invalid ID provided.');
       }
       return $parts[$column];
     }, $ids);

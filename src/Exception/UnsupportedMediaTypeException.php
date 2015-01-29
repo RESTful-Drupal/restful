@@ -2,10 +2,12 @@
 
 /**
  * @file
- * Contains RestfulUnsupportedMediaTypeException
+ * Contains \Drupal\restful\Exception\UnsupportedMediaTypeException.
  */
 
-class RestfulUnsupportedMediaTypeException extends Exception {
+namespace Drupal\restful\Exception;
+
+class UnsupportedMediaTypeException extends RestfulException {
 
   /**
    * Defines the HTTP error code.

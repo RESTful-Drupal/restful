@@ -39,20 +39,6 @@ files[] = includes/RestfulRateLimit.php
 files[] = includes/RestfulStaticCacheController.php
 files[] = includes/RestfulStaticCacheControllerInterface.php
 
-; Exceptions
-files[] = exceptions/RestfulBadRequestException.php
-files[] = exceptions/RestfulException.php
-files[] = exceptions/RestfulForbiddenException.php
-files[] = exceptions/RestfulFloodException.php
-files[] = exceptions/RestfulNotFoundException.php
-files[] = exceptions/RestfulNotImplementedException.php
-files[] = exceptions/RestfulServerConfigurationException.php
-files[] = exceptions/RestfulGoneException.php
-files[] = exceptions/RestfulServiceUnavailable.php
-files[] = exceptions/RestfulUnauthorizedException.php
-files[] = exceptions/RestfulUnsupportedMediaTypeException.php
-files[] = exceptions/RestfulUnprocessableEntityException.php
-
 ; Tests
 files[] = tests/RestfulAuthenticationTestCase.test
 files[] = tests/RestfulAutoCompleteTestCase.test

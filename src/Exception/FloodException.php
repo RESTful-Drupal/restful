@@ -2,10 +2,12 @@
 
 /**
  * @file
- * Contains RestfulFloodException
+ * Contains \Drupal\restful\Exception\FloodException.
  */
 
-class RestfulFloodException extends RestfulException {
+namespace Drupal\restful\Exception;
+
+class FloodException extends RestfulException {
 
   /**
    * Defines the HTTP error code.

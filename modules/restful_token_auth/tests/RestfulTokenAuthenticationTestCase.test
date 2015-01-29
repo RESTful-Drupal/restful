@@ -5,6 +5,9 @@
  * Contains RestfulTokenAuthenticationTestCase.
  */
 
+use Drupal\restful\Exception\BadRequestException;
+use Drupal\restful\Exception\UnauthorizedException;
+
 class RestfulTokenAuthenticationTestCase extends DrupalWebTestCase {
 
   public static function getInfo() {
@@ -55,7 +58,7 @@ class RestfulTokenAuthenticationTestCase extends DrupalWebTestCase {
       $handler->get($id);
       $this->fail('"Unauthorized" exception not thrown.');
     }
-    catch (\RestfulUnauthorizedException $e) {
+    catch (UnauthorizedException $e) {
       $this->pass('"Unauthorized" exception was thrown.');
     }
     catch (\Exception $e) {
@@ -67,7 +70,7 @@ class RestfulTokenAuthenticationTestCase extends DrupalWebTestCase {
       $handler->get($id, array('access_token' => 'invalid'));
       $this->fail('"Unauthorized" exception not thrown.');
     }
-    catch (\RestfulUnauthorizedException $e) {
+    catch (UnauthorizedException $e) {
       $this->pass('"Unauthorized" exception was thrown.');
     }
     catch (\Exception $e) {
@@ -121,7 +124,7 @@ class RestfulTokenAuthenticationTestCase extends DrupalWebTestCase {
       $handler->get('invalid');
       $this->fail('"Bad Request" exception not thrown.');
     }
-    catch (\RestfulBadRequestException $e) {
+    catch (BadRequestException $e) {
       $this->pass('"Bad Request" exception was thrown.');
     }
     catch (\Exception $e) {
