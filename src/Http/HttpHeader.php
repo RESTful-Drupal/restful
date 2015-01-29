@@ -73,6 +73,13 @@ class HttpHeader implements HttpHeaderInterface {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function getName() {
+    return $this->name;
+  }
+
+  /**
    * Returns the string version of the header.
    *
    * @return string

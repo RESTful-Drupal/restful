@@ -120,6 +120,48 @@ class Response implements ResponseInterface {
   );
 
   /**
+   * Constructor.
+   *
+   * @param mixed $content
+   *   The response content, see setContent()
+   * @param int $status
+   *   The response status code
+   * @param array $headers
+   *   An array of response headers
+   *
+   * @throws UnprocessableEntityException
+   *   When the HTTP status code is not valid
+   */
+  public function __construct($content = '', $status = 200, $headers = array()) {
+    $this->headers = new HttpHeaderBag($headers);
+    $this->setContent($content);
+    $this->setStatusCode($status);
+    $this->setProtocolVersion('1.0');
+    if (!$this->headers->has('Date')) {
+      $this->setDate(new \DateTime(NULL, new \DateTimeZone('UTC')));
+    }
+  }
+
+  /**
+   * Returns the Response as an HTTP string.
+   *
+   * The string representation of the Response is the same as the
+   * one that will be sent to the client only if the prepare() method
+   * has been called before.
+   *
+   * @return string
+   *   The Response as an HTTP string
+   *
+   * @see prepare()
+   */
+  public function __toString() {
+    return
+      sprintf('HTTP/%s %s %s', $this->version, $this->statusCode, $this->statusText) . "\r\n" .
+      $this->headers . "\r\n" .
+      $this->getContent();
+  }
+
+  /**
    * Is the response empty?
    *
    * @return bool
@@ -164,9 +206,6 @@ class Response implements ResponseInterface {
    *
    * @param Request $request
    *   A Request instance
-   *
-   * @return Response
-   *   The current response.
    */
   public function prepare(Request $request) {
     $headers = $this->headers;
@@ -185,10 +224,10 @@ class Response implements ResponseInterface {
       // Fix Content-Type
       $charset = $this->charset ?: 'UTF-8';
       if (!$headers->has('Content-Type')) {
-        $headers->add(HttpHeader::create('Content-Type', 'text/html; charset='.$charset));
+        $headers->add(HttpHeader::create('Content-Type', 'text/html; charset=' . $charset));
       } elseif (0 === stripos($headers->get('Content-Type'), 'text/') && false === stripos($headers->get('Content-Type'), 'charset')) {
         // add the charset
-        $headers->add(HttpHeader::create('Content-Type', $headers->get('Content-Type')->getValueString().'; charset='.$charset));
+        $headers->add(HttpHeader::create('Content-Type', $headers->get('Content-Type')->getValueString() . '; charset=' . $charset));
       }
       // Fix Content-Length
       if ($headers->has('Transfer-Encoding')) {
@@ -214,7 +253,6 @@ class Response implements ResponseInterface {
       $this->headers->add(HttpHeader::create('expires', -1));
     }
     $this->ensureIEOverSSLCompatibility($request);
-    return $this;
   }
 
 
@@ -225,8 +263,6 @@ class Response implements ResponseInterface {
    *
    * @param mixed $content Content that can be cast to string
    *
-   * @return Response
-   *
    * @throws InternalServerErrorException
    */
   public function setContent($content) {
@@ -234,7 +270,6 @@ class Response implements ResponseInterface {
       throw new InternalServerErrorException(sprintf('The Response content must be a string or object implementing __toString(), "%s" given.', gettype($content)));
     }
     $this->content = (string) $content;
-    return $this;
   }
 
   /**
@@ -250,12 +285,9 @@ class Response implements ResponseInterface {
    * Sets the HTTP protocol version (1.0 or 1.1).
    *
    * @param string $version The HTTP protocol version
-   *
-   * @return Response
    */
   public function setProtocolVersion($version) {
     $this->version = $version;
-    return $this;
   }
 
   /**
@@ -266,16 +298,44 @@ class Response implements ResponseInterface {
   public function getProtocolVersion() {
     return $this->version;
   }
+
+  /**
+   * Sends HTTP headers and content.
+   */
+  public function send() {
+    $this->sendHeaders();
+    $this->sendContent();
+
+    static::pageFooter();
+  }
+
+  /**
+   * Sends HTTP headers.
+   */
+  protected function sendHeaders() {
+    foreach ($this->headers as $key => $header) {
+      /** @var HttpHeader $header */
+      drupal_add_http_header($header->getName(), $header->getValueString());
+    }
+  }
+
+  /**
+   * Sends content for the current web response.
+   */
+  protected function sendContent() {
+    echo $this->content;
+  }
+
   /**
    * Sets the response status code.
    *
-   * @param int   $code HTTP status code
-   * @param mixed $text HTTP status text
+   * @param int $code
+   *   HTTP status code
+   * @param mixed $text
+   *   HTTP status text
    *
    * If the status text is NULL it will be automatically populated for the known
    * status codes and left empty otherwise.
-   *
-   * @return Response
    *
    * @throws UnprocessableEntityException When the HTTP status code is not valid
    */
@@ -286,14 +346,13 @@ class Response implements ResponseInterface {
     }
     if ($text === NULL) {
       $this->statusText = isset(self::$statusTexts[$code]) ? self::$statusTexts[$code] : '';
-      return $this;
+      return;
     }
     if ($text === FALSE) {
       $this->statusText = '';
-      return $this;
+      return;
     }
     $this->statusText = $text;
-    return $this;
   }
 
   /**
@@ -309,12 +368,9 @@ class Response implements ResponseInterface {
    * Sets the response charset.
    *
    * @param string $charset Character set
-   *
-   * @return Response
    */
   public function setCharset($charset) {
     $this->charset = $charset;
-    return $this;
   }
 
   /**
@@ -338,6 +394,32 @@ class Response implements ResponseInterface {
         $this->headers->remove('Cache-Control');
       }
     }
+  }
+
+  /**
+   * Sets the Date header.
+   *
+   * @param \DateTime $date
+   *   A \DateTime instance
+   */
+  public function setDate(\DateTime $date) {
+    $date->setTimezone(new \DateTimeZone('UTC'));
+    $this->headers->add(HttpHeader::create('Date', $date->format('D, d M Y H:i:s') . ' GMT'));
+  }
+
+  /**
+   * Performs end-of-request tasks.
+   *
+   * This function sets the page cache if appropriate, and allows modules to
+   * react to the closing of the page by calling hook_exit().
+   *
+   * This is just a wrapper around drupal_page_footer() so extending classes can
+   * override this method if necessary.
+   *
+   * @see drupal_page_footer().
+   */
+  protected static function pageFooter() {
+    drupal_page_footer();
   }
 
 }

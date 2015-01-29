@@ -19,6 +19,34 @@ class HttpHeaderBag implements HttpHeaderBagInterface {
   protected $values = array();
 
   /**
+   * Constructor
+   *
+   * @param array $headers
+   *   Array of key value pairs.
+   */
+  public function __construct($headers = array()) {
+    foreach ($headers as $key => $value) {
+      $header = HttpHeader::create($key, $value);
+      $this->values[$header->getId()] = $header;
+    }
+  }
+
+  /**
+   * Returns the header bag as a string.
+   *
+   * @return string
+   *   The string representation.
+   */
+  public function __toString() {
+    $headers = array();
+    foreach ($this->values as $key => $header) {
+      /** @var HttpHeader $header */
+      $headers[] = $header->__toString();
+    }
+    return implode("\r\n", $headers);
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function get($key) {

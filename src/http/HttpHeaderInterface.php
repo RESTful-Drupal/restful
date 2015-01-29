@@ -39,6 +39,13 @@ interface HttpHeaderInterface {
   public function getValueString();
 
   /**
+   * Gets the header name.
+   *
+   * @return string
+   */
+  public function getName();
+
+  /**
    * Sets the values.
    *
    * @param array $values
