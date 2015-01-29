@@ -2,10 +2,12 @@
 
 /**
  * @file
- * Contains \RestfulServerConfigurationException
+ * Contains \Drupal\restful\Exception\ServerConfigurationException.
  */
 
-class RestfulServerConfigurationException extends \RestfulException {
+namespace Drupal\restful\Exception;
+
+class ServerConfigurationException extends RestfulException {
 
   /**
    * Defines the HTTP error code.

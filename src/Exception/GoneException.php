@@ -2,10 +2,12 @@
 
 /**
  * @file
- * Contains RestfulGoneException
+ * Contains \Drupal\restful\Exception\GoneException.
  */
 
-class RestfulGoneException extends Exception {
+namespace Drupal\restful\Exception;
+
+class GoneException extends RestfulException {
 
   /**
    * Defines the HTTP error code.

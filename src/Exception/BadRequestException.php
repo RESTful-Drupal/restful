@@ -2,10 +2,12 @@
 
 /**
  * @file
- * Contains RestfulBadRequestException
+ * Contains \Drupal\restful\Exception\BadRequestException.
  */
 
-class RestfulBadRequestException extends RestfulException {
+namespace Drupal\restful\Exception;
+
+class BadRequestException extends RestfulException {
 
   /**
    * Defines the HTTP error code.

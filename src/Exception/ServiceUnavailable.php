@@ -2,10 +2,12 @@
 
 /**
  * @file
- * Contains RestfulServiceUnavailable
+ * Contains \Drupal\restful\Exception\ServiceUnavailable.
  */
 
-class RestfulServiceUnavailable extends RestfulException {
+namespace Drupal\restful\Exception;
+
+class ServiceUnavailable extends RestfulException {
 
   /**
    * Defines the HTTP error code.

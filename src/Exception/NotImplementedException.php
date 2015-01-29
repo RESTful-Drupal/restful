@@ -2,10 +2,12 @@
 
 /**
  * @file
- * Contains \RestfulNotImplementedException
+ * Contains \Drupal\restful\Exception\NotImplementedException.
  */
 
-class RestfulNotImplementedException extends \RestfulException {
+namespace Drupal\restful\Exception;
+
+class NotImplementedException extends RestfulException {
 
   /**
    * Defines the HTTP error code.

@@ -2,10 +2,12 @@
 
 /**
  * @file
- * Contains RestfulException
+ * Contains \Drupal\restful\Exception\RestfulException.
  */
 
-class RestfulException extends Exception {
+namespace Drupal\restful\Exception;
+
+class RestfulException extends \Exception {
 
   /**
    * Defines the instance resource.
