@@ -23,6 +23,17 @@ interface HttpHeaderBagInterface {
   public function get($key);
 
   /**
+   * Checks the existence of a header in the bag.
+   *
+   * @param string $key
+   *   The header ID or header name.
+   *
+   * @return bool
+   *   TRUE if the header is present. FALSE otherwise.
+   */
+  public function has($key);
+
+  /**
    * Returns all the headers set on the bag.
    *
    * @return array
@@ -38,5 +49,13 @@ interface HttpHeaderBagInterface {
    * @throws ServerConfigurationException
    */
   public function add(HttpHeaderInterface $header);
+
+  /**
+   * Removes a header from the bag.
+   *
+   * @param string $key
+   *   The header ID or the header name.
+   */
+  public function remove($key);
 
 }

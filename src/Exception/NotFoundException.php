@@ -17,13 +17,6 @@ class NotFoundException extends RestfulException {
   protected $code = 404;
 
   /**
-   * Defines the description.
-   *
-   * @var string
-   */
-  protected $description = 'Not Found.';
-
-  /**
    * Defines the problem instance.
    *
    * @var string
