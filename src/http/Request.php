@@ -196,6 +196,16 @@ class Request implements RequestInterface {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function isListRequest() {
+    if ($this->method != static::METHOD_GET) {
+      return FALSE;
+    }
+    return empty($this->path) || strpos($this->path, ',') !== FALSE;
+  }
+
+  /**
    * Parses the body string.
    *
    * @return array
@@ -277,16 +287,27 @@ class Request implements RequestInterface {
   }
 
   /**
-   * Gets the fully qualified URL with the query params.
-   *
-   * @return string
-   *   The URL.
+   * {@inheritdoc}
+   */
+  public function getPath() {
+    return $this->path;
+  }
+
+  /**
+   * {@inheritdoc}
    */
   public function href() {
     return url($this->path, array(
       'absolute' => TRUE,
       'query' => $this->query,
     ));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getHeaders() {
+    return $this->headers;
   }
 
   /**
