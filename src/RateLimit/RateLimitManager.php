@@ -7,6 +7,7 @@
 
 namespace Drupal\restful\RateLimit;
 
+use Drupal\restful\Exception\FloodException;
 use Drupal\restful\Plugin\RateLimitPluginManager;
 use Drupal\restful\Plugin\rate_limit\RateLimit;
 
@@ -94,7 +95,7 @@ class RateLimitManager implements RateLimitManagerInterface {
    * @param array $request
    *   The request array.
    *
-   * @throws \RestfulFloodException if the rate limit has been reached for the
+   * @throws FloodException if the rate limit has been reached for the
    * current request.
    */
   public function checkRateLimit($request) {
@@ -136,14 +137,14 @@ class RateLimitManager implements RateLimitManagerInterface {
         $rate_limit_entity->expiration = $now->add($period)->format('U');
         $rate_limit_entity->hits = 0;
         if ($limit == 0) {
-          $exception = new \RestfulFloodException('Rate limit reached');
+          $exception = new FloodException('Rate limit reached');
           $exception->setHeader('Retry-After', $new_period->format(\DateTime::RFC822));
           throw $exception;
         }
       }
       else {
         if ($rate_limit_entity->hits >= $limit) {
-          $exception = new \RestfulFloodException('Rate limit reached');
+          $exception = new FloodException('Rate limit reached');
           $exception->setHeader('Retry-After', $new_period->format(\DateTime::RFC822));
           throw $exception;
         }

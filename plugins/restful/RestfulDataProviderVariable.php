@@ -5,6 +5,8 @@
  * Contains \RestfulDataProviderDbQuery
  */
 
+use Drupal\restful\Exception\BadRequestException;
+
 abstract class RestfulDataProviderVariable extends \RestfulBase implements \RestfulDataProviderInterface {
   /**
    * Defines default sort for variable names.
@@ -78,7 +80,7 @@ abstract class RestfulDataProviderVariable extends \RestfulBase implements \Rest
    * @param array $variables
    *   An array keyed by variable name, valued by unserialized variable value.
    *
-   * @throws \RestfulBadRequestException
+   * @throws BadRequestException
    */
   protected function applyListPagination(array &$variables) {
     list($offset, $range) = $this->parseRequestForListPagination();
@@ -232,7 +234,7 @@ abstract class RestfulDataProviderVariable extends \RestfulBase implements \Rest
     }
     else {
       // We are in a create context with no name supplied.
-      throw new RestfulBadRequestException('No name property supplied');
+      throw new BadRequestException('No name property supplied');
     }
   }
 
@@ -260,7 +262,7 @@ abstract class RestfulDataProviderVariable extends \RestfulBase implements \Rest
           $public_field_value = $variable['value'];
         }
         else {
-          throw new RestfulBadRequestException("The only possible properties for the variable resource are 'name' and 'value'.");
+          throw new BadRequestException("The only possible properties for the variable resource are 'name' and 'value'.");
         }
       }
       // If no property is supplied, execute a callback, if given.

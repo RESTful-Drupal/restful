@@ -7,6 +7,8 @@
 
 namespace Drupal\restful\RateLimit;
 
+use \Drupal\restful\Exception\FloodException;
+
 interface RateLimitManagerInterface {
 
   /**
@@ -35,7 +37,7 @@ interface RateLimitManagerInterface {
    * @param array $request
    *   The request array.
    *
-   * @throws \RestfulFloodException if the rate limit has been reached for the
+   * @throws FloodException if the rate limit has been reached for the
    * current request.
    */
   public function checkRateLimit($request);

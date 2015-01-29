@@ -7,6 +7,8 @@
  * Helper class to deal with rendering entity view modes.
  */
 
+use Drupal\restful\Exception\ServerConfigurationException;
+
 class RestfulEntityViewMode {
 
   /**
@@ -51,7 +53,7 @@ class RestfulEntityViewMode {
    * @param array $field_map
    *   Associative array that maps field names to public properties.
    *
-   * @throws \RestfulServerConfigurationException
+   * @throws ServerConfigurationException
    *
    * @return array
    *   The public properties info array.
@@ -63,7 +65,7 @@ class RestfulEntityViewMode {
     $public_fields = array();
     foreach ($displayed_fields as $field_name) {
       if (empty($field_map[$field_name])) {
-        throw new \RestfulServerConfigurationException(format_string('No mapping was found for @field_name.', array(
+        throw new ServerConfigurationException(format_string('No mapping was found for @field_name.', array(
           '@field_name' => $field_name,
         )));
       }
@@ -77,7 +79,7 @@ class RestfulEntityViewMode {
       );
     }
     if (empty($public_fields)) {
-      throw new \RestfulServerConfigurationException('No fields shown rendering entity view mode.');
+      throw new ServerConfigurationException('No fields shown rendering entity view mode.');
     }
 
     return $public_fields;

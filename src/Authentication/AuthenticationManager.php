@@ -7,6 +7,7 @@
 
 namespace Drupal\restful\Authentication;
 
+use Drupal\restful\Exception\UnauthorizedException;
 use Drupal\restful\Plugin\AuthenticationPluginManager;
 
 class AuthenticationManager implements AuthenticationManagerInterface {
@@ -28,7 +29,7 @@ class AuthenticationManager implements AuthenticationManagerInterface {
   /**
    * Determines if authentication is optional.
    *
-   * If FALSE, then \RestfulUnauthorizedException is thrown if no authentication
+   * If FALSE, then UnauthorizedException is thrown if no authentication
    * was found. Defaults to FALSE.
    *
    * @var bool
@@ -100,7 +101,7 @@ class AuthenticationManager implements AuthenticationManagerInterface {
 
       if ($this->plugins->count() && !$this->getIsOptional()) {
         // User didn't authenticate against any provider, so we throw an error.
-        throw new \RestfulUnauthorizedException('Bad credentials');
+        throw new UnauthorizedException('Bad credentials');
       }
 
       // If the account could not be authenticated default to the global user.

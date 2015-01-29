@@ -5,6 +5,8 @@
  * Contains RestfulEntityValidatorTestCase.
  */
 
+use Drupal\restful\Exception\BadRequestException;
+
 class RestfulEntityValidatorTestCase extends RestfulCurlBaseTestCase {
 
   public static function getInfo() {
@@ -35,7 +37,7 @@ class RestfulEntityValidatorTestCase extends RestfulCurlBaseTestCase {
       $handler->post('', $request);
       $this->fail('Too short title did not cause a "Bad request" error.');
     }
-    catch (\RestfulBadRequestException $e) {
+    catch (BadRequestException $e) {
       $field_errors = $e->getFieldErrors();
       $this->pass('Too short title did not caused a "Bad request" error.');
     }

@@ -6,8 +6,10 @@
  *
  * This interface makes sure that the basic CRUD operations are defined. If your
  * data provider does not support any of the CRUD methods, implement and throw a
- * \RestfulNotImplementedException.
+ * NotImplementedException.
  */
+
+use Drupal\restful\Exception\BadRequestException;
 
 interface RestfulDataProviderInterface {
 
@@ -17,7 +19,7 @@ interface RestfulDataProviderInterface {
    * @return array
    *   Array of entities, as passed to RestfulEntityBase::viewEntity().
    *
-   * @throws RestfulBadRequestException
+   * @throws BadRequestException
    */
   public function index();
 

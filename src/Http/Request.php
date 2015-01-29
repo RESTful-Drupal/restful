@@ -6,6 +6,7 @@
  */
 
 namespace Drupal\restful\Http;
+use Drupal\restful\Exception\BadRequestException;
 
 /**
  * Deals with everything coming from the consumer.
@@ -138,7 +139,7 @@ class Request implements RequestInterface {
       $method = $headers->get('x-http-method-override')->getValueString();
     }
     if (!static::isValidMethod($method)) {
-      throw new \RestfulBadRequestException('Unrecognized HTTP method.');
+      throw new BadRequestException('Unrecognized HTTP method.');
     }
     return new static($path, $query, $method, $headers, $via_router, $csrf_token, $cookies, $files, $server);
   }

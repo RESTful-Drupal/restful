@@ -5,6 +5,8 @@
  * Contains RestfulSubResourcesCreateEntityTestCase.
  */
 
+use Drupal\restful\Exception\BadRequestException;
+
 class RestfulSubResourcesCreateEntityTestCase extends DrupalWebTestCase {
 
   /**
@@ -222,7 +224,7 @@ class RestfulSubResourcesCreateEntityTestCase extends DrupalWebTestCase {
       $handler->{$method}($path, $request);
       $this->fail('No exception thrown on validation fail on the parent.');
     }
-    catch (\RestfulBadRequestException $e) {
+    catch (BadRequestException $e) {
       $this->pass('Correct exception thrown on validation fail on the parent.');
     }
     catch (\Exception $e) {

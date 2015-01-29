@@ -8,6 +8,8 @@
 namespace Drupal\restful\Resource;
 
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
+use Drupal\restful\Exception\RestfulException;
+use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Http\Request;
 use Drupal\restful\Plugin\ResourcePluginManager;
 
@@ -83,7 +85,7 @@ class ResourceManager implements ResourceManagerInterface {
       return $this->pluginManager->createInstance($resource_name . '::' . $version[0] . '.' . $version[1]);
     }
     catch (PluginNotFoundException $e) {
-      throw new \RestfulServerConfigurationException($e->getMessage());
+      throw new ServerConfigurationException($e->getMessage());
     }
   }
 
@@ -100,7 +102,7 @@ class ResourceManager implements ResourceManagerInterface {
         return static::executeCallback($callback[0], array_merge($params, $callback[1]));
       }
       $callback_name = is_array($callback) ? $callback[1] : $callback;
-      throw new \RestfulException("Callback function: $callback_name does not exists.");
+      throw new ServerConfigurationException("Callback function: $callback_name does not exists.");
     }
 
     return call_user_func_array($callback, $params);

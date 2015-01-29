@@ -5,6 +5,8 @@
  * Contains \RestfulManager.
  */
 
+use Drupal\restful\Exception\UnauthorizedException;
+
 class RestfulManager {
 
   /**
@@ -36,11 +38,11 @@ class RestfulManager {
    *   use it. If set to TRUE, then all the existing authentication providers
    *   would be used until the user is authenticated. If user was not
    *   authenticated with any of the authentication providers, an
-   *   \RestfulUnauthorizedException exception would be thrown.
+   *   UnauthorizedException exception would be thrown.
    *   Defaults to empty array, which means no authentication is done by default.
    * - authentication_optional: If "authentication_types" and TRUE this determines
    *   if the resource may be accessed by an anonymous user when no provider was
-   *   able to authenticate the user. Otherwise a \RestfulUnauthorizedException
+   *   able to authenticate the user. Otherwise a UnauthorizedException
    *   exception would be thrown.
    * - hook_menu: Determines if RESTful module should declare the resource in its
    *   pwn hook_menu(). If FALSE, it is up to the implementing module to declare
@@ -230,7 +232,7 @@ class RestfulManager {
         try {
           $uid = $handler->getAccount(FALSE)->uid;
         }
-        catch (\RestfulUnauthorizedException $e) {
+        catch (UnauthorizedException $e) {
           // If no user could be found using the handler default to the logged in
           // user.
           $uid = $GLOBALS['user']->uid;

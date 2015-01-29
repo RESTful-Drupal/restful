@@ -6,6 +6,12 @@
  * Contains RestfulEntityBase.
  */
 
+use Drupal\restful\Exception\BadRequestException;
+use Drupal\restful\Exception\ForbiddenException;
+use Drupal\restful\Exception\RestfulException;
+use Drupal\restful\Exception\ServerConfigurationException;
+use Drupal\restful\Exception\UnprocessableEntityException;
+
 /**
  * An abstract implementation of RestfulEntityInterface.
  */
@@ -105,7 +111,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    * @return array
    *   Array of entities, as passed to RestfulEntityBase::viewEntity().
    *
-   * @throws RestfulBadRequestException
+   * @throws BadRequestException
    */
   public function getList() {
     $request = $this->getRequest();
@@ -412,7 +418,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
 
     if (!static::propertyIsField($property)) {
       // Property is not a field.
-      throw new \RestfulServerConfigurationException(format_string('@property is not a configurable field, so it cannot be processed using field API formatter', array('@property' => $property)));
+      throw new ServerConfigurationException(format_string('@property is not a configurable field, so it cannot be processed using field API formatter', array('@property' => $property)));
     }
 
     // Get values from the formatter.
@@ -444,11 +450,10 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    *   The wrapped property.
    * @param $property
    *   The public field name.
+   * @return string The target type of the referenced entity.
+   * The target type of the referenced entity.
    *
-   * @return string
-   *   The target type of the referenced entity.
-   *
-   * @throws \RestfulException
+   * @throws UnprocessableEntityException
    */
   protected function getTargetTypeFromEntityReference(\EntityMetadataWrapper $wrapper, $property) {
     $params = array('@property' => $property);
@@ -461,7 +466,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
         return 'taxonomy_term';
       }
 
-      throw new \RestfulException(format_string('Field @property is not an entity reference or taxonomy reference field.', $params));
+      throw new UnprocessableEntityException(format_string('Field @property is not an entity reference or taxonomy reference field.', $params));
     }
     else {
       // This is a property referencing another entity (e.g. the "uid" on the
@@ -471,7 +476,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
         return $info['type'];
       }
 
-      throw new \RestfulException(format_string('Property @property is not defined as reference in the EntityMetadataWrapper definition.', $params));
+      throw new UnprocessableEntityException(format_string('Property @property is not defined as reference in the EntityMetadataWrapper definition.', $params));
     }
   }
 
@@ -612,7 +617,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     if ($this->checkEntityAccess('create', $this->entityType, $entity) === FALSE) {
       // User does not have access to create entity.
       $params = array('@resource' => $this->getPluginKey('label'));
-      throw new RestfulForbiddenException(format_string('You do not have access to create a new @resource resource.', $params));
+      throw new ForbiddenException(format_string('You do not have access to create a new @resource resource.', $params));
     }
 
     $wrapper = entity_metadata_wrapper($this->entityType, $entity);
@@ -631,7 +636,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    *   be treated as NULL, or should be skipped. Defaults to FALSE, which will
    *   set the fields to NULL.
    *
-   * @throws RestfulBadRequestException
+   * @throws BadRequestException
    */
   protected function setPropertyValues(EntityMetadataWrapper $wrapper, $null_missing_fields = FALSE) {
     $request = $this->getRequest();
@@ -665,7 +670,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       }
 
       if (!$this->checkPropertyAccess('edit', $public_field_name, $wrapper->{$property_name}, $wrapper)) {
-        throw new \RestfulBadRequestException(format_string('Property @name cannot be set.', array('@name' => $public_field_name)));
+        throw new BadRequestException(format_string('Property @name cannot be set.', array('@name' => $public_field_name)));
       }
 
       $field_value = $this->propertyValuesPreprocess($property_name, $request[$public_field_name], $public_field_name);
@@ -677,13 +682,13 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
 
     if (!$save) {
       // No request was sent.
-      throw new \RestfulBadRequestException('No values were sent with the request');
+      throw new BadRequestException('No values were sent with the request');
     }
 
     if ($original_request) {
       // Request had illegal values.
       $error_message = format_plural(count($original_request), 'Property @names is invalid.', 'Property @names are invalid.', array('@names' => implode(', ', array_keys($original_request))));
-      throw new RestfulBadRequestException($error_message);
+      throw new BadRequestException($error_message);
     }
 
     // Allow changing the entity just before it's saved. For example, setting
@@ -958,7 +963,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    * @param \EntityMetadataWrapper $wrapper
    *   The wrapped entity.
    *
-   * @throws \RestfulBadRequestException
+   * @throws BadRequestException
    */
   public function entityValidate(\EntityMetadataWrapper $wrapper) {
     if (!module_exists('entity_validator')) {
@@ -996,11 +1001,11 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     if (empty($params['@fields'])) {
       // There was a validation error, but on non-public fields, so we need to
       // throw an exception, but can't say on which fields it occurred.
-      throw new \RestfulBadRequestException('Invalid value(s) sent with the request.');
+      throw new BadRequestException('Invalid value(s) sent with the request.');
     }
 
     $params['@fields'] = implode(',', $params['@fields']);
-    $e = new \RestfulBadRequestException(format_plural(count($map), 'Invalid value in field @fields.', 'Invalid values in fields @fields.', $params));
+    $e = new BadRequestException(format_plural(count($map), 'Invalid value in field @fields.', 'Invalid values in fields @fields.', $params));
     foreach ($errors as $property_name => $messages) {
       if (empty($map[$property_name])) {
         // Entity is not valid, but on a field not public.
@@ -1107,8 +1112,8 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    * @return bool
    *   TRUE if entity is valid, and user can access it.
    *
-   * @throws RestfulUnprocessableEntityException
-   * @throws RestfulForbiddenException
+   * @throws UnprocessableEntityException
+   * @throws ForbiddenException
    */
   protected function isValidEntity($op, $entity_id) {
     $entity_type = $this->entityType;
@@ -1119,14 +1124,14 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     );
 
     if (!$entity = entity_load_single($entity_type, $entity_id)) {
-      throw new RestfulUnprocessableEntityException(format_string('The entity ID @id for @resource does not exist.', $params));
+      throw new UnprocessableEntityException(format_string('The entity ID @id for @resource does not exist.', $params));
     }
 
     list(,, $bundle) = entity_extract_ids($entity_type, $entity);
 
     $resource_bundle = $this->getBundle();
     if ($resource_bundle && $bundle != $resource_bundle) {
-      throw new RestfulUnprocessableEntityException(format_string('The entity ID @id is not a valid @resource.', $params));
+      throw new UnprocessableEntityException(format_string('The entity ID @id is not a valid @resource.', $params));
     }
 
     if ($this->checkEntityAccess($op, $entity_type, $entity) === FALSE) {
@@ -1139,7 +1144,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       }
 
       // Entity was explicitly requested so we need to throw an exception.
-      throw new RestfulForbiddenException(format_string('You do not have access to entity ID @id of resource @resource', $params));
+      throw new ForbiddenException(format_string('You do not have access to entity ID @id of resource @resource', $params));
     }
 
     return TRUE;
@@ -1217,7 +1222,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
 
     if ($view_mode_info = $this->getPluginKey('view_mode')) {
       if (empty($view_mode_info['name'])) {
-        throw new \RestfulServerConfigurationException('View mode not found.');
+        throw new ServerConfigurationException('View mode not found.');
       }
       $view_mode_handler = new \RestfulEntityViewMode($this->getEntityType(), $this->getBundle());
 
@@ -1464,8 +1469,8 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    * @param mixed $id
    *   The provided ID.
    *
-   * @throws RestfulBadRequestException
-   * @throws RestfulUnprocessableEntityException
+   * @throws BadRequestException
+   * @throws UnprocessableEntityException
    *
    * @return int
    *   The entity ID.
@@ -1480,7 +1485,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     // We need to get the internal field/property from the public name.
     $public_fields = $this->getPublicFields();
     if ((!$public_field_info = $public_fields[$public_property_name]) || empty($public_field_info['property'])) {
-      throw new \RestfulBadRequestException(format_string('Cannot load an entity using the field "@name"', array(
+      throw new BadRequestException(format_string('Cannot load an entity using the field "@name"', array(
         '@name' => $public_property_name,
       )));
     }
@@ -1497,7 +1502,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     // Execute the query and gather the results.
     $result = $query->execute();
     if (empty($result[$this->getEntityType()])) {
-      throw new RestfulUnprocessableEntityException(format_string('The entity ID @id by @name for @resource cannot be loaded.', array(
+      throw new UnprocessableEntityException(format_string('The entity ID @id by @name for @resource cannot be loaded.', array(
         '@id' => $id,
         '@resource' => $this->getPluginKey('label'),
         '@name' => $public_property_name,

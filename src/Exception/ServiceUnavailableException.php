@@ -7,7 +7,7 @@
 
 namespace Drupal\restful\Exception;
 
-class ServiceUnavailable extends RestfulException {
+class ServiceUnavailableException extends RestfulException {
 
   /**
    * Defines the HTTP error code.
