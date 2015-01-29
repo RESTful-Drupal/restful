@@ -1,0 +1,28 @@
+<?php
+
+/**
+ * @file
+ * Contains RestfulColumnForQueryTestCase
+ */
+
+class RestfulColumnForQueryTestCase extends DrupalWebTestCase {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Column for query',
+      'description' => 'Test using joins and filters for the DB query data provider.',
+      'group' => 'RESTful',
+    );
+  }
+
+  function setUp() {
+    parent::setUp('restful_example');
+  }
+
+  /**
+   * Test using joins and filters for the DB query data provider.
+   */
+  function testColumnForQuery() {
+  }
+
+}
