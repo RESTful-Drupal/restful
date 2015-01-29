@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains RestfulExampleNodeTermsResource.
+ * Contains RestfulExampleNodeUserResource.
  */
 
-class RestfulExampleNodeTermsResource extends \RestfulDataProviderDbQuery implements \RestfulDataProviderDbQueryInterface {
+class RestfulExampleNodeUserResource extends \RestfulDataProviderDbQuery implements \RestfulDataProviderDbQueryInterface {
 
   /**
    * {@inheritdoc}
