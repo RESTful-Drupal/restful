@@ -10,6 +10,7 @@ include_once __DIR__ . '/restful.entity.inc';
 use Drupal\restful\Exception\RestfulException;
 use Drupal\restful\Exception\ServiceUnavailableException;
 use Drupal\restful\Formatter\FormatterManager;
+use Drupal\restful\Http\HttpHeader;
 use Drupal\restful\RestfulManager;
 
 /**
@@ -523,11 +524,23 @@ function restful_delivery($var = NULL, $method = 'format') {
   }
 
   if (is_int($var)) {
-    _restful_get_json_from_menu_status($var);
+    _restful_get_data_from_menu_status($var);
 
     // Adhere to the API Problem draft proposal.
-    drupal_add_http_header('Status', $var['status']);
-    drupal_add_http_header('Content-Type', 'application/problem+json; charset=utf-8');
+    $formatter_id = variable_get('restful_default_output_formatter', 'json');
+    // Get the data in the default output format.
+    $data = restful()
+      ->getFormatterManager()
+      ->negotiateFormatter(NULL, $formatter_id)
+      ->format($var);
+
+    $response = restful()->getResponse();
+    $response->setStatusCode($var['status']);
+    $response->getHeaders()->add(HttpHeader::create('Content-Type', 'application/problem+' . $formatter_id . '; charset=utf-8'));
+    $response->setContent($data);
+    $response->prepare(restful()->getRequest());
+    $response->send();
+    return;
   }
 
   // Get the formatter for the current resource.
@@ -595,7 +608,7 @@ function restful_unprepared_delivery($var = NULL) {
  * @param int $var
  *   The integer value of the menu status, passed by reference.
  */
-function _restful_get_json_from_menu_status(&$var) {
+function _restful_get_data_from_menu_status(&$var) {
   switch ($var) {
     case MENU_NOT_FOUND:
       $class_name = '\Drupal\restful\Exception\NotFoundException';

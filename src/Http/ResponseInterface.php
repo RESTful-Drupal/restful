@@ -13,17 +13,34 @@ use Drupal\restful\Exception\UnprocessableEntityException;
 interface ResponseInterface {
 
   /**
+   * Factory.
+   *
+   * @param mixed $content
+   *   The response content, see setContent()
+   * @param int $status
+   *   The response status code
+   * @param array $headers
+   *   An array of response headers
+   *
+   * @return Request
+   *   The created object.
+   *
+   * @throws UnprocessableEntityException
+   *   When the HTTP status code is not valid
+   */
+  public static function create($content = '', $status = 200, $headers = array());
+
+    /**
    * Prepares the Response before it is sent to the client.
    *
    * This method tweaks the Response to ensure that it is
    * compliant with RFC 2616. Most of the changes are based on
    * the Request that is "associated" with this Response.
    *
-   * @param Request $request
+   * @param RequestInterface $request
    *   A Request instance
    */
-  public function prepare(Request $request);
-
+  public function prepare(RequestInterface $request);
 
   /**
    * Sets the response content.

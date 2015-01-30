@@ -28,7 +28,7 @@ class HttpHeader implements HttpHeaderInterface {
    *
    * @var array
    */
-  protected $values;
+  protected $values = array();
 
   /**
    * Header extras.

@@ -41,12 +41,12 @@ class ResourceManager implements ResourceManagerInterface {
     $this->request = $request;
     $this->pluginManager = $manager ?: ResourcePluginManager::create();
     $options = array();
-    foreach ($manager->getDefinitions() as $plugin_id => $plugin_definition) {
+    foreach ($this->pluginManager->getDefinitions() as $plugin_id => $plugin_definition) {
       // Set the instance id to articles::1.5 (for example).
       $instance_id = $plugin_id . '::' . $plugin_definition['major_version'] . '.' . $plugin_definition['minor_version'];
       $options[$instance_id] = $plugin_definition;
     }
-    $this->plugins = new ResourcePluginCollection($manager, $options);
+    $this->plugins = new ResourcePluginCollection($this->pluginManager, $options);
   }
 
   /**

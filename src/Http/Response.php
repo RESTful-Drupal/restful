@@ -142,6 +142,13 @@ class Response implements ResponseInterface {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public static function create($content = '', $status = 200, $headers = array()) {
+    return new static($content, $status, $headers);
+  }
+
+  /**
    * Returns the Response as an HTTP string.
    *
    * The string representation of the Response is the same as the
@@ -197,16 +204,9 @@ class Response implements ResponseInterface {
   }
 
   /**
-   * Prepares the Response before it is sent to the client.
-   *
-   * This method tweaks the Response to ensure that it is
-   * compliant with RFC 2616. Most of the changes are based on
-   * the Request that is "associated" with this Response.
-   *
-   * @param Request $request
-   *   A Request instance
+   * {@inheritdoc}
    */
-  public function prepare(Request $request) {
+  public function prepare(RequestInterface $request) {
     $headers = $this->headers;
     if ($this->isInformational() || $this->isEmpty()) {
       $this->setContent(NULL);
@@ -252,13 +252,7 @@ class Response implements ResponseInterface {
 
 
   /**
-   * Sets the response content.
-   *
-   * Valid types are strings, numbers, NULL, and objects that implement a __toString() method.
-   *
-   * @param mixed $content Content that can be cast to string
-   *
-   * @throws InternalServerErrorException
+   * {@inheritdoc}
    */
   public function setContent($content) {
     if ($content !== NULL && !is_string($content) && !is_numeric($content) && !is_callable(array($content, '__toString'))) {
@@ -269,34 +263,28 @@ class Response implements ResponseInterface {
   }
 
   /**
-   * Gets the current response content.
-   *
-   * @return string Content
+   * {@inheritdoc}
    */
   public function getContent() {
     return $this->content;
   }
 
   /**
-   * Sets the HTTP protocol version (1.0 or 1.1).
-   *
-   * @param string $version The HTTP protocol version
+   * {@inheritdoc}
    */
   public function setProtocolVersion($version) {
     $this->version = $version;
   }
 
   /**
-   * Gets the HTTP protocol version.
-   *
-   * @return string The HTTP protocol version
+   * {@inheritdoc}
    */
   public function getProtocolVersion() {
     return $this->version;
   }
 
   /**
-   * Sends HTTP headers and content.
+   * {@inheritdoc}
    */
   public function send() {
     $this->sendHeaders();
@@ -323,17 +311,7 @@ class Response implements ResponseInterface {
   }
 
   /**
-   * Sets the response status code.
-   *
-   * @param int $code
-   *   HTTP status code
-   * @param mixed $text
-   *   HTTP status text
-   *
-   * If the status text is NULL it will be automatically populated for the known
-   * status codes and left empty otherwise.
-   *
-   * @throws UnprocessableEntityException When the HTTP status code is not valid
+   * {@inheritdoc}
    */
   public function setStatusCode($code, $text = NULL) {
     $this->statusCode = $code = (int) $code;
@@ -352,36 +330,28 @@ class Response implements ResponseInterface {
   }
 
   /**
-   * Retrieves the status code for the current web response.
-   *
-   * @return int Status code
+   * {@inheritdoc}
    */
   public function getStatusCode() {
     return $this->statusCode;
   }
 
   /**
-   * Sets the response charset.
-   *
-   * @param string $charset Character set
+   * {@inheritdoc}
    */
   public function setCharset($charset) {
     $this->charset = $charset;
   }
 
   /**
-   * Retrieves the response charset.
-   *
-   * @return string Character set
+   * {@inheritdoc}
    */
   public function getCharset() {
     return $this->charset;
   }
 
   /**
-   * Get the headers bag.
-   *
-   * @return HttpHeaderBag
+   * {@inheritdoc}
    */
   public function getHeaders() {
     return $this->headers;
@@ -402,10 +372,7 @@ class Response implements ResponseInterface {
   }
 
   /**
-   * Sets the Date header.
-   *
-   * @param \DateTime $date
-   *   A \DateTime instance
+   * {@inheritdoc}
    */
   public function setDate(\DateTime $date) {
     $date->setTimezone(new \DateTimeZone('UTC'));

@@ -59,7 +59,9 @@ class HttpHeaderBag implements HttpHeaderBagInterface {
     if (array_key_exists($key, $this->values)) {
       return $this->values[$key];
     }
-    return NULL;
+    // Return a NULL object on which you can still call the HttpHeaderInterface
+    // methods.
+    return HttpHeaderNull::create(NULL, NULL);
   }
 
   /**

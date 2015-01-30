@@ -13,7 +13,7 @@ function restful_admin_settings($form_state) {
     '#title' => t('Default formatter'),
     '#description' => t('Determine the default formatter that would be used.'),
     '#options' => array(),
-    '#default_value' => variable_get('restful_default_output_formatter', 'hal_json'),
+    '#default_value' => variable_get('restful_default_output_formatter', 'json'),
     '#required' => TRUE,
   );
 

@@ -60,7 +60,7 @@ class RestfulManager {
    *
    * @param RequestInterface $request
    */
-  public function setRequest($request) {
+  public function setRequest(RequestInterface $request) {
     $this->request = $request;
   }
 
@@ -78,7 +78,7 @@ class RestfulManager {
    *
    * @param ResponseInterface $response
    */
-  public function setResponse($response) {
+  public function setResponse(ResponseInterface $response) {
     $this->response = $response;
   }
 
@@ -96,7 +96,7 @@ class RestfulManager {
    *
    * @param ResourceManagerInterface $resourceManager
    */
-  public function setResourceManager($resourceManager) {
+  public function setResourceManager(ResourceManagerInterface $resourceManager) {
     $this->resourceManager = $resourceManager;
   }
 
@@ -114,7 +114,7 @@ class RestfulManager {
    *
    * @param FormatterManagerInterface $formatterManager
    */
-  public function setFormatterManager($formatterManager) {
+  public function setFormatterManager(FormatterManagerInterface $formatterManager) {
     $this->formatterManager = $formatterManager;
   }
 
@@ -140,11 +140,11 @@ class RestfulManager {
     // TODO: Implement the response class.
     $response = Response::create();
     // TODO: Implement the ResourceManager class.
-    $resource_manager = ResourceManager::create($request);
+    $resource_manager = new ResourceManager($request);
     // TODO: Make the formatter manager independent from the resource plugin.
     $formatter_manager = new FormatterManager();
 
-    return static($request, $response, $resource_manager, $formatter_manager);
+    return new static($request, $response, $resource_manager, $formatter_manager);
   }
 
   /**
