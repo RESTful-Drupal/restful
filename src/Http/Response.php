@@ -243,7 +243,7 @@ class Response implements ResponseInterface {
       $this->setProtocolVersion('1.1');
     }
     // Check if we need to send extra expire info headers
-    if ('1.0' == $this->getProtocolVersion() && 'no-cache' == $this->headers->get('Cache-Control')->getValueString()) {
+    if ($this->getProtocolVersion() == '1.0' && $this->headers->get('Cache-Control')->getValueString() == 'no-cache') {
       $this->headers->add(HttpHeader::create('pragma', 'no-cache'));
       $this->headers->add(HttpHeader::create('expires', -1));
     }
@@ -301,6 +301,7 @@ class Response implements ResponseInterface {
       /** @var HttpHeader $header */
       drupal_add_http_header($header->getName(), $header->getValueString());
     }
+    drupal_add_http_header('Status', $this->getStatusCode());
   }
 
   /**
@@ -364,7 +365,7 @@ class Response implements ResponseInterface {
    */
   protected function ensureIEOverSSLCompatibility(Request $request) {
     $server_info = $request->getServer();
-    if (false !== stripos($this->headers->get('Content-Disposition')->getValueString(), 'attachment') && preg_match('/MSIE (.*?);/i', $server_info['HTTP_USER_AGENT'], $match) == 1 && true === $request->isSecure()) {
+    if (stripos($this->headers->get('Content-Disposition')->getValueString(), 'attachment') !== FALSE && preg_match('/MSIE (.*?);/i', $server_info['HTTP_USER_AGENT'], $match) == 1 && $request->isSecure() === TRUE) {
       if (intval(preg_replace("/(MSIE )(.*?);/", "$2", $match[0])) < 9) {
         $this->headers->remove('Cache-Control');
       }

@@ -394,7 +394,7 @@ class Request implements RequestInterface {
       return in_array(strtolower(current(explode(',', $proto))), array('https', 'on', 'ssl', '1'));
     }
     $https = $this->server['HTTPS'];
-    return !empty($https) && 'off' !== strtolower($https);
+    return !empty($https) && strtolower($https) !== 'off';
   }
 
 }

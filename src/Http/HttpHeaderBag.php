@@ -9,7 +9,7 @@ namespace Drupal\restful\Http;
 
 use \Drupal\restful\Exception\ServerConfigurationException;
 
-class HttpHeaderBag implements HttpHeaderBagInterface {
+class HttpHeaderBag implements HttpHeaderBagInterface, \Iterator {
 
   /**
    * The header objects keyed by ID.
@@ -68,7 +68,7 @@ class HttpHeaderBag implements HttpHeaderBagInterface {
    * {@inheritdoc}
    */
   public function has($key) {
-    return !!$this->get($key);
+    return !empty($this->values[$key]);
   }
 
   /**
@@ -114,6 +114,42 @@ class HttpHeaderBag implements HttpHeaderBagInterface {
       }
     }
     unset($this->values[$key]);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function current() {
+    return current($this->values);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function next() {
+    return next($this->values);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function key() {
+    return key($this->values);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function valid() {
+    $key = key($this->values);
+    return $key !== NULL && $key !== FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function rewind() {
+    return reset($this->values);
   }
 
 }
