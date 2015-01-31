@@ -69,7 +69,7 @@ class HttpHeader implements HttpHeaderInterface {
     $parts = array();
     $parts[] = implode(', ', $this->values);
     $parts[] = $this->extras;
-    return implode('; ', $parts);
+    return implode('; ', array_filter($parts));
   }
 
   /**

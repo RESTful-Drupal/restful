@@ -133,6 +133,13 @@ class Request implements RequestInterface {
   private $parsedBody;
 
   /**
+   * Store application data as part of the request.
+   *
+   * @var array
+   */
+  protected $applicationData = array();
+
+  /**
    * Constructor.
    *
    * Parses the URL and the query params. It also uses input:// to get the body.
@@ -312,6 +319,10 @@ class Request implements RequestInterface {
    * {@inheritdoc}
    */
   public function getPath() {
+    // Remove the restful prefix from the beginning of the path.
+    if (strpos($this->path, variable_get('restful_hook_menu_base_path', 'api')) !== FALSE) {
+      return substr($this->path, strlen(variable_get('restful_hook_menu_base_path', 'api')) + 1);
+    }
     return $this->path;
   }
 
@@ -384,6 +395,20 @@ class Request implements RequestInterface {
    */
   public function getServer() {
     return $this->server;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setApplicationData($key, $value) {
+    $this->applicationData[$key] = $value;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getApplicationData($key) {
+    return $this->applicationData[$key];
   }
 
   /**

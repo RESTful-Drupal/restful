@@ -336,7 +336,13 @@ function restful() {
   if (isset($manager)) {
     return $manager;
   }
-  $manager = xautoload()->restfulManager;
+  try {
+    $manager = xautoload()->restfulManager;
+  }
+  catch (\Exception $e) {
+    $manager = RestfulManager::createFromGlobals();
+    xautoload()->getServiceContainer()->set('restfulManager', $manager);
+  }
   return $manager;
 }
 
@@ -352,9 +358,7 @@ function restful() {
  *   TRUE if user is allowed to access resource.
  */
 function restful_menu_access_callback($resource_name, $version = NULL) {
-  $manager = RestfulManager::createFromGlobals();
-  xautoload()->getServiceContainer()->set('restfulManager', $manager);
-  $resource_manager = $manager->getResourceManager();
+  $resource_manager = restful()->getResourceManager();
   if (!$versions = $resource_manager->getVersionFromRequest()) {
     // No version could be found.
     return FALSE;
@@ -362,7 +366,7 @@ function restful_menu_access_callback($resource_name, $version = NULL) {
 
   try {
     return $resource_manager
-      ->negotiate($manager->getRequest())
+      ->negotiate(restful()->getRequest())
       ->access();
   }
   catch (RestfulException $e) {

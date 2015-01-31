@@ -65,8 +65,8 @@ class ResourceManager implements ResourceManagerInterface {
     }
 
     // If there is no version in the URL check the header.
-    if ($api_version_header = $this->request->getHeaders()->get('x-api-version')) {
-      $version =  $this->parseVersionString($api_version_header->getValueString(), $resource_name);
+    if ($version_string = $this->request->getHeaders()->get('x-api-version')->getValueString()) {
+      $version =  $this->parseVersionString($version_string, $resource_name);
       return $version;
     }
 

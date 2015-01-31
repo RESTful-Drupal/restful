@@ -121,6 +121,27 @@ interface RequestInterface {
   public function getServer();
 
   /**
+   * Sets an object in the application data store.
+   *
+   * @param string $key
+   *   Identifier.
+   * @param mixed $value
+   *   The data to store as part of the request.
+   */
+  public function setApplicationData($key, $value);
+
+  /**
+   * Gets an object from the application data store.
+   *
+   * @param string $key
+   *   Identifier.
+   *
+   * @return mixed
+   *   The data stored as part of the request.
+   */
+  public function getApplicationData($key);
+
+  /**
    * Checks whether the request is secure or not.
    *
    * This method can read the client port from the "X-Forwarded-Proto" header

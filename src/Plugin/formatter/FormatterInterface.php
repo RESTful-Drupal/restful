@@ -7,7 +7,9 @@
 
 namespace Drupal\restful\Plugin\formatter;
 
-interface FormatterInterface {
+use Drupal\Component\Plugin\PluginInspectionInterface;
+
+interface FormatterInterface extends PluginInspectionInterface {
 
 
   /**
