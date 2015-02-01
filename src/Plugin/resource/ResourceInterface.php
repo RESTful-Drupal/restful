@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains \Drupal\restful\Plugin\Resource\ResourceInterface.
+ * Contains \Drupal\restful\Plugin\resource\ResourceInterface.
  */
 
-namespace Drupal\restful\Plugin\Resource;
+namespace Drupal\restful\Plugin\resource;
 
 use Drupal\Component\Plugin\PluginInspectionInterface;
 

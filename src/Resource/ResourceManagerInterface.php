@@ -52,4 +52,18 @@ interface ResourceManagerInterface {
    */
   public static function executeCallback($callback, array $params = array());
 
+  /**
+   * Return the last version for a given resource.
+   *
+   * @param string $resource_name
+   *   The name of the resource.
+   * @param int $major_version
+   *   Get the last version for this major version. If NULL the last major
+   *   version for the resource will be used.
+   *
+   * @return array
+   *   Array containing the major_version and minor_version.
+   */
+  public function getResourceLastVersion($resource_name, $major_version = NULL);
+
 }

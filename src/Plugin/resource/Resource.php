@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains \Drupal\restful\Plugin\Resource\Resource.
+ * Contains \Drupal\restful\Plugin\resource\Resource.
  */
 
-namespace Drupal\restful\Plugin\Resource;
+namespace Drupal\restful\Plugin\resource;
 
 use Drupal\Component\Plugin\PluginBase;
 
@@ -14,7 +14,7 @@ abstract class Resource extends PluginBase implements ResourceInterface {
   /**
    * The field definition object.
    *
-   * @var ResourceFields
+   * @var ResourceFieldCollection
    */
   protected $fieldDefinitions;
 

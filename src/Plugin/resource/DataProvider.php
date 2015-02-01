@@ -2,9 +2,9 @@
 
 /**
  * @file
- * Contains \Drupal\restful\Plugin\Resource\DataProvider.
+ * Contains \Drupal\restful\Plugin\resource\DataProvider.
  */
 
-namespace Drupal\restful\Plugin\Resource;
+namespace Drupal\restful\Plugin\resource;
 
 class DataProvider implements DataProviderInterface {}
