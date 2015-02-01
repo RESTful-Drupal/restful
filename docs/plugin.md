@@ -52,6 +52,8 @@ resource.
 If you need even more flexibility, you can use the `'callback'` key to name a
 custom function to compute the field data.
 
+For the DB query data provider, in case you want to filter a column of a query
+with joins, see [this](https://github.com/RESTful-Drupal/restful/blob/7.x-1.x/modules/restful_example/plugins/restful/db_query/node_user/1.0/RestfulExampleNodeUserResource.class.php) example.
 
 ## Defining a view mode
 You can leverage Drupal core's view modes to render an entity and expose it as a
@@ -195,9 +197,9 @@ public function publicFieldsInfo() {
 }
 ```
 
-Note that when you use the ``resource`` property, behind the scenes RESTful  
-initializes a second handler and calls that resource. In order to pass information  
-to the second handler (e.g. the access token), we pipe the original request  
+Note that when you use the ``resource`` property, behind the scenes RESTful
+initializes a second handler and calls that resource. In order to pass information
+to the second handler (e.g. the access token), we pipe the original request
 array with some parameters removed. If you need to strip further parameters you can
 override ``\RestfulBase::getRequestForSubRequest``.
 
