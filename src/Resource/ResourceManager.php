@@ -8,9 +8,8 @@
 namespace Drupal\restful\Resource;
 
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
-use Drupal\restful\Exception\RestfulException;
 use Drupal\restful\Exception\ServerConfigurationException;
-use Drupal\restful\Http\Request;
+use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\ResourcePluginManager;
 
 class ResourceManager implements ResourceManagerInterface {
@@ -18,7 +17,7 @@ class ResourceManager implements ResourceManagerInterface {
   /**
    * The request object.
    *
-   * @var Request
+   * @var RequestInterface
    */
   protected $request;
 
@@ -32,12 +31,12 @@ class ResourceManager implements ResourceManagerInterface {
   /**
    * Constructor for ResourceManager.
    *
-   * @param Request $request
+   * @param RequestInterface $request
    *   The request object.
    * @param ResourcePluginManager $manager
    *   The plugin manager.
    */
-  public function __construct(Request $request, ResourcePluginManager $manager = NULL) {
+  public function __construct(RequestInterface $request, ResourcePluginManager $manager = NULL) {
     $this->request = $request;
     $this->pluginManager = $manager ?: ResourcePluginManager::create();
     $options = array();
@@ -45,6 +44,7 @@ class ResourceManager implements ResourceManagerInterface {
       // Set the instance id to articles::1.5 (for example).
       $instance_id = $plugin_id . '::' . $plugin_definition['major_version'] . '.' . $plugin_definition['minor_version'];
       $options[$instance_id] = $plugin_definition;
+      $options['request'] = $request;
     }
     $this->plugins = new ResourcePluginCollection($this->pluginManager, $options);
   }

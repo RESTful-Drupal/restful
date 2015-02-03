@@ -7,4 +7,4 @@
 
 namespace Drupal\restful\Plugin\resource;
 
-interface DataProviderInterface {}
+interface DataProviderInterface extends CrudInterface {}

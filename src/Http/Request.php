@@ -235,9 +235,7 @@ class Request implements RequestInterface {
   }
 
   /**
-   * Parses the body string.
-   *
-   * @return array
+   * {@inheritdoc}
    */
   public function getParsedBody() {
     if ($this->parsedBody) {

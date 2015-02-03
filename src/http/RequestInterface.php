@@ -69,6 +69,13 @@ interface RequestInterface {
   public function isListRequest();
 
   /**
+   * Parses the body string.
+   *
+   * @return array
+   */
+  public function getParsedBody();
+
+  /**
    * Gets the request path.
    *
    * @return string
