@@ -94,17 +94,13 @@ abstract class Resource extends PluginBase implements ResourceInterface {
    */
   public function process() {
     $path = $this->getPath();
-    // TODO: Throw exception from getControllerFromPath() method.
-    if (!$method = $this->getControllerFromPath($path)) {
-      throw new NotImplementedException(sprintf('There is no handler for "%s" on the path: %s', $this->getRequest()->getMethod(), $path));
-    }
 
     // Now check if there is access for this method on this path.
     // TODO: Move this inside the $method callback.
     // TODO: This is the method the ResourceEntity uses to perform entity access checks.
-    $this->access($method, $path);
+    // $this->access($method, $path);
 
-    return ResourceManager::executeCallback($method, array($path));
+    return ResourceManager::executeCallback($this->getControllerFromPath($path), array($path));
   }
 
   /**
@@ -207,13 +203,16 @@ abstract class Resource extends PluginBase implements ResourceInterface {
   /**
    * Return the controller from a given path.
    *
+   * @return callable
+   *   A callable as expected by ResourceManager::executeCallback.
+   *
    * @throws BadRequestException
    * @throws ForbiddenException
    * @throws GoneException
+   * @throws NotImplementedException
+   * @throws ServerConfigurationException
    *
-   * @return string
-   *   The appropriate method to call.
-   *
+   * @see ResourceManager::executeCallback().
    */
   protected function getControllerFromPath() {
     $path = $this->getPath();
@@ -249,7 +248,18 @@ abstract class Resource extends PluginBase implements ResourceInterface {
         }
         $selected_controller = $selected_controller['callback'];
       }
+
+      // Create the callable from the method string.
+      if (!ResourceManager::isValidCallback($selected_controller)) {
+        // This means that the provided value means to be a public method on the
+        // current class.
+        $selected_controller = array($this, $selected_controller);
+      }
       break;
+    }
+
+    if (empty($selected_controller)) {
+      throw new NotImplementedException(sprintf('There is no handler for "%s" on the path: %s', $this->getRequest()->getMethod(), $path));
     }
 
     return $selected_controller;

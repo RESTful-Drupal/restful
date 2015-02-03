@@ -14,10 +14,10 @@ interface ResourceInterface extends PluginInspectionInterface {
   /**
    * Get the request object.
    *
-   * @return RequestInterface
+   * @return \Drupal\restful\Http\RequestInterface
    *   The request object.
    *
-   * @throws ServerConfigurationException
+   * @throws \Drupal\restful\Exception\ServerConfigurationException
    */
   public function getRequest();
 
@@ -35,9 +35,9 @@ interface ResourceInterface extends PluginInspectionInterface {
    * @return array
    *   An structured array with the response data.
    *
-   * @throws NotImplementedException
+   * @throws \Drupal\restful\Exception\NotImplementedException
    *   If no controller can be found.
-   * @throws ForbiddenException
+   * @throws \Drupal\restful\Exception\ForbiddenException
    *   If access is denied for the operation.
    */
   public function process();
@@ -65,6 +65,10 @@ interface ResourceInterface extends PluginInspectionInterface {
    *   the path as the key and an array of key values as its value. That array
    *   of key values contains the HTTP method as the key and an array with the
    *   callback information as the value.
+   *
+   *   The callback can be anything that ResourceManager::executeCallback
+   *   accepts or a string indicating a public method in the resource plugin
+   *   class.
    *
    * @code{
    *   array(

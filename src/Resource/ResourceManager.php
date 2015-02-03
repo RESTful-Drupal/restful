@@ -109,6 +109,19 @@ class ResourceManager implements ResourceManagerInterface {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public static function isValidCallback($callback) {
+    if (!is_callable($callback)) {
+      if (is_array($callback) && count($callback) == 2 && is_array($callback[1])) {
+        return static::isValidCallback($callback[0]);
+      }
+      return FALSE;
+    }
+    return TRUE;
+  }
+
+  /**
    * Get the resource name and version from the page arguments in the router.
    *
    * @param string $path
