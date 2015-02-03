@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains \Drupal\restful\Plugin\resource\ResourceFieldCollection.
+ * Contains \Drupal\restful\Plugin\resource\Field\ResourceFieldCollection.
  */
 
-namespace Drupal\restful\Plugin\resource;
+namespace Drupal\restful\Plugin\resource\Field;
 
 class ResourceFieldCollection implements ResourceFieldCollectionInterface {
 

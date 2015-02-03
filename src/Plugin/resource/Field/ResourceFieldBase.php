@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains \Drupal|restful\Plugin\resource\ResourceFieldBase.
+ * Contains \Drupal|restful\Plugin\resource\Field\ResourceFieldBase.
  */
 
-namespace Drupal\restful\Plugin\resource;
+namespace Drupal\restful\Plugin\resource\Field;
 
 use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Http\Request;

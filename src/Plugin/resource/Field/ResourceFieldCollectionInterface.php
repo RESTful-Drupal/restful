@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains \Drupal\restful\Plugin\resource\ResourceFieldCollectionInterface.
+ * Contains \Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface.
  */
 
-namespace Drupal\restful\Plugin\resource;
+namespace Drupal\restful\Plugin\resource\Field;
 
 interface ResourceFieldCollectionInterface extends \Iterator, \Countable{
 

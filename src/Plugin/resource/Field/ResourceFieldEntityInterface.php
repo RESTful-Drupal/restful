@@ -2,12 +2,10 @@
 
 /**
  * @file
- * Contains \Drupal\restful\Plugin\resource\ResourceFieldEntityInterface
+ * Contains \Drupal\restful\Plugin\resource\Field\ResourceFieldEntityInterface
  */
 
-namespace Drupal\restful\Plugin\resource;
-
-use Drupal\restful\Exception\ServerConfigurationException;
+namespace Drupal\restful\Plugin\resource\Field;
 
 interface ResourceFieldEntityInterface extends ResourceFieldInterface {
 
