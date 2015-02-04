@@ -32,7 +32,7 @@ before_script:
 
   # Download entity validator.
   - cd sites/all/modules
-  - git clone https://github.com/Gizra/entity_validator.git
+  - git clone https://github.com/Gizra/entity_validator.git --branch 7.x-1.x
 #  - drush dl entity_validator --dev --yes
 
   # Patch Entity API.
