@@ -56,6 +56,16 @@ abstract class Resource extends PluginBase implements ResourceInterface {
   protected $fieldDefinitions;
 
   /**
+   * Data provider factory.
+   *
+   * @return DataProviderInterface
+   *   The data provider for this resource.
+   *
+   * @throws NotImplementedException
+   */
+  abstract protected function dataProviderFactory();
+
+  /**
    * {@inheritdoc}
    */
   public function getRequest() {
@@ -85,7 +95,34 @@ abstract class Resource extends PluginBase implements ResourceInterface {
   /**
    * {@inheritdoc}
    */
-  public function __construct(ResourceFieldCollectionInterface $field_definitions) {
+  public function getFieldDefinitions() {
+    return $this->fieldDefinitions;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDataProvider() {
+    if (isset($this->dataProvider)) {
+      return $this->dataProvider;
+    }
+    return $this->dataProviderFactory();
+  }
+
+  /**
+   * Constructs a Drupal\Component\Plugin\PluginBase object.
+   *
+   * @param array $configuration
+   *   A configuration array containing information about the plugin instance.
+   * @param string $plugin_id
+   *   The plugin_id for the plugin instance.
+   * @param mixed $plugin_definition
+   *   The plugin implementation definition.
+   * @param ResourceFieldCollectionInterface $field_definitions
+   *   The field definitions.
+   */
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, ResourceFieldCollectionInterface $field_definitions) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->fieldDefinitions = $field_definitions;
   }
 
@@ -94,11 +131,6 @@ abstract class Resource extends PluginBase implements ResourceInterface {
    */
   public function process() {
     $path = $this->getPath();
-
-    // Now check if there is access for this method on this path.
-    // TODO: Move this inside the $method callback.
-    // TODO: This is the method the ResourceEntity uses to perform entity access checks.
-    // $this->access($method, $path);
 
     return ResourceManager::executeCallback($this->getControllerFromPath($path), array($path));
   }
@@ -152,7 +184,7 @@ abstract class Resource extends PluginBase implements ResourceInterface {
    * {@inheritdoc}
    */
   public function index($path) {
-    return $this->dataProvider->index();
+    return $this->getDataProvider()->index();
   }
 
   /**
@@ -161,7 +193,7 @@ abstract class Resource extends PluginBase implements ResourceInterface {
   public function view($path) {
     // TODO: Compare this with 1.x logic.
     $ids = static::IDS_SEPARATOR ? explode(static::IDS_SEPARATOR, $path) :  array($path);
-    return $this->dataProvider->viewMultiple($ids);
+    return $this->getDataProvider()->viewMultiple($ids);
   }
 
   /**
@@ -170,7 +202,7 @@ abstract class Resource extends PluginBase implements ResourceInterface {
   public function create($path) {
     // TODO: Compare this with 1.x logic.
     $object = $this->getRequest()->getParsedBody();
-    return $this->dataProvider->create($object);
+    return $this->getDataProvider()->create($object);
   }
 
   /**
@@ -179,7 +211,7 @@ abstract class Resource extends PluginBase implements ResourceInterface {
   public function update($path) {
     // TODO: Compare this with 1.x logic.
     $object = $this->getRequest()->getParsedBody();
-    return $this->dataProvider->update($path, $object, FALSE);
+    return $this->getDataProvider()->update($path, $object, FALSE);
   }
 
   /**
@@ -188,7 +220,7 @@ abstract class Resource extends PluginBase implements ResourceInterface {
   public function replace($path) {
     // TODO: Compare this with 1.x logic.
     $object = $this->getRequest()->getParsedBody();
-    return $this->dataProvider->update($path, $object, TRUE);
+    return $this->getDataProvider()->update($path, $object, TRUE);
   }
 
   /**
@@ -196,8 +228,11 @@ abstract class Resource extends PluginBase implements ResourceInterface {
    */
   public function remove($path) {
     // TODO: Compare this with 1.x logic.
-    $this->dataProvider->remove($path);
-    restful()->getResponse()->getHeaders()->add(HttpHeader::create('Status', 204));
+    $this->getDataProvider()->remove($path);
+    restful()
+      ->getResponse()
+      ->getHeaders()
+      ->add(HttpHeader::create('Status', 204));
   }
 
   /**

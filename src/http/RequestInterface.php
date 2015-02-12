@@ -76,6 +76,13 @@ interface RequestInterface {
   public function getParsedBody();
 
   /**
+   * Parses the input data provided via URL params.
+   *
+   * @return array
+   */
+  public function getParsedInput();
+
+  /**
    * Gets the request path.
    *
    * @return string

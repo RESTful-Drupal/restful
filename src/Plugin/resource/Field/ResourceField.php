@@ -5,7 +5,7 @@
  * Contains \Drupal\restful\Plugin\resource\ResourceField.
  */
 
-namespace Drupal\restful\Plugin\resource;
+namespace Drupal\restful\Plugin\resource\Field;
 
 use Drupal\restful\Exception\ServerConfigurationException;
 

@@ -72,16 +72,7 @@ class ResourceFieldEntity extends ResourceFieldBase implements ResourceFieldEnti
   protected $imageStyles = array();
 
   /**
-   * Factory.
-   *
-   * @param array $fields
-   *   Contains the field values.
-   * @param ResourceFieldInterface $decorated
-   *   The decorated object. If none is provided, ResourceField will be used.
-   *
-   * @return ResourceFieldInterface
-   *
-   * @throws ServerConfigurationException
+   * {@inheritdoc}
    */
   public static function create(array $fields, ResourceFieldInterface $decorated = NULL) {
     // Create the current object.
@@ -97,94 +88,91 @@ class ResourceFieldEntity extends ResourceFieldBase implements ResourceFieldEnti
   }
 
   /**
-   * Decorate the object.
-   *
-   * @param ResourceFieldInterface $decorated
-   *   The decorated subject.
+   * {@inheritdoc}
    */
   public function decorate(ResourceFieldInterface $decorated) {
     $this->decorated = $decorated;
   }
 
   /**
-   * @return string
+   * {@inheritdoc}
    */
   public function getSubProperty() {
     return $this->subProperty;
   }
 
   /**
-   * @param string $subProperty
+   * {@inheritdoc}
    */
   public function setSubProperty($subProperty) {
     $this->subProperty = $subProperty;
   }
 
   /**
-   * @return string
+   * {@inheritdoc}
    */
   public function getFormatter() {
     return $this->formatter;
   }
 
   /**
-   * @param string $formatter
+   * {@inheritdoc}
    */
   public function setFormatter($formatter) {
     $this->formatter = $formatter;
   }
 
   /**
-   * @return string
+   * {@inheritdoc}
    */
   public function getWrapperMethod() {
     return $this->wrapperMethod;
   }
 
   /**
-   * @param string $wrapperMethod
+   * {@inheritdoc}
    */
   public function setWrapperMethod($wrapperMethod) {
     $this->wrapperMethod = $wrapperMethod;
   }
 
   /**
-   * @return boolean
+   * {@inheritdoc}
    */
   public function isWrapperMethodOnEntity() {
     return $this->wrapperMethodOnEntity;
   }
 
   /**
-   * @param boolean $wrapperMethodOnEntity
+   * {@inheritdoc}
    */
   public function setWrapperMethodOnEntity($wrapperMethodOnEntity) {
     $this->wrapperMethodOnEntity = $wrapperMethodOnEntity;
   }
 
   /**
-   * @return string
+   * {@inheritdoc}
    */
   public function getColumn() {
     return $this->column;
   }
 
   /**
-   * @param string $column
+   * {@inheritdoc}
    */
   public function setColumn($column) {
     $this->column = $column;
   }
 
   /**
-   * @return array
+   * {@inheritdoc}
    */
   public function getImageStyles() {
     return $this->imageStyles;
   }
 
   /**
-   * @param array $imageStyles
+   * {@inheritdoc}
    */
   public function setImageStyles($imageStyles) {
     $this->imageStyles = $imageStyles;
@@ -215,15 +203,7 @@ class ResourceFieldEntity extends ResourceFieldBase implements ResourceFieldEnti
   }
 
   /**
-   * Get the image URLs based on the configured image styles.
-   *
-   * @param array $file_array
-   *   The file array.
-   * @param array $image_styles
-   *   The list of image styles to use.
-   *
-   * @return array
-   *   The input file array with an extra key for the image styles.
+   * {@inheritdoc}
    */
   public function getImageUris(array $file_array, $image_styles) {
     // Return early if there are no image styles.
@@ -244,6 +224,14 @@ class ResourceFieldEntity extends ResourceFieldBase implements ResourceFieldEnti
       $file_array['image_styles'][$style] = image_style_url($style, $file_array['uri']);
     }
     return $file_array;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function propertyIsField($name) {
+    $field_info = field_info_field($name);
+    return !empty($field_info);
   }
 
 }

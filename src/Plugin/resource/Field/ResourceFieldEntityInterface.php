@@ -90,4 +90,14 @@ interface ResourceFieldEntityInterface extends ResourceFieldInterface {
    */
   public function getImageUris(array $file_array, $image_styles);
 
+  /**
+   * Checks if a given string represents a Field API field.
+   *
+   * @param string $name
+   *   The name of the field/property.
+   *
+   * @return bool
+   *   TRUE if it's a field. FALSE otherwise.
+   */
+  public static function propertyIsField($name);
 }

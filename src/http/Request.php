@@ -127,10 +127,17 @@ class Request implements RequestInterface {
   /**
    * Holds the parsed body.
    *
+   * @var array
+   */
+  private $parsedBody;
+
+  /**
+   * Holds the parsed input via URL.
+   *
    * @internal
    * @var \ArrayObject
    */
-  private $parsedBody;
+  private $parsedInput;
 
   /**
    * Store application data as part of the request.
@@ -247,6 +254,18 @@ class Request implements RequestInterface {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function getParsedInput() {
+    if ($this->parsedInput) {
+      return $this->parsedInput;
+    }
+    // Get the input data provided via URL.
+    $this->parsedInput = static::parseInput($this->method);
+    return $this->parsedInput;
+  }
+
+  /**
    * Parses the body.
    *
    * @param string $method
@@ -256,6 +275,9 @@ class Request implements RequestInterface {
    *   The parsed body.
    */
   protected static function parseBody($method) {
+    if (!static::isWriteMethod($method)) {
+      return NULL;
+    }
     $body = NULL;
     if ($method == static::METHOD_GET) {
       return $_GET;
@@ -278,6 +300,16 @@ class Request implements RequestInterface {
     }
 
     return NULL;
+  }
+
+  /**
+   * Parses the input data.
+   *
+   * @return array
+   *   The parsed input.
+   */
+  protected static function parseInput($method) {
+    return $_GET;
   }
 
   /**

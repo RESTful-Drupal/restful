@@ -30,6 +30,22 @@ interface ResourceInterface extends PluginInspectionInterface {
   public function getPath();
 
   /**
+   * Gets the field definitions.
+   *
+   * @return \Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface
+   *   The field definitions
+   */
+  public function getFieldDefinitions();
+
+  /**
+   * Gets the data provider.
+   *
+   * @return \Drupal\restful\Plugin\resource\DataProvider\DataProviderInterface
+   *   The data provider to access the backend storage.
+   */
+  public function getDataProvider();
+
+  /**
    * Controller function that passes the data along and executes right action.
    *
    * @return array

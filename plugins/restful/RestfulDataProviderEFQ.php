@@ -409,32 +409,5 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
    */
   abstract public function deleteEntity($id);
 
-  /**
-   * Initialize an EntityFieldQuery (or extending class).
-   *
-   * @return \EntityFieldQuery
-   *   The initialized query with the basics filled in.
-   */
-  protected function getEntityFieldQuery() {
-    $query = $this->EFQObject();
-    $entity_type = $this->getEntityType();
-    $query->entityCondition('entity_type', $entity_type);
-    $entity_info = $this->getEntityInfo();
-    if ($this->getBundle() && $entity_info['entity keys']['bundle']) {
-      $query->entityCondition('bundle', $this->getBundle());
-    }
-    return $query;
-  }
-
-  /**
-   * Gets a EFQ object.
-   *
-   * @return \EntityFieldQuery
-   *   The object that inherits from \EntityFieldQuery.
-   */
-  protected function EFQObject() {
-    $efq_class = $this->EFQClass;
-    return new $efq_class();
-  }
 
 }
