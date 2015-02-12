@@ -730,58 +730,6 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
   }
 
   /**
-   * Return the controller from a given path.
-   *
-   * @throws BadRequestException
-   * @throws RestfulException
-   * @throws ForbiddenException
-   * @throws GoneException
-   *
-   * @return string
-   *   The appropriate method to call.
-   *
-   */
-  public function getControllerFromPath() {
-    $path = $this->getPath();
-    $method = $this->getMethod();
-
-    $selected_controller = NULL;
-    foreach ($this->getControllers() as $pattern => $controllers) {
-      // Find the controllers for the provided path.
-      if ($pattern != $path && !($pattern && preg_match('/' . $pattern . '/', $path))) {
-        continue;
-      }
-
-      if ($controllers === FALSE) {
-        // Method isn't valid anymore, due to a deprecated API endpoint.
-        $params = array('@path' => $path);
-        throw new GoneException(format_string('The path @path endpoint is not valid.', $params));
-      }
-
-      if (!isset($controllers[$method])) {
-        $params = array('@method' => strtoupper($method));
-        throw new BadRequestException(format_string('The http method @method is not allowed for this path.', $params));
-      }
-
-      // We found the controller, so we can break.
-      $selected_controller = $controllers[$method];
-      if (is_array($selected_controller)) {
-        // If there is a custom access method for this endpoint check it.
-        if (!empty($selected_controller['access callback']) && !static::executeCallback(array($this, $selected_controller['access callback']), array($path))) {
-          throw new ForbiddenException(format_string('You do not have access to this endpoint: @method - @path', array(
-            '@method' => $method,
-            '@path' => $path,
-          )));
-        }
-        $selected_controller = $selected_controller['callback'];
-      }
-      break;
-    }
-
-    return $selected_controller;
-  }
-
-  /**
    * Adds query tags and metadata to the EntityFieldQuery.
    *
    * @param \EntityFieldQuery|\SelectQuery $query
@@ -1453,24 +1401,6 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
         $this->setRange($request['range']);
       }
     }
-  }
-
-  /**
-   * Helper method to determine if an array is numeric.
-   *
-   * @param array $input
-   *   The input array.
-   *
-   * @return boolean
-   *   TRUE if the array is numeric, false otherwise.
-   */
-  public final static function isArrayNumeric(array $input) {
-    foreach (array_keys($input) as $key) {
-      if (!ctype_digit((string) $key)) {
-        return FALSE;
-      }
-    }
-    return TRUE;
   }
 
 }

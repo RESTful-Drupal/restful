@@ -1414,38 +1414,6 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
   }
 
   /**
-   * Get the image URLs based on the configured image styles.
-   *
-   * @param array $file_array
-   *   The file array.
-   * @param array $image_styles
-   *   The list of image styles to use.
-   *
-   * @return array
-   *   The input file array with an extra key for the image styles.
-   */
-  public function getImageUris(array $file_array, $image_styles) {
-    // Return early if there are no image styles.
-    if (empty($image_styles)) {
-      return $file_array;
-    }
-    // If $file_array is an array of file arrays. Then call recursively for each
-    // item and return the result.
-    if (static::isArrayNumeric($file_array)) {
-      $output = array();
-      foreach ($file_array as $item) {
-        $output[] = $this->getImageUris($item, $image_styles);
-      }
-      return $output;
-    }
-    $file_array['image_styles'] = array();
-    foreach ($image_styles as $style) {
-      $file_array['image_styles'][$style] = image_style_url($style, $file_array['uri']);
-    }
-    return $file_array;
-  }
-
-  /**
    * Clear all caches corresponding to the current resource for a given entity.
    *
    * @param int $id
