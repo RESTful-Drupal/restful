@@ -54,38 +54,61 @@ class DataProviderEntity extends DataProvider {
    *
    * @param RequestInterface $request
    *   The request.
+   * @param ResourceFieldCollectionInterface $field_definitions
+   *   The field definitions.
+   * @param int $range
+   *   The range.
    * @param string $entity_type
    *   The entity type for this data provider.
    * @param array $bundles
    *   The bundles for this data provider.
-   * @param ResourceFieldCollectionInterface $field_definitions
-   *   The field definitions.
    * @param string $efq_class
    *   The class to instantiate EFQ objects.
    *
    * @throws ServerConfigurationException
    *  If the field mappings are not for entities.
    */
-  public function __construct(RequestInterface $request, $entity_type, array $bundles, ResourceFieldCollectionInterface $field_definitions, $efq_class) {
-    $this->request = $request;
+  public function __construct(RequestInterface $request, ResourceFieldCollectionInterface $field_definitions, $range, $entity_type, array $bundles, $efq_class) {
+    parent::__construct($request, $field_definitions, $range);
     $this->entityType = $entity_type;
     $this->bundles = $bundles;
+    $this->EFQClass = $efq_class;
+
     // Make sure that all field definitions are instance of
     // \Drupal\restful\Plugin\resource\Field\ResourceFieldEntityInterface
-    foreach ($field_definitions as $key => $value) {
+    foreach ($this->fieldDefinitions as $key => $value) {
       if (!($value instanceof ResourceFieldEntityInterface)) {
         throw new ServerConfigurationException('The field mapping must implement \Drupal\restful\Plugin\resource\Field\ResourceFieldEntityInterface.');
       }
     }
-    $this->fieldDefinitions = $field_definitions;
-    $this->EFQClass = $efq_class;
+  }
+
+  /**
+   * Defines default sort fields if none are provided via the request URL.
+   *
+   * @return array
+   *   Array keyed by the public field name, and the order ('ASC' or 'DESC') as value.
+   */
+  protected function defaultSortInfo() {
+    return array('id' => 'ASC');
   }
 
   /**
    * {@inheritdoc}
    */
   public function index() {
-    // TODO: Continue HERE.
+    $result = $this
+      ->getQueryForList()
+      ->execute();
+
+    if (empty($result[$this->entityType])) {
+      return array();
+    }
+
+    $ids = array_keys($result[$this->entityType]);
+
+    // Pre-load all entities.
+    entity_load($this->entityType, $ids);
   }
 
   /**
@@ -105,8 +128,6 @@ class DataProviderEntity extends DataProvider {
     if (!$this->isValidEntity('view', $entity_id)) {
       return;
     }
-
-
   }
 
   /**
@@ -316,6 +337,173 @@ class DataProviderEntity extends DataProvider {
    */
   protected function getEntityInfo($type = NULL) {
     return entity_get_info($type ? $type : $this->entityType);
+  }
+
+  /**
+   * Prepare a query for RestfulEntityBase::getList().
+   *
+   * @return \EntityFieldQuery
+   *   The EntityFieldQuery object.
+   */
+  protected function getQueryForList() {
+    $query = $this->getEntityFieldQuery();
+    if ($path = $this->request->getPath()) {
+      $ids = explode(',', $path);
+      if (!empty($ids)) {
+        $query->entityCondition('entity_id', $ids, 'IN');
+      }
+    }
+
+    $this->queryForListSort($query);
+    $this->queryForListFilter($query);
+    $this->queryForListPagination($query);
+    $this->addExtraInfoToQuery($query);
+
+    return $query;
+  }
+
+  /**
+   * Adds query tags and metadata to the EntityFieldQuery.
+   *
+   * @param \EntityFieldQuery $query
+   *   The query to enhance.
+   */
+  protected function addExtraInfoToQuery($query) {
+    parent::addExtraInfoToQuery($query);
+    // The only time you need to add the access tags to a EFQ is when you don't
+    // have fieldConditions.
+    if (empty($query->fieldConditions)) {
+      // Add a generic entity access tag to the query.
+      $query->addTag($this->entityType . '_access');
+    }
+    $query->addMetaData('restful_data_provider', $this);
+  }
+
+  /**
+   * Sort the query for list.
+   *
+   * @param \EntityFieldQuery $query
+   *   The query object.
+   *
+   * @throws BadRequestException
+   *
+   * @see \RestfulEntityBase::getQueryForList
+   */
+  protected function queryForListSort(\EntityFieldQuery $query) {
+    $resource_fields = $this->fieldDefinitions;
+
+    // Get the sorting options from the request object.
+    $sorts = $this->parseRequestForListSort();
+
+    $sorts = $sorts ? $sorts : $this->defaultSortInfo();
+
+    foreach ($sorts as $public_field_name => $direction) {
+      // Determine if sorting is by field or property.
+      /** @var ResourceFieldEntityInterface $resource_field */
+      $resource_field = $resource_fields[$public_field_name];
+      if (!$property_name = $resource_field->getProperty()) {
+        throw new BadRequestException('The current sort selection does not map to any entity property or Field API field.');
+      }
+      if (ResourceFieldEntityInterface::propertyIsField($property_name)) {
+        $query->fieldOrderBy($property_name, $resource_field->getColumn(), $direction);
+      }
+      else {
+        $column = $this->getColumnFromProperty($property_name);
+        $query->propertyOrderBy($column, $direction);
+      }
+    }
+  }
+
+  /**
+   * Filter the query for list.
+   *
+   * @param \EntityFieldQuery $query
+   *   The query object.
+   *
+   * @throws BadRequestException
+   *
+   * @see \RestfulEntityBase::getQueryForList
+   */
+  protected function queryForListFilter(\EntityFieldQuery $query) {
+    $resource_fields = $this->fieldDefinitions;
+    foreach ($this->parseRequestForListFilter() as $filter) {
+      // Determine if filtering is by field or property.
+      /** @var ResourceFieldEntityInterface $resource_field */
+      $resource_field = $resource_fields[$filter['public_field']];
+
+      if (!$property_name = $resource_field->getProperty()) {
+        throw new BadRequestException('The current filter selection does not map to any entity property or Field API field.');
+      }
+      if (field_info_field($property_name)) {
+        if (in_array(strtoupper($filter['operator'][0]), array('IN', 'BETWEEN'))) {
+          $query->fieldCondition($property_name, $resource_field->getColumn(), $filter['value'], $filter['operator'][0]);
+          continue;
+        }
+        for ($index = 0; $index < count($filter['value']); $index++) {
+          $query->fieldCondition($property_name, $resource_field->getColumn(), $filter['value'][$index], $filter['operator'][$index]);
+        }
+      }
+      else {
+        $column = $this->getColumnFromProperty($property_name);
+        for ($index = 0; $index < count($filter['value']); $index++) {
+          $query->propertyCondition($column, $filter['value'][$index], $filter['operator'][$index]);
+        }
+      }
+    }
+  }
+
+  /**
+   * Set correct page (i.e. range) for the query for list.
+   *
+   * Determine the page that should be seen. Page 1, is actually offset 0 in the
+   * query range.
+   *
+   * @param \EntityFieldQuery $query
+   *   The query object.
+   *
+   * @throws BadRequestException
+   *
+   * @see \RestfulEntityBase::getQueryForList
+   */
+  protected function queryForListPagination(\EntityFieldQuery $query) {
+    list($offset, $range) = $this->parseRequestForListPagination();
+    $query->range($offset, $range);
+  }
+
+  /**
+   * Overrides DataProvider::isValidConjunctionForFilter().
+   */
+  protected static function isValidConjunctionForFilter($conjunction) {
+    $allowed_conjunctions = array(
+      'AND',
+    );
+
+    if (!in_array(strtoupper($conjunction), $allowed_conjunctions)) {
+      throw new BadRequestException(format_string('Conjunction "@conjunction" is not allowed for filtering on this resource. Allowed conjunctions are: !allowed', array(
+        '@conjunction' => $conjunction,
+        '!allowed' => implode(', ', $allowed_conjunctions),
+      )));
+    }
+  }
+
+  /**
+   * Get the DB column name from a property.
+   *
+   * The "property" defined in the public field is actually the property
+   * of the entity metadata wrapper. Sometimes that property can be a
+   * different name than the column in the DB. For example, for nodes the
+   * "uid" property is mapped in entity metadata wrapper as "author", so
+   * we make sure to get the real column name.
+   *
+   * @param string $property_name
+   *   The property name.
+   *
+   * @return string
+   *   The column name.
+   */
+  protected function getColumnFromProperty($property_name) {
+    $property_info = entity_get_property_info($this->entityType);
+    return $property_info['properties'][$property_name]['schema field'];
   }
 
 }

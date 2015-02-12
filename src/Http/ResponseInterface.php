@@ -22,7 +22,7 @@ interface ResponseInterface {
    * @param array $headers
    *   An array of response headers
    *
-   * @return Request
+   * @return RequestInterface
    *   The created object.
    *
    * @throws UnprocessableEntityException

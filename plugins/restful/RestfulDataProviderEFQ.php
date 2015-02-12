@@ -95,16 +95,6 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
   }
 
   /**
-   * Defines default sort fields if none are provided via the request URL.
-   *
-   * @return array
-   *   Array keyed by the public field name, and the order ('ASC' or 'DESC') as value.
-   */
-  public function defaultSortInfo() {
-    return array('id' => 'ASC');
-  }
-
-  /**
    * {@inheritdoc}
    */
   public function getQueryForList() {
@@ -125,73 +115,6 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
     return $query;
   }
 
-  /**
-   * Sort the query for list.
-   *
-   * @param \EntityFieldQuery $query
-   *   The query object.
-   *
-   * @throws BadRequestException
-   *
-   * @see \RestfulEntityBase::getQueryForList
-   */
-  protected function queryForListSort(\EntityFieldQuery $query) {
-    $public_fields = $this->getPublicFields();
-
-    // Get the sorting options from the request object.
-    $sorts = $this->parseRequestForListSort();
-
-    $sorts = $sorts ? $sorts : $this->defaultSortInfo();
-
-    foreach ($sorts as $public_field_name => $direction) {
-      // Determine if sorting is by field or property.
-      if (!$property_name = $public_fields[$public_field_name]['property']) {
-        throw new BadRequestException('The current sort selection does not map to any entity property or Field API field.');
-      }
-      if (field_info_field($property_name)) {
-        $query->fieldOrderBy($public_fields[$public_field_name]['property'], $public_fields[$public_field_name]['column'], $direction);
-      }
-      else {
-        $column = $this->getColumnFromProperty($property_name);
-        $query->propertyOrderBy($column, $direction);
-      }
-    }
-  }
-
-  /**
-   * Filter the query for list.
-   *
-   * @param \EntityFieldQuery $query
-   *   The query object.
-   *
-   * @throws BadRequestException
-   *
-   * @see \RestfulEntityBase::getQueryForList
-   */
-  protected function queryForListFilter(\EntityFieldQuery $query) {
-    $public_fields = $this->getPublicFields();
-    foreach ($this->parseRequestForListFilter() as $filter) {
-      // Determine if filtering is by field or property.
-      if (!$property_name = $public_fields[$filter['public_field']]['property']) {
-        throw new BadRequestException('The current filter selection does not map to any entity property or Field API field.');
-      }
-      if (field_info_field($property_name)) {
-        if (in_array(strtoupper($filter['operator'][0]), array('IN', 'BETWEEN'))) {
-          $query->fieldCondition($public_fields[$filter['public_field']]['property'], $public_fields[$filter['public_field']]['column'], $filter['value'], $filter['operator'][0]);
-          continue;
-        }
-        for ($index = 0; $index < count($filter['value']); $index++) {
-          $query->fieldCondition($public_fields[$filter['public_field']]['property'], $public_fields[$filter['public_field']]['column'], $filter['value'][$index], $filter['operator'][$index]);
-        }
-      }
-      else {
-        $column = $this->getColumnFromProperty($property_name);
-        for ($index = 0; $index < count($filter['value']); $index++) {
-          $query->propertyCondition($column, $filter['value'][$index], $filter['operator'][$index]);
-        }
-      }
-    }
-  }
 
   /**
    * Get the DB column name from a property.
@@ -211,40 +134,6 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
   protected function getColumnFromProperty($property_name) {
     $property_info = entity_get_property_info($this->getEntityType());
     return $property_info['properties'][$property_name]['schema field'];
-  }
-
-  /**
-   * Overrides \RestfulBase::isValidConjuctionForFilter().
-   */
-  protected static function isValidConjuctionForFilter($conjunction) {
-    $allowed_conjunctions = array(
-      'AND',
-    );
-
-    if (!in_array(strtoupper($conjunction), $allowed_conjunctions)) {
-      throw new BadRequestException(format_string('Conjunction "@conjunction" is not allowed for filtering on this resource. Allowed conjunctions are: !allowed', array(
-        '@conjunction' => $conjunction,
-        '!allowed' => implode(', ', $allowed_conjunctions),
-      )));
-    }
-  }
-
-  /**
-   * Set correct page (i.e. range) for the query for list.
-   *
-   * Determine the page that should be seen. Page 1, is actually offset 0 in the
-   * query range.
-   *
-   * @param \EntityFieldQuery $query
-   *   The query object.
-   *
-   * @throws BadRequestException
-   *
-   * @see \RestfulEntityBase::getQueryForList
-   */
-  protected function queryForListPagination(\EntityFieldQuery $query) {
-    list($offset, $range) = $this->parseRequestForListPagination();
-    $query->range($offset, $range);
   }
 
   /**
@@ -272,20 +161,6 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
     return intval($this
       ->getQueryCount()
       ->execute());
-  }
-
-  /**
-   * Adds query tags and metadata to the EntityFieldQuery.
-   *
-   * @param \EntityFieldQuery $query
-   *   The query to enhance.
-   */
-  protected function addExtraInfoToQuery($query) {
-    parent::addExtraInfoToQuery($query);
-    $entity_type = $this->getEntityType();
-    // Add a generic entity access tag to the query.
-    $query->addTag($entity_type . '_access');
-    $query->addMetaData('restful_handler', $this);
   }
 
   /**

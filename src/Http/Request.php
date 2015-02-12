@@ -151,7 +151,7 @@ class Request implements RequestInterface {
    *
    * Parses the URL and the query params. It also uses input:// to get the body.
    */
-  public function __construct($path, $query, $method = 'GET', HttpHeaderBag $headers, $via_router = FALSE, $csrf_token = NULL, $cookies = array(), $files = array(), $server = array()) {
+  public function __construct($path, array $query, $method = 'GET', HttpHeaderBag $headers, $via_router = FALSE, $csrf_token = NULL, array $cookies = array(), array $files = array(), array $server = array()) {
     $this->path = $path;
     $this->query = $query;
     $this->method = $method;
@@ -169,7 +169,7 @@ class Request implements RequestInterface {
   /**
    * {@inheritdoc}
    */
-  public static function create($path, $query, $method = 'GET', HttpHeaderBag $headers, $via_router = FALSE, $csrf_token = NULL, $cookies = array(), $files = array(), $server = array()) {
+  public static function create($path, array $query = array(), $method = 'GET', HttpHeaderBag $headers, $via_router = FALSE, $csrf_token = NULL, array $cookies = array(), array $files = array(), array $server = array()) {
     if ($method == static::METHOD_POST && $headers->get('x-http-method-override')) {
       $method = $headers->get('x-http-method-override')->getValueString();
     }
