@@ -17,13 +17,6 @@ class BadRequestException extends RestfulException {
   protected $code = 400;
 
   /**
-   * Defines the description.
-   *
-   * @var string
-   */
-  protected $description = 'Bad Request.';
-
-  /**
    * Defines the problem instance.
    *
    * @var string

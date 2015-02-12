@@ -28,7 +28,7 @@ class HttpHeader implements HttpHeaderInterface {
    *
    * @var array
    */
-  protected $values;
+  protected $values = array();
 
   /**
    * Header extras.
@@ -69,7 +69,14 @@ class HttpHeader implements HttpHeaderInterface {
     $parts = array();
     $parts[] = implode(', ', $this->values);
     $parts[] = $this->extras;
-    return implode('; ', $parts);
+    return implode('; ', array_filter($parts));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getName() {
+    return $this->name;
   }
 
   /**

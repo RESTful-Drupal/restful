@@ -17,13 +17,6 @@ class ForbiddenException extends RestfulException {
   protected $code = 403;
 
   /**
-   * Defines the description.
-   *
-   * @var string
-   */
-  protected $description = 'Forbidden.';
-
-  /**
    * Defines the problem instance.
    *
    * @var string

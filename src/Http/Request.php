@@ -13,6 +13,11 @@ use Drupal\restful\Exception\BadRequestException;
  */
 class Request implements RequestInterface {
 
+  const HEADER_CLIENT_IP = 'client_ip';
+  const HEADER_CLIENT_HOST = 'client_host';
+  const HEADER_CLIENT_PROTO = 'client_proto';
+  const HEADER_CLIENT_PORT = 'client_port';
+
   const METHOD_HEAD = 'HEAD';
   const METHOD_GET = 'GET';
   const METHOD_POST = 'POST';
@@ -23,6 +28,22 @@ class Request implements RequestInterface {
   const METHOD_OPTIONS = 'OPTIONS';
   const METHOD_TRACE = 'TRACE';
   const METHOD_CONNECT = 'CONNECT';
+
+  /**
+   * Names for headers that can be trusted when
+   * using trusted proxies.
+   *
+   * The default names are non-standard, but widely used
+   * by popular reverse proxies (like Apache mod_proxy or Amazon EC2).
+   */
+  protected static $trustedHeaders = array(
+    self::HEADER_CLIENT_IP => 'X_FORWARDED_FOR',
+    self::HEADER_CLIENT_HOST => 'X_FORWARDED_HOST',
+    self::HEADER_CLIENT_PROTO => 'X_FORWARDED_PROTO',
+    self::HEADER_CLIENT_PORT => 'X_FORWARDED_PORT',
+  );
+
+  protected static $trustedProxies = array();
 
   /**
    * HTTP Method.
@@ -110,6 +131,13 @@ class Request implements RequestInterface {
    * @var \ArrayObject
    */
   private $parsedBody;
+
+  /**
+   * Store application data as part of the request.
+   *
+   * @var array
+   */
+  protected $applicationData = array();
 
   /**
    * Constructor.
@@ -291,6 +319,10 @@ class Request implements RequestInterface {
    * {@inheritdoc}
    */
   public function getPath() {
+    // Remove the restful prefix from the beginning of the path.
+    if (strpos($this->path, variable_get('restful_hook_menu_base_path', 'api')) !== FALSE) {
+      return substr($this->path, strlen(variable_get('restful_hook_menu_base_path', 'api')) + 1);
+    }
     return $this->path;
   }
 
@@ -349,6 +381,45 @@ class Request implements RequestInterface {
   public function getPassword() {
     list(, $password) = static::getCredentials();
     return $password;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getMethod() {
+    return $this->method;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getServer() {
+    return $this->server;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setApplicationData($key, $value) {
+    $this->applicationData[$key] = $value;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getApplicationData($key) {
+    return $this->applicationData[$key];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isSecure() {
+    if (self::$trustedProxies && self::$trustedHeaders[self::HEADER_CLIENT_PROTO] && $proto = $this->headers->get(self::$trustedHeaders[self::HEADER_CLIENT_PROTO])->getValueString()) {
+      return in_array(strtolower(current(explode(',', $proto))), array('https', 'on', 'ssl', '1'));
+    }
+    $https = $this->server['HTTPS'];
+    return !empty($https) && strtolower($https) !== 'off';
   }
 
 }

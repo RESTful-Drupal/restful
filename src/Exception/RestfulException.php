@@ -7,6 +7,8 @@
 
 namespace Drupal\restful\Exception;
 
+use Drupal\restful\Http\Response;
+
 class RestfulException extends \Exception {
 
   /**
@@ -31,13 +33,20 @@ class RestfulException extends \Exception {
   protected $headers = array();
 
   /**
+   * Exception description.
+   *
+   * @var string
+   */
+  protected $description = '';
+
+  /**
    * Gets the description of the exception.
    *
    * @return string
    *   The description.
    */
   final public function getDescription() {
-    return $this->description;
+    return $this->description ? $this->description : Response::$statusTexts[$this->getCode()];
   }
 
   /**

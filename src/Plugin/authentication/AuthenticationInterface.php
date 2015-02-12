@@ -7,7 +7,9 @@
 
 namespace Drupal\restful\Plugin\authentication;
 
-interface AuthenticationInterface {
+use Drupal\Component\Plugin\PluginInspectionInterface;
+
+interface AuthenticationInterface extends PluginInspectionInterface {
 
   /**
    * Authenticate the request by trying to match a user.

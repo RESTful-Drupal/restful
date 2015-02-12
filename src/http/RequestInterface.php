@@ -106,4 +106,55 @@ interface RequestInterface {
    */
   public function getPassword();
 
+  /**
+   * Get the HTTP method.
+   *
+   * @return string
+   */
+  public function getMethod();
+
+  /**
+   * Get the server information.
+   *
+   * @return array
+   */
+  public function getServer();
+
+  /**
+   * Sets an object in the application data store.
+   *
+   * @param string $key
+   *   Identifier.
+   * @param mixed $value
+   *   The data to store as part of the request.
+   */
+  public function setApplicationData($key, $value);
+
+  /**
+   * Gets an object from the application data store.
+   *
+   * @param string $key
+   *   Identifier.
+   *
+   * @return mixed
+   *   The data stored as part of the request.
+   */
+  public function getApplicationData($key);
+
+  /**
+   * Checks whether the request is secure or not.
+   *
+   * This method can read the client port from the "X-Forwarded-Proto" header
+   * when trusted proxies were set via "setTrustedProxies()".
+   *
+   * The "X-Forwarded-Proto" header must contain the protocol: "https" or "http".
+   *
+   * If your reverse proxy uses a different header name than "X-Forwarded-Proto"
+   * ("SSL_HTTPS" for instance), configure it via "setTrustedHeaderName()" with
+   * the "client-proto" key.
+   *
+   * @return bool
+   */
+  public function isSecure();
+
 }

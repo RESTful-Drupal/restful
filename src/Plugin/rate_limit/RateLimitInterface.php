@@ -7,7 +7,9 @@
 
 namespace Drupal\restful\Plugin\rate_limit;
 
-interface RateLimitInterface {
+use Drupal\Component\Plugin\PluginInspectionInterface;
+
+interface RateLimitInterface extends PluginInspectionInterface {
   /**
    * Checks if the current request meets the event for the implementing class.
    *

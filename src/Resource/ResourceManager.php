@@ -41,12 +41,12 @@ class ResourceManager implements ResourceManagerInterface {
     $this->request = $request;
     $this->pluginManager = $manager ?: ResourcePluginManager::create();
     $options = array();
-    foreach ($manager->getDefinitions() as $plugin_id => $plugin_definition) {
+    foreach ($this->pluginManager->getDefinitions() as $plugin_id => $plugin_definition) {
       // Set the instance id to articles::1.5 (for example).
       $instance_id = $plugin_id . '::' . $plugin_definition['major_version'] . '.' . $plugin_definition['minor_version'];
       $options[$instance_id] = $plugin_definition;
     }
-    $this->plugins = new ResourcePluginCollection($manager, $options);
+    $this->plugins = new ResourcePluginCollection($this->pluginManager, $options);
   }
 
   /**
@@ -65,8 +65,8 @@ class ResourceManager implements ResourceManagerInterface {
     }
 
     // If there is no version in the URL check the header.
-    if ($api_version_header = $this->request->getHeaders()->get('x-api-version')) {
-      $version =  $this->parseVersionString($api_version_header->getValueString(), $resource_name);
+    if ($version_string = $this->request->getHeaders()->get('x-api-version')->getValueString()) {
+      $version =  $this->parseVersionString($version_string, $resource_name);
       return $version;
     }
 

@@ -7,7 +7,10 @@
 
 namespace Drupal\restful\Authentication;
 
+use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use \Drupal\restful\Exception\UnauthorizedException;
+use \Drupal\restful\Plugin\Authentication\AuthenticationInterface;
+use \Drupal\restful\Plugin\AuthenticationPluginManager;
 
 interface AuthenticationManagerInterface {
 
@@ -63,5 +66,26 @@ interface AuthenticationManagerInterface {
    *   The account to set.
    */
   public function setAccount($account);
+
+  /**
+   * Gets the plugin collection for this plugin manager.
+   *
+   * @return AuthenticationPluginManager
+   */
+  public function getPlugins();
+
+  /**
+   * Get an authentication plugin instance by instance ID.
+   *
+   * @param string $instance_id
+   *   The instance ID.
+   *
+   * @return AuthenticationInterface
+   *   The plugin.
+   *
+   * @throws PluginNotFoundException
+   *   If the plugin instance cannot be found.
+   */
+  public function getPlugin($instance_id);
 
 }

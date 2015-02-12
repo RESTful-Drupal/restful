@@ -128,4 +128,18 @@ class AuthenticationManager implements AuthenticationManagerInterface {
     $this->account = $account;
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getPlugins() {
+    return $this->plugins;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getPlugin($instance_id) {
+    return $this->plugins->get($instance_id);
+  }
+
 }

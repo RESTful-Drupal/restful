@@ -17,13 +17,6 @@ class NotImplementedException extends RestfulException {
   protected $code = 501;
 
   /**
-   * Defines the description.
-   *
-   * @var string
-   */
-  protected $description = 'Not Implemented.';
-
-  /**
    * Defines the problem instance.
    *
    * @var string

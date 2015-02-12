@@ -17,13 +17,6 @@ class ServiceUnavailableException extends RestfulException {
   protected $code = 503;
 
   /**
-   * Defines the description.
-   *
-   * @var string
-   */
-  protected $description = 'Service unavailable.';
-
-  /**
    * Defines the problem instance.
    *
    * @var string

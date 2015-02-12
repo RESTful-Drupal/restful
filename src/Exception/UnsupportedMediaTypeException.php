@@ -17,13 +17,6 @@ class UnsupportedMediaTypeException extends RestfulException {
   protected $code = 415;
 
   /**
-   * Defines the description.
-   *
-   * @var string
-   */
-  protected $description = 'Unsupported Media Type.';
-
-  /**
    * Defines the problem instance.
    *
    * @var string
