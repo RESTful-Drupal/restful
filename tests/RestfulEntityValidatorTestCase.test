@@ -23,7 +23,7 @@ class RestfulEntityValidatorTestCase extends RestfulCurlBaseTestCase {
    * Test entity validator.
    */
   function testEntityValidator() {
-    $user1 = $this->drupalCreateUser(array('bypass node access'));
+    $user1 = $this->drupalCreateUser(array('create article content'));
     $this->drupalLogin($user1);
 
     $handler = restful_get_restful_handler('test_articles');
