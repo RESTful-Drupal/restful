@@ -34,7 +34,7 @@ before_script:
   - drush dl entity_validator --dev --yes
 
   # Patch Entity API.
-  - curl -O https://www.drupal.org/files/issues/2086225-entity-access-check-node-create-3.patch
+  - curl -O https://www.drupal.org/files/issues/2086225-entity-access-check-16.patch
   - patch -p1 /home/travis/build/restful/drupal/sites/all/modules/entity/modules/callbacks.inc  < 2086225-entity-access-check-node-create-3.patch
 
   - curl -O https://www.drupal.org/files/issues/2264079-entity-wrapper-access-single-entity-reference-2.patch
