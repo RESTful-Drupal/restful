@@ -34,10 +34,8 @@ before_script:
   - drush dl entity_validator --dev --yes
 
   # Patch Entity API.
-  - curl -O https://www.drupal.org/files/issues/2086225-entity-access-check-16.patch
-  - ls -al
-  - pwd
-  - patch -p1 /home/travis/build/restful/drupal/sites/all/modules/entity/modules/callbacks.inc  < 2086225-entity-access-check-16.patch
+  - cd sites/all/modules/restful
+  - curl https://www.drupal.org/files/issues/2086225-entity-access-check-16.patch | git apply
 
   # start a web server on port 8080, run in the background; wait for initialization
   - drush runserver 127.0.0.1:8080 &
