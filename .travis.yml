@@ -31,7 +31,7 @@ before_script:
   - drush --yes pm-enable restful restful_token_auth restful_test
 
   # Download entity validator.
-  - drush dl entity_validator --dev
+  - drush dl entity_validator --dev --yes
 
   # Patch Entity API.
   - curl -O https://www.drupal.org/files/issues/2086225-entity-access-check-node-create-3.patch
