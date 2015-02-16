@@ -12,6 +12,20 @@ use Drupal\Component\Plugin\PluginInspectionInterface;
 interface ResourceInterface extends PluginInspectionInterface {
 
   /**
+   * Get the user from for request.
+   *
+   * @param boolean $cache
+   *   Boolean indicating if the resolved user should be cached for next calls.
+   *
+   * @return object
+   *   The fully loaded user object.
+   *
+   * @see AuthenticatedResource
+   *   To use authentication providers.
+   */
+  public function getAccount($cache = TRUE);
+
+  /**
    * Get the request object.
    *
    * @return \Drupal\restful\Http\RequestInterface

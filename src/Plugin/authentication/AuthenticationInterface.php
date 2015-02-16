@@ -8,36 +8,33 @@
 namespace Drupal\restful\Plugin\authentication;
 
 use Drupal\Component\Plugin\PluginInspectionInterface;
+use Drupal\restful\Http\RequestInterface;
 
 interface AuthenticationInterface extends PluginInspectionInterface {
 
   /**
    * Authenticate the request by trying to match a user.
    *
-   * @param array $request
+   * @param RequestInterface $request
    *   The request.
-   * @param string $method
-   *   The HTTP method. Defaults to "get".
    *
    * @return \stdClass|null
    *   The user object.
    */
-  public function authenticate(array $request = array(), $method = \RestfulInterface::GET);
+  public function authenticate(RequestInterface $request);
 
   /**
    * Determines if the request can be checked for authentication. For example,
    * when authenticating with HTTP header, return FALSE if the header values do
    * not exist.
    *
-   * @param array $request
+   * @param RequestInterface $request
    *   The request.
-   * @param string $method
-   *   The HTTP method. Defaults to "get".
    *
    * @return bool
    *   TRUE if the request can be checked for authentication, FALSE otherwise.
    */
-  public function applies(array $request = array(), $method = \RestfulInterface::GET);
+  public function applies(RequestInterface $request);
 
   /**
    * Get the name of the authentication plugin.

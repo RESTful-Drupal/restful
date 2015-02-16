@@ -66,16 +66,7 @@ abstract class Resource extends PluginBase implements ResourceInterface {
   abstract protected function dataProviderFactory();
 
   /**
-   * Proxy method to get the account from the authenticationManager.
-   *
-   * @param boolean $cache
-   *   Boolean indicating if the resolved user should be cached for next calls.
-   *
-   * @return object
-   *   The fully loaded user object.
-   *
-   * @see AuthenticatedResource
-   *   To use authentication providers.
+   * {@inheritdoc}
    */
   public function getAccount($cache = TRUE) {
     return user_load($GLOBALS['user']->uid);

@@ -11,11 +11,6 @@ use Drupal\restful\Authentication\AuthenticationManager;
 interface RestfulInterface {
 
   /**
-   * Token value for token generation functions.
-   */
-  const TOKEN_VALUE = 'rest';
-
-  /**
    * Return this value from public field access callbacks to allow access.
    */
   const ACCESS_ALLOW = 'allow';

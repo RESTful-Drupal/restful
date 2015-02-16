@@ -8,6 +8,8 @@
 namespace Drupal\restful\Plugin\authentication;
 use Drupal\restful\Exception\BadRequestException;
 use Drupal\restful\Exception\ForbiddenException;
+use Drupal\restful\Http\Request;
+use Drupal\restful\Http\RequestInterface;
 
 /**
  * Class CookieAuthentication
@@ -24,25 +26,25 @@ class CookieAuthentication extends Authentication {
   /**
    * {@inheritdoc}
    */
-  public function authenticate(array $request = array(), $method = \RestfulInterface::GET) {
-    if (!drupal_session_started() && !$this->isCli()) {
-      return;
+  public function authenticate(RequestInterface $request) {
+    if (!drupal_session_started() && !$this->isCli($request)) {
+      return NULL;
     }
 
     global $user;
     $account = user_load($user->uid);
 
-    if (!\RestfulBase::isWriteMethod($method) || empty($request['__application']['rest_call'])) {
+    if (!$request::isWriteMethod($request->getMethod()) || $request->getApplicationData('rest_call')) {
       // Request is done via API not CURL, or not a write operation, so we don't
       // need to check for a CSRF token.
       return $account;
     }
 
-    if (empty($request['__application']['csrf_token'])) {
+    if ($request->getApplicationData('csrf_token')) {
       throw new BadRequestException('No CSRF token passed in the HTTP header.');
     }
 
-    if (!drupal_valid_token($request['__application']['csrf_token'], \RestfulBase::TOKEN_VALUE)) {
+    if (!drupal_valid_token($request->getApplicationData('csrf_token'), Authentication::TOKEN_VALUE)) {
       throw new ForbiddenException('CSRF token validation failed.');
     }
 
@@ -53,12 +55,15 @@ class CookieAuthentication extends Authentication {
   /**
    * Detects whether the script is running from a command line environment.
    *
+   * @param RequestInterface $request.
+   *   The request.
+   *
    * @return bool
    *   TRUE if a command line environment is detected. FALSE otherwise.
    */
-  protected function isCli() {
+  protected function isCli(RequestInterface $request) {
     // Needed to detect if run-tests.sh is running the tests.
-    $cli = \RestfulManager::getRequestHttpHeader('User-Agent') == 'Drupal command line';
+    $cli = $request->getHeaders()->get('User-Agent')->getValueString() == 'Drupal command line';
     return $cli || drupal_is_cli();
   }
 

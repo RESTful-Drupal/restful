@@ -59,14 +59,17 @@ abstract class DataProvider implements DataProviderInterface {
    *   The field definitions.
    * @param object $account
    *   The authenticated account.
-   * @param int $range
-   *   The range
+   * @param array $options
+   *   The plugin options for the data provider.
    */
-  public function __construct(RequestInterface $request, ResourceFieldCollectionInterface $field_definitions, $account, $range) {
+  public function __construct(RequestInterface $request, ResourceFieldCollectionInterface $field_definitions, $account, $options) {
     $this->request = $request;
     $this->fieldDefinitions = $field_definitions;
     $this->account = $account;
-    $this->range = $range;
+    $this->options = $options;
+    if ($options['range']) {
+      $this->range = $options['range'];
+    }
   }
 
   /**

@@ -24,7 +24,7 @@ class RestfulCsrfTokenResource extends RestfulBase implements \RestfulDataProvid
    * @return array
    */
   protected static function getCsrfToken() {
-    return drupal_get_token(\RestfulInterface::TOKEN_VALUE);
+    return drupal_get_token(\Drupal\restful\Plugin\authentication\Authentication::TOKEN_VALUE);
   }
 
   /**
