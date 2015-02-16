@@ -44,6 +44,13 @@ abstract class DataProvider implements DataProviderInterface {
   protected $account;
 
   /**
+   * User defined options.
+   *
+   * @var array
+   */
+  protected $options = array();
+
+  /**
    * Constructor.
    *
    * @param RequestInterface $request

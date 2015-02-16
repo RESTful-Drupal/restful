@@ -1028,48 +1028,6 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
   }
 
   /**
-   * Check access on a property.
-   *
-   * @param string $op
-   *   The operation that access should be checked for. Can be "view" or "edit".
-   *   Defaults to "edit".
-   * @param string $public_field_name
-   *   The name of the public field.
-   * @param EntityMetadataWrapper $property_wrapper
-   *   The wrapped property.
-   * @param EntityMetadataWrapper $wrapper
-   *   The wrapped entity.
-   *
-   * @return bool
-   *   TRUE if the current user has access to set the property, FALSE otherwise.
-   */
-  protected function checkPropertyAccess($op, $public_field_name, EntityMetadataWrapper $property_wrapper, EntityMetadataWrapper $wrapper) {
-    if (!$this->checkPropertyAccessByAccessCallbacks($op, $public_field_name, $property_wrapper, $wrapper)) {
-      // Access callbacks denied access.
-      return;
-    }
-
-    $account = $this->getAccount();
-    // Check format access for text fields.
-    if ($property_wrapper->type() == 'text_formatted' && $property_wrapper->value() && $property_wrapper->format->value()) {
-      $format = (object) array('format' => $property_wrapper->format->value());
-      // Only check filter access on write contexts.
-      if (\RestfulBase::isWriteMethod($this->getMethod()) && !filter_access($format, $account)) {
-        return FALSE;
-      }
-    }
-
-    $info = $property_wrapper->info();
-    if ($op == 'edit' && empty($info['setter callback'])) {
-      // Property does not allow setting.
-      return FALSE;
-    }
-
-    $access = $property_wrapper->access($op, $account);
-    return $access !== FALSE;
-  }
-
-  /**
    * Check access on property by the defined access callbacks.
    *
    * @param string $op
@@ -1099,75 +1057,6 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     }
 
     return TRUE;
-  }
-
-  /**
-   * Determine if an entity is valid, and accessible.
-   *
-   * @param $op
-   *   The operation to perform on the entity (view, update, delete).
-   * @param $entity_id
-   *   The entity ID.
-   *
-   * @return bool
-   *   TRUE if entity is valid, and user can access it.
-   *
-   * @throws UnprocessableEntityException
-   * @throws ForbiddenException
-   */
-  protected function isValidEntity($op, $entity_id) {
-    $entity_type = $this->entityType;
-
-    $params = array(
-      '@id' => $entity_id,
-      '@resource' => $this->getPluginKey('label'),
-    );
-
-    if (!$entity = entity_load_single($entity_type, $entity_id)) {
-      throw new UnprocessableEntityException(format_string('The entity ID @id for @resource does not exist.', $params));
-    }
-
-    list(,, $bundle) = entity_extract_ids($entity_type, $entity);
-
-    $resource_bundle = $this->getBundle();
-    if ($resource_bundle && $bundle != $resource_bundle) {
-      throw new UnprocessableEntityException(format_string('The entity ID @id is not a valid @resource.', $params));
-    }
-
-    if ($this->checkEntityAccess($op, $entity_type, $entity) === FALSE) {
-
-      if ($op == 'view' && !$this->getPath()) {
-        // Just return FALSE, without an exception, for example when a list of
-        // entities is requested, and we don't want to fail all the list because
-        // of a single item without access.
-        return FALSE;
-      }
-
-      // Entity was explicitly requested so we need to throw an exception.
-      throw new ForbiddenException(format_string('You do not have access to entity ID @id of resource @resource', $params));
-    }
-
-    return TRUE;
-  }
-
-
-  /**
-   * Check access to CRUD an entity.
-   *
-   * @param $op
-   *   The operation. Allowed values are "create", "update" and "delete".
-   * @param $entity_type
-   *   The entity type.
-   * @param $entity
-   *   The entity object.
-   *
-   * @return bool
-   *   TRUE or FALSE based on the access. If no access is known about the entity
-   *   return NULL.
-   */
-  protected function checkEntityAccess($op, $entity_type, $entity) {
-    $account = $this->getAccount();
-    return entity_access($op, $entity_type, $entity, $account);
   }
 
   /**
