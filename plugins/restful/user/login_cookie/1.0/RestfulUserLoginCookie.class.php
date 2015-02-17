@@ -45,6 +45,13 @@ class RestfulUserLoginCookie extends \RestfulEntityBase {
    */
   public function loginUser($account) {
     global $user;
+
+    // Explicitly allow a session to be saved, as it was disabled in
+    // \RestfulBase::switchUser. However the cookie auth is a special
+    // authentication, in the sense that we want to keep the user authenticated
+    // after login.
+    drupal_save_session(TRUE);
+
     // Override the global user.
     $user = user_load($account->uid);
 

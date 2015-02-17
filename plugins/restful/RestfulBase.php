@@ -849,11 +849,9 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
 
       $account = $this->getAccount();
 
-      if ($user->uid) {
-        // Don't allow a session to be saved when an existing user is already
-        // logged in.
-        drupal_save_session(FALSE);
-      }
+      // Don't allow a session to be saved when an existing user is already
+      // logged in.
+      drupal_save_session(FALSE);
 
 
       // Set the global user.
