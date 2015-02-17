@@ -56,7 +56,7 @@ class RestfulCsrfTokenTestCase extends RestfulCurlBaseTestCase {
   /**
    * Test the validation of a CSRF token for anonymous users.
    */
-  function testCsrfTokenAnon() {
+  function __testCsrfTokenAnon() {
     global $user;
     $user = drupal_anonymous_user();
 
