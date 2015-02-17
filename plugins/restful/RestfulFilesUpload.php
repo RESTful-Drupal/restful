@@ -115,6 +115,31 @@ class RestfulFilesUpload extends \RestfulEntityBase {
   }
 
   /**
+   * Overrides \RestfulEntityBase::checkEntityAccess().
+   *
+   * We cannot use entity_access() on file entities, as for example a user
+   * which authenticated by the token auth, is in fact not logged in. So the
+   * the call to entity_metadata_file_access() will fail.
+   *
+   * To override this, we switch the user to be our authenticated one.
+   *
+   */
+  protected function checkEntityAccess($op, $entity_type, $entity) {
+    global $user;
+    $original_user = $user;
+    $old_state = drupal_save_session();
+    drupal_save_session(FALSE);
+    $user = $this->getAccount();
+
+    $access = parent::checkEntityAccess($op, $entity_type, $entity);
+
+    $user = $original_user;
+    drupal_save_session($old_state);
+
+    return $access;
+  }
+
+  /**
    * An adaptation of file_save_upload() that includes more verbose errors.
    *
    * @param string $source

@@ -75,6 +75,7 @@ class RestfulAuthenticationManager extends \ArrayObject {
     if (!empty($this->account)) {
       return $this->account;
     }
+
     // Resolve the user based on the providers in the manager.
     $account = NULL;
     foreach ($this as $provider) {
@@ -105,6 +106,7 @@ class RestfulAuthenticationManager extends \ArrayObject {
     if ($cache) {
       $this->setAccount($account);
     }
+
     return $account;
   }
 

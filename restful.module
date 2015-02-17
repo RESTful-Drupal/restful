@@ -426,6 +426,13 @@ function restful_menu_access_callback($resource_name, $version = NULL) {
     return;
   }
 
+  // Set the request and method on the handler, so access callbacks have full
+  // access to the request and account.
+  $path = _restful_get_request_path($version);
+  $request = restful_parse_request();
+  $handler->setMethod($method);
+  $handler->setRequest($request);
+
   return $handler->access();
 }
 
@@ -450,6 +457,8 @@ function restful_menu_process_callback($resource_name, $version = NULL) {
   if (preg_match('/^v\d+(\.\d+)?$/', $version)) {
     array_shift($path);
   }
+  $path = implode('/', $path);
+
   list($major_version, $minor_version) = \RestfulBase::getVersionFromRequest();
   $handler = restful_get_restful_handler($resource_name, $major_version, $minor_version);
   if (!$handler instanceof \RestfulDataProviderInterface) {
@@ -472,16 +481,15 @@ function restful_menu_process_callback($resource_name, $version = NULL) {
     $handler->setHttpHeaders('Access-Control-Allow-Origin', $allowed_origin);
   }
 
-  $path = implode('/', $path);
-
   $method = strtoupper($_SERVER['REQUEST_METHOD']);
 
   if ($method == \RestfulInterface::POST && \RestfulManager::getRequestHttpHeader('X-HTTP-Method-Override')) {
     $method = strtoupper(\RestfulManager::getRequestHttpHeader('X-HTTP-Method-Override'));
   }
 
-  $method = strtolower($method);
+  $path = _restful_get_request_path($version);
   $request = restful_parse_request();
+  $method = strtolower($method);
 
   try {
     return $handler->{$method}($path, $request);
@@ -518,6 +526,24 @@ function restful_menu_process_callback($resource_name, $version = NULL) {
   drupal_add_http_header('Status', $result['status']);
   drupal_add_http_header('Content-Type', 'application/problem+json; charset=utf-8');
   return $result;
+}
+
+/**
+ * Return the path of the resource from the request.
+ *
+ * @param string $version
+ *   The version that was requested.
+ *
+ * @return string
+ *   The path of the resource.
+ */
+function _restful_get_request_path($version) {
+  $path = func_get_args();
+  array_shift($path);
+  if (preg_match('/^v\d+(\.\d+)?$/', $version)) {
+    array_shift($path);
+  }
+  return implode('/', $path);
 }
 
 /**
