@@ -97,6 +97,13 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
   protected $publicFields;
 
   /**
+   * The original user object and session.
+   *
+   * @var array
+   */
+  protected $originalUserSession;
+
+  /**
    * Get the cache id parameters based on the keys.
    *
    * @param $keys
@@ -815,7 +822,57 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
       $this->getRateLimitManager()->checkRateLimit($request);
     }
 
+    // Switch user to the user authenticated by RESTful.
+    $this->switchUser();
     return $this->{$method_name}($path);
+
+    // Switch user back.
+    $this->switchUser();
+  }
+
+  /**
+   * Switch the user to the authenticated user, and back.
+   */
+  protected function switchUser() {
+    global $user;
+    if (!$user_state = $this->getOriginalUserSession()) {
+      // No original user exists, so it means we need to switch the user.
+      $session = drupal_save_session();
+      $this->setOriginalUserSession(array(
+        'user' => $user,
+        'session' => $session,
+      ));
+
+      drupal_save_session(FALSE);
+
+      // Set the global user.
+      $user = $this->getAccount();
+    }
+    else {
+      // Switch back to the original user.
+      $user = $user_state['user'];
+      drupal_save_session($user_state['session']);
+    }
+  }
+
+
+  /**
+   * Set the original user object and session.
+   *
+   * @param array $originalUserSession
+   */
+  public function setOriginalUserSession($original_user_session) {
+    $this->originalUserSession = $original_user_session;
+  }
+
+  /**
+   * Get the original user object and session.
+   *
+   * @return array
+   *   Array keyed by 'user' and 'session'.
+   */
+  public function getOriginalUserSession() {
+    return $this->originalUserSession;
   }
 
   /**
