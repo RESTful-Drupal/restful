@@ -32,7 +32,7 @@ before_script:
 
 
   # Download entity validator.
-  - drush dl entity_validator --dev --yes
+#  - drush dl entity_validator --dev --yes
 
   # Patch Entity API.
   - cd sites/all/modules/
