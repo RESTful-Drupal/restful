@@ -827,6 +827,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
 
     $return = $this->{$method_name}($path);
 
+    // Switch back to the original user.
     $this->switchUser();
 
     return $return;
@@ -837,8 +838,9 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
    * Switch the user to the authenticated user, and back.
    */
   protected function switchUser() {
-    $request = $this->getRequest();
     global $user;
+    $request = $this->getRequest();
+
     if (!$user_state = $this->getOriginalUserSession()) {
       // No original user exists, so it means we need to switch the user.
       $session = drupal_save_session();
@@ -849,8 +851,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
 
       $account = $this->getAccount();
 
-      // Don't allow a session to be saved when an existing user is already
-      // logged in.
+      // Don't allow a session to be saved.
       drupal_save_session(FALSE);
 
 
