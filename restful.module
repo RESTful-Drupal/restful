@@ -542,7 +542,11 @@ function restful_menu_process_callback($resource_name, $version = NULL) {
  *   The request array.
  */
 function restful_parse_request() {
-  $request = NULL;
+  $request = &drupal_static(__FUNCTION__, NULL);
+  if ($request) {
+    return $request;
+  }
+
   $method = strtoupper($_SERVER['REQUEST_METHOD']);
 
   if ($method == \RestfulInterface::GET) {
@@ -571,7 +575,7 @@ function restful_parse_request() {
     'csrf_token' => \RestfulManager::getRequestHttpHeader('X-CSRF-Token'),
   );
 
-  // Allow implemeting modules to alter the request.
+  // Allow implementing modules to alter the request.
   drupal_alter('restful_parse_request', $request);
 
   return $request;
