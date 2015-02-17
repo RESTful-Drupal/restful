@@ -33,6 +33,9 @@ before_script:
 
   # Download entity validator.
 #  - drush dl entity_validator --dev --yes
+# Use the github untill Drupal.org build script will initialize.
+  - git clone https://github.com/Gizra/entity_validator.git --baranch 7.x-1.x
+  
 
   # Patch Entity API.
   - cd sites/all/modules/
