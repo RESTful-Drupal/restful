@@ -30,6 +30,7 @@ before_script:
   - cd restful/drupal
   - drush --yes pm-enable restful restful_token_auth restful_test
 
+
   # Download entity validator.
   - drush dl entity_validator --dev --yes
 
