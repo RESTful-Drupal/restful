@@ -857,7 +857,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
       // Set the global user.
       $user = $account;
     }
-    elseif (!$request['__application']['rest_call']) {
+    elseif (empty($request['__application']['rest_call'])) {
       // This is an API call, so we need to switch the original user back.
       // we don't do it for calls via the menu system, as it might be a login
       // request, so we avoid switching back to the anonymous user.
