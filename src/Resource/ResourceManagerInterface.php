@@ -53,7 +53,7 @@ interface ResourceManagerInterface {
   public static function executeCallback($callback, array $params = array());
 
   /**
-   * Is valid callback?
+   * Determine if a callback is valid.
    *
    * @param mixed $callback
    *   There are 3 ways to define a callback:

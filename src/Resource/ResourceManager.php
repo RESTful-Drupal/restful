@@ -112,6 +112,12 @@ class ResourceManager implements ResourceManagerInterface {
    * {@inheritdoc}
    */
   public static function isValidCallback($callback) {
+    // Valid callbacks are:
+    //   - 'function_name'
+    //   - 'SomeClass::someStaticMethod'
+    //   - array('function_name', array('param1', 2))
+    //   - array($this, 'methodName')
+    //   - array(array($this, 'methodName'), array('param1', 2))
     if (!is_callable($callback)) {
       if (is_array($callback) && count($callback) == 2 && is_array($callback[1])) {
         return static::isValidCallback($callback[0]);

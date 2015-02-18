@@ -121,8 +121,8 @@ class DataProviderEntity extends DataProvider {
   /**
    * {@inheritdoc}
    */
-  public function view($subject) {
-    $id = $subject;
+  public function view($identifier) {
+    $id = $identifier;
     $entity_id = $this->getEntityIdByFieldId($id);
 
     if (!$this->isValidEntity('view', $entity_id)) {
@@ -220,21 +220,21 @@ class DataProviderEntity extends DataProvider {
   /**
    * {@inheritdoc}
    */
-  public function viewMultiple(array $subjects) {
+  public function viewMultiple(array $identifiers) {
 
   }
 
   /**
    * {@inheritdoc}
    */
-  public function update($subject, $object, $replace = TRUE) {
+  public function update($identifier, $object, $replace = TRUE) {
 
   }
 
   /**
    * {@inheritdoc}
    */
-  public function remove($subject) {
+  public function remove($identifier) {
 
   }
 
