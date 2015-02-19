@@ -120,4 +120,50 @@ class RestfulAuthenticationTestCase extends RestfulCurlBaseTestCase {
     $result = $this->httpRequest('api/v1.0/users');
     $this->assertEqual($result['code'], 200, 'Anonymous user got 200 when trying to access the "users" resource after permissions changed.');
   }
+
+  /**
+   * Tests that an authenticated user response never gets into the page cache.
+   */
+  public function testCachePoisoning() {
+    // Enable page caching.
+    variable_set('cache', 1);
+
+    // Allow anyone to access the user resource.
+    user_role_grant_permissions(DRUPAL_ANONYMOUS_RID, array('access resource user', 'access user profiles'));
+    user_role_grant_permissions(DRUPAL_AUTHENTICATED_RID, array('access resource user', 'access user profiles'));
+
+    // Create an admin account that is allowed to read emails of users.
+    $user1 = $this->drupalCreateUser(array('administer users'));
+
+    $this->httpauth_credentials = $user1->name . ':' . $user1->pass_raw;
+    $result = $this->httpRequest('users/1');
+    $this->assertResponse(200);
+
+    // Now access the resource as anonymous user and make sure that the response
+    // is not in the page cache.
+    $this->httpauth_credentials = '';
+    $result = $this->httpRequest('users/1');
+    $this->assertResponse(200);
+    $response = drupal_json_decode($result);
+    $this->assertTrue(empty($response['mail']), 'Protected email property is not present on response for anonymous users.');
+
+    // Access the resource as admin again and make sure that the response is not
+    // from the page cache.
+    $this->httpauth_credentials = $user1->name . ':' . $user1->pass_raw;
+    $response = $this->httpRequest('users/1');
+    $this->assertResponse(200);
+    $response = drupal_json_decode($response);
+    $this->assertFalse(empty($response['mail']), 'Protected email property is present on response for admin users.');
+
+    // Restrict access to view profiles for non-RESTful tests.
+    user_role_revoke_permissions(DRUPAL_ANONYMOUS_RID, array('access user profiles'));
+
+    // Access non-RESTful  resource as admin.
+    $response = $this->httpRequest('user/1', $user1);
+    $this->assertResponse(200, 'Admin can view user/1 (cache not set)');
+
+    // Access non-RESTful  resource as anonymous and ensure denied.
+    $response = $this->httpRequest('user/1');
+    $this->assertResponse(403, 'Anonymous gets a 403 for user/1 after admin requested user/1');
+  }
 }
