@@ -5,6 +5,10 @@
  * Contains \RestfulDataProviderCToolsPlugins
  */
 
+use Drupal\restful\Authentication\AuthenticationManager;
+use Drupal\restful\Exception\BadRequestException;
+use Drupal\restful\Exception\NotFoundException;
+
 abstract class RestfulDataProviderCToolsPlugins extends \RestfulBase implements \RestfulDataProviderCToolsPluginsInterface {
 
   /**
@@ -120,7 +124,7 @@ abstract class RestfulDataProviderCToolsPlugins extends \RestfulBase implements 
     );
 
     if (!in_array(strtoupper($conjunction), $allowed_conjunctions)) {
-      throw new \RestfulBadRequestException(format_string('Conjunction "@conjunction" is not allowed for filtering on this resource. Allowed conjunctions are: !allowed', array(
+      throw new BadRequestException(format_string('Conjunction "@conjunction" is not allowed for filtering on this resource. Allowed conjunctions are: !allowed', array(
         '@conjunction' => $conjunction,
         '!allowed' => implode(', ', $allowed_conjunctions),
       )));
@@ -140,7 +144,7 @@ abstract class RestfulDataProviderCToolsPlugins extends \RestfulBase implements 
    * @return bool
    *   TRUE or FALSE based on the evaluated expression.
    *
-   * @throws RestfulBadRequestException
+   * @throws BadRequestException
    */
   protected function evaluateExpression($value1, $value2, $operator) {
     switch($operator) {
@@ -202,14 +206,14 @@ abstract class RestfulDataProviderCToolsPlugins extends \RestfulBase implements 
    *
    * @param array $plugin
    *   Plugin definition.
-   * @param RestfulAuthenticationManager $auth_manager
+   * @param AuthenticationManager $auth_manager
    *   (optional) Injected authentication manager.
    * @param DrupalCacheInterface $cache_controller
    *   (optional) Injected cache backend.
    * @param string $language
    *   (optional) The language to return items in.
    */
-  public function __construct(array $plugin, \RestfulAuthenticationManager $auth_manager = NULL, \DrupalCacheInterface $cache_controller = NULL, $language = NULL) {
+  public function __construct(array $plugin, AuthenticationManager $auth_manager = NULL, \DrupalCacheInterface $cache_controller = NULL, $language = NULL) {
     parent::__construct($plugin, $auth_manager, $cache_controller, $language);
 
     // Validate keys exist in the plugin's "data provider options".
@@ -262,7 +266,7 @@ abstract class RestfulDataProviderCToolsPlugins extends \RestfulBase implements 
       // Since the discovery resource sits under 'api/' it will pick up all
       // invalid paths like 'api/invalid'. If it is not a valid plugin then
       // return a 404.
-      throw new \RestfulNotFoundException('Invalid URL path.');
+      throw new NotFoundException('Invalid URL path.');
     }
 
     // Loop over all the defined public fields.

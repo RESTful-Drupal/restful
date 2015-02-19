@@ -5,6 +5,8 @@
  * Contains RestfulRateLimitTestCase.
  */
 
+use Drupal\restful\Exception\FloodException;
+
 class RestfulRateLimitTestCase extends DrupalWebTestCase {
 
   public static function getInfo() {
@@ -44,17 +46,6 @@ class RestfulRateLimitTestCase extends DrupalWebTestCase {
 
     $account = $this->drupalCreateUser();
     $this->roleExecute($account, 1, array('articles', 1, 0));
-
-    // Test invalid 'restful_global_rate_period' format.
-    try {
-      variable_set('restful_global_rate_period', 'fail');
-
-      $this->roleExecute($account, 1, array('articles', 1, 0));
-      $this->fail('Invalid \DateInterval format in restful_global_rate_period did not raise an error');
-    }
-    catch (Exception $e) {
-      $this->pass('Invalid \DateInterval format in restful_global_rate_period raises an error');
-    }
   }
 
   /**
@@ -106,7 +97,7 @@ class RestfulRateLimitTestCase extends DrupalWebTestCase {
         $handler->get('');
         $this->pass('The rate limit authorized the request.');
       }
-      catch (\RestfulFloodException $e) {
+      catch (FloodException $e) {
         $this->fail('The rate limit did not authorize the request.');
       }
     }
@@ -115,7 +106,7 @@ class RestfulRateLimitTestCase extends DrupalWebTestCase {
       $handler->get('');
       $this->fail('The rate limit authorized the request.');
     }
-    catch (\RestfulFloodException $e) {
+    catch (FloodException $e) {
       $this->pass('The rate limit did not authorize the request.');
       $headers = $e->getHeaders();
       $this->assertTrue(in_array('Retry-After', array_keys($headers)), 'Retry-After header found after rate limit exception.');

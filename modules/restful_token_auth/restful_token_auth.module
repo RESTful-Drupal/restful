@@ -5,6 +5,9 @@
  * RESTful token authentication.
  */
 
+use \Drupal\Component\Plugin\Exception\PluginNotFoundException;
+use \Drupal\restful\Http\RequestInterface;
+use \Drupal\restful\Authentication\AuthenticationManager;
 /**
  *  Implements hook_menu().
  */
@@ -45,13 +48,21 @@ function restful_token_auth_menu_alter(&$items) {
 /**
  * Implements hook_restful_parse_request_alter()
  */
-function restful_token_auth_restful_parse_request_alter(&$request) {
-  $plugin = restful_get_authentication_plugin('token');
-  $param_name = $plugin['options']['param_name'];
+function restful_token_auth_restful_parse_request_alter(RequestInterface &$request) {
+  // In this hook we cannot rely on the service to be ready.
+  $authentication_manager = new AuthenticationManager();
+  try {
+    $plugin = $authentication_manager->getPlugin('token');
+  }
+  catch (PluginNotFoundException $e) {
+    watchdog_exception('restful_token_auht', $e);
+    return;
+  }
+  $plugin_definition = $plugin->getPluginDefinition();
+  $param_name = $plugin_definition['options']['param_name'];
 
-  $request['__application'] += array(
-    $param_name => \RestfulManager::getRequestHttpHeader($param_name),
-  );
+  $header = $request->getHeaders()->get($param_name);
+  $request->setApplicationData($param_name, $header->getValueString());
 }
 
 /**

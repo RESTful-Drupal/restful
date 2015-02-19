@@ -5,6 +5,8 @@
  * Contains RestfulEntityAndPropertyAccessTestCase
  */
 
+use Drupal\restful\Exception\ForbiddenException;
+
 class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
 
   public static function getInfo() {
@@ -184,7 +186,7 @@ class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
       $handler->get($node->nid);
       $this->fail('Custom access callback per resource\'s method not executed correctly.');
     }
-    catch (\RestfulForbiddenException $e) {
+    catch (ForbiddenException $e) {
       $this->pass('Custom access callback per endpoint executed correctly.');
     }
 

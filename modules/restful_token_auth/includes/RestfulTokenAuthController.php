@@ -5,6 +5,8 @@
  * Contains \RestfulTokenAuthController
  */
 
+use Drupal\restful\Exception\ServerConfigurationException;
+
 class RestfulTokenAuthController extends \EntityAPIController {
 
   /**
@@ -81,7 +83,7 @@ class RestfulTokenAuthController extends \EntityAPIController {
   /**
    * Return the expiration time.
    *
-   * @throws RestfulServerConfigurationException
+   * @throws ServerConfigurationException
    *
    * @return int
    *   Timestamp with the expiration time.
@@ -92,7 +94,7 @@ class RestfulTokenAuthController extends \EntityAPIController {
       $expiration = $now->add(new \DateInterval(variable_get('restful_token_auth_expiration_period', 'P1D')));
     }
     catch (\Exception $e) {
-      throw new \RestfulServerConfigurationException('Invalid DateInterval format provided.');
+      throw new ServerConfigurationException('Invalid DateInterval format provided.');
     }
     return $expiration->format('U');
   }

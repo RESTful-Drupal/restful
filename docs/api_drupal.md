@@ -195,4 +195,4 @@ $handler->post('', $request);
 ## Error handling
 If an error occurs while using the API within Drupal, a custom exception is
 thrown.  All the exceptions thrown by the RESTful module extend the
-`\RestfulException` class.
+`\Drupal\restful\Exception\RestfulException` class.

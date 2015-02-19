@@ -1,19 +1,15 @@
 name = RESTful
 description = Turn Drupal to a RESTful server, following best practices.
 core = 7.x
-dependencies[] = ctools
+php = 5.4
 dependencies[] = entity
+dependencies[] = plug
+dependencies[] = ctools
 configure = admin/config/services/restful
 
 ; Plugins
-files[] = plugins/authentication/RestfulAuthenticationBase.php
-files[] = plugins/authentication/RestfulAuthenticationInterface.php
-files[] = plugins/authentication/RestfulAuthenticationManager.php
 files[] = plugins/formatter/RestfulFormatterBase.php
 files[] = plugins/formatter/RestfulFormatterInterface.php
-files[] = plugins/rate_limit/RestfulRateLimitBase.php
-files[] = plugins/rate_limit/RestfulRateLimitInterface.php
-files[] = plugins/rate_limit/RestfulRateLimitManager.php
 
 files[] = plugins/restful/RestfulBase.php
 files[] = plugins/restful/RestfulDataProviderCToolsPlugins.php
@@ -42,20 +38,6 @@ files[] = includes/RestfulPluginInterface.php
 files[] = includes/RestfulRateLimit.php
 files[] = includes/RestfulStaticCacheController.php
 files[] = includes/RestfulStaticCacheControllerInterface.php
-
-; Exceptions
-files[] = exceptions/RestfulBadRequestException.php
-files[] = exceptions/RestfulException.php
-files[] = exceptions/RestfulForbiddenException.php
-files[] = exceptions/RestfulFloodException.php
-files[] = exceptions/RestfulNotFoundException.php
-files[] = exceptions/RestfulNotImplementedException.php
-files[] = exceptions/RestfulServerConfigurationException.php
-files[] = exceptions/RestfulGoneException.php
-files[] = exceptions/RestfulServiceUnavailable.php
-files[] = exceptions/RestfulUnauthorizedException.php
-files[] = exceptions/RestfulUnsupportedMediaTypeException.php
-files[] = exceptions/RestfulUnprocessableEntityException.php
 
 ; Tests
 files[] = tests/RestfulAuthenticationTestCase.test

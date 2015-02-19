@@ -1,5 +1,7 @@
 <?php
 
+use Drupal\restful\RateLimit\RateLimitManager;
+
 $plugin = array(
   'label' => t('Articles'),
   'resource' => 'articles',
@@ -7,7 +9,7 @@ $plugin = array(
   'entity_type' => 'node',
   'bundle' => 'article',
   'description' => t('Export the article content type with rate limit for anonymous users.'),
-  'class' => 'RestfulExampleArticlesResource',
+  'class' => 'RestfulExampleArticlesResource__1_4',
   // Set the minor version.
   'minor_version' => 4,
   'rate_limit' => array(
@@ -19,7 +21,7 @@ $plugin = array(
       'limits' => array(
         'authenticated user' => 3,
         'anonymous user' => 2,
-        'administrator' => \RestfulRateLimitManager::UNLIMITED_RATE_LIMIT,
+        'administrator' => RateLimitManager::UNLIMITED_RATE_LIMIT,
       ),
     ),
   ),

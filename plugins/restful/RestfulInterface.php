@@ -6,20 +6,9 @@
  * Contains RestfulInterface.
  */
 
-interface RestfulInterface {
+use Drupal\restful\Authentication\AuthenticationManager;
 
-  /**
-   * HTTP methods.
-   */
-  const GET = 'GET';
-  const PUT = 'PUT';
-  const POST = 'POST';
-  const PATCH = 'PATCH';
-  const OPTIONS = 'OPTIONS';
-  const HEAD = 'HEAD';
-  const TRACE = 'TRACE';
-  const DELETE = 'DELETE';
-  const CONNECT = 'CONNECT';
+interface RestfulInterface {
 
   /**
    * Token value for token generation functions.
@@ -46,12 +35,12 @@ interface RestfulInterface {
    *
    * @param $plugin
    *   The restful plugin object.
-   * @param RestfulAuthenticationManager $auth_manager
+   * @param AuthenticationManager $auth_manager
    *   Injected authentication manager.
    * @param DrupalCacheInterface $cache_controller
    *   Injected cache controller.
    */
-  public function __construct(array $plugin, \RestfulAuthenticationManager $auth_manager = NULL, \DrupalCacheInterface $cache_controller = NULL);
+  public function __construct(array $plugin, AuthenticationManager $auth_manager = NULL, \DrupalCacheInterface $cache_controller = NULL);
 
   /**
    * Entry point to process a request.

@@ -5,11 +5,13 @@
  * Contains RestfulSimpleJsonTestCase
  */
 
+use Drupal\restful\Formatter\FormatterManager;
+
 class RestfulSimpleJsonTestCase extends RestfulCurlBaseTestCase {
 
   public static function getInfo() {
     return array(
-      'name' => 'View HAL+JSON',
+      'name' => 'View Simple JSON',
       'description' => 'Test the viewing of an entity in HAL+JSON format.',
       'group' => 'RESTful',
     );
@@ -31,7 +33,10 @@ class RestfulSimpleJsonTestCase extends RestfulCurlBaseTestCase {
     $handler->setPluginKey('formatter', 'json');
 
     $response = $handler->get($node->nid);
-    $formatter = \RestfulManager::outputFormat($handler);
+    $formatter_manager = new FormatterManager($handler);
+    $accept = empty($GLOBALS['_SERVER']['HTTP_ACCEPT']) ? NULL : $GLOBALS['_SERVER']['HTTP_ACCEPT'];
+    $formatter = $formatter_manager->negotiateFormatter($accept, 'json');
+
     $result = $formatter->format($response);
     if ($decoded_json = drupal_json_decode($result)) {
       $this->pass('Valid JSON output generated.');

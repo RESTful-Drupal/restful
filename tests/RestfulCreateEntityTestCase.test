@@ -5,6 +5,8 @@
  * Contains RestfulCreateEntityTestCase
  */
 
+use Drupal\restful\Exception\BadRequestException;
+
 class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
 
   public static function getInfo() {
@@ -129,7 +131,7 @@ class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
       $handler->post();
       $this->fail('User can create an entity with empty request.');
     }
-    catch (\RestfulBadRequestException $e) {
+    catch (BadRequestException $e) {
       $this->pass('User cannot create an entity with empty request.');
     }
     catch (\Exception $e) {
@@ -142,7 +144,7 @@ class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
       $handler->post('', $request);
       $this->fail('User can create an entity with invalid property name.');
     }
-    catch (\RestfulBadRequestException $e) {
+    catch (BadRequestException $e) {
       $this->pass('User cannot create an entity with invalid property name.');
     }
     catch (\Exception $e) {

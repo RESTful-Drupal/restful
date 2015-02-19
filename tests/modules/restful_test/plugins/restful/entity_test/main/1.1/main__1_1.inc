@@ -8,5 +8,6 @@ $plugin = array(
   'entity_type' => 'entity_test',
   'bundle' => 'main',
   'class' => 'RestfulTestMainResource__1_1',
+  'authentication_optional' => TRUE,
   'minor_version' => 1,
 );

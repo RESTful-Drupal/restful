@@ -5,6 +5,9 @@
  * Contains RestfulListTestCase
  */
 
+use Drupal\restful\Exception\BadRequestException;
+use Drupal\restful\Exception\ForbiddenException;
+
 class RestfulListTestCase extends RestfulCurlBaseTestCase {
 
   public static function getInfo() {
@@ -185,7 +188,7 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
       $handler->get('', $request);
       $this->fail('Illegal sort property used.');
     }
-    catch (RestfulBadRequestException $e) {
+    catch (BadRequestException $e) {
       $this->pass('Exception thrown on illegal sort property.');
     }
 
@@ -195,7 +198,7 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
       $handler->get('', $request);
       $this->fail('Illegal sort property, descending, used.');
     }
-    catch (RestfulBadRequestException $e) {
+    catch (BadRequestException $e) {
       $this->pass('Exception thrown on illegal sort property, descending.');
     }
 
@@ -210,7 +213,7 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
       $handler->get('', $request);
       $this->fail('Exception not raised for disabled sort parameter.');
     }
-    catch (\RestfulBadRequestException $e) {
+    catch (BadRequestException $e) {
       $this->pass('Exception raised for disabled sort parameter.');
     }
 
@@ -226,7 +229,7 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
       $handler->get('', $request);
       $this->fail('Exception not raised on invalid range parameter.');
     }
-    catch (\RestfulBadRequestException $e) {
+    catch (BadRequestException $e) {
       $this->pass('Exception raised on invalid range parameter.');
     }
 
@@ -241,7 +244,7 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
       $handler->get('', $request);
       $this->fail('Exception not raised for disabled range parameter.');
     }
-    catch (\RestfulBadRequestException $e) {
+    catch (BadRequestException $e) {
       $this->pass('Exception raised for disabled range parameter.');
     }
 
@@ -276,7 +279,7 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
       $handler->get('', $request);
       $this->fail('Exception not thrown for invalid sort.');
     }
-    catch (\RestfulBadRequestException $e) {
+    catch (BadRequestException $e) {
       $this->pass('Exception thrown for invalid sort.');
     }
   }
@@ -344,11 +347,12 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
 
     // Single value property.
     $request['filter'] = array('label' => 'abc');
+    /** @var \RestfulBase $handler */
     $result = $handler->get('', $request);
     $this->assertEqual($result[0]['id'], $nodes['abc'], 'Filter list by single value property.');
 
     // Assert count is correct.
-    $formatter_handler = restful_get_formatter_handler('hal_json', $handler);
+    $formatter_handler = $handler->getFormatterManager()->getPlugin('hal_json');
     $output = $formatter_handler->prepare($result);
     $this->assertEqual($output['count'], 1, '"count" property is correct.');
 
@@ -373,7 +377,7 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
       $handler->get('', $request);
       $this->fail('No exception was thrown on invalid key for filter.');
     }
-    catch (\RestfulBadRequestException $e) {
+    catch (BadRequestException $e) {
       $this->pass('Correct exception was thrown on invalid key for filter.');
     }
     catch (\Exception $e) {
@@ -419,7 +423,7 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
       $handler->get('', $request);
       $this->fail('Exception not raised for disabled filter parameter.');
     }
-    catch (\RestfulBadRequestException $e) {
+    catch (BadRequestException $e) {
       $this->pass('Exception raised for disabled filter parameter.');
     }
 
@@ -446,7 +450,7 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
       $handler->get('', $request);
       $this->fail('Exception not thrown for invalid filter.');
     }
-    catch (\RestfulBadRequestException $e) {
+    catch (BadRequestException $e) {
       $this->pass('Exception thrown for invalid filter.');
     }
   }
@@ -502,7 +506,7 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
       $handler->get('', array('page' => 'string'));
       $this->fail('No exception thrown for pagination with non-numeric value.');
     }
-    catch (\RestfulBadRequestException $e) {
+    catch (BadRequestException $e) {
       $this->pass('Correct exception thrown for pagination with non-numeric value.');
     }
     catch (\Exception $e) {
@@ -515,7 +519,7 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
       $handler->get('', array('page' => 0));
       $this->fail('No exception thrown for pagination with 0 value.');
     }
-    catch (\RestfulBadRequestException $e) {
+    catch (BadRequestException $e) {
       $this->pass('Correct exception thrown for pagination with 0 value.');
     }
     catch (\Exception $e) {
@@ -606,7 +610,7 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
       $handler->get(implode(',', $ids));
       $this->fail('Exception was not thrown for un-accessible node for specific IDs list.');
     }
-    catch (\RestfulForbiddenException $e) {
+    catch (ForbiddenException $e) {
       $this->pass('Exception was thrown for un-accessible node for specific IDs list.');
     }
     catch (\Exception $e) {

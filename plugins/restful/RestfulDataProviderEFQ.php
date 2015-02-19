@@ -5,6 +5,11 @@
  * Contains \RestfulDataProviderEFQ
  */
 
+use Drupal\restful\Authentication\AuthenticationManager;
+use Drupal\restful\Exception\BadRequestException;
+use Drupal\restful\Exception\ForbiddenException;
+use Drupal\restful\Exception\ServerConfigurationException;
+
 abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDataProviderEFQInterface, \RestfulDataProviderInterface {
 
   /**
@@ -63,16 +68,16 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
    *
    * @param array $plugin
    *   Plugin definition.
-   * @param RestfulAuthenticationManager $auth_manager
+   * @param AuthenticationManager $auth_manager
    *   (optional) Injected authentication manager.
    * @param DrupalCacheInterface $cache_controller
    *   (optional) Injected cache backend.
    * @param string $language
    *   (optional) The language to return items in.
    *
-   * @throws RestfulServerConfigurationException
+   * @throws ServerConfigurationException
    */
-  public function __construct(array $plugin, \RestfulAuthenticationManager $auth_manager = NULL, \DrupalCacheInterface $cache_controller = NULL, $language = NULL) {
+  public function __construct(array $plugin, AuthenticationManager $auth_manager = NULL, \DrupalCacheInterface $cache_controller = NULL, $language = NULL) {
     parent::__construct($plugin, $auth_manager, $cache_controller, $language);
     $this->entityType = $plugin['entity_type'];
     $this->bundle = $plugin['bundle'];
@@ -81,7 +86,7 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
     $data_provider_options = $this->getPluginKey('data_provider_options');
     if (!empty($data_provider_options['efq_class'])) {
       if (!is_subclass_of($data_provider_options['efq_class'], '\EntityFieldQuery')) {
-        throw new \RestfulServerConfigurationException(format_string('The provided class @class does not extend from \EntityFieldQuery.', array(
+        throw new ServerConfigurationException(format_string('The provided class @class does not extend from \EntityFieldQuery.', array(
           '@class' => $data_provider_options['efq_class'],
         )));
       }
@@ -126,7 +131,7 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
    * @param \EntityFieldQuery $query
    *   The query object.
    *
-   * @throws \RestfulBadRequestException
+   * @throws BadRequestException
    *
    * @see \RestfulEntityBase::getQueryForList
    */
@@ -141,7 +146,7 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
     foreach ($sorts as $public_field_name => $direction) {
       // Determine if sorting is by field or property.
       if (!$property_name = $public_fields[$public_field_name]['property']) {
-        throw new \RestfulBadRequestException('The current sort selection does not map to any entity property or Field API field.');
+        throw new BadRequestException('The current sort selection does not map to any entity property or Field API field.');
       }
       if (field_info_field($property_name)) {
         $query->fieldOrderBy($public_fields[$public_field_name]['property'], $public_fields[$public_field_name]['column'], $direction);
@@ -159,7 +164,7 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
    * @param \EntityFieldQuery $query
    *   The query object.
    *
-   * @throws \RestfulBadRequestException
+   * @throws BadRequestException
    *
    * @see \RestfulEntityBase::getQueryForList
    */
@@ -168,7 +173,7 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
     foreach ($this->parseRequestForListFilter() as $filter) {
       // Determine if filtering is by field or property.
       if (!$property_name = $public_fields[$filter['public_field']]['property']) {
-        throw new \RestfulBadRequestException('The current filter selection does not map to any entity property or Field API field.');
+        throw new BadRequestException('The current filter selection does not map to any entity property or Field API field.');
       }
       if (field_info_field($property_name)) {
         if (in_array(strtoupper($filter['operator'][0]), array('IN', 'BETWEEN'))) {
@@ -217,7 +222,7 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
     );
 
     if (!in_array(strtoupper($conjunction), $allowed_conjunctions)) {
-      throw new \RestfulBadRequestException(format_string('Conjunction "@conjunction" is not allowed for filtering on this resource. Allowed conjunctions are: !allowed', array(
+      throw new BadRequestException(format_string('Conjunction "@conjunction" is not allowed for filtering on this resource. Allowed conjunctions are: !allowed', array(
         '@conjunction' => $conjunction,
         '!allowed' => implode(', ', $allowed_conjunctions),
       )));
@@ -233,7 +238,7 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
    * @param \EntityFieldQuery $query
    *   The query object.
    *
-   * @throws \RestfulBadRequestException
+   * @throws BadRequestException
    *
    * @see \RestfulEntityBase::getQueryForList
    */
@@ -341,7 +346,7 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
    * @return array
    *   Array of entities, as passed to RestfulEntityBase::viewEntity().
    *
-   * @throws RestfulBadRequestException
+   * @throws BadRequestException
    */
   abstract public function getList();
 
@@ -367,7 +372,7 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
    * @return array
    *   Array of entities, as passed to RestfulEntityBase::viewEntity().
    *
-   * @throws RestfulBadRequestException
+   * @throws BadRequestException
    */
   abstract public function viewEntities($ids_string);
 
@@ -378,7 +383,7 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
    *   Array with the output of the new entity, passed to
    *   RestfulEntityInterface::viewEntity().
    *
-   * @throws RestfulForbiddenException
+   * @throws ForbiddenException
    */
   abstract public function createEntity();
 

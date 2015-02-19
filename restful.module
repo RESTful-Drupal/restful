@@ -7,6 +7,12 @@
 
 include_once __DIR__ . '/restful.entity.inc';
 
+use Drupal\restful\Exception\RestfulException;
+use Drupal\restful\Exception\ServiceUnavailableException;
+use Drupal\restful\Formatter\FormatterManager;
+use Drupal\restful\Http\HttpHeader;
+use Drupal\restful\RestfulManager;
+
 /**
  * Implements hook_ctools_plugin_directory().
  */
@@ -57,17 +63,6 @@ function restful_get_restful_plugins() {
 }
 
 /**
- * Include CTools plugins and get all authentication plugins.
- *
- * @return array
- *   All plugins for restful authentication.
- */
-function restful_get_authentication_plugins() {
-  ctools_include('plugins');
-  return ctools_get_plugins('restful', 'authentication');
-}
-
-/**
  * Include CTools plugins and get all rate_limit plugins.
  *
  * @return array
@@ -76,17 +71,6 @@ function restful_get_authentication_plugins() {
 function restful_get_rate_limit_plugins() {
   ctools_include('plugins');
   return ctools_get_plugins('restful', 'rate_limit');
-}
-
-/**
- * Include CTools plugins and get all formatter plugins.
- *
- * @return array
- *   All the restful formatter plugins.
- */
-function restful_get_formatter_plugins() {
-  ctools_include('plugins');
-  return ctools_get_plugins('restful', 'formatter');
 }
 
 /**
@@ -101,20 +85,6 @@ function restful_get_formatter_plugins() {
 function restful_get_authentication_plugin($plugin_name) {
   ctools_include('plugins');
   return ctools_get_plugins('restful', 'authentication', $plugin_name);
-}
-
-/**
- * Include CTools plugins and get the specified formatter plugin.
- *
- * @param string $plugin_name
- *   If provided this function only returns the selected plugin.
- *
- * @return array
- *   The selected plugin for restful formatter.
- */
-function restful_get_formatter_plugin($plugin_name) {
-  ctools_include('plugins');
-  return ctools_get_plugins('restful', 'formatter', $plugin_name);
 }
 
 /**
@@ -294,72 +264,32 @@ function restful_get_restful_handler($resource_name, $major_version = 1, $minor_
  * @return RestfulInterface
  *   The handler object if found, or NULL.
  *
- * @throws \RestfulException
+ * @throws RestfulException
  */
 function restful_get_restful_handler_by_name($plugin_name) {
   ctools_include('plugins');
   $plugin = ctools_get_plugins('restful', 'restful', $plugin_name);
   if (!$class = ctools_plugin_load_class('restful', 'restful', $plugin_name, 'class')) {
-    throw new \RestfulServiceUnavailable(format_string('Restful plugin class (@plugin) was not found.', array('@plugin' => $plugin_name)));
+    throw new ServiceUnavailableException(format_string('RESTful plugin class (@plugin) was not found.', array('@plugin' => $plugin_name)));
   }
   $handler = new $class($plugin);
   // If the restful plugin needs authentication load the corresponding
   // authentication plugin.
 
-  // Handler set explicitly to allow all authentication types.
-  $auth_plugins = $plugin['authentication_types'] === TRUE ? array_keys(restful_get_authentication_plugins()) : $plugin['authentication_types'];
-
-  // We can have multiple authentication plugins.
-  foreach ($auth_plugins as $auth_plugin_name) {
-    $auth_handler = restful_get_authentication_handler($auth_plugin_name);
-    $handler->getAuthenticationManager()->addAuthenticationProvider($auth_handler);
+  if ($plugin['authentication_types'] === TRUE) {
+    $handler->getAuthenticationManager()->addAllAuthenticationProviders();
+  }
+  else {
+    // We can have multiple authentication plugins.
+    foreach ($plugin['authentication_types'] as $auth_plugin_name) {
+      $handler->getAuthenticationManager()->addAuthenticationProvider($auth_plugin_name);
+    }
   }
 
   // Set the "optional" flag of the authentication manager.
   $handler->getAuthenticationManager()->setIsOptional($plugin['authentication_optional']);
 
   return $handler;
-}
-
-/**
- * Return the authentication handler based on the authentication plugin name.
- *
- * @param string $auth_plugin_name
- *   Name of the authentication plugin.
- *
- * @return \RestfulAuthenticationInterface
- *   The authentication provider object.
- *
- * @throws \RestfulException if the authentication provider does not exist.
- */
-function restful_get_authentication_handler($auth_plugin_name) {
-  $auth_plugin = restful_get_authentication_plugin($auth_plugin_name);
-  if (!$auth_class = ctools_plugin_get_class($auth_plugin, 'class')) {
-    throw new \RestfulServiceUnavailable(format_string('Authentication plugin class (@plugin) was not found.', array('@plugin' => $auth_plugin_name)));
-  }
-  return new $auth_class($auth_plugin);
-}
-
-/**
- * Return the formatter handler based on the formatter plugin name.
- *
- * @param string $formatter_plugin_name
- *   Name of the formatter plugin.
- *
- * @param \RestfulBase $restful_handler
- *   The resource handler.
- *
- * @return \RestfulFormatterInterface
- *   The formatter provider object.
- *
- * @throws \RestfulException if the formatter provider does not exist.
- */
-function restful_get_formatter_handler($formatter_plugin_name, $restful_handler) {
-  $formatter_plugin = restful_get_formatter_plugin($formatter_plugin_name);
-  if (!$formatter_class = ctools_plugin_get_class($formatter_plugin, 'class')) {
-    throw new \RestfulServiceUnavailable(format_string('Formatter plugin class (@plugin) was not found.', array('@plugin' => $formatter_plugin_name)));
-  }
-  return new $formatter_class($formatter_plugin, $restful_handler);
 }
 
 /**
@@ -392,6 +322,31 @@ function restful_get_restful_handler_for_path($path = NULL) {
 }
 
 /**
+ * Get the RestfulManager.
+ *
+ * Calling restful() from anywhere in the code will give you access to the
+ * RestfulManager. That in turn will provide you access to all the elements
+ * involved.
+ *
+ * @return RestfulManager
+ *   The manager.
+ */
+function restful() {
+  static $manager;
+  if (isset($manager)) {
+    return $manager;
+  }
+  try {
+    $manager = xautoload()->restfulManager;
+  }
+  catch (\Exception $e) {
+    $manager = RestfulManager::createFromGlobals();
+    xautoload()->getServiceContainer()->set('restfulManager', $manager);
+  }
+  return $manager;
+}
+
+/**
  * Access callback; Determine access for an API call.
  *
  * @param $version
@@ -403,30 +358,22 @@ function restful_get_restful_handler_for_path($path = NULL) {
  *   TRUE if user is allowed to access resource.
  */
 function restful_menu_access_callback($resource_name, $version = NULL) {
-  if (!$versions = \RestfulBase::getVersionFromRequest()) {
+  $resource_manager = restful()->getResourceManager();
+  if (!$versions = $resource_manager->getVersionFromRequest()) {
     // No version could be found.
-    return;
+    return FALSE;
   }
 
-  if (!$handler = restful_get_restful_handler($resource_name, $versions[0], $versions[1])) {
-    return;
+  try {
+    return $resource_manager
+      ->negotiate(restful()->getRequest())
+      ->access();
   }
-
-  if (!\RestfulBase::isValidMethod($_SERVER['REQUEST_METHOD'], FALSE)) {
-    return;
+  catch (RestfulException $e) {
+    // We can get here if the request method is not valid or if no resource can
+    // be negotiated.
+    return FALSE;
   }
-
-  $method = strtoupper($_SERVER['REQUEST_METHOD']);
-  if ($method == \RestfulInterface::POST && \RestfulManager::getRequestHttpHeader('X-HTTP-Method-Override')) {
-    $method = strtoupper(\RestfulManager::getRequestHttpHeader('X-HTTP-Method-Override'));
-  }
-
-  if (!\RestfulBase::isValidMethod($method, FALSE)) {
-    // HTTP method is invalid.
-    return;
-  }
-
-  return $handler->access();
 }
 
 /**
@@ -437,7 +384,7 @@ function restful_menu_access_callback($resource_name, $version = NULL) {
  * @param $version
  *   The version, prefixed with v (e.g. v1, v2.2).
  *
- * @throws RestfulServiceUnavailable
+ * @throws ServiceUnavailableException
  *
  * @return string
  *   JSON output with the result of the API call.
@@ -453,7 +400,7 @@ function restful_menu_process_callback($resource_name, $version = NULL) {
   list($major_version, $minor_version) = \RestfulBase::getVersionFromRequest();
   $handler = restful_get_restful_handler($resource_name, $major_version, $minor_version);
   if (!$handler instanceof \RestfulDataProviderInterface) {
-    throw new \RestfulServiceUnavailable(format_string('The selected plugin (@plugin) does not implement \RestfulDataProviderInterface.', array('@plugin' => $resource_name . ' v' . $major_version . '.' . $minor_version)));
+    throw new ServiceUnavailableException(format_string('The selected plugin (@plugin) does not implement \RestfulDataProviderInterface.', array('@plugin' => $resource_name . ' v' . $major_version . '.' . $minor_version)));
   }
 
   // Vary the response with the presence of the X-API-Version or Accept headers.
@@ -581,11 +528,23 @@ function restful_delivery($var = NULL, $method = 'format') {
   }
 
   if (is_int($var)) {
-    _restful_get_json_from_menu_status($var);
+    _restful_get_data_from_menu_status($var);
 
     // Adhere to the API Problem draft proposal.
-    drupal_add_http_header('Status', $var['status']);
-    drupal_add_http_header('Content-Type', 'application/problem+json; charset=utf-8');
+    $formatter_id = variable_get('restful_default_output_formatter', 'json');
+    // Get the data in the default output format.
+    $data = restful()
+      ->getFormatterManager()
+      ->negotiateFormatter(NULL, $formatter_id)
+      ->format($var);
+
+    $response = restful()->getResponse();
+    $response->setStatusCode($var['status']);
+    $response->getHeaders()->add(HttpHeader::create('Content-Type', 'application/problem+' . $formatter_id . '; charset=utf-8'));
+    $response->setContent($data);
+    $response->prepare(restful()->getRequest());
+    $response->send();
+    return;
   }
 
   // Get the formatter for the current resource.
@@ -601,14 +560,17 @@ function restful_delivery($var = NULL, $method = 'format') {
   }
 
   try {
-    $formatter_handler = \RestfulManager::outputFormat($restful_handler);
+    // Get a new formatter manager.
+    $formatter_manager = new FormatterManager($restful_handler);
+    $accept = empty($GLOBALS['_SERVER']['HTTP_ACCEPT']) ? NULL : $GLOBALS['_SERVER']['HTTP_ACCEPT'];
+    $formatter_handler = $formatter_manager->negotiateFormatter($accept, $restful_handler->getPluginKey('formatter'));
     $output = $formatter_handler->{$method}($var);
     // The content type header is modified after the massaging if there is
     // an error code. Therefore we need to set the content type header after
     // formatting the output.
     drupal_add_http_header('Content-Type', $formatter_handler->getContentTypeHeader());
   }
-  catch (\RestfulException $e) {
+  catch (RestfulException $e) {
     // Handle if the formatter does not exist.
     drupal_add_http_header('Status', $e->getCode());
     echo $e->getMessage();
@@ -650,20 +612,20 @@ function restful_unprepared_delivery($var = NULL) {
  * @param int $var
  *   The integer value of the menu status, passed by reference.
  */
-function _restful_get_json_from_menu_status(&$var) {
+function _restful_get_data_from_menu_status(&$var) {
   switch ($var) {
     case MENU_NOT_FOUND:
-      $class_name = 'RestfulNotFoundException';
+      $class_name = '\Drupal\restful\Exception\NotFoundException';
       $message = 'Invalid URL path.';
       break;
 
     case MENU_ACCESS_DENIED:
-      $class_name = 'RestfulForbiddenException';
+      $class_name = '\Drupal\restful\Exception\ForbiddenException';
       $message = 'Access denied.';
       break;
 
     case MENU_SITE_OFFLINE:
-      $class_name = 'RestfulServiceUnavailable';
+      $class_name = '\Drupal\restful\Exception\ServiceUnavailable';
       $message = 'Site is offline.';
       break;
   }
@@ -724,7 +686,7 @@ function restful_deliver_menu_not_found($page_callback_result) {
  * Implements hook_cron().
  */
 function restful_cron() {
-  \RestfulRateLimitManager::deleteExpired();
+  \Drupal\restful\RateLimit\RateLimitManager::deleteExpired();
 }
 
 /**
