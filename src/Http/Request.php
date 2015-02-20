@@ -127,10 +127,17 @@ class Request implements RequestInterface {
   /**
    * Holds the parsed body.
    *
+   * @var array
+   */
+  private $parsedBody;
+
+  /**
+   * Holds the parsed input via URL.
+   *
    * @internal
    * @var \ArrayObject
    */
-  private $parsedBody;
+  private $parsedInput;
 
   /**
    * Store application data as part of the request.
@@ -144,7 +151,7 @@ class Request implements RequestInterface {
    *
    * Parses the URL and the query params. It also uses input:// to get the body.
    */
-  public function __construct($path, $query, $method = 'GET', HttpHeaderBag $headers, $via_router = FALSE, $csrf_token = NULL, $cookies = array(), $files = array(), $server = array()) {
+  public function __construct($path, array $query, $method = 'GET', HttpHeaderBag $headers, $via_router = FALSE, $csrf_token = NULL, array $cookies = array(), array $files = array(), array $server = array()) {
     $this->path = $path;
     $this->query = $query;
     $this->method = $method;
@@ -162,7 +169,7 @@ class Request implements RequestInterface {
   /**
    * {@inheritdoc}
    */
-  public static function create($path, $query, $method = 'GET', HttpHeaderBag $headers, $via_router = FALSE, $csrf_token = NULL, $cookies = array(), $files = array(), $server = array()) {
+  public static function create($path, array $query = array(), $method = 'GET', HttpHeaderBag $headers, $via_router = FALSE, $csrf_token = NULL, array $cookies = array(), array $files = array(), array $server = array()) {
     if ($method == static::METHOD_POST && $headers->get('x-http-method-override')) {
       $method = $headers->get('x-http-method-override')->getValueString();
     }
@@ -235,9 +242,7 @@ class Request implements RequestInterface {
   }
 
   /**
-   * Parses the body string.
-   *
-   * @return array
+   * {@inheritdoc}
    */
   public function getParsedBody() {
     if ($this->parsedBody) {
@@ -246,6 +251,18 @@ class Request implements RequestInterface {
     // Find out the body format and parse it into the \ArrayObject.
     $this->parsedBody = static::parseBody($this->method);
     return $this->parsedBody;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getParsedInput() {
+    if ($this->parsedInput) {
+      return $this->parsedInput;
+    }
+    // Get the input data provided via URL.
+    $this->parsedInput = static::parseInput($this->method);
+    return $this->parsedInput;
   }
 
   /**
@@ -258,6 +275,9 @@ class Request implements RequestInterface {
    *   The parsed body.
    */
   protected static function parseBody($method) {
+    if (!static::isWriteMethod($method)) {
+      return NULL;
+    }
     $body = NULL;
     if ($method == static::METHOD_GET) {
       return $_GET;
@@ -280,6 +300,16 @@ class Request implements RequestInterface {
     }
 
     return NULL;
+  }
+
+  /**
+   * Parses the input data.
+   *
+   * @return array
+   *   The parsed input.
+   */
+  protected static function parseInput($method) {
+    return $_GET;
   }
 
   /**

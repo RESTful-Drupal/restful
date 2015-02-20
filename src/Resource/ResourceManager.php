@@ -8,9 +8,8 @@
 namespace Drupal\restful\Resource;
 
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
-use Drupal\restful\Exception\RestfulException;
 use Drupal\restful\Exception\ServerConfigurationException;
-use Drupal\restful\Http\Request;
+use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\ResourcePluginManager;
 
 class ResourceManager implements ResourceManagerInterface {
@@ -18,7 +17,7 @@ class ResourceManager implements ResourceManagerInterface {
   /**
    * The request object.
    *
-   * @var Request
+   * @var RequestInterface
    */
   protected $request;
 
@@ -32,12 +31,12 @@ class ResourceManager implements ResourceManagerInterface {
   /**
    * Constructor for ResourceManager.
    *
-   * @param Request $request
+   * @param RequestInterface $request
    *   The request object.
    * @param ResourcePluginManager $manager
    *   The plugin manager.
    */
-  public function __construct(Request $request, ResourcePluginManager $manager = NULL) {
+  public function __construct(RequestInterface $request, ResourcePluginManager $manager = NULL) {
     $this->request = $request;
     $this->pluginManager = $manager ?: ResourcePluginManager::create();
     $options = array();
@@ -45,6 +44,7 @@ class ResourceManager implements ResourceManagerInterface {
       // Set the instance id to articles::1.5 (for example).
       $instance_id = $plugin_id . '::' . $plugin_definition['major_version'] . '.' . $plugin_definition['minor_version'];
       $options[$instance_id] = $plugin_definition;
+      $options['request'] = $request;
     }
     $this->plugins = new ResourcePluginCollection($this->pluginManager, $options);
   }
@@ -106,6 +106,25 @@ class ResourceManager implements ResourceManagerInterface {
     }
 
     return call_user_func_array($callback, $params);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function isValidCallback($callback) {
+    // Valid callbacks are:
+    //   - 'function_name'
+    //   - 'SomeClass::someStaticMethod'
+    //   - array('function_name', array('param1', 2))
+    //   - array($this, 'methodName')
+    //   - array(array($this, 'methodName'), array('param1', 2))
+    if (!is_callable($callback)) {
+      if (is_array($callback) && count($callback) == 2 && is_array($callback[1])) {
+        return static::isValidCallback($callback[0]);
+      }
+      return FALSE;
+    }
+    return TRUE;
   }
 
   /**
@@ -213,18 +232,9 @@ class ResourceManager implements ResourceManagerInterface {
   }
 
   /**
-   * Return the last version for a given resource.
-   *
-   * @param string $resource_name
-   *   The name of the resource.
-   * @param int $major_version
-   *   Get the last version for this major version. If NULL the last major
-   *   version for the resource will be used.
-   *
-   * @return array
-   *   Array containing the major_version and minor_version.
+   * {@inheritdoc}
    */
-  protected function getResourceLastVersion($resource_name, $major_version = NULL) {
+  public function getResourceLastVersion($resource_name, $major_version = NULL) {
     $resources = array();
     // Get all the resources corresponding to the resource name.
     foreach ($this->pluginManager->getDefinitions() as $plugin_id => $plugin_definition) {

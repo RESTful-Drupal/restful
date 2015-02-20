@@ -7,38 +7,6 @@ dependencies[] = plug
 dependencies[] = ctools
 configure = admin/config/services/restful
 
-; Plugins
-files[] = plugins/formatter/RestfulFormatterBase.php
-files[] = plugins/formatter/RestfulFormatterInterface.php
-
-files[] = plugins/restful/RestfulBase.php
-files[] = plugins/restful/RestfulDataProviderCToolsPlugins.php
-files[] = plugins/restful/RestfulDataProviderCToolsPluginsInterface.php
-files[] = plugins/restful/RestfulDataProviderDbQuery.php
-files[] = plugins/restful/RestfulDataProviderDbQueryInterface.php
-files[] = plugins/restful/RestfulDataProviderEFQ.php
-files[] = plugins/restful/RestfulDataProviderEFQInterface.php
-files[] = plugins/restful/RestfulDataProviderVariable.php
-files[] = plugins/restful/RestfulDataProviderVariableInterface.php
-files[] = plugins/restful/RestfulDataProviderInterface.php
-files[] = plugins/restful/RestfulEntityBase.php
-files[] = plugins/restful/RestfulEntityBaseMultipleBundles.php
-files[] = plugins/restful/RestfulEntityBaseNode.php
-files[] = plugins/restful/RestfulEntityBaseTaxonomyTerm.php
-files[] = plugins/restful/RestfulEntityBaseUser.php
-files[] = plugins/restful/RestfulEntityInterface.php
-files[] = plugins/restful/RestfulFilesUpload.php
-files[] = plugins/restful/RestfulInterface.php
-
-; Includes
-files[] = includes/RestfulEntityViewMode.php
-files[] = includes/RestfulManager.php
-files[] = includes/RestfulPluginBase.php
-files[] = includes/RestfulPluginInterface.php
-files[] = includes/RestfulRateLimit.php
-files[] = includes/RestfulStaticCacheController.php
-files[] = includes/RestfulStaticCacheControllerInterface.php
-
 ; Tests
 files[] = tests/RestfulAuthenticationTestCase.test
 files[] = tests/RestfulAutoCompleteTestCase.test

@@ -137,11 +137,8 @@ class RestfulManager {
    */
   public static function createFromGlobals() {
     $request = Request::createFromGlobals();
-    // TODO: Implement the response class.
     $response = Response::create();
-    // TODO: Implement the ResourceManager class.
     $resource_manager = new ResourceManager($request);
-    // TODO: Make the formatter manager independent from the resource plugin.
     $formatter_manager = new FormatterManager();
 
     return new static($request, $response, $resource_manager, $formatter_manager);

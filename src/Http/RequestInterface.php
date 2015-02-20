@@ -20,12 +20,30 @@ interface RequestInterface {
   /**
    * Creates a Request based on a given URI and configuration.
    *
-   * TODO: Add documentation.
+   * @param string $path
+   *   The requested path.
+   * @param array $query
+   *   The query string parameters being passed.
+   * @param string $method
+   *   A valid HTTP method
+   * @param HttpHeaderBag $headers
+   *   The headers for the request
+   * @param bool $via_router
+   *   Boolean indicating that if the requested was created via the Drupal's
+   *   menu router.
+   * @param string $csrf_token
+   *   A CSRF token that applies to the current request.
+   * @param array $cookies
+   *   An array of key value pairs containing information about the cookies.
+   * @param array $files
+   *   An array of key value pairs containing information about the files.
+   * @param array $server
+   *   An array of key value pairs containing information about the server.
    *
-   * @return RequestInterface
-   *   Request A Request instance
+   * @return RequestInterface Request
+   *   A Request instance
    */
-  public static function create($path, $query, $method = 'GET', HttpHeaderBag $headers, $viaRouter = FALSE, $csrfToken = NULL, $cookies = array(), $files = array(), $server = array());
+  public static function create($path, array $query = array(), $method = 'GET', HttpHeaderBag $headers, $via_router = FALSE, $csrf_token = NULL, array $cookies = array(), array $files = array(), array $server = array());
 
   /**
    * Determines if the HTTP method represents a write operation.
@@ -67,6 +85,20 @@ interface RequestInterface {
    *   TRUE if the request is for a list. FALSE otherwise.
    */
   public function isListRequest();
+
+  /**
+   * Parses the body string.
+   *
+   * @return array
+   */
+  public function getParsedBody();
+
+  /**
+   * Parses the input data provided via URL params.
+   *
+   * @return array
+   */
+  public function getParsedInput();
 
   /**
    * Gets the request path.
