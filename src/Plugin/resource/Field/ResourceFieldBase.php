@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal|restful\Plugin\resource\Field\ResourceFieldBase.
+ * Contains \Drupal\restful\Plugin\resource\Field\ResourceFieldBase.
  */
 
 namespace Drupal\restful\Plugin\resource\Field;
