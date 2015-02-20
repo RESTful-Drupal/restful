@@ -13,6 +13,22 @@ use Drupal\restful\Http\Request;
 abstract class ResourceFieldBase implements ResourceFieldInterface {
 
   /**
+   * Return this value from public field access callbacks to allow access.
+   */
+  const ACCESS_ALLOW = 'allow';
+
+  /**
+   * Return this value from public field access callbacks to deny access.
+   */
+  const ACCESS_DENY = 'deny';
+
+  /**
+   * Return this value from public field access callbacks to not affect access.
+   */
+  const ACCESS_IGNORE = NULL;
+
+
+  /**
    * Contains the public field name.
    */
   protected $publicName;

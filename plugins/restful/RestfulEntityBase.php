@@ -1028,38 +1028,6 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
   }
 
   /**
-   * Check access on property by the defined access callbacks.
-   *
-   * @param string $op
-   *   The operation that access should be checked for. Can be "view" or "edit".
-   *   Defaults to "edit".
-   * @param string $public_field_name
-   *   The name of the public field.
-   * @param EntityMetadataWrapper $property_wrapper
-   *   The wrapped property.
-   * @param EntityMetadataWrapper $wrapper
-   *   The wrapped entity.
-   *
-   * @return bool
-   *   TRUE if the current user has access to set the property, FALSE otherwise.
-   *   The default implementation assumes that if no callback has explicitly
-   *   denied access, we grant the user permission.
-   */
-  protected function checkPropertyAccessByAccessCallbacks($op, $public_field_name, EntityMetadataWrapper $property_wrapper, EntityMetadataWrapper $wrapper) {
-    $public_fields = $this->getPublicFields();
-
-    foreach ($public_fields[$public_field_name]['access_callbacks'] as $callback) {
-      $result = static::executeCallback($callback, array($op, $public_field_name, $property_wrapper, $wrapper));
-
-      if ($result == \RestfulInterface::ACCESS_DENY) {
-        return FALSE;
-      }
-    }
-
-    return TRUE;
-  }
-
-  /**
    * {@inheritdoc}
    */
   public function publicFieldsInfo() {
