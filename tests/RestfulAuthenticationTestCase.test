@@ -163,18 +163,5 @@ class RestfulAuthenticationTestCase extends RestfulCurlBaseTestCase {
     $this->assertResponse(200);
     $response = drupal_json_decode($result['body']);
     $this->assertFalse(empty($response['data'][0]['mail']), 'Protected email property is present on response for admin users.');
-
-    // Restrict access to view profiles for non-RESTful tests.
-    user_role_revoke_permissions(DRUPAL_ANONYMOUS_RID, array('access user profiles'));
-
-    // Access non-RESTful resource as admin.
-    $this->drupalLogin($user1);
-    $this->drupalGet('user/1');
-    $this->assertResponse(200, 'Admin can view user/1 (cache not set)');
-
-    // Access non-RESTful resource as anonymous and ensure denied.
-    $this->drupalLogout();
-    $this->drupalGet('user/1');
-    $this->assertResponse(403, 'Anonymous gets a 403 for user/1 after admin requested user/1');
   }
 }
