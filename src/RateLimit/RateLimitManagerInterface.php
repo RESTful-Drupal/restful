@@ -8,6 +8,7 @@
 namespace Drupal\restful\RateLimit;
 
 use \Drupal\restful\Exception\FloodException;
+use Drupal\restful\Http\RequestInterface;
 
 interface RateLimitManagerInterface {
 
@@ -34,13 +35,13 @@ interface RateLimitManagerInterface {
    * request can match multiple events, the access is only granted if all events
    * are cleared.
    *
-   * @param array $request
+   * @param RequestInterface $request
    *   The request array.
    *
    * @throws FloodException if the rate limit has been reached for the
    * current request.
    */
-  public function checkRateLimit($request);
+  public function checkRateLimit(RequestInterface $request);
 
   /**
    * Delete all expired rate limit entities.

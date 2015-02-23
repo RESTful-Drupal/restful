@@ -163,6 +163,11 @@ interface RequestInterface {
   public function setApplicationData($key, $value);
 
   /**
+   * Resets the application data.
+   */
+  public function clearApplicationData();
+
+  /**
    * Gets an object from the application data store.
    *
    * @param string $key

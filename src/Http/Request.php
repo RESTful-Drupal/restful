@@ -437,6 +437,13 @@ class Request implements RequestInterface {
   /**
    * {@inheritdoc}
    */
+  public function clearApplicationData() {
+    $this->applicationData = array();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getApplicationData($key) {
     return $this->applicationData[$key];
   }

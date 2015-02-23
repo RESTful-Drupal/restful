@@ -22,7 +22,7 @@ class RestfulStaticCacheController implements \RestfulStaticCacheControllerInter
   protected $prefix;
 
   /**
-   * Constructor
+   * Constructor.
    */
   public function __construct() {
     $this->prefix = 'restful_' . mt_rand() . '_';

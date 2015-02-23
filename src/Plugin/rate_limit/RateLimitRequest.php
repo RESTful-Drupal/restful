@@ -6,6 +6,7 @@
  */
 
 namespace Drupal\restful\Plugin\rate_limit;
+use Drupal\restful\Http\RequestInterface;
 
 /**
  * Class RateLimitGlobal
@@ -22,7 +23,7 @@ class RateLimitRequest extends RateLimit {
   /**
    * {@inheritdoc}
    */
-  public function isRequestedEvent(array $request = array()) {
+  public function isRequestedEvent(RequestInterface $request) {
     return TRUE;
   }
 

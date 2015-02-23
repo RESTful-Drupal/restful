@@ -8,19 +8,20 @@
 namespace Drupal\restful\Plugin\rate_limit;
 
 use Drupal\Component\Plugin\PluginInspectionInterface;
+use Drupal\restful\Http\RequestInterface;
 
 interface RateLimitInterface extends PluginInspectionInterface {
   /**
    * Checks if the current request meets the event for the implementing class.
    *
-   * @param array $request
+   * @param RequestInterface $request
    *   (optional) The request array.
    *
-   * @return boolean
+   * @return bool
    *   TRUE if the event is met and the rate limit hits counter should be
    *   incremented.
    */
-  public function isRequestedEvent(array $request = array());
+  public function isRequestedEvent(RequestInterface $request);
 
 
   /**
@@ -38,6 +39,7 @@ interface RateLimitInterface extends PluginInspectionInterface {
    *   The account object for the user making the request.
    *
    * @return int
+   *   The limit.
    */
   public function getLimit($account = NULL);
 
@@ -52,6 +54,7 @@ interface RateLimitInterface extends PluginInspectionInterface {
    * Get the rate limit period.
    *
    * @return \DateInterval
+   *   The period.
    */
   public function getPeriod();
 
@@ -62,6 +65,7 @@ interface RateLimitInterface extends PluginInspectionInterface {
    *   The account object for the user making the request.
    *
    * @return string
+   *   The ID.
    */
   public function generateIdentifier($account = NULL);
 
@@ -71,7 +75,7 @@ interface RateLimitInterface extends PluginInspectionInterface {
    * @param object $account
    *   The account object for the user making the request.
    *
-   * @return \RestfulRateLimit
+   * @return RateLimitInterface
    *   The loaded entity or NULL if none found.
    */
   public function loadRateLimitEntity($account = NULL);
