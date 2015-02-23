@@ -58,8 +58,9 @@ interface CrudInterface {
    * @param mixed $object
    *   The thing that will be set.
    * @param bool $replace
-   *   TRUE if the contents of $object will replace $identifier entirely. FALSE if
-   *   only what is set in $object will replace those properties in $identifier.
+   *   TRUE if the contents of $object will replace $identifier entirely. FALSE
+   *   if only what is set in $object will replace those properties in
+   *   $identifier.
    *
    * @return array
    *   An array of structured data for the thing that was updated.

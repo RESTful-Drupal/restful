@@ -27,7 +27,8 @@ class DataProviderEntity extends DataProvider {
   /**
    * Field definitions.
    *
-   * A collection of \Drupal\restful\Plugin\resource\Field\ResourceFieldEntityInterface[].
+   * A collection of
+   * \Drupal\restful\Plugin\resource\Field\ResourceFieldEntityInterface[].
    *
    * @var ResourceFieldCollectionInterface
    */
@@ -55,13 +56,6 @@ class DataProviderEntity extends DataProvider {
   protected $EFQClass = '\EntityFieldQuery';
 
   /**
-   * Determines the language of the items that should be returned.
-   *
-   * @var string
-   */
-  protected $langcode;
-
-  /**
    * Constructor.
    *
    * @param RequestInterface $request
@@ -80,8 +74,8 @@ class DataProviderEntity extends DataProvider {
    * @throws ServerConfigurationException
    *   If the field mappings are not for entities.
    */
-  public function __construct(RequestInterface $request, ResourceFieldCollectionInterface $field_definitions, $account, $options, $langcode) {
-    parent::__construct($request, $field_definitions, $account, $options);
+  public function __construct(RequestInterface $request, ResourceFieldCollectionInterface $field_definitions, $account, array $options, $langcode) {
+    parent::__construct($request, $field_definitions, $account, $options, $langcode);
     if (empty($options['entityType'])) {
       // Entity type is mandatory.
       throw new InternalServerErrorException('The entity type was not provided.');
@@ -93,7 +87,6 @@ class DataProviderEntity extends DataProvider {
     if (isset($options['EFQClass'])) {
       $this->EFQClass = $options['EFQClass'];
     }
-    $this->langcode = $langcode;
 
     // Make sure that all field definitions are instance of
     // \Drupal\restful\Plugin\resource\Field\ResourceFieldEntityInterface
@@ -105,29 +98,21 @@ class DataProviderEntity extends DataProvider {
   }
 
   /**
-   * Get the language code.
-   *
-   * @return string
+   * {@inheritdoc}
    */
-  public function getLangCode() {
-    return $this->langcode;
-  }
-
-  /**
-   * Sets the language code.
-   *
-   * @param string $langcode
-   *   The language code.
-   */
-  public function setLangCode($langcode) {
-    $this->langcode = $langcode;
+  public function getContext($identifier) {
+    return array(
+      'et' => $this->entityType,
+      'ei' => $identifier,
+    );
   }
 
   /**
    * Defines default sort fields if none are provided via the request URL.
    *
    * @return array
-   *   Array keyed by the public field name, and the order ('ASC' or 'DESC') as value.
+   *   Array keyed by the public field name, and the order ('ASC' or 'DESC') as
+   *   value.
    */
   protected function defaultSortInfo() {
     return array('id' => 'ASC');
@@ -147,8 +132,16 @@ class DataProviderEntity extends DataProvider {
 
     $ids = array_keys($result[$this->entityType]);
 
-    // Pre-load all entities.
-    entity_load($this->entityType, $ids);
+    $return = array();
+    // If no IDs were requested, we should not throw an exception in case an
+    // entity is un-accessible by the user.
+    foreach ($ids as $id) {
+      if ($row = $this->viewEntity($id)) {
+        $return[] = $row;
+      }
+    }
+
+    return $return;
   }
 
   /**
@@ -166,7 +159,7 @@ class DataProviderEntity extends DataProvider {
     $entity_id = $this->getEntityIdByFieldId($id);
 
     if (!$this->isValidEntity('view', $entity_id)) {
-      return;
+      return NULL;
     }
 
     /** @var \EntityDrupalWrapper $wrapper */
@@ -737,7 +730,12 @@ class DataProviderEntity extends DataProvider {
     /** @var ResourceFieldEntityInterface $public_field */
     $public_field = $public_fields[$public_field_name];
     foreach ($public_field->getAccessCallbacks() as $callback) {
-      $result = ResourceManager::executeCallback($callback, array($op, $public_field_name, $property_wrapper, $wrapper));
+      $result = ResourceManager::executeCallback($callback, array(
+        $op,
+        $public_field_name,
+        $property_wrapper,
+        $wrapper,
+      ));
 
       if ($result == ResourceFieldBase::ACCESS_DENY) {
         return FALSE;

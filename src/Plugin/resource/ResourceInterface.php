@@ -8,20 +8,32 @@
 namespace Drupal\restful\Plugin\resource;
 
 use Drupal\Component\Plugin\PluginInspectionInterface;
+use Drupal\restful\Exception\NotImplementedException;
+use Drupal\restful\Plugin\resource\DataProvider\DataProviderInterface;
+use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
 
 interface ResourceInterface extends PluginInspectionInterface {
 
   /**
+   * Data provider factory.
+   *
+   * @return DataProviderInterface
+   *   The data provider for this resource.
+   *
+   * @throws NotImplementedException
+   */
+  public function dataProviderFactory();
+
+  /**
    * Get the user from for request.
    *
-   * @param boolean $cache
+   * @param bool $cache
    *   Boolean indicating if the resolved user should be cached for next calls.
    *
    * @return object
    *   The fully loaded user object.
    *
    * @see AuthenticatedResource
-   *   To use authentication providers.
    */
   public function getAccount($cache = TRUE);
 
@@ -46,7 +58,7 @@ interface ResourceInterface extends PluginInspectionInterface {
   /**
    * Gets the field definitions.
    *
-   * @return \Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface
+   * @return ResourceFieldCollectionInterface
    *   The field definitions
    */
   public function getFieldDefinitions();
@@ -58,6 +70,14 @@ interface ResourceInterface extends PluginInspectionInterface {
    *   The data provider to access the backend storage.
    */
   public function getDataProvider();
+
+  /**
+   * Gets the resource name.
+   *
+   * @returns string
+   *   The name of the current resource.
+   */
+  public function getResourceName();
 
   /**
    * Controller function that passes the data along and executes right action.
@@ -83,9 +103,9 @@ interface ResourceInterface extends PluginInspectionInterface {
    *   one can be provided by turning the value into an array with the keys:
    *   'callback' and 'access callback'.
    *
-   * @see getControllers().
+   * @see getControllers()
    */
-  public static function contollersInfo();
+  public function controllersInfo();
 
   /**
    * Gets the controllers for this resource.
@@ -111,11 +131,11 @@ interface ResourceInterface extends PluginInspectionInterface {
    *
    * @todo: Populate the entity controllers so that they have the entity access checks in here.
    */
-  public static function getControllers();
+  public function getControllers();
   /**
    * Basic implementation for listing.
    *
-   * @param $path
+   * @param string $path
    *   The resource path.
    *
    * @return array
@@ -126,7 +146,7 @@ interface ResourceInterface extends PluginInspectionInterface {
   /**
    * Basic implementation for view.
    *
-   * @param $path
+   * @param string $path
    *   The resource path.
    *
    * @return array
@@ -137,7 +157,7 @@ interface ResourceInterface extends PluginInspectionInterface {
   /**
    * Basic implementation for create.
    *
-   * @param $path
+   * @param string $path
    *   The resource path.
    *
    * @return array
@@ -148,7 +168,7 @@ interface ResourceInterface extends PluginInspectionInterface {
   /**
    * Basic implementation for update.
    *
-   * @param $path
+   * @param string $path
    *   The resource path.
    *
    * @return array
@@ -159,7 +179,7 @@ interface ResourceInterface extends PluginInspectionInterface {
   /**
    * Basic implementation for update.
    *
-   * @param $path
+   * @param string $path
    *   The resource path.
    *
    * @return array
@@ -169,9 +189,18 @@ interface ResourceInterface extends PluginInspectionInterface {
   /**
    * Basic implementation for update.
    *
-   * @param $path
+   * @param string $path
    *   The resource path.
    */
   public function remove($path);
+
+  /**
+   * Return array keyed with the major and minor version of the resource.
+   *
+   * @return array
+   *   Keyed array with the major and minor version as provided in the plugin
+   *   definition.
+   */
+  public function getVersion();
 
 }

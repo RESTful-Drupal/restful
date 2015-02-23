@@ -13,8 +13,6 @@ use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
 
 abstract class DataProvider implements DataProviderInterface {
 
-  // TODO: Create the interface for this class.
-
   /**
    * The field definitions.
    *
@@ -44,6 +42,13 @@ abstract class DataProvider implements DataProviderInterface {
   protected $account;
 
   /**
+   * Determines the language of the items that should be returned.
+   *
+   * @var string
+   */
+  protected $langcode;
+
+  /**
    * User defined options.
    *
    * @var array
@@ -61,8 +66,11 @@ abstract class DataProvider implements DataProviderInterface {
    *   The authenticated account.
    * @param array $options
    *   The plugin options for the data provider.
+   * @param string $langcode
+   *   (Optional) The entity language code.
+
    */
-  public function __construct(RequestInterface $request, ResourceFieldCollectionInterface $field_definitions, $account, $options) {
+  public function __construct(RequestInterface $request, ResourceFieldCollectionInterface $field_definitions, $account, array $options, $langcode = NULL) {
     $this->request = $request;
     $this->fieldDefinitions = $field_definitions;
     $this->account = $account;
@@ -70,34 +78,71 @@ abstract class DataProvider implements DataProviderInterface {
     if ($options['range']) {
       $this->range = $options['range'];
     }
+    $this->langcode = $langcode;
   }
 
+  // TODO: We should create a method that provides the cache context given the identifier.
+
   /**
-   * Gets the range.
-   *
-   * @return int
+   * {@inheritdoc}
    */
   public function getRange() {
     return $this->range;
   }
 
   /**
-   * Gets the authenticated account.
-   *
-   * @return object
+   * {@inheritdoc}
    */
   public function getAccount() {
     return $this->account;
   }
 
   /**
-   * Gets the request.
-   *
-   * @return RequestInterface
-   *   The request
+   * {@inheritdoc}
    */
   public function getRequest() {
     return $this->request;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getLangCode() {
+    return $this->langcode;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setLangCode($langcode) {
+    $this->langcode = $langcode;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getOptions() {
+    return $this->options;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function addOptions(array $options) {
+    $this->options = array_merge($this->options, $options);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getContext($identifier) {
+    // If we are trying to get the context for multiple ids, join them.
+    if (is_array($identifier)) {
+      $identifier = implode(',', $identifier);
+    }
+    return array(
+      'id' => $identifier,
+    );
   }
 
   /**
@@ -114,9 +159,8 @@ abstract class DataProvider implements DataProviderInterface {
     if (empty($input['sort'])) {
       return array();
     }
-    // TODO: Find a way to pass in the plugin definition options without having business logic leaks between classes.
-    // TODO: Maybe create an adapter to make the getPluginKey functional?
-    $url_params = $this->getPluginKey('url_params');
+
+    $url_params = $this->options['urlParams'];
     if (!$url_params['sort']) {
       throw new BadRequestException('Sort parameters have been disabled in server configuration.');
     }
@@ -158,9 +202,8 @@ abstract class DataProvider implements DataProviderInterface {
       // No filtering is needed.
       return array();
     }
-    // TODO: Find a way to pass in the plugin definition options without having business logic leaks between classes.
-    // TODO: Maybe create an adapter to make the getPluginKey functional?
-    $url_params = $this->getPluginKey('url_params');
+
+    $url_params = $this->options['urlParams'];
     if (!$url_params['filter']) {
       throw new BadRequestException('Filter parameters have been disabled in server configuration.');
     }
@@ -173,10 +216,10 @@ abstract class DataProvider implements DataProviderInterface {
       }
 
       // Filtering can be achieved in different ways:
-      //   1. filter[foo]=bar
-      //   2. filter[foo][0]=bar&filter[foo][1]=baz
-      //   3. filter[foo][value]=bar
-      //   4. filter[foo][value][0]=bar&filter[foo][value][1]=baz
+      // 1. filter[foo]=bar
+      // 2. filter[foo][0]=bar&filter[foo][1]=baz
+      // 3. filter[foo][value]=bar
+      // 4. filter[foo][value][0]=bar&filter[foo][value][1]=baz
       if (!is_array($value)) {
         // Request uses the shorthand form for filter. For example
         // filter[foo]=bar would be converted to filter[foo][value] = bar.
@@ -185,7 +228,7 @@ abstract class DataProvider implements DataProviderInterface {
       if (!is_array($value['value'])) {
         $value['value'] = array($value['value']);
       }
-      // Add the property
+      // Add the property.
       $value['public_field'] = $public_field;
 
       // Set default operator.

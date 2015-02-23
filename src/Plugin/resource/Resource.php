@@ -56,14 +56,21 @@ abstract class Resource extends PluginBase implements ResourceInterface {
   protected $fieldDefinitions;
 
   /**
-   * Data provider factory.
+   * Constructs a Drupal\Component\Plugin\PluginBase object.
    *
-   * @return DataProviderInterface
-   *   The data provider for this resource.
-   *
-   * @throws NotImplementedException
+   * @param array $configuration
+   *   A configuration array containing information about the plugin instance.
+   * @param string $plugin_id
+   *   The plugin_id for the plugin instance.
+   * @param mixed $plugin_definition
+   *   The plugin implementation definition.
+   * @param ResourceFieldCollectionInterface $field_definitions
+   *   The field definitions.
    */
-  abstract protected function dataProviderFactory();
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, ResourceFieldCollectionInterface $field_definitions) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+    $this->fieldDefinitions = $field_definitions;
+  }
 
   /**
    * {@inheritdoc}
@@ -117,20 +124,11 @@ abstract class Resource extends PluginBase implements ResourceInterface {
   }
 
   /**
-   * Constructs a Drupal\Component\Plugin\PluginBase object.
-   *
-   * @param array $configuration
-   *   A configuration array containing information about the plugin instance.
-   * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
-   * @param mixed $plugin_definition
-   *   The plugin implementation definition.
-   * @param ResourceFieldCollectionInterface $field_definitions
-   *   The field definitions.
+   * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, ResourceFieldCollectionInterface $field_definitions) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
-    $this->fieldDefinitions = $field_definitions;
+  public function getResourceName() {
+    $definition = $this->getPluginDefinition();
+    return $definition['name'];
   }
 
   /**
@@ -150,7 +148,7 @@ abstract class Resource extends PluginBase implements ResourceInterface {
    * they are guaranteed to exist because we are enforcing that all restful
    * resources are an instance of \RestfulDataProviderInterface.
    */
-  public static function contollersInfo() {
+  public function controllersInfo() {
     return array(
       '' => array(
         // GET returns a list of entities.
@@ -173,9 +171,9 @@ abstract class Resource extends PluginBase implements ResourceInterface {
   /**
    * {@inheritdoc}
    */
-  public static function getControllers() {
+  public function getControllers() {
     $controllers = array();
-    foreach (static::contollersInfo() as $path => $method_info) {
+    foreach ($this->controllersInfo() as $path => $method_info) {
       $controllers[$path] = array();
       foreach ($method_info as $http_method => $controller_info) {
         $controllers[$path][$http_method] = $controller_info;
@@ -200,7 +198,7 @@ abstract class Resource extends PluginBase implements ResourceInterface {
    */
   public function view($path) {
     // TODO: Compare this with 1.x logic.
-    $ids = static::IDS_SEPARATOR ? explode(static::IDS_SEPARATOR, $path) :  array($path);
+    $ids = static::IDS_SEPARATOR ? explode(static::IDS_SEPARATOR, $path) : array($path);
     return $this->getDataProvider()->viewMultiple($ids);
   }
 
@@ -255,7 +253,7 @@ abstract class Resource extends PluginBase implements ResourceInterface {
    * @throws NotImplementedException
    * @throws ServerConfigurationException
    *
-   * @see ResourceManager::executeCallback().
+   * @see ResourceManager::executeCallback()
    */
   protected function getControllerFromPath() {
     $path = $this->getPath();
@@ -284,10 +282,7 @@ abstract class Resource extends PluginBase implements ResourceInterface {
       if (is_array($selected_controller)) {
         // If there is a custom access method for this endpoint check it.
         if (!empty($selected_controller['access callback']) && !ResourceManager::executeCallback(array($this, $selected_controller['access callback']), array($path))) {
-          throw new ForbiddenException(format_string('You do not have access to this endpoint: @method - @path', array(
-            '@method' => $method,
-            '@path' => $path,
-          )));
+          throw new ForbiddenException(sprintf('You do not have access to this endpoint: %s - %s', $method, $path));
         }
         $selected_controller = $selected_controller['callback'];
       }
@@ -306,6 +301,18 @@ abstract class Resource extends PluginBase implements ResourceInterface {
     }
 
     return $selected_controller;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getVersion() {
+    $plugin_definition = $this->getPluginDefinition();
+    $version = array(
+      'major' => $plugin_definition['majorVersion'],
+      'minor' => $plugin_definition['minorVersion'],
+    );
+    return $version;
   }
 
 }

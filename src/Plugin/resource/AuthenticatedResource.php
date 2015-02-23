@@ -12,7 +12,7 @@ use Drupal\restful\Authentication\AuthenticationManager;
 use Drupal\restful\Exception\NotImplementedException;
 use Drupal\restful\Plugin\resource\DataProvider\DataProviderInterface;
 
-abstract class AuthenticatedResource extends PluginBase implements ResourceInterface {
+class AuthenticatedResource extends PluginBase implements AuthenticatedResourceInterface {
 
   /**
    * The decorated resource.
@@ -29,18 +29,14 @@ abstract class AuthenticatedResource extends PluginBase implements ResourceInter
   protected $authenticationManager;
 
   /**
-   * Setter for $authenticationManager.
-   *
-   * @param AuthenticationManager $authenticationManager
+   * {@inheritdoc}
    */
-  public function setAuthenticationManager(AuthenticationManager $authenticationManager) {
-    $this->authenticationManager = $authenticationManager;
+  public function setAuthenticationManager(AuthenticationManager $authentication_manager) {
+    $this->authenticationManager = $authentication_manager;
   }
 
   /**
-   * Getter for $authenticationManager.
-   *
-   * @return AuthenticationManager
+   * {@inheritdoc}
    */
   public function getAuthenticationManager() {
     return $this->authenticationManager;
@@ -54,7 +50,9 @@ abstract class AuthenticatedResource extends PluginBase implements ResourceInter
    *
    * @throws NotImplementedException
    */
-  abstract protected function dataProviderFactory();
+  public function dataProviderFactory() {
+    return $this->subject->dataProviderFactory();
+  }
 
   /**
    * Proxy method to get the account from the authenticationManager.
@@ -121,15 +119,22 @@ abstract class AuthenticatedResource extends PluginBase implements ResourceInter
   /**
    * {@inheritdoc}
    */
-  public static function contollersInfo() {
-    return Resource::contollersInfo();
+  public function controllersInfo() {
+    return $this->subject->controllersInfo();
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function getControllers() {
-    return Resource::getControllers();
+  public function getControllers() {
+    return $this->subject->getControllers();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getResourceName() {
+    return $this->subject->getResourceName();
   }
 
   /**
@@ -172,6 +177,13 @@ abstract class AuthenticatedResource extends PluginBase implements ResourceInter
    */
   public function remove($path) {
     $this->subject->remove($path);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getVersion() {
+    return $this->subject->getVersion();
   }
 
 }
