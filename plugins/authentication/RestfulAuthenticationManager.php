@@ -14,6 +14,13 @@ class RestfulAuthenticationManager extends \ArrayObject {
    */
   protected $account;
 
+  /**
+   * The original user object and session.
+   *
+   * @var array
+   */
+  protected $originalUserSession;
+
 
   /**
    * Determines if authentication is optional.
@@ -118,6 +125,69 @@ class RestfulAuthenticationManager extends \ArrayObject {
    */
   public function setAccount(\stdClass $account) {
     $this->account = $account;
+    $this->switchUser();
   }
+
+  /**
+   * Switch the user to the authenticated user, and back.
+   */
+  public function switchUser() {
+    global $user;
+
+    if (!$user_state = $this->getOriginalUserSession()) {
+      // No original user exists, so save it.
+      $session = drupal_save_session();
+      $this->setOriginalUserSession(array(
+        'user' => $user,
+        'session' => $session,
+      ));
+
+      // Don't allow a session to be saved.
+      drupal_save_session(FALSE);
+    }
+
+
+    $account = $this->getAccount();
+    // Set the global user.
+    $user = $account;
+
+  }
+
+  /**
+   * Switch the user to the authenticated user, and back.
+   *
+   * This should be called only for an API call. It should not be used for calls
+   * via the menu system, as it might be a login request, so we avoid switching
+   * back to the anonymous user.
+   */
+  public function switchUserBack() {
+    global $user;
+
+    $user_state = $this->getOriginalUserSession();
+
+    $user = $user_state['user'];
+    drupal_save_session($user_state['session']);
+  }
+
+  /**
+   * Set the original user object and session.
+   *
+   * @param array $original_user_session
+   *   Array keyed by 'user' and 'session'.
+   */
+  protected function setOriginalUserSession(array $original_user_session) {
+    $this->originalUserSession = $original_user_session;
+  }
+
+  /**
+   * Get the original user object and session.
+   *
+   * @return array
+   *   Array keyed by 'user' and 'session'.
+   */
+  protected function getOriginalUserSession() {
+    return $this->originalUserSession;
+  }
+
 
 }
