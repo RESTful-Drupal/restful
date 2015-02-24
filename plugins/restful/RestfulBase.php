@@ -817,7 +817,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
 
     $return = $this->{$method_name}($path);
 
-    if (!empty($request['__application']['rest_call'])) {
+    if (empty($request['__application']['rest_call'])) {
       // Switch back to the original user.
       $this->getAuthenticationManager()->switchUserBack();
     }
