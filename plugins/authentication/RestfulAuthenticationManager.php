@@ -78,6 +78,7 @@ class RestfulAuthenticationManager extends \ArrayObject {
    */
   public function getAccount(array $request = array(), $method = \RestfulInterface::GET, $cache = TRUE) {
     global $user;
+
     // Return the previously resolved user, if any.
     if (!empty($this->account)) {
       return $this->account;
@@ -134,18 +135,30 @@ class RestfulAuthenticationManager extends \ArrayObject {
   public function switchUser() {
     global $user;
 
-    if (!$user_state = $this->getOriginalUserSession()) {
-      // No original user exists, so save it.
+    // @todo: Check if this is correct.
+    // Determine if this is the first time we enter this method, so we capture
+    // the original user, even if the authentication manager was initialized
+    // multiple times.
+    // This value has to persist across calls to drupal_static_reset(), since a
+    // potentially wrong or disallowed session would be written otherwise.
+
+    static $first_time = TRUE;
+
+    if ($first_time) {
+      $first_time = FALSE;
+
       $session = drupal_save_session();
       $this->setOriginalUserSession(array(
         'user' => $user,
         'session' => $session,
       ));
 
-      // Don't allow a session to be saved.
+      // Don't allow a session to be saved. Provider that require a session to
+      // be saved, like the cookie provider, need to explicitly set
+      // drupal_save_session(TRUE).
+      // @see \RestfulUserLoginCookie::loginUser().
       drupal_save_session(FALSE);
     }
-
 
     $account = $this->getAccount();
     // Set the global user.
