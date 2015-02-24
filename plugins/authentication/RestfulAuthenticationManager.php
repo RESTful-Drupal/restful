@@ -139,13 +139,13 @@ class RestfulAuthenticationManager extends \ArrayObject {
     // Determine if this is the first time we enter this method, so we capture
     // the original user, even if the authentication manager was initialized
     // multiple times.
-    // This value has to persist across calls to drupal_static_reset(), since a
-    // potentially wrong or disallowed session would be written otherwise.
+    // We don't use a static variable, as we need to make sure the original user
+    // session doesn't change even if the authentication manager was initialized
+    // multiple times
+    global $restful_switch_user;
 
-    static $first_time = TRUE;
-
-    if ($first_time) {
-      $first_time = FALSE;
+    if (empty($restful_switch_user)) {
+      $restful_switch_user = TRUE;
 
       $session = drupal_save_session();
       $this->setOriginalUserSession(array(
