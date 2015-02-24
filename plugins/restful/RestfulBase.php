@@ -828,40 +828,6 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
   }
 
   /**
-   * Switch the user to the authenticated user, and back.
-   */
-  protected function switchUser() {
-    global $user;
-    $request = $this->getRequest();
-
-    if (!$user_state = $this->getOriginalUserSession()) {
-      // No original user exists, so it means we need to switch the user.
-      $session = drupal_save_session();
-      $this->setOriginalUserSession(array(
-        'user' => $user,
-        'session' => $session,
-      ));
-
-      $account = $this->getAccount();
-
-      // Don't allow a session to be saved.
-      drupal_save_session(FALSE);
-
-
-      // Set the global user.
-      $user = $account;
-    }
-    elseif (empty($request['__application']['rest_call'])) {
-      // This is an API call, so we need to switch the original user back.
-      // we don't do it for calls via the menu system, as it might be a login
-      // request, so we avoid switching back to the anonymous user.
-      $user = $user_state['user'];
-      drupal_save_session($user_state['session']);
-    }
-  }
-
-
-  /**
    * Return the controller from a given path.
    *
    * @throws RestfulBadRequestException
