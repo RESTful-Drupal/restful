@@ -21,7 +21,7 @@ interface CrudInterface {
    * Create operation.
    *
    * @param mixed $object
-   *   The ID of thing to be created.
+   *   The thing to be created.
    *
    * @return array
    *   An array of structured data for the thing that was created.

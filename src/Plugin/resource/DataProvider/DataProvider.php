@@ -68,7 +68,6 @@ abstract class DataProvider implements DataProviderInterface {
    *   The plugin options for the data provider.
    * @param string $langcode
    *   (Optional) The entity language code.
-
    */
   public function __construct(RequestInterface $request, ResourceFieldCollectionInterface $field_definitions, $account, array $options, $langcode = NULL) {
     $this->request = $request;
@@ -342,6 +341,17 @@ abstract class DataProvider implements DataProviderInterface {
         '!allowed' => implode(', ', $allowed_conjunctions),
       )));
     }
+  }
+
+  /**
+   * Gets the global language.
+   *
+   * @return string
+   *   The language code.
+   */
+  protected static function getLanguage() {
+    // Move to its own method to allow unit testing.
+    return $GLOBALS['language']->language;
   }
 
 }

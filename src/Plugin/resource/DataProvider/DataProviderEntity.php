@@ -14,6 +14,7 @@ use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldBase;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
+use Drupal\restful\Plugin\resource\Field\ResourceFieldEntity;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldEntityInterface;
 
 use Drupal\restful\Exception\BadRequestException;
@@ -148,7 +149,7 @@ class DataProviderEntity extends DataProvider {
    * {@inheritdoc}
    */
   public function create($object) {
-
+    // TODO: POST entity.
   }
 
   /**
@@ -169,7 +170,8 @@ class DataProviderEntity extends DataProvider {
 
     $limit_fields = !empty($request['fields']) ? explode(',', $request['fields']) : array();
 
-    foreach ($this->fieldDefinitions as $resource_field_name => $info) {
+    foreach ($this->fieldDefinitions as $resource_field_name => $resource_field) {
+      /** @var ResourceFieldEntityInterface $resource_field */
       if ($limit_fields && !in_array($resource_field_name, $limit_fields)) {
         // Limit fields doesn't include this property.
         continue;
@@ -177,141 +179,35 @@ class DataProviderEntity extends DataProvider {
 
       $value = NULL;
 
-      if ($info['create_or_update_passthrough']) {
-        // The public field is a dummy one, meant only for passing data upon
-        // create or update.
+      if (!in_array($this->getRequest()->getMethod(), $resource_field->getMethods())) {
+        // The field does not apply to the current method.
         continue;
       }
 
-      if ($info['callback']) {
-        $value = ResourceManager::executeCallback($info['callback'], array($wrapper));
+      if ($resource_field->getCallback()) {
+        $value = ResourceManager::executeCallback($resource_field->getCallback(), array($wrapper));
+      }
+      elseif ($resource = $resource_field->getResource()) {
+        // TODO: The resource input data in the field definition has changed.
+        // Now it does not need to be keyed by bundle since you don't even need
+        // an entity to use the resource based field.
+        $resource_data_provider = DataProviderResource::init($this->getRequest(), $resource['name'], array(
+          $resource['major_version'],
+          $resource['minor_version'],
+        ));
+        $value = $resource_data_provider->view($identifier);
       }
       else {
-        // Exposing an entity field.
-        $property = $info['property'];
-        $sub_wrapper = $info['wrapper_method_on_entity'] ? $wrapper : $wrapper->{$property};
-
-        // Check user has access to the property.
-        if ($property && !$this->checkPropertyAccess('view', $resource_field_name, $sub_wrapper, $wrapper)) {
-          continue;
-        }
-
-        if (empty($info['formatter'])) {
-          if ($sub_wrapper instanceof \EntityListWrapper) {
-            // Multiple values.
-            foreach ($sub_wrapper as $item_wrapper) {
-              $value[] = $this->getValueFromProperty($wrapper, $item_wrapper, $info, $resource_field_name);
-            }
-          }
-          else {
-            // Single value.
-            $value = $this->getValueFromProperty($wrapper, $sub_wrapper, $info, $resource_field_name);
-          }
-        }
-        else {
-          // Get value from field formatter.
-          $value = $this->getValueFromFieldFormatter($wrapper, $sub_wrapper, $info);
-        }
+        $value = $this->getValue($wrapper, $resource_field);
       }
 
-      if ($value && $info['process_callbacks']) {
-        foreach ($info['process_callbacks'] as $process_callback) {
-          $value = ResourceManager::executeCallback($process_callback, array($value));
-        }
-      }
+      $value = $this->processCallbacks($value, $resource_field);
 
       $values[$resource_field_name] = $value;
     }
 
     return $values;
   }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function viewEntity($id) {
-    $entity_id = $this->getEntityIdByFieldId($id);
-    $request = $this->getRequest();
-
-    $cached_data = $this->getRenderedCache(array(
-      'et' => $this->getEntityType(),
-      'ei' => $entity_id,
-    ));
-    if (!empty($cached_data->data)) {
-      return $cached_data->data;
-    }
-
-    if (!$this->isValidEntity('view', $entity_id)) {
-      return;
-    }
-
-    $wrapper = entity_metadata_wrapper($this->entityType, $entity_id);
-    $wrapper->language($this->getLangCode());
-    $values = array();
-
-    $limit_fields = !empty($request['fields']) ? explode(',', $request['fields']) : array();
-
-    foreach ($this->getPublicFields() as $public_field_name => $info) {
-      if ($limit_fields && !in_array($public_field_name, $limit_fields)) {
-        // Limit fields doesn't include this property.
-        continue;
-      }
-
-      $value = NULL;
-
-      if ($info['create_or_update_passthrough']) {
-        // The public field is a dummy one, meant only for passing data upon
-        // create or update.
-        continue;
-      }
-
-      if ($info['callback']) {
-        $value = static::executeCallback($info['callback'], array($wrapper));
-      }
-      else {
-        // Exposing an entity field.
-        $property = $info['property'];
-        $sub_wrapper = $info['wrapper_method_on_entity'] ? $wrapper : $wrapper->{$property};
-
-        // Check user has access to the property.
-        if ($property && !$this->checkPropertyAccess('view', $public_field_name, $sub_wrapper, $wrapper)) {
-          continue;
-        }
-
-        if (empty($info['formatter'])) {
-          if ($sub_wrapper instanceof \EntityListWrapper) {
-            // Multiple values.
-            foreach ($sub_wrapper as $item_wrapper) {
-              $value[] = $this->getValueFromProperty($wrapper, $item_wrapper, $info, $public_field_name);
-            }
-          }
-          else {
-            // Single value.
-            $value = $this->getValueFromProperty($wrapper, $sub_wrapper, $info, $public_field_name);
-          }
-        }
-        else {
-          // Get value from field formatter.
-          $value = $this->getValueFromFieldFormatter($wrapper, $sub_wrapper, $info);
-        }
-      }
-
-      if ($value && $info['process_callbacks']) {
-        foreach ($info['process_callbacks'] as $process_callback) {
-          $value = static::executeCallback($process_callback, array($value));
-        }
-      }
-
-      $values[$public_field_name] = $value;
-    }
-
-    $this->setRenderedCache($values, array(
-      'et' => $this->getEntityType(),
-      'ei' => $entity_id,
-    ));
-    return $values;
-  }
-
 
   /**
    * {@inheritdoc}
@@ -743,6 +639,143 @@ class DataProviderEntity extends DataProvider {
     }
 
     return TRUE;
+  }
+
+  /**
+   * Gets the value for the provided resource field.
+   *
+   * @param \EntityDrupalWrapper $wrapper
+   *   The wrapped entity.
+   * @param ResourceFieldEntityInterface $resource_field
+   *   The resource field.
+   *
+   * @return mixed
+   *   The value to return.
+   */
+  protected function getValue(\EntityDrupalWrapper $wrapper, ResourceFieldEntityInterface $resource_field) {
+    // Exposing an entity field.
+    $value = NULL;
+    $resource_field_name = $resource_field->getPublicName();
+    $property = $resource_field->getProperty();
+    $sub_wrapper = $resource_field->isWrapperMethodOnEntity() ? $wrapper : $wrapper->{$property};
+
+    // Check user has access to the property.
+    if ($property && !$this->checkPropertyAccess('view', $resource_field_name, $sub_wrapper, $wrapper)) {
+      return NULL;
+    }
+
+    $formatter = $resource_field->getFormatter();
+    if (empty($formatter)) {
+      if ($sub_wrapper instanceof \EntityListWrapper) {
+        // Multiple values.
+        foreach ($sub_wrapper as $item_wrapper) {
+          $value[] = $this->getValueFromField($wrapper, $item_wrapper, $resource_field);
+        }
+      }
+      else {
+        // Single value.
+        $value = $this->getValueFromField($wrapper, $sub_wrapper, $resource_field);
+      }
+    }
+    else {
+      // Get value from field formatter.
+      $value = $this->getValueFromFieldFormatter($wrapper, $sub_wrapper, $resource_field);
+    }
+
+    return $value;
+  }
+
+  /**
+   * Get value from a property.
+   *
+   * @param \EntityDrupalWrapper $wrapper
+   *   The wrapped entity.
+   * @param \EntityMetadataWrapper $sub_wrapper
+   *   The wrapped property.
+   * @param ResourceFieldEntityInterface $resource_field
+   *   The public field info array.
+   *
+   * @return mixed
+   *   A single or multiple values.
+   */
+  protected function getValueFromField(\EntityDrupalWrapper $wrapper, \EntityMetadataWrapper $sub_wrapper, ResourceFieldEntityInterface $resource_field) {
+    if ($resource_field->getSubProperty() && $sub_wrapper->value()) {
+      $sub_wrapper = $sub_wrapper->{$resource_field->getSubProperty()};
+    }
+
+    // Wrapper method.
+    $value = $sub_wrapper->{$resource_field->getWrapperMethod()}();
+
+    return $value;
+  }
+
+  /**
+   * Get value from a field rendered by Drupal field API's formatter.
+   *
+   * @param \EntityDrupalWrapper $wrapper
+   *   The wrapped entity.
+   * @param \EntityMetadataWrapper $sub_wrapper
+   *   The wrapped property.
+   * @param ResourceFieldEntityInterface $resource_field
+   *   The resource field.
+   *
+   * @return mixed
+   *   A single or multiple values.
+   *
+   * @throws \Drupal\restful\Exception\ServerConfigurationException
+   */
+  protected function getValueFromFieldFormatter(\EntityDrupalWrapper $wrapper, \EntityMetadataWrapper $sub_wrapper, ResourceFieldEntityInterface $resource_field) {
+    $value = NULL;
+
+    if (!ResourceFieldEntity::propertyIsField($resource_field->getProperty())) {
+      // Property is not a field.
+      throw new ServerConfigurationException(format_string('@property is not a configurable field, so it cannot be processed using field API formatter', array('@property' => $resource_field->getProperty())));
+    }
+
+    // Get values from the formatter.
+    $output = field_view_field($this->entityType, $wrapper->value(), $resource_field->getProperty(), $resource_field->getFormatter());
+
+    // Unset the theme, as we just want to get the value from the formatter,
+    // without the wrapping HTML.
+    unset($output['#theme']);
+
+
+    if ($sub_wrapper instanceof \EntityListWrapper) {
+      // Multiple values.
+      foreach (element_children($output) as $delta) {
+        $value[] = drupal_render($output[$delta]);
+      }
+    }
+    else {
+      // Single value.
+      $value = drupal_render($output);
+    }
+
+    return $value;
+  }
+
+  /**
+   * Applies the process callbacks.
+   *
+   * @param mixed $value
+   *   The value for the field.
+   * @param ResourceFieldEntityInterface $resource_field
+   *   The resource field.
+   *
+   * @return mixed
+   *   The value after applying all the process callbacks.
+   *
+   * @throws \Drupal\restful\Exception\ServerConfigurationException
+   */
+  protected function processCallbacks($value, ResourceFieldEntityInterface $resource_field) {
+    $process_callbacks = $resource_field->getProcessCallbacks();
+    if (!$value || empty($process_callbacks)) {
+      return $value;
+    }
+    foreach ($process_callbacks as $process_callback) {
+      $value = ResourceManager::executeCallback($process_callback, array($value));
+    }
+    return $value;
   }
 
 }
