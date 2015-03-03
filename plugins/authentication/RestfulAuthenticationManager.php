@@ -142,7 +142,7 @@ class RestfulAuthenticationManager extends \ArrayObject {
     // We don't use a static variable, as we need to make sure the original user
     // session doesn't change even if the authentication manager was initialized
     // multiple times
-    global $restful_switch_user;
+    $restful_switch_user = &drupal_static(__FUNCTION__, FALSE);
 
     if (empty($restful_switch_user)) {
       $restful_switch_user = TRUE;
