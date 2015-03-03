@@ -38,6 +38,9 @@ class RestfulAuthenticationTestCase extends RestfulCurlBaseTestCase {
   }
 
   function tearDown() {
+    global $restful_switch_user;
+    $restful_switch_user = FALSE;
+
     // Put back the $_SERVER array.
     $_SERVER = $this->originalServer;
     parent::tearDown();
