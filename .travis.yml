@@ -35,7 +35,10 @@ before_script:
 
   # Patch Entity API.
   - curl -O https://www.drupal.org/files/issues/2086225-entity-access-check-18.patch
+  - pwd
+  - cd sites/all/modules/entity
   - patch -p1 < 2086225-entity-access-check-18.patch
+  - cd -
 
   # start a web server on port 8080, run in the background; wait for initialization
   - drush runserver 127.0.0.1:8080 &
