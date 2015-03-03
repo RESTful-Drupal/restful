@@ -135,13 +135,8 @@ class RestfulAuthenticationManager extends \ArrayObject {
   public function switchUser() {
     global $user;
 
-    // @todo: Check if this is correct.
-    // Determine if this is the first time we enter this method, so we capture
-    // the original user, even if the authentication manager was initialized
-    // multiple times.
-    // We don't use a static variable, as we need to make sure the original user
-    // session doesn't change even if the authentication manager was initialized
-    // multiple times
+    // If this is the first time we enter this method we capture the original
+    // user.
     if (!$this->getOriginalUserSession()) {
       $session = drupal_save_session();
       $this->setOriginalUserSession(array(
