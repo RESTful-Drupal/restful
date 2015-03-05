@@ -8,17 +8,6 @@
 class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulFormatterInterface {
 
   /**
-   * Determine whether this is an associative array.
-   *
-   * @param array $array
-   *
-   * @return boolean
-   */
-  static function is_assoc(array $array) {
-    return (bool)count(array_filter(array_keys($array), 'is_string'));
-  }
-
-  /**
    * Content Type
    *
    * @var string
@@ -36,13 +25,15 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
       return $data;
     }
     // Here we get the data after calling the backend storage for the resources.
+    $curies_resource = $this->withCurie($this->handler->getResourceName());
+
+    $output = array();
 
     foreach ($data as &$row) {
-      $row = $this->prepareRow($row);
+      $row = $this->prepareRow($row, $output);
     }
 
-    $curies_resource = $this->withCurie($this->handler->getResourceName());
-    $output = array($curies_resource => $data);
+    $output[$curies_resource] = $data;
 
     if (!empty($this->handler)) {
       if (
@@ -50,7 +41,7 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
         method_exists($this->handler, 'isListRequest') &&
         $this->handler->isListRequest()
       ) {
-        // Get the total number of items for the current request without pagination.
+        // Get total number of items for the current request w/out pagination.
         $output['count'] = $this->handler->getTotalCount();
       }
       if (method_exists($this->handler, 'additionalHateoas')) {
@@ -78,7 +69,7 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
   /**
    * Add HATEOAS links to list of item.
    *
-   * @param $data
+   * @param array $data
    *   The data array after initial massaging.
    */
   protected function addHateoas(array &$data) {
@@ -87,7 +78,7 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
     }
     $request = $this->handler->getRequest();
 
-    if (!isset($data['_links']) && is_array($data['_links'])) {
+    if (!isset($data['_links'])) {
       $data['_links'] = array();
     }
 
@@ -138,11 +129,13 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
    *
    * @param array $row
    *   A single row array.
+   * @param array $output
+   *   The output array, passed by reference.
    *
    * @return array
    *   The massaged data of a single row.
    */
-  public function prepareRow(array $row) {
+  public function prepareRow(array $row, array &$output) {
     $this->addHateoasRow($row);
 
     if (!$curie = $this->getCurie()) {
@@ -163,10 +156,17 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
         continue;
       }
 
-      $this->moveReferencesToEmbeds($embedded, $row, $public_field, $public_field_name);
+      $nested_embed = $this->handler->isListRequest();
+
+      if ($nested_embed) {
+        $output += array('_embedded' => array());
+      }
+
+      $this->moveReferencesToEmbeds($embedded, $row, $public_field, $public_field_name, $output);
+
     }
 
-    if (!empty($embedded)) {
+    if (!empty($embedded) && $nested_embed) {
       $row['_embedded'] = $embedded;
     }
 
@@ -231,23 +231,29 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
   /**
    * Move the fields referencing other resources to the _embed key.
    *
-   * Note that for multiple value entityreference fields $row[$public_field_name]
-   * will be an array of values rather than a single value.
+   * Note that for multiple value entityreference
+   * fields $row[$public_field_name] will be an array of values rather than a
+   * single value.
    *
-   * @param array $output
-   *   Output array to be modified.
+   * @param array $embedded
+   *   Embedded array to be modified.
    * @param array $row
    *   The row being processed.
    * @param array $public_field
    *   The public field configuration array.
-   * @param $public_field_name
+   * @param string $public_field_name
    *   The name of the public field.
+   * @param array $output
+   *   Output array to be modified.
    */
-  protected function moveReferencesToEmbeds(array &$embedded, array &$row, $public_field, $public_field_name) {
+  protected function moveReferencesToEmbeds(array &$embedded, array &$row, $public_field, $public_field_name, array &$output) {
     $values_metadata = $this->handler->getValueMetadata($row['id'], $public_field_name);
 
     // Wrap the row in an array if it isn't.
-    $rows = self::is_assoc($row[$public_field_name]) ? array($row[$public_field_name]) : $row[$public_field_name];
+    if (!is_array($row[$public_field_name])) {
+      $row[$public_field_name] = array();
+    }
+    $rows = RestfulBase::isArrayNumeric($row[$public_field_name]) ? $row[$public_field_name] : array($row[$public_field_name]);
 
     foreach ($rows as $subindex => $subrow) {
       $metadata = $values_metadata[$subindex];
@@ -259,9 +265,9 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
           continue;
         }
 
-        // If there is no resource name in the metadata for this particular value,
-        // assume that we are referring to the first resource in the field
-        // definition.
+        // If there is no resource name in the metadata for this particular
+        // value, assume that we are referring to the first resource in the
+        // field definition.
         $resource_name = NULL;
         if (!empty($metadata['resource_name'])) {
           // Make sure that the resource in the metadata exists in the list of
@@ -279,14 +285,17 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
         }
 
         $curies_resource = $this->withCurie($resource_name);
-        $preparedRow = $this->prepareRow($subrow);
-        $embedded[$curies_resource][] = $preparedRow;
+        $prepared_row = $this->prepareRow($subrow, $output);
+        if ($this->handler->isListRequest()) {
+          $embedded[$curies_resource][] = $prepared_row;
+        }
+        else {
+          $output['_embedded'][$curies_resource][] = $prepared_row;
+        }
       }
     }
 
     // Remove the original reference.
     unset($row[$public_field_name]);
   }
-
 }
-
