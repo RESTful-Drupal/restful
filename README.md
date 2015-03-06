@@ -28,8 +28,7 @@ control.
 
 ## Module dependencies
 
-  * [Entity API](https://drupal.org/project/entity), with the following patches:
-  * [$wrapper->access() might be wrong for single entity reference field](https://www.drupal.org/node/2264079#comment-8911637)
+  * [Entity API](https://drupal.org/project/entity), with the following patch:
   * [Prevent notice in entity_metadata_no_hook_node_access() when node is not saved](https://drupal.org/node/2086225#comment-8768373)
 
 ## Recipes
