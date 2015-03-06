@@ -481,7 +481,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    *
    * Non existing properties are skipped.
    *
-   * @param $entity_id
+   * @param int $entity_id
    *   The entity ID.
    *
    * @return array
@@ -519,7 +519,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     // Set the HTTP headers.
     $this->setHttpHeaders('Status', 201);
 
-    if (!empty($wrapper->url) && $url = $wrapper->url->value()); {
+    if (!empty($wrapper->url) && $url = $wrapper->url->value()) {
       $this->setHttpHeaders('Location', $url);
     }
 
@@ -546,80 +546,6 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
 
     $this->setPropertyValues($wrapper);
     return array($this->viewEntity($wrapper->getIdentifier()));
-  }
-
-  /**
-   * Set properties of the entity based on the request, and save the entity.
-   *
-   * @param EntityMetadataWrapper $wrapper
-   *   The wrapped entity object, passed by reference.
-   * @param bool $null_missing_fields
-   *   Determine if properties that are missing form the request array should
-   *   be treated as NULL, or should be skipped. Defaults to FALSE, which will
-   *   set the fields to NULL.
-   *
-   * @throws BadRequestException
-   */
-  protected function setPropertyValues(EntityMetadataWrapper $wrapper, $null_missing_fields = FALSE) {
-    $request = $this->getRequest();
-
-    static::cleanRequest($request);
-    $save = FALSE;
-    $original_request = $request;
-
-    foreach ($this->getPublicFields() as $public_field_name => $info) {
-      if (!empty($info['create_or_update_passthrough'])) {
-        // Allow passing the value in the request.
-        unset($original_request[$public_field_name]);
-        continue;
-      }
-
-      if (empty($info['property'])) {
-        // We may have for example an entity with no label property, but with a
-        // label callback. In that case the $info['property'] won't exist, so
-        // we skip this field.
-        continue;
-      }
-
-      $property_name = $info['property'];
-      if (!isset($request[$public_field_name])) {
-        // No property to set in the request.
-        if ($null_missing_fields && $this->checkPropertyAccess('edit', $public_field_name, $wrapper->{$property_name}, $wrapper)) {
-          // We need to set the value to NULL.
-          $wrapper->{$property_name}->set(NULL);
-        }
-        continue;
-      }
-
-      if (!$this->checkPropertyAccess('edit', $public_field_name, $wrapper->{$property_name}, $wrapper)) {
-        throw new BadRequestException(format_string('Property @name cannot be set.', array('@name' => $public_field_name)));
-      }
-
-      $field_value = $this->propertyValuesPreprocess($property_name, $request[$public_field_name], $public_field_name);
-
-      $wrapper->{$property_name}->set($field_value);
-      unset($original_request[$public_field_name]);
-      $save = TRUE;
-    }
-
-    if (!$save) {
-      // No request was sent.
-      throw new BadRequestException('No values were sent with the request');
-    }
-
-    if ($original_request) {
-      // Request had illegal values.
-      $error_message = format_plural(count($original_request), 'Property @names is invalid.', 'Property @names are invalid.', array('@names' => implode(', ', array_keys($original_request))));
-      throw new BadRequestException($error_message);
-    }
-
-    // Allow changing the entity just before it's saved. For example, setting
-    // the author of the node entity.
-    $this->entityPreSave($wrapper);
-
-    $this->entityValidate($wrapper);
-
-    $wrapper->save();
   }
 
   /**
@@ -868,85 +794,6 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       );
     }
     return $return;
-  }
-
-  /**
-   * Allow manipulating the entity before it is saved.
-   *
-   * @param \EntityMetadataWrapper $wrapper
-   *   The unsaved wrapped entity.
-   */
-  public function entityPreSave(\EntityMetadataWrapper $wrapper) {}
-
-
-  /**
-   * Validate an entity before it is saved.
-   *
-   * @param \EntityMetadataWrapper $wrapper
-   *   The wrapped entity.
-   *
-   * @throws BadRequestException
-   */
-  public function entityValidate(\EntityMetadataWrapper $wrapper) {
-    if (!module_exists('entity_validator')) {
-      // Entity validator doesn't exist.
-      return;
-    }
-
-    if (!$handler = entity_validator_get_validator_handler($wrapper->type(), $wrapper->getBundle())) {
-      // Entity validator handler doesn't exist for the entity.
-      return;
-    }
-
-    if ($handler->validate($wrapper->value(), TRUE)) {
-      // Entity is valid.
-      return;
-    }
-
-    $errors = $handler->getErrors(FALSE);
-
-    $map = array();
-    foreach ($this->getPublicFields() as $field_name => $value) {
-      if (empty($value['property'])) {
-        continue;
-      }
-
-      if (empty($errors[$value['property']])) {
-        // Field validated.
-        continue;
-      }
-
-      $map[$value['property']] = $field_name;
-      $params['@fields'][] = $field_name;
-    }
-
-    if (empty($params['@fields'])) {
-      // There was a validation error, but on non-public fields, so we need to
-      // throw an exception, but can't say on which fields it occurred.
-      throw new BadRequestException('Invalid value(s) sent with the request.');
-    }
-
-    $params['@fields'] = implode(',', $params['@fields']);
-    $e = new BadRequestException(format_plural(count($map), 'Invalid value in field @fields.', 'Invalid values in fields @fields.', $params));
-    foreach ($errors as $property_name => $messages) {
-      if (empty($map[$property_name])) {
-        // Entity is not valid, but on a field not public.
-        continue;
-      }
-
-      $field_name = $map[$property_name];
-
-      foreach ($messages as $message) {
-
-        $message['params']['@field'] = $field_name;
-        $output = format_string($message['message'], $message['params']);
-
-        $e->addFieldError($field_name, $output);
-      }
-    }
-
-    // Throw the exception.
-    throw $e;
   }
 
   /**

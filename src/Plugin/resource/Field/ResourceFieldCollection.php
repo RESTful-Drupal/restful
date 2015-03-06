@@ -87,7 +87,7 @@ class ResourceFieldCollection implements ResourceFieldCollectionInterface {
   public function __construct(array $fields = array()) {
     foreach ($fields as $public_name => $field_info) {
       $field_info['public_name'] = $public_name;
-      // The default values are added
+      // The default values are added.
       $field = ResourceField::create($field_info);
       $this->fields[$field->id()] = $field;
     }

@@ -17,9 +17,9 @@ interface ResourceFieldInterface {
   public function getPublicName();
 
   /**
-   * @param mixed $publicName
+   * @param mixed $public_name
    */
-  public function setPublicName($publicName);
+  public function setPublicName($public_name);
 
   /**
    * @return array
@@ -27,9 +27,9 @@ interface ResourceFieldInterface {
   public function getAccessCallbacks();
 
   /**
-   * @param array $accessCallbacks
+   * @param array $access_callbacks
    */
-  public function setAccessCallbacks($accessCallbacks);
+  public function setAccessCallbacks($access_callbacks);
 
   /**
    * @return string
@@ -55,10 +55,11 @@ interface ResourceFieldInterface {
    * @return array
    */
   public function getProcessCallbacks();
+
   /**
-   * @param array $processCallbacks
+   * @param array $process_callbacks
    */
-  public function setProcessCallbacks($processCallbacks);
+  public function setProcessCallbacks($process_callbacks);
 
   /**
    * @return array
@@ -96,14 +97,15 @@ interface ResourceFieldInterface {
   /**
    * Factory.
    *
-   * @param array $fields
+   * @param array $field
    *   Contains the field values.
    *
    * @return ResourceFieldInterface
+   *   The created field
    *
    * @throws ServerConfigurationException
    */
-  public static function create(array $fields);
+  public static function create(array $field);
 
   /**
    * Gets the ID of the resource field.

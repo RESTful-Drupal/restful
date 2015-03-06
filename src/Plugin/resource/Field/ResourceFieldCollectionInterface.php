@@ -7,7 +7,7 @@
 
 namespace Drupal\restful\Plugin\resource\Field;
 
-interface ResourceFieldCollectionInterface extends \Iterator, \Countable{
+interface ResourceFieldCollectionInterface extends \Iterator, \Countable {
 
   /**
    * Factory.

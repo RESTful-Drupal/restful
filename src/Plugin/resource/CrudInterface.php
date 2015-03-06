@@ -65,7 +65,7 @@ interface CrudInterface {
    * @return array
    *   An array of structured data for the thing that was updated.
    */
-  public function update($identifier, $object, $replace = TRUE);
+  public function update($identifier, $object, $replace = FALSE);
 
   /**
    * Delete operation.

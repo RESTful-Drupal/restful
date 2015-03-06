@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\restful\Plugin\resource\Field\ResourceFieldEntityInterface
+ * Contains \Drupal\restful\Plugin\resource\Field\ResourceFieldEntityInterface.
  */
 
 namespace Drupal\restful\Plugin\resource\Field;
@@ -23,9 +23,9 @@ interface ResourceFieldEntityInterface extends ResourceFieldInterface {
   public function getSubProperty();
 
   /**
-   * @param string $subProperty
+   * @param string $sub_property
    */
-  public function setSubProperty($subProperty);
+  public function setSubProperty($sub_property);
 
   /**
    * @return string
@@ -43,9 +43,9 @@ interface ResourceFieldEntityInterface extends ResourceFieldInterface {
   public function getWrapperMethod();
 
   /**
-   * @param string $wrapperMethod
+   * @param string $wrapper_method
    */
-  public function setWrapperMethod($wrapperMethod);
+  public function setWrapperMethod($wrapper_method);
 
   /**
    * @return boolean
@@ -53,9 +53,9 @@ interface ResourceFieldEntityInterface extends ResourceFieldInterface {
   public function isWrapperMethodOnEntity();
 
   /**
-   * @param boolean $wrapperMethodOnEntity
+   * @param boolean $wrapper_method_on_entity
    */
-  public function setWrapperMethodOnEntity($wrapperMethodOnEntity);
+  public function setWrapperMethodOnEntity($wrapper_method_on_entity);
 
   /**
    * @return string
@@ -73,10 +73,29 @@ interface ResourceFieldEntityInterface extends ResourceFieldInterface {
   public function getImageStyles();
 
   /**
-   * @param array $imageStyles
+   * @param array $image_styles
    */
-  public function setImageStyles($imageStyles);
+  public function setImageStyles($image_styles);
 
+  /**
+   * @return string
+   */
+  public function getEntityType();
+
+  /**
+   * @param string $entity_type
+   */
+  public function setEntityType($entity_type);
+
+  /**
+   * @return array
+   */
+  public function getBundles();
+
+  /**
+   * @param array $bundles
+   */
+  public function setBundles($bundles);
   /**
    * Get the image URLs based on the configured image styles.
    *
@@ -100,4 +119,16 @@ interface ResourceFieldEntityInterface extends ResourceFieldInterface {
    *   TRUE if it's a field. FALSE otherwise.
    */
   public static function propertyIsField($name);
+
+  /**
+   * Massage the value to set according to the format expected by the wrapper.
+   *
+   * @param mixed $value
+   *   The value passed in the request.
+   *
+   * @return mixed
+   *   The value to set using the wrapped property.
+   */
+  public function preprocess($value);
+
 }

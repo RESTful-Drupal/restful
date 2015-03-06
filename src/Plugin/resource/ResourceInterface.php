@@ -203,4 +203,21 @@ interface ResourceInterface extends PluginInspectionInterface {
    */
   public function getVersion();
 
+  /**
+   * Gets a resource URL based on the current version.
+   *
+   * @param string $path
+   *   The path for the resource
+   * @param array $options
+   *   Array of options as in url().
+   * @param bool $version_string
+   *   TRUE to add the version string to the URL. FALSE otherwise.
+   *
+   * @return string
+   *   The fully qualified URL.
+   *
+   * @see url()
+   */
+  public function versionedUrl($path = '', $options = array(), $version_string = TRUE);
+
 }

@@ -76,4 +76,15 @@ interface DataProviderInterface extends CrudInterface {
    */
   public function getContext($identifier);
 
+  /**
+   * Generates the canonical path for a given path.
+   *
+   * @param string $path
+   *   The aliased path.
+   *
+   * @return string
+   *   The canonical path.
+   */
+  public function canonicalPath($path);
+
 }

@@ -936,39 +936,6 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
   }
 
   /**
-   * Gets a resource URL based on the current version.
-   *
-   * @param string $path
-   *   The path for the resource
-   * @param array $options
-   *   Array of options as in url().
-   * @param boolean $version_string
-   *   TRUE to add the version string to the URL. FALSE otherwise.
-   *
-   * @return string
-   *   The fully qualified URL.
-   *
-   * @see url().
-   */
-  public function versionedUrl($path = '', $options = array(), $version_string = TRUE) {
-    // Make the URL absolute by default.
-    $options += array('absolute' => TRUE);
-    $plugin = $this->getPlugin();
-    if (!empty($plugin['menu_item'])) {
-      $url = $plugin['menu_item'] . '/' . $path;
-      return url(rtrim($url, '/'), $options);
-    }
-
-    $base_path = variable_get('restful_hook_menu_base_path', 'api');
-    $url = $base_path;
-    if ($version_string) {
-      $url .= '/v' . $plugin['major_version'] . '.' . $plugin['minor_version'];
-    }
-    $url .= '/' . $plugin['resource'] . '/' . $path;
-    return url(rtrim($url, '/'), $options);
-  }
-
-  /**
    * {@inheritdoc}
    */
   public function index() {

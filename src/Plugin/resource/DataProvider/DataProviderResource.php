@@ -98,7 +98,7 @@ class DataProviderResource extends DataProvider implements DataProviderResourceI
   /**
    * {@inheritdoc}
    */
-  public function update($identifier, $object, $replace = TRUE) {
+  public function update($identifier, $object, $replace = FALSE) {
     return $this->referencedDataProvider->update($identifier, $object, $replace);
   }
 

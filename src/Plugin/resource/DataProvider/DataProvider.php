@@ -10,6 +10,7 @@ namespace Drupal\restful\Plugin\resource\DataProvider;
 use Drupal\restful\Exception\BadRequestException;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
+use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
 
 abstract class DataProvider implements DataProviderInterface {
 
@@ -142,6 +143,27 @@ abstract class DataProvider implements DataProviderInterface {
     return array(
       'id' => $identifier,
     );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function canonicalPath($path) {
+    // Assume that there is no alias.
+    return $path;
+  }
+
+  /**
+   * Checks if the provided field can be used with the current method.
+   *
+   * @param ResourceFieldInterface $resource_field
+   *   The field.
+   *
+   * @return bool
+   *   TRUE if acces is granted. FALSE otherwise.
+   */
+  public function fieldAccess(ResourceFieldInterface $resource_field) {
+    return in_array($this->getRequest()->getMethod(), $resource_field->getMethods());
   }
 
   /**
