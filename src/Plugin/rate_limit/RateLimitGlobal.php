@@ -6,6 +6,7 @@
  */
 
 namespace Drupal\restful\Plugin\rate_limit;
+use Drupal\restful\Http\RequestInterface;
 
 /**
  * Class RateLimitGlobal
@@ -55,7 +56,7 @@ class RateLimitGlobal extends RateLimit {
    *
    * Only track the global limit for the current user if the variable is on.
    */
-  public function isRequestedEvent(array $request = array()) {
+  public function isRequestedEvent(RequestInterface $request) {
     return $this->getLimit() > 0;
   }
 

@@ -6,8 +6,10 @@
  */
 
 namespace Drupal\restful\Plugin\authentication;
+
 use Drupal\restful\Exception\FloodException;
-use Drupal\restful\Exception\FloodException;
+use Drupal\restful\Http\Request;
+use Drupal\restful\Http\RequestInterface;
 
 /**
  * Class BasicAuthentication
@@ -24,13 +26,15 @@ class BasicAuthentication extends Authentication {
   /**
    * {@inheritdoc}
    */
-  public function applies(array $request = array(), $method = \RestfulInterface::GET) {
+  public function applies(RequestInterface $request) {
     if (variable_get('restful_skip_basic_auth', FALSE)) {
       // Skip basic auth. The variable may be set if .htaccess password is set
       // on the server.
-      return;
+      return NULL;
     }
-    list($username, $password) = $this->getCredentials();
+    $username = $request->getUser();
+    $password = $request->getPassword();
+
     return isset($username) && isset($password);
   }
 
@@ -39,8 +43,9 @@ class BasicAuthentication extends Authentication {
    *
    * @see user_login_authenticate_validate().
    */
-  public function authenticate(array $request = array(), $method = \RestfulInterface::GET) {
-    list($username, $password) = $this->getCredentials();
+  public function authenticate(RequestInterface $request) {
+    $username = $request->getUser();
+    $password = $request->getPassword();
 
     // Do not allow any login from the current user's IP if the limit has been
     // reached. Default is 50 failed attempts allowed in one hour. This is
@@ -53,7 +58,7 @@ class BasicAuthentication extends Authentication {
     if (!$uid = db_query_range("SELECT uid FROM {users} WHERE name = :name AND status = 1", 0, 1, array(':name' => $username))->fetchField()) {
       // Always register an IP-based failed login event.
       flood_register_event('failed_login_attempt_ip', variable_get('user_failed_login_ip_window', 3600), ip_address());
-      return;
+      return NULL;
     }
     if (variable_get('user_failed_login_identifier_uid_only', FALSE)) {
       // Register flood events based on the uid only, so they apply for any

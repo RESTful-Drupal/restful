@@ -211,7 +211,7 @@ function restful_angular_example_page($example) {
     // Pass info via Drupal.settings.
     $settings['restfulExample'] = array(
       'basePath' => url('', array('absolute' => TRUE)),
-      'csrfToken' => drupal_get_token(\RestfulInterface::TOKEN_VALUE),
+      'csrfToken' => drupal_get_token(\Drupal\restful\Plugin\authentication\Authentication::TOKEN_VALUE),
       'data' => array(
         'article' => array(
           'label' => 'no',
@@ -245,7 +245,7 @@ function restful_angular_example_page($example) {
     $settings['restfulExample'] = array(
       'apiPath' => url(variable_get('restful_hook_menu_base_path', 'api'), array('absolute' => TRUE)),
       'apiVersion' => 'v1.5',
-      'csrfToken' => drupal_get_token(\RestfulInterface::TOKEN_VALUE),
+      'csrfToken' => drupal_get_token(\Drupal\restful\Plugin\authentication\Authentication::TOKEN_VALUE),
       'data' => array(
         'article' => array(
           'label' => 'no',

@@ -7,6 +7,7 @@
 
 namespace Drupal\restful_token_auth\Plugin\authentication;
 
+use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\authentication\Authentication;
 
 /**
@@ -27,23 +28,26 @@ class TokenAuthentication extends Authentication {
   /**
    * {@inheritdoc}
    */
-  public function applies(array $request = array(), $method = \RestfulInterface::GET) {
+  public function applies(RequestInterface $request) {
     $plugin_definition = $this->getPluginDefinition();
     $options = $plugin_definition['options'];
     $key_name = !empty($options['param_name']) ? $options['param_name'] : 'access_token';
 
     // Access token may be on the request, or in the headers.
-    return !empty($request['__application'][$key_name]) || !empty($request[$key_name]);
+    $body = $request->getParsedBody();
+    $token = $request->getApplicationData($key_name) ? $request->getApplicationData($key_name) : $body[$key_name];
+    return (bool) $token;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function authenticate(array $request = array(), $method = \RestfulInterface::GET) {
+  public function authenticate(RequestInterface $request) {
     $plugin_definition = $this->getPluginDefinition();
     $options = $plugin_definition['options'];
     $key_name = !empty($options['param_name']) ? $options['param_name'] : 'access_token';
-    $token = !empty($request['__application'][$key_name]) ? $request['__application'][$key_name] : $request[$key_name];
+    $body = $request->getParsedBody();
+    $token = $request->getApplicationData($key_name) ? $request->getApplicationData($key_name) : $body[$key_name];
 
     // Check if there is a token that did not expire yet.
 
@@ -57,7 +61,7 @@ class TokenAuthentication extends Authentication {
 
     if (empty($result['restful_token_auth'])) {
       // No token exists.
-      return;
+      return NULL;
     }
 
     $id = key($result['restful_token_auth']);
@@ -71,7 +75,7 @@ class TokenAuthentication extends Authentication {
         $auth_token->delete();
       }
 
-      return;
+      return NULL;
     }
 
     return user_load($auth_token->uid);

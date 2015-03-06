@@ -8,8 +8,14 @@
 namespace Drupal\restful\Plugin\authentication;
 
 use Drupal\Component\Plugin\PluginBase;
+use Drupal\restful\Http\RequestInterface;
 
 abstract class Authentication extends PluginBase implements AuthenticationInterface {
+
+  /**
+   * Token value for token generation functions.
+   */
+  const TOKEN_VALUE = 'rest';
 
   /**
    * Settings from the plugin definition.
@@ -21,7 +27,7 @@ abstract class Authentication extends PluginBase implements AuthenticationInterf
   /**
    * {@inheritdoc}
    */
-  public function applies(array $request = array(), $method = \RestfulInterface::GET) {
+  public function applies(RequestInterface $request) {
     // By default assume that the request can be checked for authentication.
     return TRUE;
   }

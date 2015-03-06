@@ -8,6 +8,7 @@
 namespace Drupal\restful\RateLimit;
 
 use Drupal\restful\Exception\FloodException;
+use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\RateLimitPluginManager;
 use Drupal\restful\Plugin\rate_limit\RateLimit;
 
@@ -92,13 +93,13 @@ class RateLimitManager implements RateLimitManagerInterface {
    * request can match multiple events, the access is only granted if all events
    * are cleared.
    *
-   * @param array $request
+   * @param RequestInterface $request
    *   The request array.
    *
    * @throws FloodException if the rate limit has been reached for the
    * current request.
    */
-  public function checkRateLimit($request) {
+  public function checkRateLimit(RequestInterface $request) {
     $now = new \DateTime();
     $now->setTimestamp(REQUEST_TIME);
     // Check all rate limits configured for this handler.

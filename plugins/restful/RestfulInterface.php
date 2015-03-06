@@ -11,26 +11,6 @@ use Drupal\restful\Authentication\AuthenticationManager;
 interface RestfulInterface {
 
   /**
-   * Token value for token generation functions.
-   */
-  const TOKEN_VALUE = 'rest';
-
-  /**
-   * Return this value from public field access callbacks to allow access.
-   */
-  const ACCESS_ALLOW = 'allow';
-
-  /**
-   * Return this value from public field access callbacks to deny access.
-   */
-  const ACCESS_DENY = 'deny';
-
-  /**
-   * Return this value from public field access callbacks to not affect access.
-   */
-  const ACCESS_IGNORE = NULL;
-
-  /**
    * Constructor for the RESTful handler.
    *
    * @param $plugin

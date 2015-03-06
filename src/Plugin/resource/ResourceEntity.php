@@ -25,7 +25,7 @@ class ResourceEntity extends Resource {
    *
    * @var array
    */
-  protected $bundles;
+  protected $bundles = array();
 
   /**
    * {@inheritdoc}
@@ -35,8 +35,10 @@ class ResourceEntity extends Resource {
     if (empty($plugin_definition['entityType'])) {
       throw new InternalServerErrorException('The entity type was not provided.');
     }
-    $this->entityType = $plugin_definition['entityType'];
-    $this->bundles = $plugin_definition['bundles'];
+    $this->entityType = $plugin_definition['dataProvider']['entityType'];
+    if (isset($plugin_definition['dataProvider']['bundles'])) {
+      $this->bundles = $plugin_definition['dataProvider']['bundles'];
+    }
   }
 
   /**
@@ -44,8 +46,18 @@ class ResourceEntity extends Resource {
    */
   protected function dataProviderFactory() {
     $plugin_definition = $this->getPluginDefinition();
-    $efq_class = empty($plugin_definition['efq_class']) ? '\EntityFieldQuery' : $plugin_definition['efq_class'];
-    return new DataProviderEntity($this->getRequest(), $this->getEntityType(), $this->getBundles(), $this->getFieldDefinitions(), $efq_class);
+    return new DataProviderEntity($this->getRequest(), $this->getFieldDefinitions(), $this->getAccount(), $plugin_definition['dataProvider'], static::getLanguage());
+  }
+
+  /**
+   * Gets the global language.
+   *
+   * @return string
+   *   The language code.
+   */
+  protected static function getLanguage() {
+    // Move to its own method to allow unit testing.
+    return $GLOBALS['language']->language;
   }
 
   /**

@@ -8,6 +8,7 @@
 namespace Drupal\restful\Authentication;
 
 use Drupal\restful\Exception\UnauthorizedException;
+use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\AuthenticationPluginManager;
 
 class AuthenticationManager implements AuthenticationManagerInterface {
@@ -82,7 +83,7 @@ class AuthenticationManager implements AuthenticationManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function getAccount(array $request = array(), $method = \RestfulInterface::GET, $cache = TRUE) {
+  public function getAccount(RequestInterface $request, $cache = TRUE) {
     global $user;
     // Return the previously resolved user, if any.
     if (!empty($this->account)) {
@@ -91,7 +92,8 @@ class AuthenticationManager implements AuthenticationManagerInterface {
     // Resolve the user based on the providers in the manager.
     $account = NULL;
     foreach ($this->plugins as $provider) {
-      if ($provider->applies($request, $method) && $account = $provider->authenticate($request, $method)) {
+      /** @var \Drupal\restful\Plugin\authentication\AuthenticationInterface $provider */
+      if ($provider->applies($request) && $account = $provider->authenticate($request)) {
         // The account has been loaded, we can stop looking.
         break;
       }

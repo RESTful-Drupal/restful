@@ -7,13 +7,18 @@
 
 namespace Drupal\restful\Plugin\resource\DataProvider;
 
+use Drupal\restful\Exception\ForbiddenException;
+use Drupal\restful\Exception\InternalServerErrorException;
 use Drupal\restful\Exception\ServerConfigurationException;
+use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
+use Drupal\restful\Plugin\resource\Field\ResourceFieldBase;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldEntityInterface;
 
 use Drupal\restful\Exception\BadRequestException;
 use Drupal\restful\Exception\UnprocessableEntityException;
+use Drupal\restful\Resource\ResourceManager;
 
 class DataProviderEntity extends DataProvider {
 
@@ -22,7 +27,8 @@ class DataProviderEntity extends DataProvider {
   /**
    * Field definitions.
    *
-   * A collection of \Drupal\restful\Plugin\resource\Field\ResourceFieldEntityInterface[].
+   * A collection of
+   * \Drupal\restful\Plugin\resource\Field\ResourceFieldEntityInterface[].
    *
    * @var ResourceFieldCollectionInterface
    */
@@ -47,7 +53,7 @@ class DataProviderEntity extends DataProvider {
    *
    * @var string
    */
-  protected $EFQClass;
+  protected $EFQClass = '\EntityFieldQuery';
 
   /**
    * Constructor.
@@ -56,23 +62,31 @@ class DataProviderEntity extends DataProvider {
    *   The request.
    * @param ResourceFieldCollectionInterface $field_definitions
    *   The field definitions.
-   * @param int $range
-   *   The range.
-   * @param string $entity_type
-   *   The entity type for this data provider.
-   * @param array $bundles
-   *   The bundles for this data provider.
-   * @param string $efq_class
-   *   The class to instantiate EFQ objects.
+   * @param object $account
+   *   The account object.
+   * @param array $options
+   *   The plugin definition options for the data provider.
+   * @param string $langcode
+   *   The entity language code.
    *
+   * @throws InternalServerErrorException
+   *   If there is no entity type.
    * @throws ServerConfigurationException
-   *  If the field mappings are not for entities.
+   *   If the field mappings are not for entities.
    */
-  public function __construct(RequestInterface $request, ResourceFieldCollectionInterface $field_definitions, $range, $entity_type, array $bundles, $efq_class) {
-    parent::__construct($request, $field_definitions, $range);
-    $this->entityType = $entity_type;
-    $this->bundles = $bundles;
-    $this->EFQClass = $efq_class;
+  public function __construct(RequestInterface $request, ResourceFieldCollectionInterface $field_definitions, $account, array $options, $langcode) {
+    parent::__construct($request, $field_definitions, $account, $options, $langcode);
+    if (empty($options['entityType'])) {
+      // Entity type is mandatory.
+      throw new InternalServerErrorException('The entity type was not provided.');
+    }
+    $this->entityType = $options['entityType'];
+    if (isset($options['bundles'])) {
+      $this->bundles = $options['bundles'];
+    }
+    if (isset($options['EFQClass'])) {
+      $this->EFQClass = $options['EFQClass'];
+    }
 
     // Make sure that all field definitions are instance of
     // \Drupal\restful\Plugin\resource\Field\ResourceFieldEntityInterface
@@ -84,10 +98,21 @@ class DataProviderEntity extends DataProvider {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function getContext($identifier) {
+    return array(
+      'et' => $this->entityType,
+      'ei' => $identifier,
+    );
+  }
+
+  /**
    * Defines default sort fields if none are provided via the request URL.
    *
    * @return array
-   *   Array keyed by the public field name, and the order ('ASC' or 'DESC') as value.
+   *   Array keyed by the public field name, and the order ('ASC' or 'DESC') as
+   *   value.
    */
   protected function defaultSortInfo() {
     return array('id' => 'ASC');
@@ -107,8 +132,16 @@ class DataProviderEntity extends DataProvider {
 
     $ids = array_keys($result[$this->entityType]);
 
-    // Pre-load all entities.
-    entity_load($this->entityType, $ids);
+    $return = array();
+    // If no IDs were requested, we should not throw an exception in case an
+    // entity is un-accessible by the user.
+    foreach ($ids as $id) {
+      if ($row = $this->viewEntity($id)) {
+        $return[] = $row;
+      }
+    }
+
+    return $return;
   }
 
   /**
@@ -126,8 +159,71 @@ class DataProviderEntity extends DataProvider {
     $entity_id = $this->getEntityIdByFieldId($id);
 
     if (!$this->isValidEntity('view', $entity_id)) {
-      return;
+      return NULL;
     }
+
+    /** @var \EntityDrupalWrapper $wrapper */
+    $wrapper = entity_metadata_wrapper($this->entityType, $entity_id);
+    $wrapper->language($this->getLangCode());
+    $values = array();
+
+    $limit_fields = !empty($request['fields']) ? explode(',', $request['fields']) : array();
+
+    foreach ($this->fieldDefinitions as $resource_field_name => $info) {
+      if ($limit_fields && !in_array($resource_field_name, $limit_fields)) {
+        // Limit fields doesn't include this property.
+        continue;
+      }
+
+      $value = NULL;
+
+      if ($info['create_or_update_passthrough']) {
+        // The public field is a dummy one, meant only for passing data upon
+        // create or update.
+        continue;
+      }
+
+      if ($info['callback']) {
+        $value = ResourceManager::executeCallback($info['callback'], array($wrapper));
+      }
+      else {
+        // Exposing an entity field.
+        $property = $info['property'];
+        $sub_wrapper = $info['wrapper_method_on_entity'] ? $wrapper : $wrapper->{$property};
+
+        // Check user has access to the property.
+        if ($property && !$this->checkPropertyAccess('view', $resource_field_name, $sub_wrapper, $wrapper)) {
+          continue;
+        }
+
+        if (empty($info['formatter'])) {
+          if ($sub_wrapper instanceof \EntityListWrapper) {
+            // Multiple values.
+            foreach ($sub_wrapper as $item_wrapper) {
+              $value[] = $this->getValueFromProperty($wrapper, $item_wrapper, $info, $resource_field_name);
+            }
+          }
+          else {
+            // Single value.
+            $value = $this->getValueFromProperty($wrapper, $sub_wrapper, $info, $resource_field_name);
+          }
+        }
+        else {
+          // Get value from field formatter.
+          $value = $this->getValueFromFieldFormatter($wrapper, $sub_wrapper, $info);
+        }
+      }
+
+      if ($value && $info['process_callbacks']) {
+        foreach ($info['process_callbacks'] as $process_callback) {
+          $value = ResourceManager::executeCallback($process_callback, array($value));
+        }
+      }
+
+      $values[$resource_field_name] = $value;
+    }
+
+    return $values;
   }
 
   /**
@@ -183,7 +279,7 @@ class DataProviderEntity extends DataProvider {
         }
 
         if (empty($info['formatter'])) {
-          if ($sub_wrapper instanceof EntityListWrapper) {
+          if ($sub_wrapper instanceof \EntityListWrapper) {
             // Multiple values.
             foreach ($sub_wrapper as $item_wrapper) {
               $value[] = $this->getValueFromProperty($wrapper, $item_wrapper, $info, $public_field_name);
@@ -504,6 +600,149 @@ class DataProviderEntity extends DataProvider {
   protected function getColumnFromProperty($property_name) {
     $property_info = entity_get_property_info($this->entityType);
     return $property_info['properties'][$property_name]['schema field'];
+  }
+
+  /**
+   * Determine if an entity is valid, and accessible.
+   *
+   * @param $op
+   *   The operation to perform on the entity (view, update, delete).
+   * @param $entity_id
+   *   The entity ID.
+   *
+   * @return bool
+   *   TRUE if entity is valid, and user can access it.
+   *
+   * @throws UnprocessableEntityException
+   * @throws ForbiddenException
+   */
+  protected function isValidEntity($op, $entity_id) {
+    $entity_type = $this->entityType;
+
+    if (!$entity = entity_load_single($entity_type, $entity_id)) {
+      throw new UnprocessableEntityException(sprintf('The entity ID %s does not exist.', $entity_id));
+    }
+
+    list(,, $bundle) = entity_extract_ids($entity_type, $entity);
+
+    if (!empty($this->bundles) && !in_array($bundle, $this->bundles)) {
+      throw new UnprocessableEntityException(sprintf('The entity ID %s is not valid.', $entity_id));
+    }
+
+    if ($this->checkEntityAccess($op, $entity_type, $entity) === FALSE) {
+
+      if ($op == 'view' && !$this->request->getPath()) {
+        // Just return FALSE, without an exception, for example when a list of
+        // entities is requested, and we don't want to fail all the list because
+        // of a single item without access.
+        return FALSE;
+      }
+
+      // Entity was explicitly requested so we need to throw an exception.
+      throw new ForbiddenException(sprintf('You do not have access to entity ID %s.', $entity_id));
+    }
+
+    return TRUE;
+  }
+
+  /**
+   * Check access to CRUD an entity.
+   *
+   * @param $op
+   *   The operation. Allowed values are "create", "update" and "delete".
+   * @param $entity_type
+   *   The entity type.
+   * @param $entity
+   *   The entity object.
+   *
+   * @return bool
+   *   TRUE or FALSE based on the access. If no access is known about the entity
+   *   return NULL.
+   */
+  protected function checkEntityAccess($op, $entity_type, $entity) {
+    $account = $this->getAccount();
+    return entity_access($op, $entity_type, $entity, $account);
+  }
+
+  /**
+   * Check access on a property.
+   *
+   * @param string $op
+   *   The operation that access should be checked for. Can be "view" or "edit".
+   *   Defaults to "edit".
+   * @param string $public_field_name
+   *   The name of the public field.
+   * @param \EntityMetadataWrapper $property_wrapper
+   *   The wrapped property.
+   * @param \EntityMetadataWrapper $wrapper
+   *   The wrapped entity.
+   *
+   * @return bool
+   *   TRUE if the current user has access to set the property, FALSE otherwise.
+   */
+  protected function checkPropertyAccess($op, $public_field_name, \EntityMetadataWrapper $property_wrapper, \EntityMetadataWrapper $wrapper) {
+    if (!$this->checkPropertyAccessByAccessCallbacks($op, $public_field_name, $property_wrapper, $wrapper)) {
+      // Access callbacks denied access.
+      return FALSE;
+    }
+
+    $account = $this->getAccount();
+    // Check format access for text fields.
+    if ($property_wrapper->type() == 'text_formatted' && $property_wrapper->value() && $property_wrapper->format->value()) {
+      $format = (object) array('format' => $property_wrapper->format->value());
+      // Only check filter access on write contexts.
+      if (Request::isWriteMethod($this->request->getMethod()) && !filter_access($format, $account)) {
+        return FALSE;
+      }
+    }
+
+    $info = $property_wrapper->info();
+    if ($op == 'edit' && empty($info['setter callback'])) {
+      // Property does not allow setting.
+      return FALSE;
+    }
+
+    $access = $property_wrapper->access($op, $account);
+    return $access !== FALSE;
+  }
+
+  /**
+   * Check access on property by the defined access callbacks.
+   *
+   * @param string $op
+   *   The operation that access should be checked for. Can be "view" or "edit".
+   *   Defaults to "edit".
+   * @param string $public_field_name
+   *   The name of the public field.
+   * @param \EntityMetadataWrapper $property_wrapper
+   *   The wrapped property.
+   * @param \EntityMetadataWrapper $wrapper
+   *   The wrapped entity.
+   *
+   * @return bool
+   *   TRUE if the current user has access to set the property, FALSE otherwise.
+   *   The default implementation assumes that if no callback has explicitly
+   *   denied access, we grant the user permission.
+   */
+  protected function checkPropertyAccessByAccessCallbacks($op, $public_field_name, \EntityMetadataWrapper $property_wrapper, \EntityMetadataWrapper $wrapper) {
+    $public_fields = $this->fieldDefinitions;
+
+    /** @var ResourceFieldEntityInterface $public_field */
+    $public_field = $public_fields[$public_field_name];
+    foreach ($public_field->getAccessCallbacks() as $callback) {
+      $result = ResourceManager::executeCallback($callback, array(
+        $op,
+        $public_field_name,
+        $property_wrapper,
+        $wrapper,
+      ));
+
+      if ($result == ResourceFieldBase::ACCESS_DENY) {
+        return FALSE;
+      }
+    }
+
+    return TRUE;
   }
 
 }

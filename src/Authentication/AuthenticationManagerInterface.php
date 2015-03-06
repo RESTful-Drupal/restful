@@ -57,7 +57,7 @@ interface AuthenticationManagerInterface {
    * @return \stdClass
    *   The user object.
    */
-  public function getAccount(array $request = array(), $method = \RestfulInterface::GET, $cache = TRUE);
+  public function getAccount(RequestInterface $request, $cache = TRUE);
 
   /**
    * Setter method for the account property.
