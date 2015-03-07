@@ -150,7 +150,25 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
    * {@inheritdoc}
    */
   public function create($object) {
-    // TODO: POST entity.
+    $entity_info = $this->getEntityInfo();
+    $bundle_key = $entity_info['entity keys']['bundle'];
+    // TODO: figure out how to derive the bundle when posting to a resource with
+    // multiple bundles.
+    $bundle = reset($this->bundles);
+    $values = $bundle_key ? array($bundle_key => $bundle) : array();
+
+    $entity = entity_create($this->entityType, $values);
+
+    if ($this->checkEntityAccess('create', $this->entityType, $entity) === FALSE) {
+      // User does not have access to create entity.
+      throw new ForbiddenException('You do not have access to create a new resource.');
+    }
+
+    /** @var \EntityDrupalWrapper $wrapper */
+    $wrapper = entity_metadata_wrapper($this->entityType, $entity);
+
+    $this->setPropertyValues($wrapper, $object, TRUE);
+    return array($this->view($wrapper->getIdentifier()));
   }
 
   /**
@@ -192,6 +210,8 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
         // TODO: The resource input data in the field definition has changed.
         // Now it does not need to be keyed by bundle since you don't even need
         // an entity to use the resource based field.
+
+        // TODO: Make sure that we don't need to fake a ResourceEntity for this.
         $resource_data_provider = DataProviderResource::init($this->getRequest(), $resource['name'], array(
           $resource['major_version'],
           $resource['minor_version'],
@@ -949,12 +969,8 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
         continue;
       }
 
+      // Delegate modifications on the value of the field.
       $field_value = $resource_field->preprocess($object[$public_field_name]);
-
-      CONTINUE HERE! YOU NEED TO CREATE THE RESOURCE FIELD ENTITY CLASSES TO
-      IMPLEMENT THE PREPROCESS METHOD ON THEM.
-
-      // $this->propertyValuesPreprocess($property_name, $object[$public_field_name], $public_field_name);
 
       $wrapper->{$property_name}->set($field_value);
       unset($original_object[$public_field_name]);

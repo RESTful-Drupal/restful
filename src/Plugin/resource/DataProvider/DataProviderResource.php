@@ -7,6 +7,7 @@
 
 namespace Drupal\restful\Plugin\resource\DataProvider;
 
+use Drupal\restful\Http\Request;
 use Drupal\restful\Plugin\resource\ResourceInterface;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
@@ -107,6 +108,17 @@ class DataProviderResource extends DataProvider implements DataProviderResourceI
    */
   public function remove($identifier) {
     $this->referencedDataProvider->remove($identifier);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function merge($identifier, $object) {
+    if (!$identifier) {
+      return $this->referencedDataProvider->create($object);
+    }
+    $method = $this->getRequest()->getMethod();
+    return $this->referencedDataProvider->update($identifier, $object, $method == Request::METHOD_PUT);
   }
 
 }

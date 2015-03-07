@@ -353,7 +353,11 @@ class ResourceFieldEntity extends ResourceFieldBase implements ResourceFieldEnti
         return 'ResourceFieldEntityFile';
 
       default:
-        return 'ResourceFieldEntity' . String::camelize($field_info['type']);
+        $class_name = 'ResourceFieldEntity' . String::camelize($field_info['type']);
+        if (class_exists($class_name)) {
+          return $class_name;
+        }
+        return __CLASS__;
     }
   }
 

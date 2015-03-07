@@ -26,4 +26,17 @@ interface DataProviderResourceInterface extends DataProviderInterface {
    */
   public static function init(RequestInterface $request, $resource_name, array $version);
 
+  /**
+   * Create or update an item based on the payload.
+   *
+   * @param mixed $identifier
+   *   The resource item identifier.
+   * @param mixed $object
+   *   The payload.
+   *
+   * @return mixed
+   *   The identifier of the created or updated resource item.
+   */
+  public function merge($identifier, $object);
+
 }
