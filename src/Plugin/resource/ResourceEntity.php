@@ -46,7 +46,7 @@ class ResourceEntity extends Resource {
    */
   public function dataProviderFactory() {
     $plugin_definition = $this->getPluginDefinition();
-    return new DataProviderEntity($this->getRequest(), $this->getFieldDefinitions(), $this->getAccount(), $plugin_definition['dataProvider'], static::getLanguage());
+    return new DataProviderEntity($this->getRequest(), $this->getFieldDefinitions(), $this->getAccount(), $plugin_definition['dataProvider']);
   }
 
   /**

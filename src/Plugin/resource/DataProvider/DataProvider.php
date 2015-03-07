@@ -78,10 +78,8 @@ abstract class DataProvider implements DataProviderInterface {
     if ($options['range']) {
       $this->range = $options['range'];
     }
-    $this->langcode = $langcode;
+    $this->langcode = $langcode ?: static::getLanguage();
   }
-
-  // TODO: We should create a method that provides the cache context given the identifier.
 
   /**
    * {@inheritdoc}
@@ -154,13 +152,7 @@ abstract class DataProvider implements DataProviderInterface {
   }
 
   /**
-   * Checks if the provided field can be used with the current method.
-   *
-   * @param ResourceFieldInterface $resource_field
-   *   The field.
-   *
-   * @return bool
-   *   TRUE if acces is granted. FALSE otherwise.
+   * {@inheritdoc}
    */
   public function fieldAccess(ResourceFieldInterface $resource_field) {
     return in_array($this->getRequest()->getMethod(), $resource_field->getMethods());

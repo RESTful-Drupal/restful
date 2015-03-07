@@ -9,6 +9,7 @@ namespace Drupal\restful\Plugin\resource\DataProvider;
 
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\CrudInterface;
+use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
 
 interface DataProviderInterface extends CrudInterface {
 
@@ -86,5 +87,16 @@ interface DataProviderInterface extends CrudInterface {
    *   The canonical path.
    */
   public function canonicalPath($path);
+
+  /**
+   * Checks if the provided field can be used with the current method.
+   *
+   * @param ResourceFieldInterface $resource_field
+   *   The field.
+   *
+   * @return bool
+   *   TRUE if acces is granted. FALSE otherwise.
+   */
+  public function fieldAccess(ResourceFieldInterface $resource_field);
 
 }

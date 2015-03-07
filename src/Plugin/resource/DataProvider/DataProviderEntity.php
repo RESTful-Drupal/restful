@@ -76,7 +76,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
    * @throws ServerConfigurationException
    *   If the field mappings are not for entities.
    */
-  public function __construct(RequestInterface $request, ResourceFieldCollectionInterface $field_definitions, $account, array $options, $langcode) {
+  public function __construct(RequestInterface $request, ResourceFieldCollectionInterface $field_definitions, $account, array $options, $langcode = NULL) {
     parent::__construct($request, $field_definitions, $account, $options, $langcode);
     if (empty($options['entityType'])) {
       // Entity type is mandatory.
