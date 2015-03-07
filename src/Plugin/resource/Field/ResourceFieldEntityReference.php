@@ -48,37 +48,34 @@ class ResourceFieldEntityReference extends ResourceFieldEntity implements Resour
     // TODO: Move this to the docs. The payload for the resource has changed.
     // The structure of the payload send for a public field declared as a
     // resource is now like:
-
-    array(
-      'request' => array(
-        'method' => 'PATCH',
-        'headers' => array('foo' => 'bar'),
-        'csrf_token' => 'abcde',
-      ),
-      'values' => array(
-        array(
-          'id' => 1,
-          'my-description' => 'Lorem ipsum',
-          'another-int' => 2,
-        ),
-        array(
-          'id' => 5,
-          'my-description' => 'Only the description has changed this time.',
-        ),
-      ),
-    );
+    // 1. array(
+    //   'request' => array(
+    //     'method' => 'PATCH',
+    //     'headers' => array('foo' => 'bar'),
+    //     'csrf_token' => 'abcde',
+    //   ),
+    //   'values' => array(
+    //     array(
+    //       'id' => 1, // This is the referenced entity ID. Hardcoded for now.
+    //       'my-description' => 'Lorem ipsum',
+    //       'another-int' => 2,
+    //     ),
+    //     array(
+    //       'id' => 5,
+    //       'my-description' => 'Only the description has changed this time.',
+    //     ),
+    //   ),
+    // );
+    // 2. array(1, 5); <-- To set a multi value reference field. Without
+    //    updating the underlying entities.
+    // 3. 5 <-- To set a single value reference field. Without updating the
+    //    underlying entities.
 
     $field_info = field_info_field($this->getProperty());
 
     $resource = $this->getResource();
     $cardinality = $field_info['cardinality'];
-    if (
-      empty($resource) ||
-      (
-        $cardinality == 1 &&
-        !is_array($value)
-      )
-    ) {
+    if (empty($resource) || empty($value['values'])) {
       // Field is not defined as "resource", which means it only accepts an
       // integer as a valid value.
       // Or, we are passing an integer and cardinality is 1. That means that we
@@ -97,13 +94,13 @@ class ResourceFieldEntityReference extends ResourceFieldEntity implements Resour
     // Return the entity ID that was created.
     if ($cardinality == 1) {
       // Single value.
-      return $resource_data_provider->merge(static::subRequestId($value), $value);
+      return $resource_data_provider->merge(static::subRequestId($value['values'][0]), $value['values'][0]);
     }
 
     // Multiple values.
     $return = array();
-    foreach ($value as $value_item) {
-      $return[] = $resource_data_provider->merge(static::subRequestId($value), $value_item);
+    foreach ($value['values'] as $value_item) {
+      $return[] = $resource_data_provider->merge(static::subRequestId($value_item), $value_item);
     }
 
     return $return;
@@ -118,16 +115,6 @@ class ResourceFieldEntityReference extends ResourceFieldEntity implements Resour
       'query' => array(),
     );
 
-    if (empty($request_user_info['method'])) {
-      // If there is no id for the sub request, then it's a POST.
-      if (!static::subRequestId($value)) {
-        // TODO: Move the METHOD_* constants to RequestInterface.
-        $request_user_info['method'] = Request::METHOD_POST;
-      }
-      else {
-        $request_user_info['method'] = Request::METHOD_PATCH;
-      }
-    }
     if (!empty($request_user_info['headers']) || is_array($request_user_info['headers'])) {
       $request_user_info['headers'] = new HttpHeaderBag($request_user_info['headers']);
     }

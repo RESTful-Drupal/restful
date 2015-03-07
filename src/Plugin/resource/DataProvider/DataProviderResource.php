@@ -117,8 +117,8 @@ class DataProviderResource extends DataProvider implements DataProviderResourceI
     if (!$identifier) {
       return $this->referencedDataProvider->create($object);
     }
-    $method = $this->getRequest()->getMethod();
-    return $this->referencedDataProvider->update($identifier, $object, $method == Request::METHOD_PUT);
+    $replace = ($method = $this->getRequest()->getMethod()) ? $method == Request::METHOD_PUT : FALSE;
+    return $this->referencedDataProvider->update($identifier, $object, $replace);
   }
 
 }
