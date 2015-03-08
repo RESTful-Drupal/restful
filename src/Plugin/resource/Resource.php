@@ -328,18 +328,21 @@ abstract class Resource extends PluginBase implements ResourceInterface {
     // Make the URL absolute by default.
     $options += array('absolute' => TRUE);
     $plugin_definition = $this->getPluginDefinition();
-    if (!empty($plugin_definition['menu_item'])) {
-      $url = $plugin_definition['menu_item'] . '/' . $path;
+    if (!empty($plugin_definition['menuItem'])) {
+      $url = $plugin_definition['menuItem'] . '/' . $path;
       return url(rtrim($url, '/'), $options);
     }
 
     $base_path = variable_get('restful_hook_menu_base_path', 'api');
     $url = $base_path;
     if ($version_string) {
-      $url .= '/v' . $plugin_definition['major_version'] . '.' . $plugin_definition['minor_version'];
+      $url .= '/v' . $plugin_definition['majorVersion'] . '.' . $plugin_definition['minorVersion'];
     }
     $url .= '/' . $plugin_definition['resource'] . '/' . $path;
     return url(rtrim($url, '/'), $options);
   }
 
+  /**
+   * Overrides getId.
+   */
 }
