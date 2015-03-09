@@ -102,6 +102,11 @@ class RestfulAuthenticationManager extends \ArrayObject {
         $account = $user->uid ? user_load($user->uid) : $account;
       }
     }
+    else {
+      // Always make sure to disable the page cache after we authenticated the
+      // user so that a response never gets into the page cache.
+      drupal_page_is_cacheable(FALSE);
+    }
     if ($cache) {
       $this->setAccount($account);
     }

@@ -38,6 +38,10 @@ class RestfulAuthenticationTestCase extends RestfulCurlBaseTestCase {
   }
 
   function tearDown() {
+    global $user;
+    // Put back the user object.
+    $user = $this->originalUser;
+
     // Put back the $_SERVER array.
     $_SERVER = $this->originalServer;
     parent::tearDown();
@@ -119,5 +123,45 @@ class RestfulAuthenticationTestCase extends RestfulCurlBaseTestCase {
     user_role_change_permissions(DRUPAL_ANONYMOUS_RID, array('access user profiles' => TRUE));
     $result = $this->httpRequest('api/v1.0/users');
     $this->assertEqual($result['code'], 200, 'Anonymous user got 200 when trying to access the "users" resource after permissions changed.');
+  }
+
+  /**
+   * Tests that an authenticated user response never gets into the page cache.
+   */
+  public function testCachePoisoning() {
+    global $user;
+    // We need to hijack the global user object in order to force it to be an
+    // anonymous user.
+    $user = drupal_anonymous_user();
+
+    // Enable page caching.
+    variable_set('cache', 1);
+
+    // Allow anyone to access the user resource.
+    user_role_grant_permissions(DRUPAL_ANONYMOUS_RID, array('access user profiles'));
+    user_role_grant_permissions(DRUPAL_AUTHENTICATED_RID, array('access user profiles'));
+
+    // Create an admin account that is allowed to read emails of users.
+    $user1 = $this->drupalCreateUser(array('administer users'));
+
+    $this->httpauth_credentials = $user1->name . ':' . $user1->pass_raw;
+    $this->httpRequest('api/users/1');
+    $this->assertResponse(200);
+
+    // Now access the resource as anonymous user and make sure that the response
+    // is not in the page cache.
+    $this->httpauth_credentials = '';
+    $result = $this->httpRequest('api/users/1');
+    $this->assertResponse(200);
+    $response = drupal_json_decode($result['body']);
+    $this->assertTrue(empty($response['data'][0]['mail']), 'Protected email property is not present on response for anonymous users.');
+
+    // Access the resource as admin again and make sure that the response is not
+    // from the page cache.
+    $this->httpauth_credentials = $user1->name . ':' . $user1->pass_raw;
+    $result = $this->httpRequest('api/users/1');
+    $this->assertResponse(200);
+    $response = drupal_json_decode($result['body']);
+    $this->assertFalse(empty($response['data'][0]['mail']), 'Protected email property is present on response for admin users.');
   }
 }
