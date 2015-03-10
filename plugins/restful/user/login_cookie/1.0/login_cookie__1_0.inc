@@ -3,7 +3,7 @@
 if (variable_get('restful_enable_user_login_resource', TRUE)) {
   $plugin = array(
     'label' => t('Login'),
-    'description' => t('Login a user and return a JSON along with the authentication cookie..'),
+    'description' => t('Login a user and return a JSON along with the authentication cookie.'),
     'resource' => 'login_cookie',
     'class' => 'RestfulUserLoginCookie',
     'entity_type' => 'user',

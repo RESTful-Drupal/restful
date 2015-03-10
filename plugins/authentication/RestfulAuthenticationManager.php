@@ -144,7 +144,7 @@ class RestfulAuthenticationManager extends \ArrayObject {
     // multiple times
     $restful_switch_user = &drupal_static(__FUNCTION__, FALSE);
 
-    if (empty($restful_switch_user) || !$this->getOriginalUserSession()) {
+    if (empty($restful_switch_user) && !$this->getOriginalUserSession()) {
       $restful_switch_user = TRUE;
 
       $session = drupal_save_session();
