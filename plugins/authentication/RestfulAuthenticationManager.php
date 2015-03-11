@@ -175,8 +175,9 @@ class RestfulAuthenticationManager extends \ArrayObject {
    */
   public function switchUserBack() {
     global $user;
-
-    $user_state = $this->getOriginalUserSession();
+    if (!$user_state = $this->getOriginalUserSession()) {
+      return;
+    }
 
     $user = $user_state['user'];
     drupal_save_session($user_state['session']);
