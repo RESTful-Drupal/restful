@@ -59,7 +59,21 @@ class RestfulAccessTokenAuthentication extends \RestfulTokenAuthenticationBase {
 
     $output = $this->viewEntity($id);
 
+    // various options to provide info about the token owner
+    $owner_resource = variable_get('restful_token_auth_owner_resource', '');
+
+    if ($owner_resource !== '<none>') {
+      if ($owner_resource == '<id>') {
+        $output['owner'] = $access_token->uid;
+      } else {
+        $handler = restful_get_restful_handler('users') ?: restful_get_restful_handler($owner_resource) ?: FALSE;
+        if ($handler) {
+          $user = $handler->get($access_token->uid);
+          $output['owner'] = array_pop($user);
+        }
+      }
+    }
+
     return $output;
   }
-
 }

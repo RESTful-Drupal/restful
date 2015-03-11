@@ -24,6 +24,12 @@ function restful_token_auth_admin_settings($form, &$form_state) {
     '#default_value' => variable_get('restful_token_auth_expiration_period', 'P1D'),
     '#element_validate' => array('restful_date_time_format_element_validate'),
   );
+  $form['advanced']['restful_token_auth_owner_resource'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Owner resource'),
+    '#description' => t('If a resource endpoint is specified or the resource "users" exists the token endpoint will also provide information about the token owner. Use !none if you have the users resource enabled but no information should be send. Use !id to just provide the owner uid wihout querying any resource.', array('!none' => '&lt;none&gt;', '!id' => '&lt;id&gt;')),
+    '#default_value' => variable_get('restful_token_auth_owner_resource', ''),
+  );
 
   return system_settings_form($form);
 }
