@@ -770,12 +770,13 @@ function restful_date_time_format_element_validate($element, &$form_state) {
 }
 
 /**
+ * Determine if this is the first time we try to switch the user.
  *
  * @return bool
  *   TRUE if this static function was already called.
  */
 function restful_is_user_switched() {
-  static $restful_switch_user = FALSE;
+  $restful_switch_user = &drupal_static(__FUNCTION__, FALSE);
 
   if (!$restful_switch_user) {
     $restful_switch_user = TRUE;
