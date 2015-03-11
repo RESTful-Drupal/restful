@@ -768,3 +768,20 @@ function restful_date_time_format_element_validate($element, &$form_state) {
     )));
   }
 }
+
+/**
+ *
+ * @return bool
+ *   TRUE if this static function was already called.
+ */
+function restful_is_user_switched() {
+  static $restful_switch_user = FALSE;
+
+  if (!$restful_switch_user) {
+    $restful_switch_user = TRUE;
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
