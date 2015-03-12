@@ -204,6 +204,8 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
       }
 
       if ($resource_field->getCallback()) {
+        // TODO: Use strategy pattern to pass a consistent object to
+        // executeCallback.
         $value = ResourceManager::executeCallback($resource_field->getCallback(), array($wrapper));
       }
       elseif ($resource = $resource_field->getResource()) {
@@ -211,10 +213,10 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
         // Now it does not need to be keyed by bundle since you don't even need
         // an entity to use the resource based field.
 
-        // TODO: Make sure that we don't need to fake a ResourceEntity for this.
-        $resource_data_provider = DataProviderResource::init($this->getRequest(), $resource['name'], array(
-          $resource['major_version'],
-          $resource['minor_version'],
+        $request = Request::create('', array(), Request::METHOD_GET);
+        $resource_data_provider = DataProviderResource::init($request, $resource['name'], array(
+          $resource['majorVersion'],
+          $resource['minorVersion'],
         ));
         $value = $resource_data_provider->view($identifier);
       }

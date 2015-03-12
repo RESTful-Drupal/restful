@@ -88,11 +88,11 @@ class Resource extends Plugin {
   public $cacheRender = array();
 
   /**
-   * Hook menu. FALSE if the resource should declare a menu item automatically.
+   * Hook menu. TRUE if the resource should declare a menu item automatically.
    *
    * @var bool
    */
-  public $hookMenu = FALSE;
+  public $hookMenu = TRUE;
 
   /**
    * The path to be used as the menu item.

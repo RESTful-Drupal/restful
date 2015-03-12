@@ -8,6 +8,7 @@
 namespace Drupal\restful\Resource;
 
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
+use Drupal\Component\Plugin\PluginBase;
 use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\ResourcePluginManager;
@@ -29,6 +30,13 @@ class ResourceManager implements ResourceManagerInterface {
   protected $pluginManager;
 
   /**
+   * The resource plugins.
+   *
+   * @var ResourcePluginCollection
+   */
+  protected $plugins;
+
+  /**
    * Constructor for ResourceManager.
    *
    * @param RequestInterface $request
@@ -42,9 +50,9 @@ class ResourceManager implements ResourceManagerInterface {
     $options = array();
     foreach ($this->pluginManager->getDefinitions() as $plugin_id => $plugin_definition) {
       // Set the instance id to articles::1.5 (for example).
-      $instance_id = $plugin_id . '::' . $plugin_definition['major_version'] . '.' . $plugin_definition['minor_version'];
+      $instance_id = $plugin_id . PluginBase::DERIVATIVE_SEPARATOR . $plugin_definition['majorVersion'] . '.' . $plugin_definition['minorVersion'];
       $options[$instance_id] = $plugin_definition;
-      $options['request'] = $request;
+      // $options['request'] = $request;
     }
     $this->plugins = new ResourcePluginCollection($this->pluginManager, $options);
   }
@@ -52,12 +60,26 @@ class ResourceManager implements ResourceManagerInterface {
   /**
    * {@inheritdoc}
    */
+  public function getPlugins() {
+    return $this->plugins;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getPlugin($instance_id) {
+    return $this->plugins->get($instance_id);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getVersionFromRequest() {
-    $path = $this->request->getPath();
-    $version = &drupal_static(__CLASS__ . '::' . __FUNCTION__);
+    $version = &drupal_static(__METHOD__);
     if (isset($version)) {
       return $version;
     }
+    $path = $this->request->getPath(FALSE);
     list($resource_name, $version) = static::getPageArguments($path);
     if (preg_match('/^v\d+(\.\d+)?$/', $version)) {
       $version = $this->parseVersionString($version, $resource_name);
@@ -80,9 +102,11 @@ class ResourceManager implements ResourceManagerInterface {
    */
   public function negotiate() {
     $version = $this->getVersionFromRequest();
-    list($resource_name, ) = static::getPageArguments($this->request->getPath());
+    list($resource_name,) = static::getPageArguments($this->request->getPath(FALSE));
     try {
-      return $this->pluginManager->createInstance($resource_name . '::' . $version[0] . '.' . $version[1]);
+      return $this->pluginManager->createInstance($resource_name . PluginBase::DERIVATIVE_SEPARATOR . $version[0] . '.' . $version[1], array(
+        'request' => restful()->getRequest()
+      ));
     }
     catch (PluginNotFoundException $e) {
       throw new ServerConfigurationException($e->getMessage());
@@ -201,7 +225,7 @@ class ResourceManager implements ResourceManagerInterface {
    * @see menu_get_item().
    */
   protected static function getMenuItem($path = NULL) {
-    $router_items = &drupal_static(__CLASS__ . '::' . __FUNCTION__);
+    $router_items = &drupal_static(__METHOD__);
     if (!isset($path)) {
       $path = $_GET['q'];
     }
@@ -238,10 +262,10 @@ class ResourceManager implements ResourceManagerInterface {
     $resources = array();
     // Get all the resources corresponding to the resource name.
     foreach ($this->pluginManager->getDefinitions() as $plugin_id => $plugin_definition) {
-      if ($plugin_definition['id'] != $resource_name || (isset($major_version) && $plugin_definition['major_version'] != $major_version)) {
+      if ($plugin_definition['name'] != $resource_name || (isset($major_version) && $plugin_definition['majorVersion'] != $major_version)) {
         continue;
       }
-      $resources[$plugin_definition['major_version']][$plugin_definition['minor_version']] = $plugin_definition;
+      $resources[$plugin_definition['majorVersion']][$plugin_definition['minorVersion']] = $plugin_definition;
     }
     // Sort based on the major version.
     ksort($resources, SORT_NUMERIC);
@@ -254,7 +278,7 @@ class ResourceManager implements ResourceManagerInterface {
     ksort($resources, SORT_NUMERIC);
     // Get the latest resource for the minor version.
     $resource = end($resources);
-    return array($resource['major_version'], $resource['minor_version']);
+    return array($resource['majorVersion'], $resource['minorVersion']);
   }
 
 }

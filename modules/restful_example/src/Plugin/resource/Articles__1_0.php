@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains \Drupal\restful_example\Plugin\restful\Articles__1_0.
+ * Contains \Drupal\restful_example\Plugin\resource\Articles__1_0.
  */
 
-namespace Drupal\restful_example\Plugin\restful;
+namespace Drupal\restful_example\Plugin\resource;
 
 use Drupal\restful\Plugin\resource\ResourceEntity;
 use Drupal\restful\Plugin\resource\ResourceInterface;
@@ -14,11 +14,11 @@ use Drupal\restful\Plugin\resource\ResourceInterface;
  * Class Articles
  * @package Drupal\restful\Plugin\formatter
  *
- * @Formatter(
- *   name = "articles",
+ * @Resource(
+ *   name = "articles:1.0",
  *   resource = "articles",
  *   label = "Articles",
- *   description = "Export the article content type with "cookie" authentication.",
+ *   description = "Export the article content type with cookie authentication.",
  *   authenticationTypes = TRUE,
  *   authenticationOptional = TRUE,
  *   dataProvider = {
@@ -32,10 +32,7 @@ use Drupal\restful\Plugin\resource\ResourceInterface;
 class Articles__1_0 extends ResourceEntity implements ResourceInterface {
 
   /**
-   * Public fields.
-   *
-   * @return array
-   *   The field definition array.
+   * {@inheritdoc}
    */
   protected function publicFields() {
     return array(

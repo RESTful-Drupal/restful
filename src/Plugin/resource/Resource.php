@@ -17,6 +17,7 @@ use Drupal\restful\Http\HttpHeader;
 use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataProvider\DataProviderInterface;
+use Drupal\restful\Plugin\resource\Field\ResourceFieldCollection;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
 use Drupal\restful\Resource\ResourceManager;
 
@@ -64,14 +65,10 @@ abstract class Resource extends PluginBase implements ResourceInterface {
    *   The plugin_id for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
-   * @param ResourceFieldCollectionInterface $field_definitions
-   *   The field definitions.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, ResourceFieldCollectionInterface $field_definitions) {
-    // TODO: According to DefaultFactory.php#L58 the last parameter will not be
-    // passed in. Find some other way to do this.
+  public function __construct(array $configuration, $plugin_id, $plugin_definition) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
-    $this->fieldDefinitions = $field_definitions;
+    $this->fieldDefinitions = ResourceFieldCollection::factory($this->publicFields());
   }
 
   /**
@@ -343,6 +340,40 @@ abstract class Resource extends PluginBase implements ResourceInterface {
   }
 
   /**
-   * Overrides getId.
+   * {@inheritdoc}
    */
+  public function access() {
+    return $this->accessByAllowOrigin();
+  }
+
+  /**
+   * Checks access based on the referer header and the allow_origin setting.
+   *
+   * @return bool
+   *   TRUE if the access is granted. FALSE otherwise.
+   */
+  protected function accessByAllowOrigin() {
+    // Check the referrer header and return false if it does not match the
+    // Access-Control-Allow-Origin
+    $referer = $this->getRequest()->getHeaders()->get('Referer')->getValueString();
+
+    // If there is no allow_origin assume that it is allowed. Also, if there is
+    // no referer then grant access since the request probably was not
+    // originated from a browser.
+    $plugin_definition = $this->getPluginDefinition();
+    $origin = $plugin_definition['allowOrigin'];
+    if (empty($origin) || $origin == '*' || !$referer) {
+      return TRUE;
+    }
+    return strpos($referer, $origin) === 0;
+  }
+
+  /**
+   * Public fields.
+   *
+   * @return array
+   *   The field definition array.
+   */
+  abstract protected function publicFields();
+
 }

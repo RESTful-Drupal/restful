@@ -92,12 +92,12 @@ class ResourceFieldEntity extends ResourceFieldBase implements ResourceFieldEnti
    *   Contains the field values.
    */
   public function __construct(array $field) {
-    $this->wrapperMethod = $field['wrapper_method'];
-    $this->subProperty = $field['sub_property'];
-    $this->formatter = $field['formatter'];
-    $this->wrapperMethodOnEntity = $field['wrapper_method_on_entity'];
-    $this->column = $field['column'];
-    $this->imageStyles = $field['image_styles'];
+    $this->wrapperMethod = isset($field['wrapper_method']) ? $field['wrapper_method'] : $this->wrapperMethod;
+    $this->subProperty = isset($field['sub_property']) ? $field['sub_property'] : $this->subProperty;
+    $this->formatter = isset($field['formatter']) ? $field['formatter'] : $this->formatter;
+    $this->wrapperMethodOnEntity = isset($field['wrapper_method_on_entity']) ? $field['wrapper_method_on_entity'] : $this->wrapperMethodOnEntity;
+    $this->column = isset($field['column']) ? $field['column'] : $this->column;
+    $this->imageStyles = isset($field['image_styles']) ? $field['image_styles'] : $this->imageStyles;
     if (!empty($field['bundles'])) {
       $this->bundle = $field['bundles'];
     }
@@ -335,29 +335,31 @@ class ResourceFieldEntity extends ResourceFieldBase implements ResourceFieldEnti
   protected static function fieldClassName(array $field_definition) {
     // If there is an extending class for the particular field use that class
     // instead.
-    $field_info = field_info_field($field_definition['property']);
+    if (empty($field_definition['property']) || !$field_info = field_info_field($field_definition['property'])) {
+      return NULL;
+    }
 
     $resource_field = NULL;
     switch ($field_info['type']) {
       case 'entityreference':
       case 'taxonomy_term_reference':
-        return 'ResourceFieldEntityReference';
+        return '\Drupal\restful\Plugin\resource\Field\ResourceFieldEntityReference';
 
       case 'text':
       case 'text_long':
       case 'text_with_summary':
-        return 'ResourceFieldEntityText';
+        return '\Drupal\restful\Plugin\resource\Field\ResourceFieldEntityText';
 
       case 'file':
       case 'image':
-        return 'ResourceFieldEntityFile';
+        return '\Drupal\restful\Plugin\resource\Field\ResourceFieldEntityFile';
 
       default:
         $class_name = 'ResourceFieldEntity' . String::camelize($field_info['type']);
         if (class_exists($class_name)) {
           return $class_name;
         }
-        return __CLASS__;
+        return NULL;
     }
   }
 

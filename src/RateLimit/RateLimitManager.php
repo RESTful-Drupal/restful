@@ -7,6 +7,7 @@
 
 namespace Drupal\restful\RateLimit;
 
+use Drupal\Component\Plugin\PluginBase;
 use Drupal\restful\Exception\FloodException;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\RateLimitPluginManager;
@@ -75,7 +76,7 @@ class RateLimitManager implements RateLimitManagerInterface {
     $options = array();
     foreach ($plugin_options as $plugin_id => $rate_options) {
       // Set the instance id to articles::request and specify the plugin id.
-      $instance_id = $resource->getResourceName() . '::' . $plugin_id;
+      $instance_id = $resource->getResourceName() . PluginBase::DERIVATIVE_SEPARATOR . $plugin_id;
       $options[$instance_id] = array(
         'id' => $plugin_id,
         'resource' => $resource,

@@ -220,4 +220,13 @@ interface ResourceInterface extends PluginInspectionInterface {
    */
   public function versionedUrl($path = '', $options = array(), $version_string = TRUE);
 
+  /**
+   * Determine if user can access the handler.
+   *
+   * @return bool
+   *   TRUE if the current request has access to the requested resource. FALSE
+   *   otherwise.
+   */
+  public function access();
+
 }

@@ -6,6 +6,7 @@
  */
 
 namespace Drupal\restful\Plugin\rate_limit;
+use Drupal\Component\Plugin\PluginBase;
 use Drupal\restful\Http\RequestInterface;
 
 /**
@@ -37,7 +38,7 @@ class RateLimitGlobal extends RateLimit {
    */
   public function generateIdentifier($account = NULL) {
     $identifier = '';
-    $identifier .= $this->getPluginId() . '::';
+    $identifier .= $this->getPluginId() . PluginBase::DERIVATIVE_SEPARATOR;
     $identifier .= empty($account->uid) ? ip_address() : $account->uid;
     return $identifier;
   }

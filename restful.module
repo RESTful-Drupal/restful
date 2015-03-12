@@ -11,6 +11,8 @@ use Drupal\restful\Exception\RestfulException;
 use Drupal\restful\Exception\ServiceUnavailableException;
 use Drupal\restful\Formatter\FormatterManager;
 use Drupal\restful\Http\HttpHeader;
+use Drupal\restful\Plugin\resource\ResourceInterface;
+use Drupal\restful\Resource\ResourceManager;
 use Drupal\restful\RestfulManager;
 
 /**
@@ -107,37 +109,42 @@ function restful_get_rate_limit_plugin($plugin_name) {
 function restful_menu() {
   $base_path = variable_get('restful_hook_menu_base_path', 'api');
   $items = array();
-  foreach (restful_get_restful_plugins() as $plugin) {
-    if (!$plugin['hook_menu']) {
+  $plugins = restful()
+    ->getResourceManager()
+    ->getPlugins();
+  foreach ($plugins as $plugin) {
+    /** @var ResourceInterface $plugin */
+    $plugin_definition = $plugin->getPluginDefinition();
+    if (!$plugin_definition['hookMenu']) {
       // Plugin explicitly declared no hook menu should be created automatically
       // for it.
       continue;
     }
     $item = array(
-      'title' => $plugin['name'],
+      'title' => $plugin_definition['name'],
       'access callback' => 'restful_menu_access_callback',
-      'access arguments' => array($plugin['resource']),
+      'access arguments' => array($plugin_definition['resource']),
       'page callback' => 'restful_menu_process_callback',
-      'page arguments' => array($plugin['resource']),
+      'page arguments' => array($plugin_definition['resource']),
       'delivery callback' => 'restful_formatted_delivery',
       'type' => MENU_CALLBACK,
     );
     // If there is no specific menu item allow the different version variations.
-    if ($plugin['hook_menu'] && empty($plugin['menu_item'])) {
+    if ($plugin_definition['hookMenu'] && empty($plugin_definition['menuItem'])) {
       // Add the version string to the arguments.
       $item['access arguments'][] = 1;
       $item['page arguments'][] = 1;
         // Ex: api/v1.2/articles
-      $items[$base_path . '/v' . $plugin['major_version'] . '.' . $plugin['minor_version'] . '/' . $plugin['resource']] = $item;
+      $items[$base_path . '/v' . $plugin_definition['majorVersion'] . '.' . $plugin_definition['minorVersion'] . '/' . $plugin_definition['resource']] = $item;
       // Ex: api/v1/articles will use the latest minor version.
-      $items[$base_path . '/v' . $plugin['major_version'] . '/' . $plugin['resource']] = $item;
+      $items[$base_path . '/v' . $plugin_definition['majorVersion'] . '/' . $plugin_definition['resource']] = $item;
       // Ex: api/articles will use the header or the latest version.
       // Do not add the version string to the arguments.
       $item['access arguments'] = $item['page arguments'] = array(1);
-      $items[$base_path . '/' . $plugin['resource']] = $item;
+      $items[$base_path . '/' . $plugin_definition['resource']] = $item;
     }
     else {
-      $items[$plugin['menu_item']] = $item;
+      $items[$plugin_definition['menuItem']] = $item;
     }
   }
 
@@ -340,6 +347,11 @@ function restful() {
     $manager = xautoload()->restfulManager;
   }
   catch (\Exception $e) {
+    // During the menu access checks we get here before plug_xautoload has had
+    // the chance to include the composer manager classes. That means that we
+    // would not be able to get the resource manager that depends on composer
+    // classes.
+    composer_manager_register_autoloader();
     $manager = RestfulManager::createFromGlobals();
     xautoload()->getServiceContainer()->set('restfulManager', $manager);
   }
@@ -397,7 +409,7 @@ function restful_menu_process_callback($resource_name, $version = NULL) {
   if (preg_match('/^v\d+(\.\d+)?$/', $version)) {
     array_shift($path);
   }
-  list($major_version, $minor_version) = \RestfulBase::getVersionFromRequest();
+  list($major_version, $minor_version) = ResourceManager::getVersionFromRequest();
   $handler = restful_get_restful_handler($resource_name, $major_version, $minor_version);
   if (!$handler instanceof \RestfulDataProviderInterface) {
     throw new ServiceUnavailableException(format_string('The selected plugin (@plugin) does not implement \RestfulDataProviderInterface.', array('@plugin' => $resource_name . ' v' . $major_version . '.' . $minor_version)));

@@ -103,9 +103,13 @@ interface RequestInterface {
   /**
    * Gets the request path.
    *
+   * @param bool $strip
+   *   If TRUE it will strip the restful API prefix from the beginning.
+   *
    * @return string
+   *   The path.
    */
-  public function getPath();
+  public function getPath($strip = TRUE);
 
   /**
    * Gets the fully qualified URL with the query params.
