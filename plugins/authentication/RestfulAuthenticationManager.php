@@ -130,7 +130,9 @@ class RestfulAuthenticationManager extends \ArrayObject {
   }
 
   /**
-   * Switch the user to the authenticated user, and back.
+   * Switch the user to the user authenticated by RESTful.
+   *
+   * @link https://www.drupal.org/node/218104
    */
   public function switchUser() {
     global $user;
