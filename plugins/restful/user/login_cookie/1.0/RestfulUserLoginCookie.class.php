@@ -27,7 +27,7 @@ class RestfulUserLoginCookie extends \RestfulEntityBase {
   public function loginAndRespondWithCookie() {
     // Login the user.
     $account = $this->getAccount();
-    $this->loginUser($account);
+    $this->loginUser();
 
     $version = $this->getVersion();
     $handler = restful_get_restful_handler('users', $version['major'], $version['minor']);
@@ -39,12 +39,18 @@ class RestfulUserLoginCookie extends \RestfulEntityBase {
 
   /**
    * Log the user.
-   *
-   * @param $account
-   *   The user object that was retrieved by the \RestfulAuthenticationManager.
    */
-  public function loginUser($account) {
+  protected function loginUser() {
     global $user;
+
+    $account = $this->getAccount();
+
+    // Explicitly allow a session to be saved, as it was disabled in
+    // \RestfulAuthenticationManager::getAccount. However this resource is a
+    // special one, in the sense that we want to keep the user authenticated
+    // after login.
+    drupal_save_session(TRUE);
+
     // Override the global user.
     $user = user_load($account->uid);
 

@@ -29,7 +29,7 @@ control.
 ## Module dependencies
 
   * [Entity API](https://drupal.org/project/entity), with the following patch:
-  * [Prevent notice in entity_metadata_no_hook_node_access() when node is not saved](https://drupal.org/node/2086225#comment-8768373)
+  * [Prevent notice in entity_metadata_no_hook_node_access() when node is not saved](https://www.drupal.org/node/2086225#comment-9627407)
 
 ## Recipes
 Read even more examples on how to use the RESTful module in the [module documentation

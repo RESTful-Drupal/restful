@@ -120,4 +120,22 @@ class RestfulAuthenticationTestCase extends RestfulCurlBaseTestCase {
     $result = $this->httpRequest('api/v1.0/users');
     $this->assertEqual($result['code'], 200, 'Anonymous user got 200 when trying to access the "users" resource after permissions changed.');
   }
+
+  /**
+   * Test switching the user in an API call.
+   */
+  function testSwitchUser() {
+    global $user;
+    // We need to hijack the global user object in order to force it to be an
+    // anonymous user.
+    $user = drupal_anonymous_user();
+
+    $user1 = $this->drupalCreateUser();
+
+    $handler = restful_get_restful_handler('articles');
+    $handler->setAccount($user1);
+    $handler->get();
+
+    $this->assertEqual($user->uid, 0, 'Global user is the correct one after an API call that switches the user.');
+  }
 }

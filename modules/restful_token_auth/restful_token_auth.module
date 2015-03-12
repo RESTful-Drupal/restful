@@ -49,8 +49,16 @@ function restful_token_auth_restful_parse_request_alter(&$request) {
   $plugin = restful_get_authentication_plugin('token');
   $param_name = $plugin['options']['param_name'];
 
+  $value = \RestfulManager::getRequestHttpHeader($param_name);
+  if (!$value && !empty($_GET[$param_name])) {
+    // If no access token found on the HTTP header, check if it's in the URL
+    // itself. This allows to do a POST request to for example:
+    // https://example.com/api/file-upload?access_token=foo
+    $value = $_GET[$param_name];
+  }
+
   $request['__application'] += array(
-    $param_name => \RestfulManager::getRequestHttpHeader($param_name),
+    $param_name => $value,
   );
 }
 
