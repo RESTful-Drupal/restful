@@ -420,6 +420,11 @@ class Request implements RequestInterface {
    * {@inheritdoc}
    */
   public function getMethod() {
+    $method_override = $this->getHeaders()->get('X-HTTP-Method-Override')->getValueString();
+    // TODO: Add helper method to get header string from RequestInterface.
+    if ($this->method == static::METHOD_POST && $method_override) {
+      return strtoupper($method_override);
+    }
     return $this->method;
   }
 

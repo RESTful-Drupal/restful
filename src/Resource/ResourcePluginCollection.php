@@ -16,6 +16,6 @@ class ResourcePluginCollection extends DefaultLazyPluginCollection {
    *
    * @var string
    */
-  protected $pluginKey = 'resource';
+  protected $pluginKey = 'name';
 
 }

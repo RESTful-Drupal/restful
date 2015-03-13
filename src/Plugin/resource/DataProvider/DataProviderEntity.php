@@ -94,6 +94,9 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     // \Drupal\restful\Plugin\resource\Field\ResourceFieldEntityInterface
     foreach ($this->fieldDefinitions as $key => $value) {
       // Set the entity type and bundles on the resource fields.
+      if (!($value instanceof ResourceFieldEntityInterface)) {
+        continue;
+      }
       /** @var ResourceFieldEntityInterface $value */
       $value->setEntityType($this->entityType);
       if (!$value->getBundles()) {
@@ -101,9 +104,6 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
         // field then assume that the field applies to all the bundles of the
         // resource.
         $value->setBundles($this->bundles);
-      }
-      if (!($value instanceof ResourceFieldEntityInterface)) {
-        throw new ServerConfigurationException('The field mapping must implement \Drupal\restful\Plugin\resource\Field\ResourceFieldEntityInterface.');
       }
     }
   }

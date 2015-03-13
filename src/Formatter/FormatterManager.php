@@ -10,6 +10,7 @@ namespace Drupal\restful\Formatter;
 use Drupal\restful\Exception\ServiceUnavailableException;
 use Drupal\restful\Http\HttpHeader;
 use Drupal\restful\Plugin\formatter\FormatterInterface;
+use Drupal\restful\Plugin\resource\ResourceInterface;
 use Drupal\restful\Plugin\FormatterPluginManager;
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 
@@ -23,9 +24,18 @@ class FormatterManager implements FormatterManagerInterface {
   protected $plugins;
 
   /**
+   * The resource.
+   *
+   * @todo: Remove this coupling.
+   *
+   * @var ResourceInterface
+   */
+  protected $resource;
+
+  /**
    * Constructs FormatterManager.
    *
-   * @param \RestfulBase $resource
+   * @param ResourceInterface $resource
    *   TODO: Remove this coupling.
    *   The resource.
    */
@@ -35,33 +45,31 @@ class FormatterManager implements FormatterManagerInterface {
     $options = array();
     foreach ($manager->getDefinitions() as $plugin_id => $plugin_definition) {
       // Since there is only one instance per plugin_id use the plugin_id as
-      //instance_id.
-      // Add the restful resource to the plugin options.
-      // TODO: Remove this coupling.
-      $options[$plugin_id] = $plugin_definition + array(
-        'resource' => $resource,
-      );
+      // instance_id.
+      $options[$plugin_id] = $plugin_definition;
     }
     $this->plugins = new FormatterPluginCollection($manager, $options);
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function setResource($resource) {
+    $this->resource = $resource;
+  }
 
   /**
    * {@inheritdoc}
    */
   public function format(array $data, $formatter_name = NULL) {
-    $accept = restful()
-      ->getRequest()
-      ->getHeaders()
-      ->get('accept')
-      ->getValueString();
-    $formatter = $this->negotiateFormatter($accept, $formatter_name);
-    $content_type = $formatter->getContentTypeHeader();
-    restful()
-      ->getResponse()
-      ->getHeaders()
-      ->add(HttpHeader::create('Content-Type', $content_type));
-    return $formatter->format($data);
+    return $this->processData('format', $data, $formatter_name);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function render(array $data, $formatter_name = NULL) {
+    return $this->processData('render', $data, $formatter_name);
   }
 
   /**
@@ -69,23 +77,35 @@ class FormatterManager implements FormatterManagerInterface {
    */
   public function negotiateFormatter($accept, $formatter_name = NULL) {
     $message = 'Formatter plugin class was not found.';
+    $default_formatter_name = variable_get('restful_default_output_formatter', 'json');
     try {
       if ($formatter_name) {
         return $this->plugins->get($formatter_name);
       }
-      // Sometimes we will get a default Accept: */* in that case we want to return
-      // the default content type and not just any.
+      // Sometimes we will get a default Accept: */* in that case we want to
+      // return the default content type and not just any.
       if (empty($accept) || $accept == '*/*') {
         // Return the default formatter.
-        $formatter_name = variable_get('restful_default_output_formatter', 'json');
-        return $this->plugins->get($formatter_name);
+        return $this->plugins->get($default_formatter_name);
       }
       foreach (explode(',', $accept) as $accepted_content_type) {
-        // Loop through all the formatters and find the first one that matches the
-        // Content-Type header.
+        // Loop through all the formatters and find the first one that matches
+        // the Content-Type header.
+        $accepted_content_type = trim($accepted_content_type);
+        if (strpos($accepted_content_type, '*/*') === 0) {
+          /** @var FormatterInterface $formatter */
+          $formatter = $this->plugins->get($default_formatter_name);
+          $formatter->setConfiguration(array(
+            'resource' => $this->resource,
+          ));
+          return $formatter;
+        }
         foreach ($this->plugins as $formatter_name => $formatter) {
           /** @var FormatterInterface $formatter */
           if (static::matchContentType($formatter->getContentTypeHeader(), $accepted_content_type)) {
+            $formatter->setConfiguration(array(
+              'resource' => $this->resource,
+            ));
             return $formatter;
           }
         }
@@ -96,6 +116,41 @@ class FormatterManager implements FormatterManagerInterface {
       $message = $e->getMessage();
     }
     throw new ServiceUnavailableException($message);
+  }
+
+  /**
+   * Helper function to get a formatter and apply a method.
+   *
+   * @param string $method
+   *   A valid method to call on the FormatterInterface object.
+   * @param array $data
+   *   The array of data to process.
+   * @param string $formatter_name
+   *   The name of the formatter for the current resource. Leave it NULL to use
+   *   the Accept headers.
+   *
+   * @return string
+   *   The processed output.
+   */
+  protected function processData($method, array $data, $formatter_name = NULL) {
+    $accept = restful()
+      ->getRequest()
+      ->getHeaders()
+      ->get('accept')
+      ->getValueString();
+    $formatter = $this->negotiateFormatter($accept, $formatter_name);
+    $output = call_user_func(array($formatter, $method), $data, $formatter_name);
+
+    // The content type header is modified after the massaging if there is
+    // an error code. Therefore we need to set the content type header after
+    // formatting the output.
+    $content_type = $formatter->getContentTypeHeader();
+    restful()
+      ->getResponse()
+      ->getHeaders()
+      ->add(HttpHeader::create('Content-Type', $content_type));
+
+    return $output;
   }
 
   /**
@@ -124,8 +179,8 @@ class FormatterManager implements FormatterManagerInterface {
       );
       $patterns_quoted = preg_quote($pattern, '/');
 
-      // This will turn 'application/*' into '/^(application\/.*)(;.*)$/' allowing
-      // us to match 'application/json; charset: utf8'
+      // This will turn 'application/*' into '/^(application\/.*)(;.*)$/'
+      // allowing us to match 'application/json; charset: utf8'
       $regexps[$pattern] = '/^(' . preg_replace($to_replace, $replacements, $patterns_quoted) . ')(;.*)?$/i';
     }
     return (bool) preg_match($regexps[$pattern], $content_type);

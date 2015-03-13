@@ -28,7 +28,7 @@ interface ResourceManagerInterface {
    * @param string $instance_id
    *   The instance ID.
    *
-   * @return ResourcePluginManager
+   * @return ResourceInterface
    *   The plugin.
    *
    * @throws PluginNotFoundException

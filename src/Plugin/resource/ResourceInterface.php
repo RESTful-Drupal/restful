@@ -7,12 +7,13 @@
 
 namespace Drupal\restful\Plugin\resource;
 
+use Drupal\Component\Plugin\ConfigurablePluginInterface;
 use Drupal\Component\Plugin\PluginInspectionInterface;
 use Drupal\restful\Exception\NotImplementedException;
 use Drupal\restful\Plugin\resource\DataProvider\DataProviderInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
 
-interface ResourceInterface extends PluginInspectionInterface {
+interface ResourceInterface extends PluginInspectionInterface, ConfigurablePluginInterface {
 
   /**
    * Data provider factory.

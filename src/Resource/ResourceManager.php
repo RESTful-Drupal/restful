@@ -11,6 +11,7 @@ use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\Component\Plugin\PluginBase;
 use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Http\RequestInterface;
+use Drupal\restful\Plugin\resource\ResourceInterface;
 use Drupal\restful\Plugin\ResourcePluginManager;
 
 class ResourceManager implements ResourceManagerInterface {
@@ -50,9 +51,7 @@ class ResourceManager implements ResourceManagerInterface {
     $options = array();
     foreach ($this->pluginManager->getDefinitions() as $plugin_id => $plugin_definition) {
       // Set the instance id to articles::1.5 (for example).
-      $instance_id = $plugin_id . PluginBase::DERIVATIVE_SEPARATOR . $plugin_definition['majorVersion'] . '.' . $plugin_definition['minorVersion'];
-      $options[$instance_id] = $plugin_definition;
-      // $options['request'] = $request;
+      $options[$plugin_id] = $plugin_definition;
     }
     $this->plugins = new ResourcePluginCollection($this->pluginManager, $options);
   }
@@ -68,7 +67,12 @@ class ResourceManager implements ResourceManagerInterface {
    * {@inheritdoc}
    */
   public function getPlugin($instance_id) {
-    return $this->plugins->get($instance_id);
+    /** @var ResourceInterface $plugin */
+    $plugin = $this->plugins->get($instance_id);
+    $plugin->setConfiguration(array(
+      'request' => $this->request,
+    ));
+    return $plugin;
   }
 
   /**
@@ -104,9 +108,7 @@ class ResourceManager implements ResourceManagerInterface {
     $version = $this->getVersionFromRequest();
     list($resource_name,) = static::getPageArguments($this->request->getPath(FALSE));
     try {
-      return $this->pluginManager->createInstance($resource_name . PluginBase::DERIVATIVE_SEPARATOR . $version[0] . '.' . $version[1], array(
-        'request' => restful()->getRequest()
-      ));
+      return $this->getPlugin($resource_name . PluginBase::DERIVATIVE_SEPARATOR . $version[0] . '.' . $version[1]);
     }
     catch (PluginNotFoundException $e) {
       throw new ServerConfigurationException($e->getMessage());

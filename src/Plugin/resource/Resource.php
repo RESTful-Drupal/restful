@@ -16,12 +16,15 @@ use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Http\HttpHeader;
 use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
+use Drupal\restful\Plugin\ConfigurablePluginTrait;
 use Drupal\restful\Plugin\resource\DataProvider\DataProviderInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollection;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
 use Drupal\restful\Resource\ResourceManager;
 
 abstract class Resource extends PluginBase implements ResourceInterface {
+
+  use ConfigurablePluginTrait;
 
   /**
    * The string that separates multiple ids.
@@ -85,7 +88,8 @@ abstract class Resource extends PluginBase implements ResourceInterface {
     if (isset($this->request)) {
       return $this->request;
     }
-    if (!$this->request = $this->configuration['request']) {
+    $instance_configuration = $this->getConfiguration();
+    if (!$this->request = $instance_configuration['request']) {
       throw new ServerConfigurationException('Request object is not available for the Resource plugin.');
     }
     return $this->request;
@@ -128,6 +132,15 @@ abstract class Resource extends PluginBase implements ResourceInterface {
   public function getResourceName() {
     $definition = $this->getPluginDefinition();
     return $definition['name'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function defaultConfiguration() {
+    return array(
+      'request' => restful()->getRequest(),
+    );
   }
 
   /**
@@ -361,7 +374,7 @@ abstract class Resource extends PluginBase implements ResourceInterface {
     // no referer then grant access since the request probably was not
     // originated from a browser.
     $plugin_definition = $this->getPluginDefinition();
-    $origin = $plugin_definition['allowOrigin'];
+    $origin = isset($plugin_definition['allowOrigin']) ? $plugin_definition['allowOrigin'] : NULL;
     if (empty($origin) || $origin == '*' || !$referer) {
       return TRUE;
     }

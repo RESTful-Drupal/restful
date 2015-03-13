@@ -49,6 +49,13 @@ class Resource extends Plugin {
   public $resource;
 
   /**
+   * Formatter.
+   *
+   * @var string
+   */
+  public $formatter;
+
+  /**
    * Description.
    *
    * @var string

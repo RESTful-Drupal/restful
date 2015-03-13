@@ -7,9 +7,10 @@
 
 namespace Drupal\restful\Plugin\resource;
 
+use Drupal\Component\Plugin\PluginInspectionInterface;
 use Drupal\restful\Authentication\AuthenticationManager;
 
-interface AuthenticatedResourceInterface extends ResourceInterface {
+interface AuthenticatedResourceInterface extends PluginInspectionInterface {
 
   /**
    * Setter for $authenticationManager.
