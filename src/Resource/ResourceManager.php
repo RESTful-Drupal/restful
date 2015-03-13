@@ -128,7 +128,7 @@ class ResourceManager implements ResourceManagerInterface {
         return static::executeCallback($callback[0], array_merge($params, $callback[1]));
       }
       $callback_name = is_array($callback) ? $callback[1] : $callback;
-      throw new ServerConfigurationException("Callback function: $callback_name does not exists.");
+      throw new ServerConfigurationException("Callback function: $callback_name does not exist.");
     }
 
     return call_user_func_array($callback, $params);

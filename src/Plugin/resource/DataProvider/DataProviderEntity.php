@@ -9,6 +9,7 @@ namespace Drupal\restful\Plugin\resource\DataProvider;
 
 use Drupal\restful\Exception\ForbiddenException;
 use Drupal\restful\Exception\InternalServerErrorException;
+use Drupal\restful\Exception\RestfulException;
 use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Http\HttpHeader;
 use Drupal\restful\Http\Request;
@@ -19,6 +20,7 @@ use Drupal\restful\Plugin\resource\Field\ResourceFieldEntity;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldEntityInterface;
 use Drupal\restful\Exception\BadRequestException;
 use Drupal\restful\Exception\UnprocessableEntityException;
+use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
 use Drupal\restful\Plugin\resource\Resource;
 use Drupal\restful\Resource\ResourceManager;
 
@@ -90,8 +92,6 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
       $this->EFQClass = $options['EFQClass'];
     }
 
-    // Make sure that all field definitions are instance of
-    // \Drupal\restful\Plugin\resource\Field\ResourceFieldEntityInterface
     foreach ($this->fieldDefinitions as $key => $value) {
       // Set the entity type and bundles on the resource fields.
       if (!($value instanceof ResourceFieldEntityInterface)) {
@@ -203,10 +203,10 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
         continue;
       }
 
-      if ($resource_field->getCallback()) {
+      if ($callback = $resource_field->getCallback()) {
         // TODO: Use strategy pattern to pass a consistent object to
         // executeCallback.
-        $value = ResourceManager::executeCallback($resource_field->getCallback(), array($wrapper));
+        $value = ResourceManager::executeCallback($callback, array($wrapper));
       }
       elseif ($resource = $resource_field->getResource()) {
         // TODO: The resource input data in the field definition has changed.
@@ -289,7 +289,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
    * {@inheritdoc}
    */
   public function canonicalPath($path) {
-    $ids = Resource::IDS_SEPARATOR ? explode(Resource::IDS_SEPARATOR, $path) : array($path);
+    $ids = explode(Resource::IDS_SEPARATOR, $path);
     $canonical_ids = array_map(array($this, 'getEntityIdByFieldId'), $ids);
     return implode(Resource::IDS_SEPARATOR, $canonical_ids);
   }
@@ -486,15 +486,22 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
    */
   protected function getQueryForList() {
     $query = $this->getEntityFieldQuery();
-    if ($path = $this->request->getPath()) {
-      $ids = explode(',', $path);
-      if (!empty($ids)) {
-        $query->entityCondition('entity_id', $ids, 'IN');
-      }
+
+    // If we are trying to filter or sort on a computed field, just ignore it
+    // and log an exception.
+    try {
+      $this->queryForListSort($query);
+    }
+    catch (RestfulException $e) {
+      watchdog_exception('restful', $e);
+    }
+    try {
+      $this->queryForListFilter($query);
+    }
+    catch (RestfulException $e) {
+      watchdog_exception('restful', $e);
     }
 
-    $this->queryForListSort($query);
-    $this->queryForListFilter($query);
     $this->queryForListPagination($query);
     $this->addExtraInfoToQuery($query);
 
@@ -539,7 +546,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     foreach ($sorts as $public_field_name => $direction) {
       // Determine if sorting is by field or property.
       /** @var ResourceFieldEntityInterface $resource_field */
-      $resource_field = $resource_fields[$public_field_name];
+      $resource_field = $resource_fields->get($public_field_name);
       if (!$property_name = $resource_field->getProperty()) {
         throw new BadRequestException('The current sort selection does not map to any entity property or Field API field.');
       }
@@ -802,7 +809,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
   protected function getValue(\EntityDrupalWrapper $wrapper, ResourceFieldEntityInterface $resource_field) {
     // Exposing an entity field.
     $value = NULL;
-    $resource_field_name = $resource_field->getPublicName();
+    $resource_field_name = $resource_field->id();
     $property = $resource_field->getProperty();
     $sub_wrapper = $resource_field->isWrapperMethodOnEntity() ? $wrapper : $wrapper->{$property};
 
@@ -906,7 +913,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
    *
    * @param mixed $value
    *   The value for the field.
-   * @param ResourceFieldEntityInterface $resource_field
+   * @param ResourceFieldInterface $resource_field
    *   The resource field.
    *
    * @return mixed
@@ -914,7 +921,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
    *
    * @throws \Drupal\restful\Exception\ServerConfigurationException
    */
-  protected function processCallbacks($value, ResourceFieldEntityInterface $resource_field) {
+  protected function processCallbacks($value, ResourceFieldInterface $resource_field) {
     $process_callbacks = $resource_field->getProcessCallbacks();
     if (!$value || empty($process_callbacks)) {
       return $value;

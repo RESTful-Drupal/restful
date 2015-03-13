@@ -444,6 +444,7 @@ function restful_menu_process_callback($resource_name, $version = NULL) {
   }
 
   try {
+    $resource->setPath(implode('/', $path));
     return $resource->process();
   }
   catch (RestfulException $e) {
@@ -576,7 +577,8 @@ function restful_delivery($var = NULL, $method = 'format') {
       ->getFormatterManager();
     $formatter_manager->setResource($resource);
     $plugin_definition = $resource->getPluginDefinition();
-    $output = call_user_func(array($formatter_manager, $method), $var, $plugin_definition['formatter']);
+    $formatter_name = isset($plugin_definition['formatter']) ? $plugin_definition['formatter'] : NULL;
+    $output = call_user_func(array($formatter_manager, $method), $var, $formatter_name);
     $response->setContent($output);
   }
   catch (RestfulException $e) {

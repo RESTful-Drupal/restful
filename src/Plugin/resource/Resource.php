@@ -99,14 +99,14 @@ abstract class Resource extends PluginBase implements ResourceInterface {
    * {@inheritdoc}
    */
   public function getPath() {
-    if (isset($this->path)) {
-      return $this->path;
-    }
-    // This gives us the path without the RESTful prefix.
-    $path = preg_quote($this->getRequest()->getPath(), '#');
-    // Remove the version prefix.
-    $this->path = preg_replace('#^v\d+(\.\d+)?/#', '', $path);
     return $this->path;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setPath($path) {
+    $this->path = $path;
   }
 
   /**
@@ -210,7 +210,7 @@ abstract class Resource extends PluginBase implements ResourceInterface {
    */
   public function view($path) {
     // TODO: Compare this with 1.x logic.
-    $ids = static::IDS_SEPARATOR ? explode(static::IDS_SEPARATOR, $path) : array($path);
+    $ids = explode(static::IDS_SEPARATOR, $path);
 
     // REST requires a canonical URL for every resource.
     $canonical_path = $this->getDataProvider()->canonicalPath($path);

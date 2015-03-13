@@ -118,6 +118,13 @@ class ResourceFieldCollection implements ResourceFieldCollectionInterface {
   /**
    * {@inheritdoc}
    */
+  public function get($key) {
+    return isset($this->fields[$key]) ? $this->fields[$key] : NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function current() {
     return current($this->fields);
   }

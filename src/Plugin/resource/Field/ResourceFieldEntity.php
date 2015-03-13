@@ -9,7 +9,7 @@ namespace Drupal\restful\Plugin\resource\Field;
 
 use Drupal\restful\Util\String;
 
-class ResourceFieldEntity extends ResourceFieldBase implements ResourceFieldEntityInterface {
+class ResourceFieldEntity implements ResourceFieldEntityInterface {
 
   /**
    * Decorated resource field.
@@ -267,11 +267,14 @@ class ResourceFieldEntity extends ResourceFieldBase implements ResourceFieldEnti
     $this->setResource($this->decorated->getResource());
 
     // Set the Entity related defaults.
-    if ($this->property && $field = field_info_field($this->property)) {
+    if ($this->getProperty() && $field = field_info_field($this->getProperty())) {
       // If it's an image check if we need to add image style processing.
       $image_styles = $this->getImageStyles();
       if ($field['type'] == 'image' && !empty($image_styles)) {
-        array_unshift($this->processCallbacks, array(array($this, 'getImageUris'), array($image_styles)));
+        array_unshift($this->getProcessCallbacks(), array(
+          array($this, 'getImageUris'),
+          array($image_styles),
+        ));
       }
       if (!$this->getColumn()) {
         // Set the column name.
@@ -361,6 +364,124 @@ class ResourceFieldEntity extends ResourceFieldBase implements ResourceFieldEnti
         }
         return NULL;
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getPublicName() {
+    return $this->decorated->getPublicName();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setPublicName($public_name) {
+    $this->decorated->setPublicName($public_name);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getAccessCallbacks() {
+    return $this->decorated->getAccessCallbacks();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setAccessCallbacks($access_callbacks) {
+    $this->decorated->setAccessCallbacks($access_callbacks);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getProperty() {
+    return $this->decorated->getProperty();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setProperty($property) {
+    $this->decorated->setProperty($property);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCallback() {
+    return $this->decorated->getCallback();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setCallback($callback) {
+    $this->decorated->setCallback($callback);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getProcessCallbacks() {
+    return $this->decorated->getProcessCallbacks();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setProcessCallbacks($process_callbacks) {
+    $this->decorated->setProcessCallbacks($process_callbacks);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getResource() {
+    return $this->decorated->getResource();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setResource($resource) {
+    $this->decorated->setResource($resource);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getMethods() {
+    return $this->decorated->getMethods();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setMethods($methods) {
+    $this->decorated->setMethods($methods);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function id() {
+    return $this->decorated->id();
+  }
+
+  /**
+   * Helper method to determine if an array is numeric.
+   *
+   * @param array $input
+   *   The input array.
+   *
+   * @return bool
+   *   TRUE if the array is numeric, false otherwise.
+   */
+  public static function isArrayNumeric(array $input) {
+    return ResourceFieldBase::isArrayNumeric($input);
   }
 
 }

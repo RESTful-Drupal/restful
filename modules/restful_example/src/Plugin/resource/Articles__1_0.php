@@ -23,7 +23,9 @@ use Drupal\restful\Plugin\resource\ResourceInterface;
  *   authenticationOptional = TRUE,
  *   dataProvider = {
  *     "entityType": "node",
- *     "bundle": "article",
+ *     "bundles": {
+ *       "article"
+ *     },
  *   },
  *   majorVersion = 1,
  *   minorVersion = 0
@@ -38,7 +40,11 @@ class Articles__1_0 extends ResourceEntity implements ResourceInterface {
     return array(
       'id' => array(
         'wrapper_method' => 'getIdentifier',
-        'wrapper_on_method' => TRUE,
+        'wrapper_method_on_entity' => TRUE,
+      ),
+      'label' => array(
+        'wrapper_method' => 'label',
+        'wrapper_method_on_entity' => TRUE,
       ),
       'self' => array(
         'callback' => array($this, 'getEntitySelf'),

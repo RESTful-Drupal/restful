@@ -49,12 +49,26 @@ interface ResourceInterface extends PluginInspectionInterface, ConfigurablePlugi
   public function getRequest();
 
   /**
-   * Gets the path of the request lazily.
+   * Gets the path of the resource.
+   *
+   * The resource path is different from the request path in that it does not
+   * contain the RESTful API prefix, the optional version string nor the
+   * resource name. All that information is already present in the resource
+   * object. The resource path only contains information used to query the data
+   * provider.
    *
    * @return string
-   *   The path without the RESTful prefix or the version string.
+   *   The resource path.
    */
   public function getPath();
+
+  /**
+   * Sets the path of the resource.
+   *
+   * @param string $path
+   *   The path without the RESTful prefix or the version string.
+   */
+  public function setPath($path);
 
   /**
    * Gets the field definitions.

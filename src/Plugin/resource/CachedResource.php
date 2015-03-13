@@ -131,6 +131,13 @@ class CachedResource extends PluginBase implements ResourceInterface {
   /**
    * {@inheritdoc}
    */
+  public function setPath($path) {
+    $this->subject->setPath($path);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getFieldDefinitions() {
     return $this->subject->getFieldDefinitions();
   }

@@ -62,7 +62,8 @@ abstract class ResourceEntity extends Resource {
   /**
    * Gets the entity bundle.
    *
-   * @return string
+   * @return array
+   *   The bundles.
    */
   public function getBundles() {
     return $this->bundles;
@@ -77,7 +78,8 @@ abstract class ResourceEntity extends Resource {
    * @return string
    *   The self URL.
    */
-  protected function getEntitySelf(\EntityDrupalWrapper $wrapper) {
+  public function getEntitySelf(\EntityDrupalWrapper $wrapper) {
+    // TODO: All the callbacks defined in the publicFields MUST have the same signature.
     return $this->versionedUrl($wrapper->getIdentifier());
   }
 
