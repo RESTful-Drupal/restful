@@ -68,6 +68,8 @@ abstract class Resource extends PluginBase implements ResourceInterface {
    *   The field definitions.
    */
   public function __construct(array $configuration, $plugin_id, $plugin_definition, ResourceFieldCollectionInterface $field_definitions) {
+    // TODO: According to DefaultFactory.php#L58 the last parameter will not be
+    // passed in. Find some other way to do this.
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->fieldDefinitions = $field_definitions;
   }
@@ -154,7 +156,7 @@ abstract class Resource extends PluginBase implements ResourceInterface {
         // GET returns a list of entities.
         Request::METHOD_GET => 'index',
         Request::METHOD_HEAD => 'index',
-        // POST
+        // POST.
         Request::METHOD_POST => 'create',
       ),
       // We don't know what the ID looks like, assume that everything is the ID.
@@ -199,6 +201,14 @@ abstract class Resource extends PluginBase implements ResourceInterface {
   public function view($path) {
     // TODO: Compare this with 1.x logic.
     $ids = static::IDS_SEPARATOR ? explode(static::IDS_SEPARATOR, $path) : array($path);
+
+    // REST requires a canonical URL for every resource.
+    $canonical_path = $this->getDataProvider()->canonicalPath($path);
+    $this
+      ->getRequest()
+      ->getHeaders()
+      ->add(HttpHeader::create('Link', $this->versionedUrl($canonical_path, array(), FALSE) . '; rel="canonical"'));
+
     return $this->getDataProvider()->viewMultiple($ids);
   }
 
@@ -235,10 +245,6 @@ abstract class Resource extends PluginBase implements ResourceInterface {
   public function remove($path) {
     // TODO: Compare this with 1.x logic.
     $this->getDataProvider()->remove($path);
-    restful()
-      ->getResponse()
-      ->getHeaders()
-      ->add(HttpHeader::create('Status', 204));
   }
 
   /**
@@ -313,6 +319,27 @@ abstract class Resource extends PluginBase implements ResourceInterface {
       'minor' => $plugin_definition['minorVersion'],
     );
     return $version;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function versionedUrl($path = '', $options = array(), $version_string = TRUE) {
+    // Make the URL absolute by default.
+    $options += array('absolute' => TRUE);
+    $plugin_definition = $this->getPluginDefinition();
+    if (!empty($plugin_definition['menu_item'])) {
+      $url = $plugin_definition['menu_item'] . '/' . $path;
+      return url(rtrim($url, '/'), $options);
+    }
+
+    $base_path = variable_get('restful_hook_menu_base_path', 'api');
+    $url = $base_path;
+    if ($version_string) {
+      $url .= '/v' . $plugin_definition['major_version'] . '.' . $plugin_definition['minor_version'];
+    }
+    $url .= '/' . $plugin_definition['resource'] . '/' . $path;
+    return url(rtrim($url, '/'), $options);
   }
 
 }

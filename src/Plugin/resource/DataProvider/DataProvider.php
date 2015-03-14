@@ -10,6 +10,7 @@ namespace Drupal\restful\Plugin\resource\DataProvider;
 use Drupal\restful\Exception\BadRequestException;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
+use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
 
 abstract class DataProvider implements DataProviderInterface {
 
@@ -68,7 +69,6 @@ abstract class DataProvider implements DataProviderInterface {
    *   The plugin options for the data provider.
    * @param string $langcode
    *   (Optional) The entity language code.
-
    */
   public function __construct(RequestInterface $request, ResourceFieldCollectionInterface $field_definitions, $account, array $options, $langcode = NULL) {
     $this->request = $request;
@@ -78,10 +78,8 @@ abstract class DataProvider implements DataProviderInterface {
     if ($options['range']) {
       $this->range = $options['range'];
     }
-    $this->langcode = $langcode;
+    $this->langcode = $langcode ?: static::getLanguage();
   }
-
-  // TODO: We should create a method that provides the cache context given the identifier.
 
   /**
    * {@inheritdoc}
@@ -143,6 +141,21 @@ abstract class DataProvider implements DataProviderInterface {
     return array(
       'id' => $identifier,
     );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function canonicalPath($path) {
+    // Assume that there is no alias.
+    return $path;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function fieldAccess(ResourceFieldInterface $resource_field) {
+    return in_array($this->getRequest()->getMethod(), $resource_field->getMethods());
   }
 
   /**
@@ -342,6 +355,17 @@ abstract class DataProvider implements DataProviderInterface {
         '!allowed' => implode(', ', $allowed_conjunctions),
       )));
     }
+  }
+
+  /**
+   * Gets the global language.
+   *
+   * @return string
+   *   The language code.
+   */
+  protected static function getLanguage() {
+    // Move to its own method to allow unit testing.
+    return $GLOBALS['language']->language;
   }
 
 }

@@ -7,7 +7,7 @@
 
 namespace Drupal\restful\Plugin\resource\Field;
 
-use Drupal\restful\Exception\ServerConfigurationException;
+use Drupal\restful\Util\String;
 
 class ResourceFieldEntity extends ResourceFieldBase implements ResourceFieldEntityInterface {
 
@@ -72,14 +72,64 @@ class ResourceFieldEntity extends ResourceFieldBase implements ResourceFieldEnti
   protected $imageStyles = array();
 
   /**
+   * The entity type.
+   *
+   * @var string
+   */
+  protected $entityType;
+
+  /**
+   * The bundles.
+   *
+   * @var array
+   */
+  protected $bundles;
+
+  /**
+   * Constructor.
+   *
+   * @param array $field
+   *   Contains the field values.
+   */
+  public function __construct(array $field) {
+    $this->wrapperMethod = $field['wrapper_method'];
+    $this->subProperty = $field['sub_property'];
+    $this->formatter = $field['formatter'];
+    $this->wrapperMethodOnEntity = $field['wrapper_method_on_entity'];
+    $this->column = $field['column'];
+    $this->imageStyles = $field['image_styles'];
+    if (!empty($field['bundles'])) {
+      $this->bundle = $field['bundles'];
+    }
+  }
+
+  /**
    * {@inheritdoc}
    */
-  public static function create(array $fields, ResourceFieldInterface $decorated = NULL) {
-    // Create the current object.
-    $resource_field = new static($fields);
+  public static function create(array $field, ResourceFieldInterface $decorated = NULL) {
+    $resource_field = NULL;
+    $class_name = static::fieldClassName($field);
+    // If the class exists and is a ResourceFieldEntityInterface use that one.
+    if (
+      $class_name &&
+      class_exists($class_name) &&
+      in_array(
+        'Drupal\restful\Plugin\resource\Field\ResourceFieldEntityInterface',
+        class_implements($class_name)
+      )
+    ) {
+      $resource_field = new $class_name($field);
+    }
+
+    // If no specific class was found then use the current one.
+    if (!$resource_field) {
+      // Create the current object.
+      $resource_field = new static($field);
+    }
 
     // Set the basic object to the decorated property.
-    $resource_field->decorate($decorated ? $decorated : ResourceField::create($fields));
+    $resource_field->decorate($decorated ? $decorated : new ResourceField($field));
+    $resource_field->decorated->addDefaults();
 
     // Add the default specifics for the current object.
     $resource_field->addDefaults();
@@ -104,8 +154,8 @@ class ResourceFieldEntity extends ResourceFieldBase implements ResourceFieldEnti
   /**
    * {@inheritdoc}
    */
-  public function setSubProperty($subProperty) {
-    $this->subProperty = $subProperty;
+  public function setSubProperty($sub_property) {
+    $this->subProperty = $sub_property;
   }
 
   /**
@@ -132,8 +182,8 @@ class ResourceFieldEntity extends ResourceFieldBase implements ResourceFieldEnti
   /**
    * {@inheritdoc}
    */
-  public function setWrapperMethod($wrapperMethod) {
-    $this->wrapperMethod = $wrapperMethod;
+  public function setWrapperMethod($wrapper_method) {
+    $this->wrapperMethod = $wrapper_method;
   }
 
   /**
@@ -146,8 +196,8 @@ class ResourceFieldEntity extends ResourceFieldBase implements ResourceFieldEnti
   /**
    * {@inheritdoc}
    */
-  public function setWrapperMethodOnEntity($wrapperMethodOnEntity) {
-    $this->wrapperMethodOnEntity = $wrapperMethodOnEntity;
+  public function setWrapperMethodOnEntity($wrapper_method_on_entity) {
+    $this->wrapperMethodOnEntity = $wrapper_method_on_entity;
   }
 
   /**
@@ -174,8 +224,36 @@ class ResourceFieldEntity extends ResourceFieldBase implements ResourceFieldEnti
   /**
    * {@inheritdoc}
    */
-  public function setImageStyles($imageStyles) {
-    $this->imageStyles = $imageStyles;
+  public function setImageStyles($image_styles) {
+    $this->imageStyles = $image_styles;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getEntityType() {
+    return $this->entityType;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setEntityType($entity_type) {
+    $this->entityType = $entity_type;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getBundles() {
+    return $this->bundles;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setBundles($bundles) {
+    $this->bundle = $bundles;
   }
 
   /**
@@ -232,6 +310,55 @@ class ResourceFieldEntity extends ResourceFieldBase implements ResourceFieldEnti
   public static function propertyIsField($name) {
     $field_info = field_info_field($name);
     return !empty($field_info);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function preprocess($value) {
+    // By default assume that there is no preprocess and allow extending classes
+    // to implement this.
+    return $value;
+  }
+
+  /**
+   * Get the class name to use based on the field definition.
+   *
+   * @param array $field_definition
+   *   The processed field definition with the user values.
+   *
+   * @return string
+   *   The class name to use. If the class name is empty or does not implement
+   *   ResourceFieldInterface then ResourceField will be used. NULL if nothing
+   *   was found.
+   */
+  protected static function fieldClassName(array $field_definition) {
+    // If there is an extending class for the particular field use that class
+    // instead.
+    $field_info = field_info_field($field_definition['property']);
+
+    $resource_field = NULL;
+    switch ($field_info['type']) {
+      case 'entityreference':
+      case 'taxonomy_term_reference':
+        return 'ResourceFieldEntityReference';
+
+      case 'text':
+      case 'text_long':
+      case 'text_with_summary':
+        return 'ResourceFieldEntityText';
+
+      case 'file':
+      case 'image':
+        return 'ResourceFieldEntityFile';
+
+      default:
+        $class_name = 'ResourceFieldEntity' . String::camelize($field_info['type']);
+        if (class_exists($class_name)) {
+          return $class_name;
+        }
+        return __CLASS__;
+    }
   }
 
 }

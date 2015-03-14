@@ -44,26 +44,16 @@ class ResourceEntity extends Resource {
   /**
    * {@inheritdoc}
    */
-  protected function dataProviderFactory() {
+  public function dataProviderFactory() {
     $plugin_definition = $this->getPluginDefinition();
-    return new DataProviderEntity($this->getRequest(), $this->getFieldDefinitions(), $this->getAccount(), $plugin_definition['dataProvider'], static::getLanguage());
-  }
-
-  /**
-   * Gets the global language.
-   *
-   * @return string
-   *   The language code.
-   */
-  protected static function getLanguage() {
-    // Move to its own method to allow unit testing.
-    return $GLOBALS['language']->language;
+    return new DataProviderEntity($this->getRequest(), $this->getFieldDefinitions(), $this->getAccount(), $plugin_definition['dataProvider']);
   }
 
   /**
    * Gets the entity type.
    *
    * @return string
+   *   The entity type.
    */
   public function getEntityType() {
     return $this->entityType;

@@ -123,8 +123,8 @@ abstract class ResourceFieldBase implements ResourceFieldInterface {
   /**
    * {@inheritdoc}
    */
-  public function setPublicName($publicName) {
-    $this->publicName = $publicName;
+  public function setPublicName($public_name) {
+    $this->publicName = $public_name;
   }
 
   /**
@@ -137,8 +137,8 @@ abstract class ResourceFieldBase implements ResourceFieldInterface {
   /**
    * {@inheritdoc}
    */
-  public function setAccessCallbacks($accessCallbacks) {
-    $this->accessCallbacks = $accessCallbacks;
+  public function setAccessCallbacks($access_callbacks) {
+    $this->accessCallbacks = $access_callbacks;
   }
 
   /**
@@ -179,8 +179,8 @@ abstract class ResourceFieldBase implements ResourceFieldInterface {
   /**
    * {@inheritdoc}
    */
-  public function setProcessCallbacks($processCallbacks) {
-    $this->processCallbacks = $processCallbacks;
+  public function setProcessCallbacks($process_callbacks) {
+    $this->processCallbacks = $process_callbacks;
   }
 
   /**

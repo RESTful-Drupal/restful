@@ -43,7 +43,7 @@ interface RequestInterface {
    * @return RequestInterface Request
    *   A Request instance
    */
-  public static function create($path, array $query = array(), $method = 'GET', HttpHeaderBag $headers, $via_router = FALSE, $csrf_token = NULL, array $cookies = array(), array $files = array(), array $server = array());
+  public static function create($path, array $query = array(), $method = 'GET', HttpHeaderBag $headers = NULL, $via_router = FALSE, $csrf_token = NULL, array $cookies = array(), array $files = array(), array $server = array());
 
   /**
    * Determines if the HTTP method represents a write operation.
