@@ -264,7 +264,7 @@ class ResourceManager implements ResourceManagerInterface {
     $resources = array();
     // Get all the resources corresponding to the resource name.
     foreach ($this->pluginManager->getDefinitions() as $plugin_id => $plugin_definition) {
-      if ($plugin_definition['name'] != $resource_name || (isset($major_version) && $plugin_definition['majorVersion'] != $major_version)) {
+      if ($plugin_definition['resource'] != $resource_name || (isset($major_version) && $plugin_definition['majorVersion'] != $major_version)) {
         continue;
       }
       $resources[$plugin_definition['majorVersion']][$plugin_definition['minorVersion']] = $plugin_definition;
