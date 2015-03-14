@@ -11,7 +11,6 @@ use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Http\Request;
 use Drupal\restful\Plugin\resource\DataProvider\DataProviderResource;
 use Drupal\restful\Plugin\resource\DataSource\DataSourceInterface;
-use Drupal\restful\Resource\ResourceManager;
 use Drupal\restful\Util\String;
 
 class ResourceFieldEntity implements ResourceFieldEntityInterface {
@@ -152,11 +151,55 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
       return $value;
     }
 
+    // Check user has access to the property.
+    if (!$this->access('view', $source)) {
+      return NULL;
+    }
+
+    $property_wrapper = $this->propertyWrapper($source);
+    $wrapper = $source->getWrapper();
+
+    if ($property_wrapper instanceof \EntityListWrapper) {
+      $values = array();
+      // Multiple values.
+      foreach ($property_wrapper->getIterator() as $item_wrapper) {
+        $values[] = $this->singleValue($item_wrapper, $wrapper);
+      }
+      return $values;
+    }
+    return $this->singleValue($property_wrapper, $wrapper);
+  }
+
+  /**
+   * Returns the value for the current single field.
+   *
+   * @param \EntityMetadataWrapper $property_wrapper
+   *   The property wrapper. Either \EntityDrupalWrapper or \EntityListWrapper.
+   * @param \EntityDrupalWrapper $wrapper
+   *   The entity wrapper.
+   *
+   * @return mixed
+   *   A single value for the field.
+   */
+  protected function singleValue(\EntityMetadataWrapper $property_wrapper, \EntityDrupalWrapper $wrapper) {
     if ($resource = $this->getResource()) {
       // TODO: The resource input data in the field definition has changed.
       // Now it does not need to be keyed by bundle since you don't even need
       // an entity to use the resource based field.
 
+      if ($property_wrapper instanceof \EntityDrupalWrapper) {
+        // The property wrapper is a reference to another entity get the entity
+        // ID.
+        $embedded_identifier = $property_wrapper->getIdentifier();
+      }
+      else {
+        // The property is a regular one, get the value out of it and use it as
+        // the embedded identifier.
+        $embedded_identifier = $this->fieldValue($property_wrapper);
+      }
+      if ($resource['full_view' === FALSE]) {
+        return $embedded_identifier;
+      }
       $request = Request::create('', array(), Request::METHOD_GET);
       $resource_data_provider = DataProviderResource::init($request, $resource['name'], array(
         $resource['majorVersion'],
@@ -166,30 +209,17 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
       return $resource_data_provider->view($embedded_identifier);
     }
 
-    // Check user has access to the property.
-    if (!$this->access('view', $source)) {
-      return NULL;
-    }
-
-    $property_wrapper = $this->propertyWrapper($source);
     if ($this->getFormatter()) {
       // Get value from field formatter.
-      $value = $this->formatterValue($source);
-    }
-    elseif ($property_wrapper instanceof \EntityListWrapper) {
-      // Multiple values.
-      foreach ($property_wrapper->getIterator() as $item_wrapper) {
-        $value[] = $this->fieldValue($item_wrapper);
-      }
+      $value = $this->formatterValue($property_wrapper, $wrapper);
     }
     else {
       // Single value.
-      $value = $this->fieldValue($property_wrapper);
+      return $this->fieldValue($property_wrapper);
     }
 
     return $value;
   }
-
   /**
    * {@inheritdoc}
    *
@@ -279,17 +309,17 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
   /**
    * Get value from a field rendered by Drupal field API's formatter.
    *
-   * @param DataSourceInterface $source
-   *   The data source.
+   * @param \EntityMetadataWrapper $property_wrapper
+   *   The property wrapper. Either \EntityDrupalWrapper or \EntityListWrapper.
+   * @param \EntityDrupalWrapper $wrapper
+   *   The entity wrapper.
    *
    * @return mixed
    *   A single or multiple values.
    *
    * @throws \Drupal\restful\Exception\ServerConfigurationException
    */
-  protected function formatterValue(DataSourceInterface $source) {
-    $wrapper = $source->getWrapper();
-    $property_wrapper = $this->propertyWrapper($source);
+  protected function formatterValue(\EntityMetadataWrapper $property_wrapper, \EntityDrupalWrapper $wrapper) {
     $value = NULL;
 
     if (!ResourceFieldEntity::propertyIsField($this->getProperty())) {
@@ -317,6 +347,19 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
     }
 
     return $value;
+  }
+
+  /**
+   * Get value for a field based on another resource.
+   *
+   * @param DataSourceInterface $source
+   *   The data source.
+   *
+   * @return mixed
+   *   A single or multiple values.
+   */
+  protected function resourceValue(DataSourceInterface $source) {
+
   }
 
   /**
