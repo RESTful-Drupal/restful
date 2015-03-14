@@ -9,6 +9,7 @@ namespace Drupal\restful\Plugin\resource;
 
 use Drupal\restful\Exception\InternalServerErrorException;
 use Drupal\restful\Plugin\resource\DataProvider\DataProviderEntity;
+use Drupal\restful\Plugin\resource\DataSource\DataSourceInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
 
 abstract class ResourceEntity extends Resource {
@@ -72,15 +73,14 @@ abstract class ResourceEntity extends Resource {
   /**
    * Get the "self" url.
    *
-   * @param \EntityDrupalWrapper $wrapper
+   * @param DataSourceInterface $source
    *   The wrapped entity.
    *
    * @return string
    *   The self URL.
    */
-  public function getEntitySelf(\EntityDrupalWrapper $wrapper) {
-    // TODO: All the callbacks defined in the publicFields MUST have the same signature.
-    return $this->versionedUrl($wrapper->getIdentifier());
+  public function getEntitySelf(DataSourceInterface $source) {
+    return $this->versionedUrl($source->getWrapper()->getIdentifier());
   }
 
 }

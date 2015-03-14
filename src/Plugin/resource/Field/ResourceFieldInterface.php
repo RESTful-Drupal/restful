@@ -8,6 +8,7 @@
 namespace Drupal\restful\Plugin\resource\Field;
 
 use Drupal\restful\Exception\ServerConfigurationException;
+use Drupal\restful\Plugin\resource\DataSource\DataSourceInterface;
 
 interface ResourceFieldInterface {
 
@@ -106,6 +107,33 @@ interface ResourceFieldInterface {
    * @throws ServerConfigurationException
    */
   public static function create(array $field);
+
+  /**
+   * Gets the value for the field given a data source.
+   *
+   * @param DataSourceInterface $source
+   *   The data source object. Interacts with the data storage.
+   *
+   * @return mixed
+   *   The value for the public field.
+   */
+  public function value(DataSourceInterface $source);
+
+  /**
+   * Check access on property by the defined access callbacks.
+   *
+   * @param string $op
+   *   The operation that access should be checked for. Can be "view" or "edit".
+   *   Defaults to "edit".
+   * @param DataSourceInterface $source
+   *   The data source representing the entity.
+   *
+   * @return bool
+   *   TRUE if the current user has access to set the property, FALSE otherwise.
+   *   The default implementation assumes that if no callback has explicitly
+   *   denied access, we grant the user permission.
+   */
+  public function access($op, DataSourceInterface $source);
 
   /**
    * Gets the ID of the resource field.

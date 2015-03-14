@@ -97,6 +97,6 @@ interface DataProviderInterface extends CrudInterface {
    * @return bool
    *   TRUE if acces is granted. FALSE otherwise.
    */
-  public function fieldAccess(ResourceFieldInterface $resource_field);
+  public function methodAccess(ResourceFieldInterface $resource_field);
 
 }

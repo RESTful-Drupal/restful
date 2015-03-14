@@ -7,6 +7,11 @@
 
 namespace Drupal\restful\Plugin\resource\Field;
 
+use Drupal\restful\Exception\ServerConfigurationException;
+use Drupal\restful\Http\Request;
+use Drupal\restful\Plugin\resource\DataProvider\DataProviderResource;
+use Drupal\restful\Plugin\resource\DataSource\DataSourceInterface;
+use Drupal\restful\Resource\ResourceManager;
 use Drupal\restful\Util\String;
 
 class ResourceFieldEntity implements ResourceFieldEntityInterface {
@@ -135,6 +140,183 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
     $resource_field->addDefaults();
 
     return $resource_field;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function value(DataSourceInterface $source) {
+    // Return if this field is a callback.
+    $value = $this->decorated->value($source);
+    if (isset($value)) {
+      return $value;
+    }
+
+    if ($resource = $this->getResource()) {
+      // TODO: The resource input data in the field definition has changed.
+      // Now it does not need to be keyed by bundle since you don't even need
+      // an entity to use the resource based field.
+
+      $request = Request::create('', array(), Request::METHOD_GET);
+      $resource_data_provider = DataProviderResource::init($request, $resource['name'], array(
+        $resource['majorVersion'],
+        $resource['minorVersion'],
+      ));
+      // FIXME: $embedded_identifier needs to be fetched first!!!
+      return $resource_data_provider->view($embedded_identifier);
+    }
+
+    // Check user has access to the property.
+    if (!$this->access('view', $source)) {
+      return NULL;
+    }
+
+    $property_wrapper = $this->propertyWrapper($source);
+    if ($this->getFormatter()) {
+      // Get value from field formatter.
+      $value = $this->formatterValue($source);
+    }
+    elseif ($property_wrapper instanceof \EntityListWrapper) {
+      // Multiple values.
+      foreach ($property_wrapper->getIterator() as $item_wrapper) {
+        $value[] = $this->fieldValue($item_wrapper);
+      }
+    }
+    else {
+      // Single value.
+      $value = $this->fieldValue($property_wrapper);
+    }
+
+    return $value;
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * @throws \EntityMetadataWrapperException
+   */
+  public function access($op, DataSourceInterface $source) {
+    // Perform basic access checks.
+    if (!$this->decorated->access($op, $source)) {
+      return FALSE;
+    }
+
+    if (!$this->getProperty()) {
+      // If there is no property we cannot check for property access.
+      return TRUE;
+    }
+
+    // Perform field API access checks.
+    $property_wrapper = $this->propertyWrapper($source);
+    $account = $source->getAccount();
+
+    // Check format access for text fields.
+    if (
+      $op == 'edit' &&
+      $property_wrapper->type() == 'text_formatted' &&
+      $property_wrapper->value() &&
+      $property_wrapper->format->value()
+    ) {
+      $format = (object) array('format' => $property_wrapper->format->value());
+      // Only check filter access on write contexts.
+      if (!filter_access($format, $account)) {
+        return FALSE;
+      }
+    }
+
+    $info = $property_wrapper->info();
+    if ($op == 'edit' && empty($info['setter callback'])) {
+      // Property does not allow setting.
+      return FALSE;
+    }
+
+    $access = $property_wrapper->access($op, $account);
+    return $access !== FALSE;
+  }
+
+  /**
+   * Get the wrapper for the property associated to the current field.
+   *
+   * @param DataSourceInterface $source
+   *   The data source.
+   *
+   * @return \EntityMetadataWrapper
+   *   Either a \EntityStructureWrapper or a \EntityListWrapper.
+   *
+   * @throws ServerConfigurationException
+   */
+  protected function propertyWrapper(DataSourceInterface $source) {
+    // Exposing an entity field.
+    $wrapper = $source->getWrapper();
+    // For entity fields the DataSource needs to contain an EMW.
+    if (!$wrapper instanceof \EntityDrupalWrapper) {
+      throw new ServerConfigurationException('Cannot get a value without an entity metadata wrapper data source.');
+    }
+    $property = $this->getProperty();
+    return ($property && !$this->isWrapperMethodOnEntity()) ? $wrapper->{$property} : $wrapper;
+  }
+
+  /**
+   * Get value from a property.
+   *
+   * @param \EntityMetadataWrapper $property_wrapper
+   *   The property wrapper. Either \EntityDrupalWrapper or \EntityListWrapper.
+   *
+   * @return mixed
+   *   A single or multiple values.
+   */
+  protected function fieldValue(\EntityMetadataWrapper $property_wrapper) {
+    if ($this->getSubProperty() && $property_wrapper->value()) {
+      $property_wrapper = $property_wrapper->{$this->getSubProperty()};
+    }
+
+    // Wrapper method.
+    $value = $property_wrapper->{$this->getWrapperMethod()}();
+
+    return $value;
+  }
+
+  /**
+   * Get value from a field rendered by Drupal field API's formatter.
+   *
+   * @param DataSourceInterface $source
+   *   The data source.
+   *
+   * @return mixed
+   *   A single or multiple values.
+   *
+   * @throws \Drupal\restful\Exception\ServerConfigurationException
+   */
+  protected function formatterValue(DataSourceInterface $source) {
+    $wrapper = $source->getWrapper();
+    $property_wrapper = $this->propertyWrapper($source);
+    $value = NULL;
+
+    if (!ResourceFieldEntity::propertyIsField($this->getProperty())) {
+      // Property is not a field.
+      throw new ServerConfigurationException(format_string('@property is not a configurable field, so it cannot be processed using field API formatter', array('@property' => $this->getProperty())));
+    }
+
+    // Get values from the formatter.
+    $output = field_view_field($this->entityType, $wrapper->value(), $this->getProperty(), $this->getFormatter());
+
+    // Unset the theme, as we just want to get the value from the formatter,
+    // without the wrapping HTML.
+    unset($output['#theme']);
+
+
+    if ($property_wrapper instanceof \EntityListWrapper) {
+      // Multiple values.
+      foreach (element_children($output) as $delta) {
+        $value[] = drupal_render($output[$delta]);
+      }
+    }
+    else {
+      // Single value.
+      $value = drupal_render($output);
+    }
+
+    return $value;
   }
 
   /**

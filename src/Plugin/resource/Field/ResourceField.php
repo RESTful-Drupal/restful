@@ -8,6 +8,8 @@
 namespace Drupal\restful\Plugin\resource\Field;
 
 use Drupal\restful\Exception\ServerConfigurationException;
+use Drupal\restful\Plugin\resource\DataSource\DataSourceInterface;
+use Drupal\restful\Resource\ResourceManager;
 
 class ResourceField extends ResourceFieldBase implements ResourceFieldInterface {
 
@@ -44,6 +46,41 @@ class ResourceField extends ResourceFieldBase implements ResourceFieldInterface 
     $resource_field = new static($field);
     $resource_field->addDefaults();
     return $resource_field;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function value(DataSourceInterface $source) {
+    if (!$this->access('view', $source)) {
+      // If there is no access to the property, return NULL.
+      return NULL;
+    }
+    if ($callback = $this->getCallback()) {
+      // TODO: Use strategy pattern to pass a consistent object to
+      // executeCallback.
+      return ResourceManager::executeCallback($callback, array($source));
+    }
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function access($op, DataSourceInterface $source) {
+    foreach ($this->getAccessCallbacks() as $callback) {
+      $result = ResourceManager::executeCallback($callback, array(
+        $op,
+        $this,
+        $source,
+      ));
+
+      if ($result == ResourceFieldBase::ACCESS_DENY) {
+        return FALSE;
+      }
+    }
+
+    return TRUE;
   }
 
   /**
@@ -97,7 +134,8 @@ class ResourceField extends ResourceFieldBase implements ResourceFieldInterface 
       !empty($field_definition['wrapper_method']) ||
       !empty($field_definition['wrapper_method_on_entity']) ||
       !empty($field_definition['column']) ||
-      !empty($field_definition['image_styles'])
+      !empty($field_definition['image_styles']) ||
+      (!empty($field_definition['property']) ? field_info_field($field_definition['property']) : NULL)
     ) {
       $class_name = '\Drupal\restful\Plugin\resource\Field\ResourceFieldEntity';
     }
