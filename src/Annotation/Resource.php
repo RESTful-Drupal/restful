@@ -12,7 +12,7 @@ use Drupal\Component\Annotation\Plugin;
 /**
  * Defines a Resource annotation object.
  *
- * @ingroup plug_example_api
+ * @ingroup resource_api
  *
  * @Annotation
  */
@@ -121,10 +121,10 @@ class Resource extends Plugin {
   public $autocomplete = array();
 
   /**
-   * Options. Used mainly for file resources.
+   * Arbitrary options that can be passed to the resource.
    *
    * Set the default validators, scheme, and replace as used in
-   * file_save_upload().
+   * file_save_upload(). Used mainly for file resources.
    *
    * @var array
    */
@@ -138,7 +138,7 @@ class Resource extends Plugin {
   public $allowOrigin;
 
   /**
-   * Discoverable.
+   * Determines if a resource should be discoverable, and appear under /api.
    *
    * @var bool
    */
@@ -155,7 +155,7 @@ class Resource extends Plugin {
    * {@inheritdoc}
    */
   public function getId() {
-    // Our ID property is 'name', not 'id'.
+    // The ID of the resource plugin is its name.
     return $this->definition['name'];
   }
 

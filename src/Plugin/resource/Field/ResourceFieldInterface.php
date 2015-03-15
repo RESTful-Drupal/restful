@@ -85,6 +85,14 @@ interface ResourceFieldInterface {
   public function setMethods($methods);
 
   /**
+   * Checks if the current field is computed.
+   *
+   * @return bool
+   *   TRUE if the field is computed.
+   */
+  public function isComputed();
+
+  /**
    * Helper method to determine if an array is numeric.
    *
    * @param array $input
