@@ -12,7 +12,7 @@ use Drupal\restful\Plugin\resource\ResourceInterface;
 
 /**
  * Class Articles
- * @package Drupal\restful\Plugin\formatter
+ * @package Drupal\restful\Plugin\resource
  *
  * @Resource(
  *   name = "articles:1.0",

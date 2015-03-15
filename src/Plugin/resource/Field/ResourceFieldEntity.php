@@ -7,10 +7,11 @@
 
 namespace Drupal\restful\Plugin\resource\Field;
 
+use Drupal\restful\Exception\IncompatibleFieldDefinitionException;
 use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Http\Request;
 use Drupal\restful\Plugin\resource\DataProvider\DataProviderResource;
-use Drupal\restful\Plugin\resource\DataSource\DataSourceInterface;
+use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
 use Drupal\restful\Util\String;
 
 class ResourceFieldEntity implements ResourceFieldEntityInterface {
@@ -144,20 +145,18 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
   /**
    * {@inheritdoc}
    */
-  public function value(DataSourceInterface $source) {
-    // Return if this field is a callback.
-    $value = $this->decorated->value($source);
-    if (isset($value)) {
-      return $value;
+  public function value(DataInterpreterInterface $interpreter) {
+    if ($callback = $this->getCallback()) {
+      throw new IncompatibleFieldDefinitionException('You cannot have a callback with entity specific field descriptions.');
     }
 
     // Check user has access to the property.
-    if (!$this->access('view', $source)) {
+    if (!$this->access('view', $interpreter)) {
       return NULL;
     }
 
-    $property_wrapper = $this->propertyWrapper($source);
-    $wrapper = $source->getWrapper();
+    $property_wrapper = $this->propertyWrapper($interpreter);
+    $wrapper = $interpreter->getWrapper();
 
     if ($property_wrapper instanceof \EntityListWrapper) {
       $values = array();
@@ -215,7 +214,7 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
     }
     else {
       // Single value.
-      return $this->fieldValue($property_wrapper);
+      $value = $this->fieldValue($property_wrapper);
     }
 
     return $value;
@@ -225,9 +224,9 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
    *
    * @throws \EntityMetadataWrapperException
    */
-  public function access($op, DataSourceInterface $source) {
+  public function access($op, DataInterpreterInterface $interpreter) {
     // Perform basic access checks.
-    if (!$this->decorated->access($op, $source)) {
+    if (!$this->decorated->access($op, $interpreter)) {
       return FALSE;
     }
 
@@ -237,8 +236,8 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
     }
 
     // Perform field API access checks.
-    $property_wrapper = $this->propertyWrapper($source);
-    $account = $source->getAccount();
+    $property_wrapper = $this->propertyWrapper($interpreter);
+    $account = $interpreter->getAccount();
 
     // Check format access for text fields.
     if (
@@ -267,7 +266,7 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
   /**
    * Get the wrapper for the property associated to the current field.
    *
-   * @param DataSourceInterface $source
+   * @param DataInterpreterInterface $interpreter
    *   The data source.
    *
    * @return \EntityMetadataWrapper
@@ -275,10 +274,10 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
    *
    * @throws ServerConfigurationException
    */
-  protected function propertyWrapper(DataSourceInterface $source) {
+  protected function propertyWrapper(DataInterpreterInterface $interpreter) {
     // Exposing an entity field.
-    $wrapper = $source->getWrapper();
-    // For entity fields the DataSource needs to contain an EMW.
+    $wrapper = $interpreter->getWrapper();
+    // For entity fields the DataInterpreter needs to contain an EMW.
     if (!$wrapper instanceof \EntityDrupalWrapper) {
       throw new ServerConfigurationException('Cannot get a value without an entity metadata wrapper data source.');
     }
@@ -352,13 +351,13 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
   /**
    * Get value for a field based on another resource.
    *
-   * @param DataSourceInterface $source
+   * @param DataInterpreterInterface $source
    *   The data source.
    *
    * @return mixed
    *   A single or multiple values.
    */
-  protected function resourceValue(DataSourceInterface $source) {
+  protected function resourceValue(DataInterpreterInterface $source) {
 
   }
 
@@ -694,6 +693,13 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
    */
   public function id() {
     return $this->decorated->id();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isComputed() {
+    return $this->decorated->isComputed();
   }
 
   /**

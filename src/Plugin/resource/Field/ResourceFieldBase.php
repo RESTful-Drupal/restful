@@ -226,6 +226,13 @@ abstract class ResourceFieldBase implements ResourceFieldInterface {
   /**
    * {@inheritdoc}
    */
+  public function isComputed() {
+    return !$this->getProperty();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public final static function isArrayNumeric(array $input) {
     foreach (array_keys($input) as $key) {
       if (!ctype_digit((string) $key)) {

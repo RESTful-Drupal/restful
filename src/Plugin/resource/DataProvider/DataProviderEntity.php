@@ -12,10 +12,8 @@ use Drupal\restful\Exception\InternalServerErrorException;
 use Drupal\restful\Exception\RestfulException;
 use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Http\HttpHeader;
-use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
-use Drupal\restful\Plugin\resource\DataSource\DataSourceEMW;
-use Drupal\restful\Plugin\resource\Field\ResourceFieldBase;
+use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterEMW;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldEntity;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldEntityInterface;
@@ -204,8 +202,8 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
         continue;
       }
 
-      $source = new DataSourceEMW($this->getAccount(), $wrapper);
-      $value = $resource_field->value($source);
+      $interpreter = new DataInterpreterEMW($this->getAccount(), $wrapper);
+      $value = $resource_field->value($interpreter);
 
       $value = $this->processCallbacks($value, $resource_field);
 
