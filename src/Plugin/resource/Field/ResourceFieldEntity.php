@@ -146,8 +146,10 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
    * {@inheritdoc}
    */
   public function value(DataInterpreterInterface $interpreter) {
-    if ($callback = $this->getCallback()) {
-      throw new IncompatibleFieldDefinitionException('You cannot have a callback with entity specific field descriptions.');
+    $value = $this->decorated->value($interpreter);
+    if (isset($value)) {
+      // Let the decorated resolve callbacks.
+      return $value;
     }
 
     // Check user has access to the property.
