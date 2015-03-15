@@ -10,7 +10,6 @@ namespace Drupal\restful\Plugin\resource;
 use Drupal\restful\Exception\InternalServerErrorException;
 use Drupal\restful\Plugin\resource\DataProvider\DataProviderEntity;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
-use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
 
 abstract class ResourceEntity extends Resource {
 
@@ -81,6 +80,21 @@ abstract class ResourceEntity extends Resource {
    */
   public function getEntitySelf(DataInterpreterInterface $interpreter) {
     return $this->versionedUrl($interpreter->getWrapper()->getIdentifier());
+  }
+
+  /**
+   * Get the public fields with the default values applied to them.
+   *
+   * @return array
+   *   The field definition array.
+   */
+  protected function processedPublicFields() {
+    // The fields that only contain a property need to be set to be
+    // ResourceFieldEntity. Otherwise they will be considered regular
+    // ResourceField.
+    return array_map(function ($field_definition) {
+      return $field_definition + array('class' => '\Drupal\restful\Plugin\resource\Field\ResourceFieldEntity');
+    },$this->publicFields());
   }
 
 }

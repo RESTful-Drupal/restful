@@ -71,7 +71,7 @@ abstract class Resource extends PluginBase implements ResourceInterface {
    */
   public function __construct(array $configuration, $plugin_id, $plugin_definition) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
-    $this->fieldDefinitions = ResourceFieldCollection::factory($this->publicFields());
+    $this->fieldDefinitions = ResourceFieldCollection::factory($this->processedPublicFields());
   }
 
   /**
@@ -388,5 +388,16 @@ abstract class Resource extends PluginBase implements ResourceInterface {
    *   The field definition array.
    */
   abstract protected function publicFields();
+
+  /**
+   * Get the public fields with the default values applied to them.
+   *
+   * @return array
+   *   The field definition array.
+   */
+  protected function processedPublicFields() {
+    // By default do not do any special processing.
+    return $this->publicFields();
+  }
 
 }
