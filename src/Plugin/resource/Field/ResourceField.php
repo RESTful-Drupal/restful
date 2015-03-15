@@ -8,7 +8,7 @@
 namespace Drupal\restful\Plugin\resource\Field;
 
 use Drupal\restful\Exception\ServerConfigurationException;
-use Drupal\restful\Plugin\resource\DataSource\DataSourceInterface;
+use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
 use Drupal\restful\Resource\ResourceManager;
 
 class ResourceField extends ResourceFieldBase implements ResourceFieldInterface {
@@ -51,15 +51,15 @@ class ResourceField extends ResourceFieldBase implements ResourceFieldInterface 
   /**
    * {@inheritdoc}
    */
-  public function value(DataSourceInterface $source) {
-    if (!$this->access('view', $source)) {
+  public function value(DataInterpreterInterface $interpreter) {
+    if (!$this->access('view', $interpreter)) {
       // If there is no access to the property, return NULL.
       return NULL;
     }
     if ($callback = $this->getCallback()) {
       // TODO: Use strategy pattern to pass a consistent object to
       // executeCallback.
-      return ResourceManager::executeCallback($callback, array($source));
+      return ResourceManager::executeCallback($callback, array($interpreter));
     }
     return NULL;
   }
@@ -67,12 +67,12 @@ class ResourceField extends ResourceFieldBase implements ResourceFieldInterface 
   /**
    * {@inheritdoc}
    */
-  public function access($op, DataSourceInterface $source) {
+  public function access($op, DataInterpreterInterface $interpreter) {
     foreach ($this->getAccessCallbacks() as $callback) {
       $result = ResourceManager::executeCallback($callback, array(
         $op,
         $this,
-        $source,
+        $interpreter,
       ));
 
       if ($result == ResourceFieldBase::ACCESS_DENY) {

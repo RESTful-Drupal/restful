@@ -8,7 +8,7 @@
 namespace Drupal\restful\Plugin\resource\Field;
 
 use Drupal\restful\Exception\ServerConfigurationException;
-use Drupal\restful\Plugin\resource\DataSource\DataSourceInterface;
+use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
 
 interface ResourceFieldInterface {
 
@@ -119,13 +119,13 @@ interface ResourceFieldInterface {
   /**
    * Gets the value for the field given a data source.
    *
-   * @param DataSourceInterface $source
+   * @param DataInterpreterInterface $interpreter
    *   The data source object. Interacts with the data storage.
    *
    * @return mixed
    *   The value for the public field.
    */
-  public function value(DataSourceInterface $source);
+  public function value(DataInterpreterInterface $interpreter);
 
   /**
    * Check access on property by the defined access callbacks.
@@ -133,7 +133,7 @@ interface ResourceFieldInterface {
    * @param string $op
    *   The operation that access should be checked for. Can be "view" or "edit".
    *   Defaults to "edit".
-   * @param DataSourceInterface $source
+   * @param DataInterpreterInterface $interpreter
    *   The data source representing the entity.
    *
    * @return bool
@@ -141,7 +141,7 @@ interface ResourceFieldInterface {
    *   The default implementation assumes that if no callback has explicitly
    *   denied access, we grant the user permission.
    */
-  public function access($op, DataSourceInterface $source);
+  public function access($op, DataInterpreterInterface $interpreter);
 
   /**
    * Gets the ID of the resource field.

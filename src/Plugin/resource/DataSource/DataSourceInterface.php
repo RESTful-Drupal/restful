@@ -2,12 +2,12 @@
 
 /**
  * @file
- * Contains \Drupal\restful\Plugin\resource\DataSource\DataSourceInterface.
+ * Contains \Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface.
  */
 
-namespace Drupal\restful\Plugin\resource\DataSource;
+namespace Drupal\restful\Plugin\resource\DataInterpreter;
 
-interface DataSourceInterface {
+interface DataInterpreterInterface {
 
   /**
    * Get the account.

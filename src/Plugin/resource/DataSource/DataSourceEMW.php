@@ -2,12 +2,12 @@
 
 /**
  * @file
- * Contains \Drupal\restful\Plugin\resource\DataSource\DataSource.
+ * Contains \Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreter.
  */
 
-namespace Drupal\restful\Plugin\resource\DataSource;
+namespace Drupal\restful\Plugin\resource\DataInterpreter;
 
-class DataSourceEMW extends DataSourceBase implements DataSourceInterface {
+class DataInterpreterEMW extends DataInterpreterBase implements DataInterpreterInterface {
 
   /**
    * Returns the \EntityDrupalWrapper.
@@ -17,7 +17,7 @@ class DataSourceEMW extends DataSourceBase implements DataSourceInterface {
    */
   public function getWrapper() {
     // Note: this is just implemented to override the docblock. Now when we call
-    // DataSourceEMW::getWrapper we know we are getting a \EntityDrupalWrapper
+    // DataInterpreterEMW::getWrapper we know we are getting a \EntityDrupalWrapper
     // object back.
     return parent::getWrapper();
   }

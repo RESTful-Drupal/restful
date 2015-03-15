@@ -2,12 +2,12 @@
 
 /**
  * @file
- * Contains \Drupal\restful\Plugin\resource\DataSource\DataSource.
+ * Contains \Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreter.
  */
 
-namespace Drupal\restful\Plugin\resource\DataSource;
+namespace Drupal\restful\Plugin\resource\DataInterpreter;
 
-abstract class DataSourceBase implements DataSourceInterface {
+abstract class DataInterpreterBase implements DataInterpreterInterface {
 
   /**
    * The account.
@@ -24,7 +24,7 @@ abstract class DataSourceBase implements DataSourceInterface {
   protected $wrapper;
 
   /**
-   * Constructs a DataSource object.
+   * Constructs a DataInterpreter object.
    *
    * @param object $account
    *   The fully loaded object.
