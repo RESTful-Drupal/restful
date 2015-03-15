@@ -7,6 +7,7 @@
 
 namespace Drupal\restful\Plugin\resource\Field;
 
+use Drupal\restful\Exception\IncompatibleFieldDefinitionException;
 use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
 
@@ -124,6 +125,8 @@ interface ResourceFieldInterface {
    *
    * @return mixed
    *   The value for the public field.
+   *
+   * @throws IncompatibleFieldDefinitionException
    */
   public function value(DataInterpreterInterface $interpreter);
 

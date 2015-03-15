@@ -7,6 +7,7 @@
 
 namespace Drupal\restful\Plugin\resource\Field;
 
+use Drupal\restful\Exception\IncompatibleFieldDefinitionException;
 use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Http\Request;
 use Drupal\restful\Plugin\resource\DataProvider\DataProviderResource;
@@ -146,10 +147,8 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
    * {@inheritdoc}
    */
   public function value(DataInterpreterInterface $interpreter) {
-    // Return if this field is a callback.
-    $value = $this->decorated->value($interpreter);
-    if (isset($value)) {
-      return $value;
+    if ($callback = $this->getCallback()) {
+      throw new IncompatibleFieldDefinitionException('You cannot have a callback with entity specific field descriptions.');
     }
 
     if ($resource = $this->getResource()) {

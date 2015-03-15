@@ -57,8 +57,6 @@ class ResourceField extends ResourceFieldBase implements ResourceFieldInterface 
       return NULL;
     }
     if ($callback = $this->getCallback()) {
-      // TODO: Use strategy pattern to pass a consistent object to
-      // executeCallback.
       return ResourceManager::executeCallback($callback, array($interpreter));
     }
     return NULL;
