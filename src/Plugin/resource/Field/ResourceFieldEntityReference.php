@@ -7,9 +7,11 @@
 
 namespace Drupal\restful\Plugin\resource\Field;
 
+use Drupal\restful\Exception\IncompatibleFieldDefinitionException;
 use Drupal\restful\Http\HttpHeaderBag;
 use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
+use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
 use Drupal\restful\Plugin\resource\DataProvider\DataProviderResource;
 use Drupal\restful\Plugin\resource\DataSource\DataSourceEMW;
 use Drupal\restful\Plugin\resource\DataSource\DataSourceInterface;
@@ -154,15 +156,13 @@ class ResourceFieldEntityReference extends ResourceFieldEntity implements Resour
   /**
    * {@inheritdoc}
    */
-  public function value(DataSourceInterface $source) {
-    // Return if this field is a callback.
-    $value = $this->decorated->value($source);
-    if (isset($value)) {
-      return $value;
+  public function value(DataInterpreterInterface $interpreter) {
+    if ($callback = $this->getCallback()) {
+      throw new IncompatibleFieldDefinitionException('You cannot have a callback with entity specific field descriptions.');
     }
 
     // Check user has access to the property.
-    if (!$this->access('view', $source)) {
+    if (!$this->access('view', $interpreter)) {
       return NULL;
     }
 
@@ -171,13 +171,13 @@ class ResourceFieldEntityReference extends ResourceFieldEntity implements Resour
     // explicitly to full_view FALSE, then return only the entity ID.
     if ($resource || (!empty($resource) && $resource['full_view'] !== FALSE)) {
       // Let the resource embedding to the parent class.
-      return parent::value($source);
+      return parent::value($interpreter);
     }
 
     // Since this is a reference field (a field that points to other entities,
     // we can know for sure that the property wrappers are instances of
     // \EntityDrupalWrapper or lists of them.
-    $property_wrapper = $this->propertyWrapper($source);
+    $property_wrapper = $this->propertyWrapper($interpreter);
 
     // If this is a multivalue field, then call recursively on the items.
     if ($property_wrapper instanceof \EntityListWrapper) {
