@@ -654,6 +654,13 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function isComputed() {
+    return $this->decorated->isComputed();
+  }
+
+  /**
    * Helper method to determine if an array is numeric.
    *
    * @param array $input
