@@ -18,7 +18,8 @@ interface ResourceManagerInterface {
   /**
    * Gets the plugin collection for this plugin manager.
    *
-   * @return ResourcePluginManager
+   * @return ResourcePluginCollection
+   *   The plugin collection.
    */
   public function getPlugins();
 

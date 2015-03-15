@@ -8,7 +8,9 @@
 namespace Drupal\restful\Plugin\resource\DataProvider;
 
 use Drupal\restful\Exception\NotImplementedException;
+use Drupal\restful\Exception\UnauthorizedException;
 use Drupal\restful\Http\Request;
+use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
 
 class CachedDataProvider implements DataProviderInterface {
 
@@ -154,6 +156,20 @@ class CachedDataProvider implements DataProviderInterface {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function methodAccess(ResourceFieldInterface $resource_field) {
+    $this->subject->methodAccess($resource_field);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function canonicalPath($path) {
+    $this->subject->canonicalPath($path);
+  }
+
+  /**
    * Get an entry from the rendered cache.
    *
    * @param array $context
@@ -220,6 +236,35 @@ class CachedDataProvider implements DataProviderInterface {
     }
 
     return $base_cid . implode('::', $cid_params);
+  }
+
+  /**
+   * Delete cached entities from all the cache bins for resources.
+   *
+   * @param string $cid
+   *   The wildcard cache id to invalidate.
+   */
+  public static function invalidateEntityCache($cid) {
+    $plugins = restful()
+      ->getResourceManager()
+      ->getPlugins();
+    foreach ($plugins as $instance_id => $plugin) {
+      /** @var \Drupal\restful\Plugin\resource\Resource $plugin */
+      if (method_exists($plugin, 'cacheInvalidate')) {
+        $version = $plugin->getVersion();
+        // Get the uid for the invalidation.
+        try {
+          $uid = $plugin->getAccount(FALSE)->uid;
+        }
+        catch (UnauthorizedException $e) {
+          // If no user could be found using the handler default to the logged
+          // in user.
+          $uid = $GLOBALS['user']->uid;
+        }
+        $version_cid = 'v' . $version['major'] . '.' . $version['minor'] . '::' . $plugin->getResourceName() . '::uu' . $uid;
+        $plugin->cacheInvalidate($version_cid . '::' . $cid);
+      }
+    }
   }
 
   /**

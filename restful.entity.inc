@@ -5,6 +5,8 @@
  * Contains entity related code.
  */
 
+use Drupal\restful\Plugin\resource\DataProvider\CachedDataProvider;
+
 /**
  * Implements hook_entity_info().
  */
@@ -37,7 +39,7 @@ function restful_entity_info() {
 function restful_entity_update($entity, $type) {
   list($entity_id) = entity_extract_ids($type, $entity);
   $cid = 'paet:' . $type . '::ei:' . $entity_id;
-  \RestfulManager::invalidateEntityCache($cid);
+  CachedDataProvider::invalidateEntityCache($cid);
 }
 
 /**
@@ -46,7 +48,7 @@ function restful_entity_update($entity, $type) {
 function restful_entity_delete($entity, $type) {
   list($entity_id) = entity_extract_ids($type, $entity);
   $cid = 'paet:' . $type . '::ei:' . $entity_id;
-  \RestfulManager::invalidateEntityCache($cid);
+  CachedDataProvider::invalidateEntityCache($cid);
 }
 
 /**
@@ -55,7 +57,7 @@ function restful_entity_delete($entity, $type) {
 function restful_user_update(&$edit, $account, $category) {
   // Due to the limitations for cid matching on clearing caches, we need to
   // clear all the bin. We cannot do $cid = '%::uu' . $account->uid . '::pa';
-  \RestfulManager::invalidateEntityCache('*');
+  CachedDataProvider::invalidateEntityCache('*');
 }
 
 /**
@@ -64,5 +66,5 @@ function restful_user_update(&$edit, $account, $category) {
 function restful_user_delete($account) {
   // Due to the limitations for cid matching on clearing caches, we need to
   // clear all the bin. We cannot do $cid = '%::uu' . $account->uid . '::pa';
-  \RestfulManager::invalidateEntityCache('*');
+  CachedDataProvider::invalidateEntityCache('*');
 }
