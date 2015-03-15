@@ -196,7 +196,7 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
         // the embedded identifier.
         $embedded_identifier = $this->fieldValue($property_wrapper);
       }
-      if ($resource['full_view' === FALSE]) {
+      if (isset($resource['full_view']) && $resource['full_view'] === FALSE) {
         return $embedded_identifier;
       }
       $request = Request::create('', array(), Request::METHOD_GET);
@@ -204,7 +204,7 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
         $resource['majorVersion'],
         $resource['minorVersion'],
       ));
-      // FIXME: $embedded_identifier needs to be fetched first!!!
+
       return $resource_data_provider->view($embedded_identifier);
     }
 

@@ -49,6 +49,14 @@ class Articles__1_0 extends ResourceEntity implements ResourceInterface {
       'self' => array(
         'callback' => array($this, 'getEntitySelf'),
       ),
+      'tags' => array(
+        'property' => 'field_tags',
+        'resource' => array(
+          'name' => 'tags',
+          'majorVersion' => 1,
+          'minorVersion' => 0,
+        ),
+      ),
     );
   }
 

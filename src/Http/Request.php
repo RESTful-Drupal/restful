@@ -171,7 +171,7 @@ class Request implements RequestInterface {
    */
   public static function create($path, array $query = array(), $method = 'GET', HttpHeaderBag $headers = NULL, $via_router = FALSE, $csrf_token = NULL, array $cookies = array(), array $files = array(), array $server = array()) {
     if (!$headers) {
-      $headers = HttpHeaderNull::create(NULL, NULL);
+      $headers = new HttpHeaderBag();
     }
     if ($method == static::METHOD_POST && $headers->get('x-http-method-override')->getValueString()) {
       $method = $headers->get('x-http-method-override')->getValueString();
