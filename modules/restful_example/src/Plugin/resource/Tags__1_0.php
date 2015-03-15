@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\restful_example\Plugin\resource\Articles__1_0.
+ * Contains \Drupal\restful_example\Plugin\resource\Tags__1_0.
  */
 
 namespace Drupal\restful_example\Plugin\resource;
@@ -11,27 +11,27 @@ use Drupal\restful\Plugin\resource\ResourceEntity;
 use Drupal\restful\Plugin\resource\ResourceInterface;
 
 /**
- * Class Articles
+ * Class Tags
  * @package Drupal\restful\Plugin\resource
  *
  * @Resource(
- *   name = "articles:1.0",
- *   resource = "articles",
- *   label = "Articles",
- *   description = "Export the article content type with cookie authentication.",
+ *   name = "tags:1.0",
+ *   resource = "tags",
+ *   label = "Tags",
+ *   description = "Export the tags taxonomy term.",
  *   authenticationTypes = TRUE,
  *   authenticationOptional = TRUE,
  *   dataProvider = {
- *     "entityType": "node",
+ *     "entityType": "taxonomy_term",
  *     "bundles": {
- *       "article"
+ *       "tags"
  *     },
  *   },
  *   majorVersion = 1,
  *   minorVersion = 0
  * )
  */
-class Articles__1_0 extends ResourceEntity implements ResourceInterface {
+class Tags__1_0 extends ResourceEntity implements ResourceInterface {
 
   /**
    * {@inheritdoc}
@@ -39,7 +39,8 @@ class Articles__1_0 extends ResourceEntity implements ResourceInterface {
   protected function publicFields() {
     return array(
       'id' => array(
-        'property' => 'nid',
+        'wrapper_method' => 'getIdentifier',
+        'wrapper_method_on_entity' => TRUE,
       ),
       'label' => array(
         'wrapper_method' => 'label',
@@ -47,17 +48,6 @@ class Articles__1_0 extends ResourceEntity implements ResourceInterface {
       ),
       'self' => array(
         'callback' => array($this, 'getEntitySelf'),
-      ),
-      'tags' => array(
-        'property' => 'field_tags',
-        'resource' => array(
-          'name' => 'tags',
-          'majorVersion' => 1,
-          'minorVersion' => 0,
-        ),
-      ),
-      'status' => array(
-        'property' => 'status',
       ),
     );
   }
