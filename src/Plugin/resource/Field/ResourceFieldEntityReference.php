@@ -167,7 +167,11 @@ class ResourceFieldEntityReference extends ResourceFieldEntity implements Resour
     $resource = $this->getResource();
     // If the field definition does not contain a resource, or it is set
     // explicitly to full_view FALSE, then return only the entity ID.
-    if ($resource || (!empty($resource) && $resource['full_view'] !== FALSE)) {
+    if (
+      $resource ||
+      (!empty($resource) && $resource['full_view'] !== FALSE) ||
+      $this->getFormatter()
+    ) {
       // Let the resource embedding to the parent class.
       return parent::value($interpreter);
     }

@@ -67,6 +67,8 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
    *   The field definitions.
    * @param object $account
    *   The account object.
+   * @param string $resource_path
+   *   The resource path.
    * @param array $options
    *   The plugin definition options for the data provider.
    * @param string $langcode
@@ -77,7 +79,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
    * @throws ServerConfigurationException
    *   If the field mappings are not for entities.
    */
-  public function __construct(RequestInterface $request, ResourceFieldCollectionInterface $field_definitions, $account, array $options, $langcode = NULL) {
+  public function __construct(RequestInterface $request, ResourceFieldCollectionInterface $field_definitions, $account, $resource_path, array $options, $langcode = NULL) {
     parent::__construct($request, $field_definitions, $account, $options, $langcode);
     if (empty($options['entityType'])) {
       // Entity type is mandatory.
@@ -104,6 +106,15 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
         // resource.
         $value->setBundles($this->bundles);
       }
+    }
+    $this->resourcePath = $resource_path;
+    if (empty($this->options['urlParams'])) {
+      $this->options['urlParams'] = array(
+        'filter' => TRUE,
+        'sort' => TRUE,
+        'fields' => TRUE,
+        'loadByFieldName' => TRUE,
+      );
     }
   }
 
@@ -186,7 +197,8 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     $wrapper->language($this->getLangCode());
     $values = array();
 
-    $limit_fields = !empty($request['fields']) ? explode(',', $request['fields']) : array();
+    $input = $this->getRequest()->getParsedInput();
+    $limit_fields = !empty($input['fields']) ? explode(',', $input['fields']) : array();
 
     foreach ($this->fieldDefinitions as $resource_field_name => $resource_field) {
       /** @var ResourceFieldEntityInterface $resource_field */
@@ -473,13 +485,13 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     try {
       $this->queryForListSort($query);
     }
-    catch (RestfulException $e) {
+    catch (BadRequestException $e) {
       watchdog_exception('restful', $e);
     }
     try {
       $this->queryForListFilter($query);
     }
-    catch (RestfulException $e) {
+    catch (BadRequestException $e) {
       watchdog_exception('restful', $e);
     }
 
@@ -527,7 +539,9 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     foreach ($sorts as $public_field_name => $direction) {
       // Determine if sorting is by field or property.
       /** @var ResourceFieldEntityInterface $resource_field */
-      $resource_field = $resource_fields->get($public_field_name);
+      if (!$resource_field = $resource_fields->get($public_field_name)) {
+        return;
+      }
       if (!$property_name = $resource_field->getProperty()) {
         throw new BadRequestException('The current sort selection does not map to any entity property or Field API field.');
       }
@@ -556,8 +570,9 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     foreach ($this->parseRequestForListFilter() as $filter) {
       // Determine if filtering is by field or property.
       /** @var ResourceFieldEntityInterface $resource_field */
-      $resource_field = $resource_fields[$filter['public_field']];
-
+      if (!$resource_field = $resource_fields->get($filter['public_field'])) {
+        return;
+      }
       if (!$property_name = $resource_field->getProperty()) {
         throw new BadRequestException('The current filter selection does not map to any entity property or Field API field.');
       }

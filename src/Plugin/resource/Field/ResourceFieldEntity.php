@@ -201,6 +201,8 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
         return $embedded_identifier;
       }
       $request = Request::create('', array(), Request::METHOD_GET);
+      // Remove the $_GET options for the sub-request.
+      $request->setParsedInput(array());
       // TODO: Get version automatically to avoid setting it in the plugin definition. Ideally we would fill this when processing the plugin definition defaults.
       $resource_data_provider = DataProviderResource::init($request, $resource['name'], array(
         $resource['majorVersion'],

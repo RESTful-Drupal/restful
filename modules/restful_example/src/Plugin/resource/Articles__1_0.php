@@ -64,6 +64,15 @@ class Articles__1_0 extends ResourceEntity implements ResourceInterface {
         'property' => 'status',
         'methods' => array(Request::METHOD_POST, Request::METHOD_PUT),
       ),
+      'body' => array(
+        'property' => 'body',
+        'formatter' => array(
+          'type' => 'text_summary_or_trimmed',
+          'settings' => array(
+            'trim_length' => 100,
+          ),
+        ),
+      ),
     );
   }
 

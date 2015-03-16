@@ -71,7 +71,7 @@ abstract class Resource extends PluginBase implements ResourceInterface {
    */
   public function __construct(array $configuration, $plugin_id, $plugin_definition) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
-    $this->fieldDefinitions = ResourceFieldCollection::factory($this->processedPublicFields());
+    $this->fieldDefinitions = ResourceFieldCollection::factory($this->processPublicFields($this->publicFields()));
   }
 
   /**
@@ -93,6 +93,13 @@ abstract class Resource extends PluginBase implements ResourceInterface {
       throw new ServerConfigurationException('Request object is not available for the Resource plugin.');
     }
     return $this->request;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setRequest(RequestInterface $request) {
+    $this->request = $request;
   }
 
   /**
@@ -392,12 +399,15 @@ abstract class Resource extends PluginBase implements ResourceInterface {
   /**
    * Get the public fields with the default values applied to them.
    *
+   * @param array $field_definitions
+   *   The field definitions to process.
+   *
    * @return array
    *   The field definition array.
    */
-  protected function processedPublicFields() {
+  protected function processPublicFields(array $field_definitions) {
     // By default do not do any special processing.
-    return $this->publicFields();
+    return $field_definitions;
   }
 
 }

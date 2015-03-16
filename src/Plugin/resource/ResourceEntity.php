@@ -8,8 +8,10 @@
 namespace Drupal\restful\Plugin\resource;
 
 use Drupal\restful\Exception\InternalServerErrorException;
+use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Plugin\resource\DataProvider\DataProviderEntity;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
+use Drupal\restful\Plugin\resource\Field\ResourceFieldCollection;
 
 abstract class ResourceEntity extends Resource {
 
@@ -46,7 +48,12 @@ abstract class ResourceEntity extends Resource {
    */
   public function dataProviderFactory() {
     $plugin_definition = $this->getPluginDefinition();
-    return new DataProviderEntity($this->getRequest(), $this->getFieldDefinitions(), $this->getAccount(), $plugin_definition['dataProvider']);
+    $field_definitions = $this->getFieldDefinitions();
+    if (!empty($plugin_definition['dataProvider']['viewMode'])) {
+      $field_definitions_array = $this->viewModeFields($plugin_definition['dataProvider']['viewMode']);
+      $field_definitions = ResourceFieldCollection::factory($field_definitions_array);
+    }
+    return new DataProviderEntity($this->getRequest(), $field_definitions, $this->getAccount(), $this->getPath(), $plugin_definition['dataProvider']);
   }
 
   /**
@@ -85,16 +92,53 @@ abstract class ResourceEntity extends Resource {
   /**
    * Get the public fields with the default values applied to them.
    *
+   * @param array $field_definitions
+   *   The field definitions to process.
+   *
    * @return array
    *   The field definition array.
    */
-  protected function processedPublicFields() {
+  protected function processPublicFields(array $field_definitions) {
     // The fields that only contain a property need to be set to be
     // ResourceFieldEntity. Otherwise they will be considered regular
     // ResourceField.
     return array_map(function ($field_definition) {
       return $field_definition + array('class' => '\Drupal\restful\Plugin\resource\Field\ResourceFieldEntity');
-    },$this->publicFields());
+    }, $field_definitions);
+  }
+
+  /**
+   * Get the public fields with default values based on view mode information.
+   *
+   * @param array $view_mode_info
+   *   View mode configuration array.
+   *
+   * @return array
+   *   The public fields.
+   *
+   * @throws ServerConfigurationException
+   */
+  protected function viewModeFields(array $view_mode_info) {
+    $field_definitions = array();
+    $entity_type = $this->getEntityType();
+    $bundles = $this->getBundles();
+    $view_mode = $view_mode_info['name'];
+    if (count($bundles) != 1) {
+      throw new ServerConfigurationException('View modes can only be used in resources with a single bundle.');
+    }
+    $bundle = reset($bundles);
+    foreach ($view_mode_info['fieldMap'] as $field_name => $public_field_name) {
+      $field_instance = field_info_instance($entity_type, $field_name, $bundle);
+      $formatter_info = $field_instance['display'][$view_mode];
+      unset($formatter_info['module']);
+      unset($formatter_info['weight']);
+      unset($formatter_info['label']);
+      $field_definitions[$public_field_name] = array(
+        'property' => $field_name,
+        'formatter' => $formatter_info,
+      );
+    }
+    return $field_definitions;
   }
 
 }

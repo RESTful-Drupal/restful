@@ -54,6 +54,7 @@ class DataProviderResource extends DataProvider implements DataProviderResourceI
    */
   public function __construct(RequestInterface $request, ResourceFieldCollectionInterface $field_definitions, $account, array $options, $langcode = NULL, ResourceInterface $resource = NULL) {
     $this->resource = $resource;
+    $resource->setRequest($request);
     $this->referencedDataProvider = $resource->getDataProvider();
     parent::__construct($request, $field_definitions, $account, $options, $langcode);
   }

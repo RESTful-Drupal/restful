@@ -10,6 +10,7 @@ namespace Drupal\restful\Plugin\resource;
 use Drupal\Component\Plugin\ConfigurablePluginInterface;
 use Drupal\Component\Plugin\PluginInspectionInterface;
 use Drupal\restful\Exception\NotImplementedException;
+use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataProvider\DataProviderInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
 
@@ -41,12 +42,20 @@ interface ResourceInterface extends PluginInspectionInterface, ConfigurablePlugi
   /**
    * Get the request object.
    *
-   * @return \Drupal\restful\Http\RequestInterface
+   * @return RequestInterface
    *   The request object.
    *
    * @throws \Drupal\restful\Exception\ServerConfigurationException
    */
   public function getRequest();
+
+  /**
+   * Sets the request object.
+   *
+   * @param RequestInterface $request
+   *   The request object.
+   */
+  public function setRequest(RequestInterface $request);
 
   /**
    * Gets the path of the resource.
