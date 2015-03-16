@@ -8,8 +8,6 @@
 namespace Drupal\restful_example\Plugin\resource;
 
 use Drupal\restful\Http\Request;
-use Drupal\restful\Plugin\resource\Field\ResourceFieldBase;
-use Drupal\restful\Plugin\resource\Resource;
 use Drupal\restful\Plugin\resource\ResourceEntity;
 use Drupal\restful\Plugin\resource\ResourceInterface;
 
@@ -64,6 +62,7 @@ class Articles__1_0 extends ResourceEntity implements ResourceInterface {
       ),
       'status' => array(
         'property' => 'status',
+        'methods' => array(Request::METHOD_POST, Request::METHOD_PUT),
       ),
     );
   }

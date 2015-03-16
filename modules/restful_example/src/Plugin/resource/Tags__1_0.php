@@ -7,6 +7,9 @@
 
 namespace Drupal\restful_example\Plugin\resource;
 
+use Drupal\restful\Http\Request;
+use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
+use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
 use Drupal\restful\Plugin\resource\ResourceEntity;
 use Drupal\restful\Plugin\resource\ResourceInterface;
 
@@ -48,8 +51,29 @@ class Tags__1_0 extends ResourceEntity implements ResourceInterface {
       ),
       'self' => array(
         'callback' => array($this, 'getEntitySelf'),
+        'access_callbacks' => array(
+          array($this, 'evenAccess'),
+        ),
       ),
     );
   }
 
+  /**
+   * Access callback example.
+   *
+   * @param string $op
+   *   Operation being performed.
+   * @param ResourceFieldInterface $resource_field
+   *   The resource field definition object.
+   * @param DataInterpreterInterface $interpreter
+   *   The data interpreter.
+   *
+   * @return bool
+   *   TRUE for access granted.
+   */
+  public function evenAccess($op, ResourceFieldInterface $resource_field, DataInterpreterInterface $interpreter) {
+    $account = $interpreter->getAccount();
+    $value = $interpreter->getWrapper()->getIdentifier() + $account->uid;
+    return $value % 2;
+  }
 }

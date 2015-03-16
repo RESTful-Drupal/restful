@@ -7,7 +7,6 @@
 
 namespace Drupal\restful\Plugin\resource\Field;
 
-use Drupal\restful\Exception\IncompatibleFieldDefinitionException;
 use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Http\Request;
 use Drupal\restful\Plugin\resource\DataProvider\DataProviderResource;

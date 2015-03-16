@@ -7,14 +7,10 @@
 
 namespace Drupal\restful\Plugin\resource\Field;
 
-use Drupal\restful\Exception\IncompatibleFieldDefinitionException;
 use Drupal\restful\Http\HttpHeaderBag;
 use Drupal\restful\Http\Request;
-use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
 use Drupal\restful\Plugin\resource\DataProvider\DataProviderResource;
-use Drupal\restful\Plugin\resource\DataSource\DataSourceEMW;
-use Drupal\restful\Plugin\resource\DataSource\DataSourceInterface;
 
 class ResourceFieldEntityReference extends ResourceFieldEntity implements ResourceFieldEntityReferenceInterface {
 

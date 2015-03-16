@@ -531,7 +531,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
       if (!$property_name = $resource_field->getProperty()) {
         throw new BadRequestException('The current sort selection does not map to any entity property or Field API field.');
       }
-      if (ResourceFieldEntityInterface::propertyIsField($property_name)) {
+      if (ResourceFieldEntity::propertyIsField($property_name)) {
         $query->fieldOrderBy($property_name, $resource_field->getColumn(), $direction);
       }
       else {
