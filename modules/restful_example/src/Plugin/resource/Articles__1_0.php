@@ -7,6 +7,9 @@
 
 namespace Drupal\restful_example\Plugin\resource;
 
+use Drupal\restful\Http\Request;
+use Drupal\restful\Plugin\resource\Field\ResourceFieldBase;
+use Drupal\restful\Plugin\resource\Resource;
 use Drupal\restful\Plugin\resource\ResourceEntity;
 use Drupal\restful\Plugin\resource\ResourceInterface;
 
@@ -44,6 +47,9 @@ class Articles__1_0 extends ResourceEntity implements ResourceInterface {
       'label' => array(
         'wrapper_method' => 'label',
         'wrapper_method_on_entity' => TRUE,
+        'process_callbacks' => array(
+          array(array($this, 'addPrefix'), array('Label: ')),
+        ),
       ),
       'self' => array(
         'callback' => array($this, 'getEntitySelf'),
@@ -60,6 +66,21 @@ class Articles__1_0 extends ResourceEntity implements ResourceInterface {
         'property' => 'status',
       ),
     );
+  }
+
+  /**
+   * Helper function that adds a prefix.
+   *
+   * @param mixed $value
+   *   The input value to be prefixed.
+   * @param string $prefix
+   *   The prefix to add.
+   *
+   * @return string
+   *   The prefixed value.
+   */
+  public function addPrefix($value, $prefix) {
+    return $prefix . $value;
   }
 
 }

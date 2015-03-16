@@ -197,12 +197,12 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
 
       $value = NULL;
 
-      if (!$this->methodAccess($resource_field)) {
-        // The field does not apply to the current method.
+      $interpreter = new DataInterpreterEMW($this->getAccount(), $wrapper);
+      if (!$this->methodAccess($resource_field) || !$resource_field->access('view', $interpreter)) {
+        // The field does not apply to the current method or has denied access.
         continue;
       }
 
-      $interpreter = new DataInterpreterEMW($this->getAccount(), $wrapper);
       $value = $resource_field->value($interpreter);
 
       $value = $this->processCallbacks($value, $resource_field);
