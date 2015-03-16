@@ -8,6 +8,8 @@
 namespace Drupal\restful\Plugin\resource\Field;
 
 use Drupal\restful\Exception\ServerConfigurationException;
+use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
+use Drupal\restful\Resource\ResourceManager;
 
 class ResourceField extends ResourceFieldBase implements ResourceFieldInterface {
 
@@ -24,16 +26,12 @@ class ResourceField extends ResourceFieldBase implements ResourceFieldInterface 
       throw new ServerConfigurationException('No public name provided in the field mappings.');
     }
     $this->publicName = $field['public_name'];
-    $this->accessCallbacks = $field['access_callbacks'];
-    $this->property = $field['property'];
-    $this->subProperty = $field['sub_property'];
-    $this->formatter = $field['formatter'];
-    $this->wrapperMethod = $field['wrapper_method'];
-    $this->column = $field['column'];
-    $this->callback = $field['callback'];
-    $this->processCallbacks = $field['processCallbacks'];
-    $this->resource = $field['resource'];
-    $this->createOrUpdatePassthrough = $field['create_or_update_passthrough'];
+    $this->accessCallbacks = isset($field['access_callbacks']) ? $field['access_callbacks'] : $this->accessCallbacks;
+    $this->property = isset($field['property']) ? $field['property'] : $this->property;
+    // $this->column = isset($field['column']) ? $field['column'] : $this->column;
+    $this->callback = isset($field['callback']) ? $field['callback'] : $this->callback;
+    $this->processCallbacks = isset($field['processCallbacks']) ? $field['processCallbacks'] : $this->processCallbacks;
+    $this->resource = isset($field['resource']) ? $field['resource'] : $this->resource;
   }
 
   /**
@@ -48,6 +46,39 @@ class ResourceField extends ResourceFieldBase implements ResourceFieldInterface 
     $resource_field = new static($field);
     $resource_field->addDefaults();
     return $resource_field;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function value(DataInterpreterInterface $interpreter) {
+    if (!$this->access('view', $interpreter)) {
+      // If there is no access to the property, return NULL.
+      return NULL;
+    }
+    if ($callback = $this->getCallback()) {
+      return ResourceManager::executeCallback($callback, array($interpreter));
+    }
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function access($op, DataInterpreterInterface $interpreter) {
+    foreach ($this->getAccessCallbacks() as $callback) {
+      $result = ResourceManager::executeCallback($callback, array(
+        $op,
+        $this,
+        $interpreter,
+      ));
+
+      if ($result == ResourceFieldBase::ACCESS_DENY) {
+        return FALSE;
+      }
+    }
+
+    return TRUE;
   }
 
   /**
@@ -69,12 +100,12 @@ class ResourceField extends ResourceFieldBase implements ResourceFieldInterface 
       );
 
       // Set the default value for the version of the referenced resource.
-      if (empty($resource['major_version']) || empty($resource['minor_version'])) {
+      if (empty($resource['majorVersion']) || empty($resource['minorVersion'])) {
         list($major_version, $minor_version) = restful()
           ->getResourceManager()
           ->getResourceLastVersion($resource['name']);
-        $resource['major_version'] = $major_version;
-        $resource['minor_version'] = $minor_version;
+        $resource['majorVersion'] = $major_version;
+        $resource['minorVersion'] = $minor_version;
       }
     }
   }
@@ -101,9 +132,10 @@ class ResourceField extends ResourceFieldBase implements ResourceFieldInterface 
       !empty($field_definition['wrapper_method']) ||
       !empty($field_definition['wrapper_method_on_entity']) ||
       !empty($field_definition['column']) ||
-      !empty($field_definition['image_styles'])
+      !empty($field_definition['image_styles']) ||
+      (!empty($field_definition['property']) ? field_info_field($field_definition['property']) : NULL)
     ) {
-      $class_name = 'ResourceFieldEntity';
+      $class_name = '\Drupal\restful\Plugin\resource\Field\ResourceFieldEntity';
     }
 
     if (
@@ -111,10 +143,10 @@ class ResourceField extends ResourceFieldBase implements ResourceFieldInterface 
       class_exists($class_name) &&
       in_array(
         'Drupal\restful\Plugin\resource\Field\ResourceFieldInterface',
-        class_implements($field_definition['class'])
+        class_implements($class_name)
       )
     ) {
-      return $field_definition['class'];
+      return $class_name;
     }
 
     return NULL;

@@ -97,6 +97,7 @@ class ResourceFieldCollection implements ResourceFieldCollectionInterface {
    * {@inheritdoc}
    */
   public static function factory(array $fields = array()) {
+    // TODO: Explore the possibility to change factory methods by using FactoryInterface.
     return new static($fields);
   }
 
@@ -112,6 +113,13 @@ class ResourceFieldCollection implements ResourceFieldCollectionInterface {
    */
   public static function getInfo() {
     return array();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function get($key) {
+    return isset($this->fields[$key]) ? $this->fields[$key] : NULL;
   }
 
   /**

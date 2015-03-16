@@ -9,9 +9,10 @@ namespace Drupal\restful\Plugin\resource;
 
 use Drupal\restful\Exception\InternalServerErrorException;
 use Drupal\restful\Plugin\resource\DataProvider\DataProviderEntity;
+use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
 
-class ResourceEntity extends Resource {
+abstract class ResourceEntity extends Resource {
 
   /**
    * The entity type.
@@ -30,9 +31,9 @@ class ResourceEntity extends Resource {
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, ResourceFieldCollectionInterface $field_definitions) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $field_definitions);
-    if (empty($plugin_definition['entityType'])) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+    if (empty($plugin_definition['dataProvider']['entityType'])) {
       throw new InternalServerErrorException('The entity type was not provided.');
     }
     $this->entityType = $plugin_definition['dataProvider']['entityType'];
@@ -62,10 +63,24 @@ class ResourceEntity extends Resource {
   /**
    * Gets the entity bundle.
    *
-   * @return string
+   * @return array
+   *   The bundles.
    */
   public function getBundles() {
     return $this->bundles;
+  }
+
+  /**
+   * Get the "self" url.
+   *
+   * @param DataInterpreterInterface $interpreter
+   *   The wrapped entity.
+   *
+   * @return string
+   *   The self URL.
+   */
+  public function getEntitySelf(DataInterpreterInterface $interpreter) {
+    return $this->versionedUrl($interpreter->getWrapper()->getIdentifier());
   }
 
 }

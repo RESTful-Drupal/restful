@@ -11,6 +11,7 @@ use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use \Drupal\restful\Exception\UnauthorizedException;
 use \Drupal\restful\Plugin\Authentication\AuthenticationInterface;
 use \Drupal\restful\Plugin\AuthenticationPluginManager;
+use \Drupal\restful\Http\RequestInterface;
 
 interface AuthenticationManagerInterface {
 

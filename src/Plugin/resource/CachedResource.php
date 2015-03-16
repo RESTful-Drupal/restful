@@ -43,6 +43,7 @@ class CachedResource extends PluginBase implements ResourceInterface {
    *   Injected cache manager.
    */
   public function __construct(ResourceInterface $subject, \DrupalCacheInterface $cache_controller) {
+    // TODO: Implement the ResourceManager factory to use the CachedResource.
     $this->subject = $subject;
     $this->cacheController = $cache_controller ? $cache_controller : $this->newCacheObject();
   }
@@ -125,6 +126,13 @@ class CachedResource extends PluginBase implements ResourceInterface {
    */
   public function getPath() {
     return $this->subject->getPath();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setPath($path) {
+    $this->subject->setPath($path);
   }
 
   /**
@@ -226,6 +234,13 @@ class CachedResource extends PluginBase implements ResourceInterface {
    */
   public function getVersion() {
     return $this->subject->getVersion();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function versionedUrl($path = '', $options = array(), $version_string = TRUE) {
+    return $this->subject->versionedUrl($path, $options, $version_string);
   }
 
 }

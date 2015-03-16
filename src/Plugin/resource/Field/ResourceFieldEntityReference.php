@@ -87,8 +87,8 @@ class ResourceFieldEntityReference extends ResourceFieldEntity implements Resour
     // Get the resource data provider and make the appropriate operations.
     // We need to create a RequestInterface object for the sub-request.
     $resource_data_provider = DataProviderResource::init(static::subRequest($value), $resource['name'], array(
-      $resource['major_version'],
-      $resource['minor_version'],
+      $resource['majorVersion'],
+      $resource['minorVersion'],
     ));
 
     // Return the entity ID that was created.

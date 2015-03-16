@@ -7,9 +7,11 @@
 
 namespace Drupal\restful\Plugin\formatter;
 
+use Drupal\Component\Plugin\ConfigurablePluginInterface;
 use Drupal\Component\Plugin\PluginInspectionInterface;
+use Drupal\restful\Plugin\resource\ResourceInterface;
 
-interface FormatterInterface extends PluginInspectionInterface {
+interface FormatterInterface extends PluginInspectionInterface, ConfigurablePluginInterface {
 
 
   /**
@@ -56,5 +58,13 @@ interface FormatterInterface extends PluginInspectionInterface {
    *   The contents for the ContentType header in the response.
    */
   public function getContentTypeHeader();
+
+  /**
+   * Gets the underlying resource.
+   *
+   * @return ResourceInterface
+   *   The resource.
+   */
+  public function getResource();
 
 }

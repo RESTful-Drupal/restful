@@ -915,25 +915,6 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
     return $formatter_names;
   }
 
-  /**
-   * Checks access based on the referer header and the allow_origin setting.
-   *
-   * @return bool
-   *   TRUE if the access is granted. FALSE otherwise.
-   */
-  protected function accessByAllowOrigin() {
-    // Check the referrer header and return false if it does not match the
-    // Access-Control-Allow-Origin
-    $referer = \RestfulManager::getRequestHttpHeader('Referer', '');
-    // If there is no allow_origin assume that it is allowed. Also, if there is
-    // no referer then grant access since the request probably was not
-    // originated from a browser.
-    $origin = $this->getPluginKey('allow_origin');
-    if (empty($origin) || $origin == '*' || !$referer) {
-      return TRUE;
-    }
-    return strpos($referer, $origin) === 0;
-  }
 
   /**
    * {@inheritdoc}

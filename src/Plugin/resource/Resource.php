@@ -16,11 +16,15 @@ use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Http\HttpHeader;
 use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
+use Drupal\restful\Plugin\ConfigurablePluginTrait;
 use Drupal\restful\Plugin\resource\DataProvider\DataProviderInterface;
+use Drupal\restful\Plugin\resource\Field\ResourceFieldCollection;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
 use Drupal\restful\Resource\ResourceManager;
 
 abstract class Resource extends PluginBase implements ResourceInterface {
+
+  use ConfigurablePluginTrait;
 
   /**
    * The string that separates multiple ids.
@@ -64,14 +68,10 @@ abstract class Resource extends PluginBase implements ResourceInterface {
    *   The plugin_id for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
-   * @param ResourceFieldCollectionInterface $field_definitions
-   *   The field definitions.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, ResourceFieldCollectionInterface $field_definitions) {
-    // TODO: According to DefaultFactory.php#L58 the last parameter will not be
-    // passed in. Find some other way to do this.
+  public function __construct(array $configuration, $plugin_id, $plugin_definition) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
-    $this->fieldDefinitions = $field_definitions;
+    $this->fieldDefinitions = ResourceFieldCollection::factory($this->publicFields());
   }
 
   /**
@@ -88,7 +88,8 @@ abstract class Resource extends PluginBase implements ResourceInterface {
     if (isset($this->request)) {
       return $this->request;
     }
-    if (!$this->request = $this->configuration['request']) {
+    $instance_configuration = $this->getConfiguration();
+    if (!$this->request = $instance_configuration['request']) {
       throw new ServerConfigurationException('Request object is not available for the Resource plugin.');
     }
     return $this->request;
@@ -98,14 +99,14 @@ abstract class Resource extends PluginBase implements ResourceInterface {
    * {@inheritdoc}
    */
   public function getPath() {
-    if (isset($this->path)) {
-      return $this->path;
-    }
-    // This gives us the path without the RESTful prefix.
-    $path = preg_quote($this->getRequest()->getPath(), '#');
-    // Remove the version prefix.
-    $this->path = preg_replace('#^v\d+(\.\d+)?/#', '', $path);
     return $this->path;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setPath($path) {
+    $this->path = $path;
   }
 
   /**
@@ -131,6 +132,15 @@ abstract class Resource extends PluginBase implements ResourceInterface {
   public function getResourceName() {
     $definition = $this->getPluginDefinition();
     return $definition['name'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function defaultConfiguration() {
+    return array(
+      'request' => restful()->getRequest(),
+    );
   }
 
   /**
@@ -200,7 +210,7 @@ abstract class Resource extends PluginBase implements ResourceInterface {
    */
   public function view($path) {
     // TODO: Compare this with 1.x logic.
-    $ids = static::IDS_SEPARATOR ? explode(static::IDS_SEPARATOR, $path) : array($path);
+    $ids = explode(static::IDS_SEPARATOR, $path);
 
     // REST requires a canonical URL for every resource.
     $canonical_path = $this->getDataProvider()->canonicalPath($path);
@@ -328,18 +338,55 @@ abstract class Resource extends PluginBase implements ResourceInterface {
     // Make the URL absolute by default.
     $options += array('absolute' => TRUE);
     $plugin_definition = $this->getPluginDefinition();
-    if (!empty($plugin_definition['menu_item'])) {
-      $url = $plugin_definition['menu_item'] . '/' . $path;
+    if (!empty($plugin_definition['menuItem'])) {
+      $url = $plugin_definition['menuItem'] . '/' . $path;
       return url(rtrim($url, '/'), $options);
     }
 
     $base_path = variable_get('restful_hook_menu_base_path', 'api');
     $url = $base_path;
     if ($version_string) {
-      $url .= '/v' . $plugin_definition['major_version'] . '.' . $plugin_definition['minor_version'];
+      $url .= '/v' . $plugin_definition['majorVersion'] . '.' . $plugin_definition['minorVersion'];
     }
     $url .= '/' . $plugin_definition['resource'] . '/' . $path;
     return url(rtrim($url, '/'), $options);
   }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function access() {
+    return $this->accessByAllowOrigin();
+  }
+
+  /**
+   * Checks access based on the referer header and the allow_origin setting.
+   *
+   * @return bool
+   *   TRUE if the access is granted. FALSE otherwise.
+   */
+  protected function accessByAllowOrigin() {
+    // Check the referrer header and return false if it does not match the
+    // Access-Control-Allow-Origin
+    $referer = $this->getRequest()->getHeaders()->get('Referer')->getValueString();
+
+    // If there is no allow_origin assume that it is allowed. Also, if there is
+    // no referer then grant access since the request probably was not
+    // originated from a browser.
+    $plugin_definition = $this->getPluginDefinition();
+    $origin = isset($plugin_definition['allowOrigin']) ? $plugin_definition['allowOrigin'] : NULL;
+    if (empty($origin) || $origin == '*' || !$referer) {
+      return TRUE;
+    }
+    return strpos($referer, $origin) === 0;
+  }
+
+  /**
+   * Public fields.
+   *
+   * @return array
+   *   The field definition array.
+   */
+  abstract protected function publicFields();
 
 }

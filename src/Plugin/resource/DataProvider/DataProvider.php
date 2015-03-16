@@ -75,7 +75,7 @@ abstract class DataProvider implements DataProviderInterface {
     $this->fieldDefinitions = $field_definitions;
     $this->account = $account;
     $this->options = $options;
-    if ($options['range']) {
+    if (!empty($options['range'])) {
       $this->range = $options['range'];
     }
     $this->langcode = $langcode ?: static::getLanguage();
@@ -154,7 +154,7 @@ abstract class DataProvider implements DataProviderInterface {
   /**
    * {@inheritdoc}
    */
-  public function fieldAccess(ResourceFieldInterface $resource_field) {
+  public function methodAccess(ResourceFieldInterface $resource_field) {
     return in_array($this->getRequest()->getMethod(), $resource_field->getMethods());
   }
 

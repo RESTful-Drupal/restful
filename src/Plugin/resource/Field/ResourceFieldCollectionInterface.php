@@ -45,4 +45,15 @@ interface ResourceFieldCollectionInterface extends \Iterator, \Countable {
    */
   public static function getInfo();
 
+  /**
+   * Get an element of the collection by its key.
+   *
+   * @param string $key
+   *   The key of the field.
+   *
+   * @return ResourceFieldInterface
+   *   The requested field.
+   */
+  public function get($key);
+
 }

@@ -9,4 +9,13 @@ namespace Drupal\restful\Resource;
 
 use Drupal\Core\Plugin\DefaultLazyPluginCollection;
 
-class ResourcePluginCollection extends DefaultLazyPluginCollection {}
+class ResourcePluginCollection extends DefaultLazyPluginCollection {
+
+  /**
+   * The key within the plugin configuration that contains the plugin ID.
+   *
+   * @var string
+   */
+  protected $pluginKey = 'name';
+
+}

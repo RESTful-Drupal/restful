@@ -7,12 +7,13 @@
 
 namespace Drupal\restful\Plugin\resource;
 
+use Drupal\Component\Plugin\ConfigurablePluginInterface;
 use Drupal\Component\Plugin\PluginInspectionInterface;
 use Drupal\restful\Exception\NotImplementedException;
 use Drupal\restful\Plugin\resource\DataProvider\DataProviderInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
 
-interface ResourceInterface extends PluginInspectionInterface {
+interface ResourceInterface extends PluginInspectionInterface, ConfigurablePluginInterface {
 
   /**
    * Data provider factory.
@@ -48,12 +49,26 @@ interface ResourceInterface extends PluginInspectionInterface {
   public function getRequest();
 
   /**
-   * Gets the path of the request lazily.
+   * Gets the path of the resource.
+   *
+   * The resource path is different from the request path in that it does not
+   * contain the RESTful API prefix, the optional version string nor the
+   * resource name. All that information is already present in the resource
+   * object. The resource path only contains information used to query the data
+   * provider.
    *
    * @return string
-   *   The path without the RESTful prefix or the version string.
+   *   The resource path.
    */
   public function getPath();
+
+  /**
+   * Sets the path of the resource.
+   *
+   * @param string $path
+   *   The path without the RESTful prefix or the version string.
+   */
+  public function setPath($path);
 
   /**
    * Gets the field definitions.
@@ -219,5 +234,14 @@ interface ResourceInterface extends PluginInspectionInterface {
    * @see url()
    */
   public function versionedUrl($path = '', $options = array(), $version_string = TRUE);
+
+  /**
+   * Determine if user can access the handler.
+   *
+   * @return bool
+   *   TRUE if the current request has access to the requested resource. FALSE
+   *   otherwise.
+   */
+  public function access();
 
 }

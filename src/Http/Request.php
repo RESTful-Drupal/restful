@@ -173,7 +173,7 @@ class Request implements RequestInterface {
     if (!$headers) {
       $headers = HttpHeaderNull::create(NULL, NULL);
     }
-    if ($method == static::METHOD_POST && $headers->get('x-http-method-override')) {
+    if ($method == static::METHOD_POST && $headers->get('x-http-method-override')->getValueString()) {
       $method = $headers->get('x-http-method-override')->getValueString();
     }
     if (!static::isValidMethod($method)) {
@@ -351,9 +351,9 @@ class Request implements RequestInterface {
   /**
    * {@inheritdoc}
    */
-  public function getPath() {
+  public function getPath($strip = TRUE) {
     // Remove the restful prefix from the beginning of the path.
-    if (strpos($this->path, variable_get('restful_hook_menu_base_path', 'api')) !== FALSE) {
+    if ($strip && strpos($this->path, variable_get('restful_hook_menu_base_path', 'api')) !== FALSE) {
       return substr($this->path, strlen(variable_get('restful_hook_menu_base_path', 'api')) + 1);
     }
     return $this->path;
@@ -420,6 +420,11 @@ class Request implements RequestInterface {
    * {@inheritdoc}
    */
   public function getMethod() {
+    $method_override = $this->getHeaders()->get('X-HTTP-Method-Override')->getValueString();
+    // TODO: Add helper method to get header string from RequestInterface.
+    if ($this->method == static::METHOD_POST && $method_override) {
+      return strtoupper($method_override);
+    }
     return $this->method;
   }
 

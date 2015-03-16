@@ -112,7 +112,7 @@ class RestfulException extends \Exception {
   public function getInstance() {
     // Handle all instances using the advanced help module.
     if (!module_exists('advanced_help') || empty($this->instance)) {
-      return;
+      return NULL;
     }
     return url($this->instance, array(
       'absolute' => TRUE,

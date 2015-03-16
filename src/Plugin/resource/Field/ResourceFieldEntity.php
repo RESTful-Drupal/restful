@@ -7,9 +7,15 @@
 
 namespace Drupal\restful\Plugin\resource\Field;
 
+use Drupal\restful\Exception\IncompatibleFieldDefinitionException;
+use Drupal\restful\Exception\ServerConfigurationException;
+use Drupal\restful\Http\Request;
+use Drupal\restful\Plugin\resource\DataProvider\DataProviderResource;
+use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
+use Drupal\restful\Resource\ResourceManager;
 use Drupal\restful\Util\String;
 
-class ResourceFieldEntity extends ResourceFieldBase implements ResourceFieldEntityInterface {
+class ResourceFieldEntity implements ResourceFieldEntityInterface {
 
   /**
    * Decorated resource field.
@@ -92,12 +98,12 @@ class ResourceFieldEntity extends ResourceFieldBase implements ResourceFieldEnti
    *   Contains the field values.
    */
   public function __construct(array $field) {
-    $this->wrapperMethod = $field['wrapper_method'];
-    $this->subProperty = $field['sub_property'];
-    $this->formatter = $field['formatter'];
-    $this->wrapperMethodOnEntity = $field['wrapper_method_on_entity'];
-    $this->column = $field['column'];
-    $this->imageStyles = $field['image_styles'];
+    $this->wrapperMethod = isset($field['wrapper_method']) ? $field['wrapper_method'] : $this->wrapperMethod;
+    $this->subProperty = isset($field['sub_property']) ? $field['sub_property'] : $this->subProperty;
+    $this->formatter = isset($field['formatter']) ? $field['formatter'] : $this->formatter;
+    $this->wrapperMethodOnEntity = isset($field['wrapper_method_on_entity']) ? $field['wrapper_method_on_entity'] : $this->wrapperMethodOnEntity;
+    $this->column = isset($field['column']) ? $field['column'] : $this->column;
+    $this->imageStyles = isset($field['image_styles']) ? $field['image_styles'] : $this->imageStyles;
     if (!empty($field['bundles'])) {
       $this->bundle = $field['bundles'];
     }
@@ -135,6 +141,181 @@ class ResourceFieldEntity extends ResourceFieldBase implements ResourceFieldEnti
     $resource_field->addDefaults();
 
     return $resource_field;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function value(DataInterpreterInterface $interpreter) {
+    if ($callback = $this->getCallback()) {
+      throw new IncompatibleFieldDefinitionException('You cannot have a callback with entity specific field descriptions.');
+    }
+
+    if ($resource = $this->getResource()) {
+      // TODO: The resource input data in the field definition has changed.
+      // Now it does not need to be keyed by bundle since you don't even need
+      // an entity to use the resource based field.
+
+      $request = Request::create('', array(), Request::METHOD_GET);
+      $resource_data_provider = DataProviderResource::init($request, $resource['name'], array(
+        $resource['majorVersion'],
+        $resource['minorVersion'],
+      ));
+      // FIXME: $embedded_identifier needs to be fetched first!!!
+      return $resource_data_provider->view($embedded_identifier);
+    }
+
+    // Check user has access to the property.
+    if (!$this->access('view', $interpreter)) {
+      return NULL;
+    }
+
+    $property_wrapper = $this->propertyWrapper($interpreter);
+    if ($this->getFormatter()) {
+      // Get value from field formatter.
+      $value = $this->formatterValue($interpreter);
+    }
+    elseif ($property_wrapper instanceof \EntityListWrapper) {
+      // Multiple values.
+      foreach ($property_wrapper->getIterator() as $item_wrapper) {
+        $value[] = $this->fieldValue($item_wrapper);
+      }
+    }
+    else {
+      // Single value.
+      $value = $this->fieldValue($property_wrapper);
+    }
+
+    return $value;
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * @throws \EntityMetadataWrapperException
+   */
+  public function access($op, DataInterpreterInterface $interpreter) {
+    // Perform basic access checks.
+    if (!$this->decorated->access($op, $interpreter)) {
+      return FALSE;
+    }
+
+    if (!$this->getProperty()) {
+      // If there is no property we cannot check for property access.
+      return TRUE;
+    }
+
+    // Perform field API access checks.
+    $property_wrapper = $this->propertyWrapper($interpreter);
+    $account = $interpreter->getAccount();
+
+    // Check format access for text fields.
+    if (
+      $op == 'edit' &&
+      $property_wrapper->type() == 'text_formatted' &&
+      $property_wrapper->value() &&
+      $property_wrapper->format->value()
+    ) {
+      $format = (object) array('format' => $property_wrapper->format->value());
+      // Only check filter access on write contexts.
+      if (!filter_access($format, $account)) {
+        return FALSE;
+      }
+    }
+
+    $info = $property_wrapper->info();
+    if ($op == 'edit' && empty($info['setter callback'])) {
+      // Property does not allow setting.
+      return FALSE;
+    }
+
+    $access = $property_wrapper->access($op, $account);
+    return $access !== FALSE;
+  }
+
+  /**
+   * Get the wrapper for the property associated to the current field.
+   *
+   * @param DataInterpreterInterface $interpreter
+   *   The data source.
+   *
+   * @return \EntityMetadataWrapper
+   *   Either a \EntityStructureWrapper or a \EntityListWrapper.
+   *
+   * @throws ServerConfigurationException
+   */
+  protected function propertyWrapper(DataInterpreterInterface $interpreter) {
+    // Exposing an entity field.
+    $wrapper = $interpreter->getWrapper();
+    // For entity fields the DataInterpreter needs to contain an EMW.
+    if (!$wrapper instanceof \EntityDrupalWrapper) {
+      throw new ServerConfigurationException('Cannot get a value without an entity metadata wrapper data source.');
+    }
+    $property = $this->getProperty();
+    return ($property && !$this->isWrapperMethodOnEntity()) ? $wrapper->{$property} : $wrapper;
+  }
+
+  /**
+   * Get value from a property.
+   *
+   * @param \EntityMetadataWrapper $property_wrapper
+   *   The property wrapper. Either \EntityDrupalWrapper or \EntityListWrapper.
+   *
+   * @return mixed
+   *   A single or multiple values.
+   */
+  protected function fieldValue(\EntityMetadataWrapper $property_wrapper) {
+    if ($this->getSubProperty() && $property_wrapper->value()) {
+      $property_wrapper = $property_wrapper->{$this->getSubProperty()};
+    }
+
+    // Wrapper method.
+    $value = $property_wrapper->{$this->getWrapperMethod()}();
+
+    return $value;
+  }
+
+  /**
+   * Get value from a field rendered by Drupal field API's formatter.
+   *
+   * @param DataInterpreterInterface $interpreter
+   *   The data source.
+   *
+   * @return mixed
+   *   A single or multiple values.
+   *
+   * @throws \Drupal\restful\Exception\ServerConfigurationException
+   */
+  protected function formatterValue(DataInterpreterInterface $interpreter) {
+    $wrapper = $interpreter->getWrapper();
+    $property_wrapper = $this->propertyWrapper($interpreter);
+    $value = NULL;
+
+    if (!ResourceFieldEntity::propertyIsField($this->getProperty())) {
+      // Property is not a field.
+      throw new ServerConfigurationException(format_string('@property is not a configurable field, so it cannot be processed using field API formatter', array('@property' => $this->getProperty())));
+    }
+
+    // Get values from the formatter.
+    $output = field_view_field($this->entityType, $wrapper->value(), $this->getProperty(), $this->getFormatter());
+
+    // Unset the theme, as we just want to get the value from the formatter,
+    // without the wrapping HTML.
+    unset($output['#theme']);
+
+
+    if ($property_wrapper instanceof \EntityListWrapper) {
+      // Multiple values.
+      foreach (element_children($output) as $delta) {
+        $value[] = drupal_render($output[$delta]);
+      }
+    }
+    else {
+      // Single value.
+      $value = drupal_render($output);
+    }
+
+    return $value;
   }
 
   /**
@@ -267,11 +448,14 @@ class ResourceFieldEntity extends ResourceFieldBase implements ResourceFieldEnti
     $this->setResource($this->decorated->getResource());
 
     // Set the Entity related defaults.
-    if ($this->property && $field = field_info_field($this->property)) {
+    if ($this->getProperty() && $field = field_info_field($this->getProperty())) {
       // If it's an image check if we need to add image style processing.
       $image_styles = $this->getImageStyles();
       if ($field['type'] == 'image' && !empty($image_styles)) {
-        array_unshift($this->processCallbacks, array(array($this, 'getImageUris'), array($image_styles)));
+        array_unshift($this->getProcessCallbacks(), array(
+          array($this, 'getImageUris'),
+          array($image_styles),
+        ));
       }
       if (!$this->getColumn()) {
         // Set the column name.
@@ -335,30 +519,157 @@ class ResourceFieldEntity extends ResourceFieldBase implements ResourceFieldEnti
   protected static function fieldClassName(array $field_definition) {
     // If there is an extending class for the particular field use that class
     // instead.
-    $field_info = field_info_field($field_definition['property']);
+    if (empty($field_definition['property']) || !$field_info = field_info_field($field_definition['property'])) {
+      return NULL;
+    }
 
     $resource_field = NULL;
     switch ($field_info['type']) {
       case 'entityreference':
       case 'taxonomy_term_reference':
-        return 'ResourceFieldEntityReference';
+        return '\Drupal\restful\Plugin\resource\Field\ResourceFieldEntityReference';
 
       case 'text':
       case 'text_long':
       case 'text_with_summary':
-        return 'ResourceFieldEntityText';
+        return '\Drupal\restful\Plugin\resource\Field\ResourceFieldEntityText';
 
       case 'file':
       case 'image':
-        return 'ResourceFieldEntityFile';
+        return '\Drupal\restful\Plugin\resource\Field\ResourceFieldEntityFile';
 
       default:
         $class_name = 'ResourceFieldEntity' . String::camelize($field_info['type']);
         if (class_exists($class_name)) {
           return $class_name;
         }
-        return __CLASS__;
+        return NULL;
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getPublicName() {
+    return $this->decorated->getPublicName();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setPublicName($public_name) {
+    $this->decorated->setPublicName($public_name);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getAccessCallbacks() {
+    return $this->decorated->getAccessCallbacks();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setAccessCallbacks($access_callbacks) {
+    $this->decorated->setAccessCallbacks($access_callbacks);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getProperty() {
+    return $this->decorated->getProperty();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setProperty($property) {
+    $this->decorated->setProperty($property);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCallback() {
+    return $this->decorated->getCallback();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setCallback($callback) {
+    $this->decorated->setCallback($callback);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getProcessCallbacks() {
+    return $this->decorated->getProcessCallbacks();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setProcessCallbacks($process_callbacks) {
+    $this->decorated->setProcessCallbacks($process_callbacks);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getResource() {
+    return $this->decorated->getResource();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setResource($resource) {
+    $this->decorated->setResource($resource);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getMethods() {
+    return $this->decorated->getMethods();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setMethods($methods) {
+    $this->decorated->setMethods($methods);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function id() {
+    return $this->decorated->id();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isComputed() {
+    return $this->decorated->isComputed();
+  }
+
+  /**
+   * Helper method to determine if an array is numeric.
+   *
+   * @param array $input
+   *   The input array.
+   *
+   * @return bool
+   *   TRUE if the array is numeric, false otherwise.
+   */
+  public static function isArrayNumeric(array $input) {
+    return ResourceFieldBase::isArrayNumeric($input);
   }
 
 }

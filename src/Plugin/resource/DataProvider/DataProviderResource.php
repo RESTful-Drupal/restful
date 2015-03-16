@@ -7,6 +7,7 @@
 
 namespace Drupal\restful\Plugin\resource\DataProvider;
 
+use Drupal\Component\Plugin\PluginBase;
 use Drupal\restful\Http\Request;
 use Drupal\restful\Plugin\resource\ResourceInterface;
 use Drupal\restful\Http\RequestInterface;
@@ -63,7 +64,7 @@ class DataProviderResource extends DataProvider implements DataProviderResourceI
   public static function init(RequestInterface $request, $resource_name, array $version) {
     $plugin_manager = ResourcePluginManager::create();
     /** @var ResourceInterface $resource */
-    $resource = $plugin_manager->createInstance($resource_name . '::' . $version[0] . '.' . $version[1]);
+    $resource = $plugin_manager->createInstance($resource_name . PluginBase::DERIVATIVE_SEPARATOR . $version[0] . '.' . $version[1]);
     $plugin_definition = $resource->getPluginDefinition();
     return new static($request, $resource->getFieldDefinitions(), $resource->getAccount(), $plugin_definition['dataProvider'], static::getLanguage(), $resource);
   }

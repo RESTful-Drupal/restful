@@ -7,7 +7,9 @@
 
 namespace Drupal\restful\Plugin\resource\Field;
 
+use Drupal\restful\Exception\IncompatibleFieldDefinitionException;
 use Drupal\restful\Exception\ServerConfigurationException;
+use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
 
 interface ResourceFieldInterface {
 
@@ -84,6 +86,14 @@ interface ResourceFieldInterface {
   public function setMethods($methods);
 
   /**
+   * Checks if the current field is computed.
+   *
+   * @return bool
+   *   TRUE if the field is computed.
+   */
+  public function isComputed();
+
+  /**
    * Helper method to determine if an array is numeric.
    *
    * @param array $input
@@ -106,6 +116,35 @@ interface ResourceFieldInterface {
    * @throws ServerConfigurationException
    */
   public static function create(array $field);
+
+  /**
+   * Gets the value for the field given a data source.
+   *
+   * @param DataInterpreterInterface $interpreter
+   *   The data source object. Interacts with the data storage.
+   *
+   * @return mixed
+   *   The value for the public field.
+   *
+   * @throws IncompatibleFieldDefinitionException
+   */
+  public function value(DataInterpreterInterface $interpreter);
+
+  /**
+   * Check access on property by the defined access callbacks.
+   *
+   * @param string $op
+   *   The operation that access should be checked for. Can be "view" or "edit".
+   *   Defaults to "edit".
+   * @param DataInterpreterInterface $interpreter
+   *   The data source representing the entity.
+   *
+   * @return bool
+   *   TRUE if the current user has access to set the property, FALSE otherwise.
+   *   The default implementation assumes that if no callback has explicitly
+   *   denied access, we grant the user permission.
+   */
+  public function access($op, DataInterpreterInterface $interpreter);
 
   /**
    * Gets the ID of the resource field.

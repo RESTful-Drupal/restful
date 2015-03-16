@@ -95,12 +95,12 @@ abstract class RateLimit extends PluginBase implements RateLimitInterface {
    * {@inheritdoc}
    */
   public function generateIdentifier($account = NULL) {
-    $identifier = $this->resource->getResourceName() . '::';
+    $identifier = $this->resource->getResourceName() . PluginBase::DERIVATIVE_SEPARATOR;
     if ($this->getPluginId() == 'global') {
       // Don't split the id by resource if the event is global.
       $identifier = '';
     }
-    $identifier .= $this->getPluginId() . '::';
+    $identifier .= $this->getPluginId() . PluginBase::DERIVATIVE_SEPARATOR;
     $identifier .= empty($account->uid) ? ip_address() : $account->uid;
     return $identifier;
   }

@@ -7,10 +7,13 @@
 
 include_once __DIR__ . '/restful.entity.inc';
 
+use Drupal\Component\Plugin\PluginBase;
 use Drupal\restful\Exception\RestfulException;
 use Drupal\restful\Exception\ServiceUnavailableException;
-use Drupal\restful\Formatter\FormatterManager;
 use Drupal\restful\Http\HttpHeader;
+use Drupal\restful\Http\Request;
+use Drupal\restful\Http\Response;
+use Drupal\restful\Plugin\resource\ResourceInterface;
 use Drupal\restful\RestfulManager;
 
 /**
@@ -107,37 +110,42 @@ function restful_get_rate_limit_plugin($plugin_name) {
 function restful_menu() {
   $base_path = variable_get('restful_hook_menu_base_path', 'api');
   $items = array();
-  foreach (restful_get_restful_plugins() as $plugin) {
-    if (!$plugin['hook_menu']) {
+  $plugins = restful()
+    ->getResourceManager()
+    ->getPlugins();
+  foreach ($plugins as $plugin) {
+    /** @var ResourceInterface $plugin */
+    $plugin_definition = $plugin->getPluginDefinition();
+    if (!$plugin_definition['hookMenu']) {
       // Plugin explicitly declared no hook menu should be created automatically
       // for it.
       continue;
     }
     $item = array(
-      'title' => $plugin['name'],
+      'title' => $plugin_definition['name'],
       'access callback' => 'restful_menu_access_callback',
-      'access arguments' => array($plugin['resource']),
+      'access arguments' => array($plugin_definition['resource']),
       'page callback' => 'restful_menu_process_callback',
-      'page arguments' => array($plugin['resource']),
+      'page arguments' => array($plugin_definition['resource']),
       'delivery callback' => 'restful_formatted_delivery',
       'type' => MENU_CALLBACK,
     );
     // If there is no specific menu item allow the different version variations.
-    if ($plugin['hook_menu'] && empty($plugin['menu_item'])) {
+    if ($plugin_definition['hookMenu'] && empty($plugin_definition['menuItem'])) {
       // Add the version string to the arguments.
       $item['access arguments'][] = 1;
       $item['page arguments'][] = 1;
         // Ex: api/v1.2/articles
-      $items[$base_path . '/v' . $plugin['major_version'] . '.' . $plugin['minor_version'] . '/' . $plugin['resource']] = $item;
+      $items[$base_path . '/v' . $plugin_definition['majorVersion'] . '.' . $plugin_definition['minorVersion'] . '/' . $plugin_definition['resource']] = $item;
       // Ex: api/v1/articles will use the latest minor version.
-      $items[$base_path . '/v' . $plugin['major_version'] . '/' . $plugin['resource']] = $item;
+      $items[$base_path . '/v' . $plugin_definition['majorVersion'] . '/' . $plugin_definition['resource']] = $item;
       // Ex: api/articles will use the header or the latest version.
       // Do not add the version string to the arguments.
       $item['access arguments'] = $item['page arguments'] = array(1);
-      $items[$base_path . '/' . $plugin['resource']] = $item;
+      $items[$base_path . '/' . $plugin_definition['resource']] = $item;
     }
     else {
-      $items[$plugin['menu_item']] = $item;
+      $items[$plugin_definition['menuItem']] = $item;
     }
   }
 
@@ -340,6 +348,11 @@ function restful() {
     $manager = xautoload()->restfulManager;
   }
   catch (\Exception $e) {
+    // During the menu access checks we get here before plug_xautoload has had
+    // the chance to include the composer manager classes. That means that we
+    // would not be able to get the resource manager that depends on composer
+    // classes.
+    composer_manager_register_autoloader();
     $manager = RestfulManager::createFromGlobals();
     xautoload()->getServiceContainer()->set('restfulManager', $manager);
   }
@@ -397,41 +410,42 @@ function restful_menu_process_callback($resource_name, $version = NULL) {
   if (preg_match('/^v\d+(\.\d+)?$/', $version)) {
     array_shift($path);
   }
-  list($major_version, $minor_version) = \RestfulBase::getVersionFromRequest();
-  $handler = restful_get_restful_handler($resource_name, $major_version, $minor_version);
-  if (!$handler instanceof \RestfulDataProviderInterface) {
-    throw new ServiceUnavailableException(format_string('The selected plugin (@plugin) does not implement \RestfulDataProviderInterface.', array('@plugin' => $resource_name . ' v' . $major_version . '.' . $minor_version)));
-  }
+  $resource_manager = restful()->getResourceManager();
+  list($major_version, $minor_version) = $resource_manager->getVersionFromRequest();
+  $request = restful()->getRequest();
+  $resource = $resource_manager->getPlugin($resource_name . PluginBase::DERIVATIVE_SEPARATOR . $major_version . '.' . $minor_version, $request);
 
   // Vary the response with the presence of the X-API-Version or Accept headers.
-  $headers = $handler->getHttpHeaders();
-  $vary = empty($headers['Vary']) ? '' : $headers['Vary'];
+  $vary = $request
+    ->getHeaders()
+    ->get('Vary')
+    ->getValueString() ?: '';
   $additional_variations = array($vary, 'Accept');
-  if (\RestfulManager::getRequestHttpHeader('X-API-Version')) {
+  if ($x_api_version = $request
+    ->getHeaders()
+    ->get('X-API-Version')
+    ->getValueString()) {
     $additional_variations[] = 'X-API-Version';
   }
   if ($additional_variations) {
-    $handler->setHttpHeaders('Vary', implode(',', $additional_variations));
+    restful()
+      ->getResponse()
+      ->getHeaders()
+      ->append(HttpHeader::create('Vary', implode(',', $additional_variations)));
   }
 
   // Always add the allow origin if configured.
-  if ($allowed_origin = $handler->getPluginKey('allow_origin')) {
-    $handler->setHttpHeaders('Access-Control-Allow-Origin', $allowed_origin);
+  $plugin_definition = $resource->getPluginDefinition();
+  if (!empty($plugin_definition['allowOrigin'])) {
+    restful()
+      ->getResponse()
+      ->getHeaders()
+      ->append(HttpHeader::create('Access-Control-Allow-Origin', $plugin_definition['allowOrigin']));
   }
-
-  $path = implode('/', $path);
-
-  $method = strtoupper($_SERVER['REQUEST_METHOD']);
-
-  if ($method == \RestfulInterface::POST && \RestfulManager::getRequestHttpHeader('X-HTTP-Method-Override')) {
-    $method = strtoupper(\RestfulManager::getRequestHttpHeader('X-HTTP-Method-Override'));
-  }
-
-  $method = strtolower($method);
-  $request = restful_parse_request();
 
   try {
-    return $handler->{$method}($path, $request);
+    $resource->setPath(implode('/', $path));
+    return $resource->process();
   }
   catch (RestfulException $e) {
     $result = array(
@@ -527,6 +541,8 @@ function restful_delivery($var = NULL, $method = 'format') {
     return;
   }
 
+  $request = restful()->getRequest();
+  $response = restful()->getResponse();
   if (is_int($var)) {
     _restful_get_data_from_menu_status($var);
 
@@ -538,37 +554,32 @@ function restful_delivery($var = NULL, $method = 'format') {
       ->negotiateFormatter(NULL, $formatter_id)
       ->format($var);
 
-    $response = restful()->getResponse();
     $response->setStatusCode($var['status']);
     $response->getHeaders()->add(HttpHeader::create('Content-Type', 'application/problem+' . $formatter_id . '; charset=utf-8'));
     $response->setContent($data);
-    $response->prepare(restful()->getRequest());
+    $response->prepare($request);
     $response->send();
     return;
   }
 
-  // Get the formatter for the current resource.
-  if ($restful_handler = restful_get_restful_handler_for_path()) {
-    // Allow the handler to change the HTTP headers.
-    foreach ($restful_handler->getHttpHeaders() as $key => $value) {
-      drupal_add_http_header($key, $value);
-    }
-    // If we are returning from an OPTIONS call, always use render.
-    if ($restful_handler->getMethod() == \RestfulInterface::OPTIONS) {
-      $method = 'render';
-    }
+  // If we are returning from an OPTIONS call, always use render.
+  if ($request->getMethod() == Request::METHOD_OPTIONS) {
+    $method = 'render';
   }
 
   try {
+    // Get the formatter for the current resource.
+    $resource = restful()
+      ->getResourceManager()
+      ->negotiate($request);
     // Get a new formatter manager.
-    $formatter_manager = new FormatterManager($restful_handler);
-    $accept = empty($GLOBALS['_SERVER']['HTTP_ACCEPT']) ? NULL : $GLOBALS['_SERVER']['HTTP_ACCEPT'];
-    $formatter_handler = $formatter_manager->negotiateFormatter($accept, $restful_handler->getPluginKey('formatter'));
-    $output = $formatter_handler->{$method}($var);
-    // The content type header is modified after the massaging if there is
-    // an error code. Therefore we need to set the content type header after
-    // formatting the output.
-    drupal_add_http_header('Content-Type', $formatter_handler->getContentTypeHeader());
+    $formatter_manager = restful()
+      ->getFormatterManager();
+    $formatter_manager->setResource($resource);
+    $plugin_definition = $resource->getPluginDefinition();
+    $formatter_name = isset($plugin_definition['formatter']) ? $plugin_definition['formatter'] : NULL;
+    $output = call_user_func(array($formatter_manager, $method), $var, $formatter_name);
+    $response->setContent($output);
   }
   catch (RestfulException $e) {
     // Handle if the formatter does not exist.
@@ -577,8 +588,8 @@ function restful_delivery($var = NULL, $method = 'format') {
     return;
   }
 
-  print $output;
-  \RestfulManager::pageFooter();
+  $response->prepare($request);
+  $response->send();
 }
 
 /**
