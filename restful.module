@@ -11,8 +11,7 @@ use Drupal\Component\Plugin\PluginBase;
 use Drupal\restful\Exception\RestfulException;
 use Drupal\restful\Exception\ServiceUnavailableException;
 use Drupal\restful\Http\HttpHeader;
-use Drupal\restful\Http\Request;
-use Drupal\restful\Http\Response;
+use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\ResourceInterface;
 use Drupal\restful\RestfulManager;
 
@@ -23,6 +22,7 @@ function restful_ctools_plugin_directory($module, $plugin) {
   if ($module == 'restful') {
     return 'plugins/' . $plugin;
   }
+  return NULL;
 }
 
 /**
@@ -563,7 +563,7 @@ function restful_delivery($var = NULL, $method = 'format') {
   }
 
   // If we are returning from an OPTIONS call, always use render.
-  if ($request->getMethod() == Request::METHOD_OPTIONS) {
+  if ($request->getMethod() == RequestInterface::METHOD_OPTIONS) {
     $method = 'render';
   }
 

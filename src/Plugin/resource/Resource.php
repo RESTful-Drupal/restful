@@ -171,18 +171,18 @@ abstract class Resource extends PluginBase implements ResourceInterface {
     return array(
       '' => array(
         // GET returns a list of entities.
-        Request::METHOD_GET => 'index',
-        Request::METHOD_HEAD => 'index',
+        RequestInterface::METHOD_GET => 'index',
+        RequestInterface::METHOD_HEAD => 'index',
         // POST.
-        Request::METHOD_POST => 'create',
+        RequestInterface::METHOD_POST => 'create',
       ),
       // We don't know what the ID looks like, assume that everything is the ID.
       '^.*$' => array(
-        Request::METHOD_GET => 'view',
-        Request::METHOD_HEAD => 'view',
-        Request::METHOD_PUT => 'replace',
-        Request::METHOD_PATCH => 'update',
-        Request::METHOD_DELETE => 'remove',
+        RequestInterface::METHOD_GET => 'view',
+        RequestInterface::METHOD_HEAD => 'view',
+        RequestInterface::METHOD_PUT => 'replace',
+        RequestInterface::METHOD_PATCH => 'update',
+        RequestInterface::METHOD_DELETE => 'remove',
       ),
     );
   }

@@ -228,7 +228,7 @@ class Response implements ResponseInterface {
       if ($headers->has('Transfer-Encoding')) {
         $headers->remove('Content-Length');
       }
-      if ($request->getMethod() == Request::METHOD_HEAD) {
+      if ($request->getMethod() == RequestInterface::METHOD_HEAD) {
         // cf. RFC2616 14.13
         $length = $headers->get('Content-Length')->getValueString();
         $this->setContent(NULL);
