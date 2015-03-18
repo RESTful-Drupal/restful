@@ -460,6 +460,9 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       elseif ($field['type'] == 'taxonomy_term_reference') {
         return 'taxonomy_term';
       }
+      elseif ($field['type'] == 'field_collection') {
+        return 'field_collection_item';
+      }
 
       throw new \RestfulException(format_string('Field @property is not an entity reference or taxonomy reference field.', $params));
     }
@@ -715,6 +718,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     switch ($field_info['type']) {
       case 'entityreference':
       case 'taxonomy_term_reference':
+      case 'field_collection':
         return $this->propertyValuesPreprocessReference($property_name, $value, $field_info, $public_field_name);
 
       case 'text':
@@ -1384,6 +1388,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     $field_types = array(
       'entityreference',
       'taxonomy_term_reference',
+      'field_collection',
     );
 
     $widget_types = array(
