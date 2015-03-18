@@ -242,6 +242,11 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
 
     // Perform field API access checks.
     $property_wrapper = $this->propertyWrapper($interpreter);
+    if ($this->isWrapperMethodOnEntity() && $this->getWrapperMethod() && $this->getProperty()) {
+      // Sometimes we define fields as $wrapper->getIdentifier. We need to
+      // resolve that to $wrapper->nid to call $wrapper->nid->info().
+      $property_wrapper = $property_wrapper->{$this->getProperty()};
+    }
     $account = $interpreter->getAccount();
 
     // Check format access for text fields.
@@ -469,6 +474,26 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
    */
   public function setEntityType($entity_type) {
     $this->entityType = $entity_type;
+
+    // If there is no property try to get it based on the wrapper method and
+    // store the value in the decorated object.
+    $property = NULL;
+    // If entity metadata wrapper methods were used, then return the appropriate
+    // entity property.
+    if (!$this->isWrapperMethodOnEntity() || !($wrapper_method = $this->getWrapperMethod())) {
+      return NULL;
+    }
+    $entity_info = entity_get_info($entity_type);
+    if ($wrapper_method == 'label') {
+      // Store the label key.
+      $property = empty($entity_info['entity keys']['label']) ? NULL : $entity_info['entity keys']['label'];
+      $this->decorated->setProperty($property);
+    }
+    elseif ($wrapper_method == 'getIdentifier') {
+      // Store the ID key.
+      $property = empty($entity_info['entity keys']['id']) ? NULL : $entity_info['entity keys']['id'];
+      $this->decorated->setProperty($property);
+    }
   }
 
   /**
@@ -482,7 +507,7 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
    * {@inheritdoc}
    */
   public function setBundles($bundles) {
-    $this->bundle = $bundles;
+    $this->bundles = $bundles;
   }
 
   /**

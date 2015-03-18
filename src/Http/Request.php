@@ -277,7 +277,7 @@ class Request implements RequestInterface {
     if ($method == static::METHOD_GET) {
       return $_GET;
     }
-    elseif ($method == static::METHOD_POST) {
+    elseif ($method == static::METHOD_POST && !empty($_POST)) {
       return $_POST;
     }
 

@@ -104,6 +104,13 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
         // If the field definition does not contain an array of bundles for that
         // field then assume that the field applies to all the bundles of the
         // resource.
+        if (!$this->bundles && $entity_type = $this->entityType) {
+          // If no bundles are passed, then assume all the bundles of the entity
+          // type.
+          $entity_info = entity_get_info($entity_type);
+          $this->bundles = array_keys($entity_info['bundles']);
+        }
+
         $value->setBundles($this->bundles);
       }
     }
@@ -761,16 +768,15 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
       }
 
       $property_name = $resource_field->getProperty();
-      if (empty($property_name)) {
+      if ($resource_field->isComputed()) {
         // We may have for example an entity with no label property, but with a
         // label callback. In that case the $info['property'] won't exist, so
         // we skip this field.
+        unset($original_object[$public_field_name]);
         continue;
       }
 
-      if (!$entity_property_access = $this->checkPropertyAccess('edit', $public_field_name, $wrapper->{$property_name}, $wrapper)) {
-        throw new BadRequestException(format_string('Property @name cannot be set.', array('@name' => $public_field_name)));
-      }
+      $entity_property_access = $resource_field->access('edit', new DataInterpreterEMW($this->getAccount(), $wrapper));
       if (!isset($object[$public_field_name])) {
         // No property to set in the request.
         if ($replace && $entity_property_access) {
@@ -778,6 +784,9 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
           $wrapper->{$property_name}->set(NULL);
         }
         continue;
+      }
+      if (!$entity_property_access) {
+        throw new BadRequestException(format_string('Property @name cannot be set.', array('@name' => $public_field_name)));
       }
 
       // Delegate modifications on the value of the field.
