@@ -11,6 +11,7 @@ use Drupal\restful\Exception\InternalServerErrorException;
 use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Plugin\resource\DataProvider\DataProviderEntity;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
+use Drupal\restful\Plugin\resource\DataProvider\DataProviderEntityTaxonomyTerm;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollection;
 
 abstract class ResourceEntity extends Resource {
@@ -53,7 +54,12 @@ abstract class ResourceEntity extends Resource {
       $field_definitions_array = $this->viewModeFields($plugin_definition['dataProvider']['viewMode']);
       $field_definitions = ResourceFieldCollection::factory($field_definitions_array);
     }
-    return new DataProviderEntity($this->getRequest(), $field_definitions, $this->getAccount(), $this->getPath(), $plugin_definition['dataProvider']);
+    $class_name = '\Drupal\restful\Plugin\resource\DataProvider\DataProviderEntity';
+    // TODO: Make this logic below alterable by the implementor user via info hook, or something similar.
+    if ($this->getEntityType() == 'taxonomy_term') {
+      $class_name = '\Drupal\restful\Plugin\resource\DataProvider\DataProviderTaxonomyTerm';
+    }
+    return new $class_name($this->getRequest(), $field_definitions, $this->getAccount(), $this->getPath(), $plugin_definition['dataProvider']);
   }
 
   /**
