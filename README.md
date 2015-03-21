@@ -7,7 +7,7 @@ practices for security, performance, and usability.
 
 
 ## Concept
-Here are the differences between RESTful and other modules, such as RestWs and
+These are the differences between RESTful and other modules, such as RestWs and
 Services Entity:
 
 * RESTful requires explicitly declaring the exposed API. When enabling
