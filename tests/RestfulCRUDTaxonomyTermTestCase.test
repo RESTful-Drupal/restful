@@ -1,0 +1,51 @@
+<?php
+
+/**
+ * @file
+ * Contains RestfulCreateTaxonomyTermTestCase
+ */
+
+class RestfulCRUDTaxonomyTermTestCase extends DrupalWebTestCase {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Taxonomy term integration',
+      'description' => 'Test the CRUD actions of a taxonomy term entity type.',
+      'group' => 'RESTful',
+    );
+  }
+
+  function setUp() {
+    parent::setUp('restful_test');
+  }
+
+  /**
+   * Test the CRUD actions.
+   */
+  function testCRUD() {
+
+    // Test creation of a taxonomy term.
+    $user1 = $this->drupalCreateUser(array('create article content', 'administer taxonomy'));
+    $this->drupalLogin($user1);
+
+    $handler = restful_get_restful_handler('test_tags');
+    $handler->setAccount($user1);
+
+    $text1 = $this->randomName();
+    $request = array('label' => $text1);
+    $result = $handler->post('', $request);
+
+    $id = $result[0]['id'];
+    $this->assertTrue($id, 'Term was created by a non-admin user.');
+
+    // Test the update of a taxonomy term.
+    $text2 = $this->randomName();
+    $request = array('label' => $text2);
+    $result = $handler->patch($id, $request);
+    $this->assertTrue($result[0]['label'] != $text1 && $result[0]['label'] == $text2, 'The taxonomy term has been updates successfully');
+
+    // Test the deletion of a taxonomy term.
+    $handler->delete($id);
+    $this->assertFalse(taxonomy_term_load($id), 'The taxonomy term has been deleted successfully');
+  }
+}

@@ -18,7 +18,7 @@ class RestfulEntityBaseTaxonomyTerm extends RestfulEntityBase {
    */
   protected function setPropertyValues(EntityMetadataWrapper $wrapper, $null_missing_fields = FALSE) {
     $term = $wrapper->value();
-    if (!empty($term->tid)) {
+    if (empty($term->tid) && (!$vocabulary = taxonomy_vocabulary_machine_name_load($this->getBundle()))) {
       return;
     }
 

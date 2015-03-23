@@ -16,6 +16,6 @@ class RestfulEntityTaxonomyTermTags extends \RestfulEntityBaseTaxonomyTerm {
    */
   protected function checkEntityAccess($op, $entity_type, $entity) {
     $account = $this->getAccount();
-    return user_access('create article content', $account);
+    return user_access($op == 'view' ? 'access content' : 'administer taxonomy', $account);
   }
 }
