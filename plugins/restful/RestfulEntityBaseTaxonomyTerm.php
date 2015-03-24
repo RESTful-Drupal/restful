@@ -43,4 +43,16 @@ class RestfulEntityBaseTaxonomyTerm extends RestfulEntityBase {
     }
     return parent::checkPropertyAccess($op, $public_field_name, $property, $wrapper);
   }
+
+  /**
+   * Overrides \RestfulEntityBaseTaxonomyTerm::checkEntityAccess().
+   *
+   * Allow access to create "Tags" resource for privileged users, as
+   * we can't use entity_access() since entity_metadata_taxonomy_access()
+   * denies it for a non-admin user.
+   */
+  protected function checkEntityAccess($op, $entity_type, $entity) {
+    $account = $this->getAccount();
+    return user_access($op == 'view' ? 'access content' : 'administer taxonomy', $account);
+  }
 }

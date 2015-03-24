@@ -25,8 +25,8 @@ class RestfulCRUDTaxonomyTermTestCase extends DrupalWebTestCase {
   function testCRUD() {
 
     // Test creation of a taxonomy term.
-    $user1 = $this->drupalCreateUser(array('create article content', 'administer taxonomy'));
-    $this->drupalLogin($user1);
+    $user1 = $this->drupalCreateuser(array('administer taxonomy'));
+    $user2 = $this->drupalCreateUser(array('access content'));
 
     $handler = restful_get_restful_handler('test_tags');
     $handler->setAccount($user1);
@@ -36,7 +36,7 @@ class RestfulCRUDTaxonomyTermTestCase extends DrupalWebTestCase {
     $result = $handler->post('', $request);
 
     $id = $result[0]['id'];
-    $this->assertTrue($id, 'Term was created by a non-admin user.');
+    $this->assertTrue($id, 'Term was created by a user with the proper permission.');
 
     // Test the update of a taxonomy term.
     $text2 = $this->randomName();
@@ -47,5 +47,29 @@ class RestfulCRUDTaxonomyTermTestCase extends DrupalWebTestCase {
     // Test the deletion of a taxonomy term.
     $handler->delete($id);
     $this->assertFalse(taxonomy_term_load($id), 'The taxonomy term has been deleted successfully');
+
+    // Verify user1 can't create terms.
+    $handler->setAccount($user2);
+    try {
+      $text1 = $this->randomName();
+      $request = array('label' => $text1);
+      $handler->post('', $request);
+    } catch (RestfulForbiddenException $e) {
+      $this->pass('user2 cannot create taxonomy term via restful.');
+    }
+    catch (\Exception $e) {
+      $this->fail('user2 can create taxonomy term via restful.');
+    }
+
+    // Creating a term and check that the normal user can consume the resource.
+    $text3 = $this->randomName();
+    $taxonomy = entity_create('taxonomy_term', array(
+      'name' => $text3,
+      'vid' => taxonomy_vocabulary_machine_name_load('tags')->vid,
+    ));
+    entity_save('taxonomy_term', $taxonomy);
+    $terms = $handler->get();
+
+    $this->assertEqual($terms[0]['label'], $text3, 'user2 can access to the terms via rest.');
   }
 }
