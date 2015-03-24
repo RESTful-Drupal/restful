@@ -24,8 +24,7 @@ class RestfulEntityBaseTaxonomyTerm extends RestfulEntityBase {
       return;
     }
 
-    $vocabulary_name = empty($term->vocabulary_machine_name) ? $this->getBundle() : $term->vocabulary_machine_name;
-    $vocabulary = taxonomy_vocabulary_machine_name_load($vocabulary_name);
+    $vocabulary = taxonomy_vocabulary_machine_name_load($this->getBundle());
     $term->vid = $vocabulary->vid;
 
     parent::setPropertyValues($wrapper, $null_missing_fields);
