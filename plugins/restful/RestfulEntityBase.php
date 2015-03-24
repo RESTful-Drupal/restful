@@ -595,7 +595,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     // Set the HTTP headers.
     $this->setHttpHeaders('Status', 201);
 
-    if (!empty($wrapper->url) && $url = $wrapper->url->value()); {
+    if (!empty($wrapper->url) && $url = $wrapper->url->value()) {
       $this->setHttpHeaders('Location', $url);
     }
 
