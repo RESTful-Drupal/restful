@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains RestfulCreateTaxonomyTermTestCase
+ * Contains RestfulCRUDTaxonomyTermTestCase
  */
 
 class RestfulCRUDTaxonomyTermTestCase extends DrupalWebTestCase {
@@ -42,7 +42,7 @@ class RestfulCRUDTaxonomyTermTestCase extends DrupalWebTestCase {
     $text2 = $this->randomName();
     $request = array('label' => $text2);
     $result = $handler->patch($id, $request);
-    $this->assertTrue($result[0]['label'] != $text1 && $result[0]['label'] == $text2, 'The taxonomy term has been updates successfully');
+    $this->assertTrue($result[0]['label'] == $text2, 'The taxonomy term has been updates successfully');
 
     // Test the deletion of a taxonomy term.
     $handler->delete($id);

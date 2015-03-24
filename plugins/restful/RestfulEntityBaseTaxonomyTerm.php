@@ -18,11 +18,14 @@ class RestfulEntityBaseTaxonomyTerm extends RestfulEntityBase {
    */
   protected function setPropertyValues(EntityMetadataWrapper $wrapper, $null_missing_fields = FALSE) {
     $term = $wrapper->value();
-    if (empty($term->tid) && (!$vocabulary = taxonomy_vocabulary_machine_name_load($this->getBundle()))) {
+    if (empty($term->tid) && (!taxonomy_vocabulary_machine_name_load($this->getBundle()))) {
+      // This is a new term object but we don't have a vocabulary with the name
+      // from the plugin definition.
       return;
     }
 
-    $vocabulary = taxonomy_vocabulary_machine_name_load($term->vocabulary_machine_name);
+    $vocabulary_name = empty($term->vocabulary_machine_name) ? $this->getBundle() : $term->vocabulary_machine_name;
+    $vocabulary = taxonomy_vocabulary_machine_name_load($vocabulary_name);
     $term->vid = $vocabulary->vid;
 
     parent::setPropertyValues($wrapper, $null_missing_fields);
