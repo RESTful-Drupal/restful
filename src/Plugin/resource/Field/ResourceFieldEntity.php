@@ -9,6 +9,7 @@ namespace Drupal\restful\Plugin\resource\Field;
 
 use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Http\Request;
+use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataProvider\DataProviderResource;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
 use Drupal\restful\Util\String;
@@ -200,7 +201,7 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
       if (isset($resource['full_view']) && $resource['full_view'] === FALSE) {
         return $embedded_identifier;
       }
-      $request = Request::create('', array(), Request::METHOD_GET);
+      $request = Request::create('', array(), RequestInterface::METHOD_GET);
       // Remove the $_GET options for the sub-request.
       $request->setParsedInput(array());
       // TODO: Get version automatically to avoid setting it in the plugin definition. Ideally we would fill this when processing the plugin definition defaults.

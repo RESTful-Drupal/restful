@@ -9,6 +9,7 @@ namespace Drupal\restful\Plugin\resource\Field;
 
 use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Http\Request;
+use Drupal\restful\Http\RequestInterface;
 
 abstract class ResourceFieldBase implements ResourceFieldInterface {
 
@@ -106,11 +107,11 @@ abstract class ResourceFieldBase implements ResourceFieldInterface {
    * @var array
    */
   protected $methods = array(
-    Request::METHOD_GET,
-    Request::METHOD_HEAD,
-    Request::METHOD_POST,
-    Request::METHOD_PUT,
-    Request::METHOD_OPTIONS,
+    RequestInterface::METHOD_GET,
+    RequestInterface::METHOD_HEAD,
+    RequestInterface::METHOD_POST,
+    RequestInterface::METHOD_PUT,
+    RequestInterface::METHOD_OPTIONS,
   );
 
   /**

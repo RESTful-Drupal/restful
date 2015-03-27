@@ -146,7 +146,7 @@ interface ResourceInterface extends PluginInspectionInterface, ConfigurablePlugi
    *
    * @code{
    *   array(
-   *     '^.*$' => array(Request::METHOD_GET => array(
+   *     '^.*$' => array(RequestInterface::METHOD_GET => array(
    *       'callback' => 'view',
    *       'access callback' => array($this, 'viewAccess'),
    *     )),
