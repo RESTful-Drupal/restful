@@ -81,15 +81,19 @@ interface RequestInterface {
   /**
    * Helper method to know if the current request is for a list.
    *
+   * @param string $resource_path
+   *   The resource path without any prefixes.
+   *
    * @return boolean
    *   TRUE if the request is for a list. FALSE otherwise.
    */
-  public function isListRequest();
+  public function isListRequest($resource_path);
 
   /**
    * Parses the body string.
    *
    * @return array
+   *   The parsed body.
    */
   public function getParsedBody();
 
@@ -97,8 +101,17 @@ interface RequestInterface {
    * Parses the input data provided via URL params.
    *
    * @return array
+   *   The parsed input.
    */
   public function getParsedInput();
+
+  /**
+   * Parses the input data provided via URL params.
+   *
+   * @param array $input
+   *   The input to set.
+   */
+  public function setParsedInput(array $input);
 
   /**
    * Gets the request path.

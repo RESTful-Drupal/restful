@@ -171,7 +171,7 @@ class Request implements RequestInterface {
    */
   public static function create($path, array $query = array(), $method = 'GET', HttpHeaderBag $headers = NULL, $via_router = FALSE, $csrf_token = NULL, array $cookies = array(), array $files = array(), array $server = array()) {
     if (!$headers) {
-      $headers = HttpHeaderNull::create(NULL, NULL);
+      $headers = new HttpHeaderBag();
     }
     if ($method == static::METHOD_POST && $headers->get('x-http-method-override')->getValueString()) {
       $method = $headers->get('x-http-method-override')->getValueString();
@@ -237,11 +237,11 @@ class Request implements RequestInterface {
   /**
    * {@inheritdoc}
    */
-  public function isListRequest() {
+  public function isListRequest($resource_path) {
     if ($this->method != static::METHOD_GET) {
       return FALSE;
     }
-    return empty($this->path) || strpos($this->path, ',') !== FALSE;
+    return empty($resource_path) || strpos($resource_path, ',') !== FALSE;
   }
 
   /**
@@ -260,12 +260,20 @@ class Request implements RequestInterface {
    * {@inheritdoc}
    */
   public function getParsedInput() {
-    if ($this->parsedInput) {
+    if (isset($this->parsedInput)) {
       return $this->parsedInput;
     }
     // Get the input data provided via URL.
     $this->parsedInput = static::parseInput($this->method);
+    unset($this->parsedInput['q']);
     return $this->parsedInput;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setParsedInput(array $input) {
+    $this->parsedInput = $input;
   }
 
   /**

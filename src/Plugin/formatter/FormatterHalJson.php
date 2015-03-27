@@ -55,7 +55,7 @@ class FormatterHalJson extends Formatter implements FormatterInterface {
       if (
         method_exists($this->resource, 'getTotalCount') &&
         method_exists($this->resource, 'isListRequest') &&
-        $this->resource->isListRequest()
+        $this->resource->isListRequest($this->resource->getPath())
       ) {
         // Get the total number of items for the current request without pagination.
         $output['count'] = $this->resource->getTotalCount();

@@ -8,6 +8,7 @@
 namespace Drupal\restful\Plugin\resource\DataProvider;
 
 use Drupal\restful\Exception\BadRequestException;
+use Drupal\restful\Exception\ServiceUnavailableException;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
@@ -55,6 +56,13 @@ abstract class DataProvider implements DataProviderInterface {
    * @var array
    */
   protected $options = array();
+
+  /**
+   * The resource path.
+   *
+   * @var string
+   */
+  protected $resourcePath;
 
   /**
    * Constructor.
@@ -175,7 +183,7 @@ abstract class DataProvider implements DataProviderInterface {
 
     $url_params = $this->options['urlParams'];
     if (!$url_params['sort']) {
-      throw new BadRequestException('Sort parameters have been disabled in server configuration.');
+      throw new ServiceUnavailableException('Sort parameters have been disabled in server configuration.');
     }
 
     $sorts = array();
@@ -183,7 +191,7 @@ abstract class DataProvider implements DataProviderInterface {
       $direction = $sort[0] == '-' ? 'DESC' : 'ASC';
       $sort = str_replace('-', '', $sort);
       // Check the sort is on a legal key.
-      if (empty($this->fieldDefinitions[$sort])) {
+      if (!$this->fieldDefinitions->get($sort)) {
         throw new BadRequestException(format_string('The sort @sort is not allowed for this path.', array('@sort' => $sort)));
       }
 
@@ -200,10 +208,13 @@ abstract class DataProvider implements DataProviderInterface {
    * @returns array
    *   An array of filters to apply.
    *
+   * @throws BadRequestException
+   * @throws ServiceUnavailableException
+   *
    * @see \RestfulEntityBase::getQueryForList
    */
   protected function parseRequestForListFilter() {
-    if (!$this->request->isListRequest()) {
+    if (!$this->request->isListRequest($this->resourcePath)) {
       // Not a list request, so we don't need to filter.
       // We explicitly check this, as this function might be called from a
       // formatter plugin, after RESTful's error handling has finished, and an
@@ -218,13 +229,13 @@ abstract class DataProvider implements DataProviderInterface {
 
     $url_params = $this->options['urlParams'];
     if (!$url_params['filter']) {
-      throw new BadRequestException('Filter parameters have been disabled in server configuration.');
+      throw new ServiceUnavailableException('Filter parameters have been disabled in server configuration.');
     }
 
     $filters = array();
 
     foreach ($input['filter'] as $public_field => $value) {
-      if (empty($this->fieldDefinitions[$public_field])) {
+      if (!$this->fieldDefinitions->get($public_field)) {
         throw new BadRequestException(format_string('The filter @filter is not allowed for this path.', array('@filter' => $public_field)));
       }
 

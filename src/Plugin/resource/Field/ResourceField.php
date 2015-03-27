@@ -30,8 +30,9 @@ class ResourceField extends ResourceFieldBase implements ResourceFieldInterface 
     $this->property = isset($field['property']) ? $field['property'] : $this->property;
     // $this->column = isset($field['column']) ? $field['column'] : $this->column;
     $this->callback = isset($field['callback']) ? $field['callback'] : $this->callback;
-    $this->processCallbacks = isset($field['processCallbacks']) ? $field['processCallbacks'] : $this->processCallbacks;
+    $this->processCallbacks = isset($field['process_callbacks']) ? $field['process_callbacks'] : $this->processCallbacks;
     $this->resource = isset($field['resource']) ? $field['resource'] : $this->resource;
+    $this->methods = isset($field['methods']) ? $field['methods'] : $this->methods;
   }
 
   /**
@@ -52,10 +53,6 @@ class ResourceField extends ResourceFieldBase implements ResourceFieldInterface 
    * {@inheritdoc}
    */
   public function value(DataInterpreterInterface $interpreter) {
-    if (!$this->access('view', $interpreter)) {
-      // If there is no access to the property, return NULL.
-      return NULL;
-    }
     if ($callback = $this->getCallback()) {
       return ResourceManager::executeCallback($callback, array($interpreter));
     }

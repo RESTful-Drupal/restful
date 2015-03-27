@@ -9,7 +9,7 @@ namespace Drupal\restful\Plugin\resource\Field;
 
 use Drupal\restful\Http\HttpHeaderBag;
 use Drupal\restful\Http\Request;
-use Drupal\restful\Http\RequestInterface;
+use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
 use Drupal\restful\Plugin\resource\DataProvider\DataProviderResource;
 
 class ResourceFieldEntityReference extends ResourceFieldEntity implements ResourceFieldEntityReferenceInterface {
@@ -137,7 +137,7 @@ class ResourceFieldEntityReference extends ResourceFieldEntity implements Resour
   }
 
   /**
-   * Get the ID of the resource this sub-request is for.
+   * Get the ID of the resource this write sub-request is for.
    *
    * @param array $value
    *   The array of values provided for this sub-request.
@@ -147,6 +147,51 @@ class ResourceFieldEntityReference extends ResourceFieldEntity implements Resour
    */
   protected static function subRequestId(array $value) {
     return $value['id'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function value(DataInterpreterInterface $interpreter) {
+    $value = $this->decorated->value($interpreter);
+    if (isset($value)) {
+      // Let the decorated resolve callbacks.
+      return $value;
+    }
+
+    // Check user has access to the property.
+    if (!$this->access('view', $interpreter)) {
+      return NULL;
+    }
+
+    $resource = $this->getResource();
+    // If the field definition does not contain a resource, or it is set
+    // explicitly to full_view FALSE, then return only the entity ID.
+    if (
+      $resource ||
+      (!empty($resource) && $resource['full_view'] !== FALSE) ||
+      $this->getFormatter()
+    ) {
+      // Let the resource embedding to the parent class.
+      return parent::value($interpreter);
+    }
+
+    // Since this is a reference field (a field that points to other entities,
+    // we can know for sure that the property wrappers are instances of
+    // \EntityDrupalWrapper or lists of them.
+    $property_wrapper = $this->propertyWrapper($interpreter);
+
+    // If this is a multivalue field, then call recursively on the items.
+    if ($property_wrapper instanceof \EntityListWrapper) {
+      $values = array();
+      foreach ($property_wrapper->getIterator() as $item_wrapper) {
+        /** @var $item_wrapper \EntityDrupalWrapper */
+        $values[] = $item_wrapper->getIdentifier();
+      }
+      return $values;
+    }
+    /** @var $property_wrapper \EntityDrupalWrapper */
+    return $property_wrapper->getIdentifier();
   }
 
 }

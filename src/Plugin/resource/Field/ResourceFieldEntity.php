@@ -2,17 +2,15 @@
 
 /**
  * @file
- * Contains \Drupal\restful\Plugin\resource\Field\ResourceFieldEntity
+* Contains \Drupal\restful\Plugin\resource\Field\ResourceFieldEntity
  */
 
 namespace Drupal\restful\Plugin\resource\Field;
 
-use Drupal\restful\Exception\IncompatibleFieldDefinitionException;
 use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Http\Request;
 use Drupal\restful\Plugin\resource\DataProvider\DataProviderResource;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
-use Drupal\restful\Resource\ResourceManager;
 use Drupal\restful\Util\String;
 
 class ResourceFieldEntity implements ResourceFieldEntityInterface {
@@ -147,22 +145,10 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
    * {@inheritdoc}
    */
   public function value(DataInterpreterInterface $interpreter) {
-    if ($callback = $this->getCallback()) {
-      throw new IncompatibleFieldDefinitionException('You cannot have a callback with entity specific field descriptions.');
-    }
-
-    if ($resource = $this->getResource()) {
-      // TODO: The resource input data in the field definition has changed.
-      // Now it does not need to be keyed by bundle since you don't even need
-      // an entity to use the resource based field.
-
-      $request = Request::create('', array(), Request::METHOD_GET);
-      $resource_data_provider = DataProviderResource::init($request, $resource['name'], array(
-        $resource['majorVersion'],
-        $resource['minorVersion'],
-      ));
-      // FIXME: $embedded_identifier needs to be fetched first!!!
-      return $resource_data_provider->view($embedded_identifier);
+    $value = $this->decorated->value($interpreter);
+    if (isset($value)) {
+      // Let the decorated resolve callbacks.
+      return $value;
     }
 
     // Check user has access to the property.
@@ -171,15 +157,64 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
     }
 
     $property_wrapper = $this->propertyWrapper($interpreter);
-    if ($this->getFormatter()) {
-      // Get value from field formatter.
-      $value = $this->formatterValue($interpreter);
-    }
-    elseif ($property_wrapper instanceof \EntityListWrapper) {
+    $wrapper = $interpreter->getWrapper();
+
+    if ($property_wrapper instanceof \EntityListWrapper) {
+      $values = array();
       // Multiple values.
       foreach ($property_wrapper->getIterator() as $item_wrapper) {
-        $value[] = $this->fieldValue($item_wrapper);
+        $values[] = $this->singleValue($item_wrapper, $wrapper);
       }
+      return $values;
+    }
+    return $this->singleValue($property_wrapper, $wrapper);
+  }
+
+  /**
+   * Returns the value for the current single field.
+   *
+   * @param \EntityMetadataWrapper $property_wrapper
+   *   The property wrapper. Either \EntityDrupalWrapper or \EntityListWrapper.
+   * @param \EntityDrupalWrapper $wrapper
+   *   The entity wrapper.
+   *
+   * @return mixed
+   *   A single value for the field.
+   */
+  protected function singleValue(\EntityMetadataWrapper $property_wrapper, \EntityDrupalWrapper $wrapper) {
+    if ($resource = $this->getResource()) {
+      // TODO: The resource input data in the field definition has changed.
+      // Now it does not need to be keyed by bundle since you don't even need
+      // an entity to use the resource based field.
+
+      if ($property_wrapper instanceof \EntityDrupalWrapper) {
+        // The property wrapper is a reference to another entity get the entity
+        // ID.
+        $embedded_identifier = $property_wrapper->getIdentifier();
+      }
+      else {
+        // The property is a regular one, get the value out of it and use it as
+        // the embedded identifier.
+        $embedded_identifier = $this->fieldValue($property_wrapper);
+      }
+      if (isset($resource['full_view']) && $resource['full_view'] === FALSE) {
+        return $embedded_identifier;
+      }
+      $request = Request::create('', array(), Request::METHOD_GET);
+      // Remove the $_GET options for the sub-request.
+      $request->setParsedInput(array());
+      // TODO: Get version automatically to avoid setting it in the plugin definition. Ideally we would fill this when processing the plugin definition defaults.
+      $resource_data_provider = DataProviderResource::init($request, $resource['name'], array(
+        $resource['majorVersion'],
+        $resource['minorVersion'],
+      ));
+
+      return $resource_data_provider->view($embedded_identifier);
+    }
+
+    if ($this->getFormatter()) {
+      // Get value from field formatter.
+      $value = $this->formatterValue($property_wrapper, $wrapper);
     }
     else {
       // Single value.
@@ -188,7 +223,6 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
 
     return $value;
   }
-
   /**
    * {@inheritdoc}
    *
@@ -278,17 +312,17 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
   /**
    * Get value from a field rendered by Drupal field API's formatter.
    *
-   * @param DataInterpreterInterface $interpreter
-   *   The data source.
+   * @param \EntityMetadataWrapper $property_wrapper
+   *   The property wrapper. Either \EntityDrupalWrapper or \EntityListWrapper.
+   * @param \EntityDrupalWrapper $wrapper
+   *   The entity wrapper.
    *
    * @return mixed
    *   A single or multiple values.
    *
    * @throws \Drupal\restful\Exception\ServerConfigurationException
    */
-  protected function formatterValue(DataInterpreterInterface $interpreter) {
-    $wrapper = $interpreter->getWrapper();
-    $property_wrapper = $this->propertyWrapper($interpreter);
+  protected function formatterValue(\EntityMetadataWrapper $property_wrapper, \EntityDrupalWrapper $wrapper) {
     $value = NULL;
 
     if (!ResourceFieldEntity::propertyIsField($this->getProperty())) {
@@ -316,6 +350,19 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
     }
 
     return $value;
+  }
+
+  /**
+   * Get value for a field based on another resource.
+   *
+   * @param DataInterpreterInterface $source
+   *   The data source.
+   *
+   * @return mixed
+   *   A single or multiple values.
+   */
+  protected function resourceValue(DataInterpreterInterface $source) {
+
   }
 
   /**
@@ -517,6 +564,10 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
    *   was found.
    */
   protected static function fieldClassName(array $field_definition) {
+    if (!empty($field_definition['class']) && $field_definition['class'] != '\Drupal\restful\Plugin\resource\Field\ResourceFieldEntity') {
+      // If there is a class that is not the current, return it.
+      return $field_definition['class'];
+    }
     // If there is an extending class for the particular field use that class
     // instead.
     if (empty($field_definition['property']) || !$field_info = field_info_field($field_definition['property'])) {
