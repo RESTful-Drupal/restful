@@ -489,6 +489,11 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
       $property = empty($entity_info['entity keys']['label']) ? NULL : $entity_info['entity keys']['label'];
       $this->decorated->setProperty($property);
     }
+    if ($wrapper_method == 'getBundle') {
+      // Store the label key.
+      $property = empty($entity_info['entity keys']['bundle']) ? NULL : $entity_info['entity keys']['bundle'];
+      $this->decorated->setProperty($property);
+    }
     elseif ($wrapper_method == 'getIdentifier') {
       // Store the ID key.
       $property = empty($entity_info['entity keys']['id']) ? NULL : $entity_info['entity keys']['id'];
