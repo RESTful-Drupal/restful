@@ -39,42 +39,43 @@ class Articles__1_0 extends ResourceEntity implements ResourceInterface {
    * {@inheritdoc}
    */
   protected function publicFields() {
-    return array(
-      'id' => array(
-        'property' => 'nid',
+    $public_fields = array();
+    $public_fields['id'] = array(
+      'property' => 'nid',
+    );
+    $public_fields['label'] = array(
+      'wrapper_method' => 'label',
+      'wrapper_method_on_entity' => TRUE,
+      'process_callbacks' => array(
+        array(array($this, 'addPrefix'), array('Label: ')),
       ),
-      'label' => array(
-        'wrapper_method' => 'label',
-        'wrapper_method_on_entity' => TRUE,
-        'process_callbacks' => array(
-          array(array($this, 'addPrefix'), array('Label: ')),
-        ),
+    );
+    $public_fields['self'] = array(
+      'callback' => array($this, 'getEntitySelf'),
+    );
+    $public_fields['tags'] = array(
+      'property' => 'field_tags',
+      'resource' => array(
+        'name' => 'tags',
+        'majorVersion' => 1,
+        'minorVersion' => 0,
       ),
-      'self' => array(
-        'callback' => array($this, 'getEntitySelf'),
-      ),
-      'tags' => array(
-        'property' => 'field_tags',
-        'resource' => array(
-          'name' => 'tags',
-          'majorVersion' => 1,
-          'minorVersion' => 0,
-        ),
-      ),
-      'status' => array(
-        'property' => 'status',
-        'methods' => array(RequestInterface::METHOD_POST, RequestInterface::METHOD_PUT),
-      ),
-      'body' => array(
-        'property' => 'body',
-        'formatter' => array(
-          'type' => 'text_summary_or_trimmed',
-          'settings' => array(
-            'trim_length' => 100,
-          ),
+    );
+    $public_fields['status'] = array(
+      'property' => 'status',
+      'methods' => array(RequestInterface::METHOD_POST, RequestInterface::METHOD_PUT),
+    );
+    $public_fields['body'] = array(
+      'property' => 'body',
+      'formatter' => array(
+        'type' => 'text_summary_or_trimmed',
+        'settings' => array(
+          'trim_length' => 100,
         ),
       ),
     );
+
+    return $public_fields;
   }
 
   /**
