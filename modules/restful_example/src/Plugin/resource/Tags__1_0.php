@@ -59,7 +59,7 @@ class Tags__1_0 extends ResourceEntity implements ResourceInterface {
   }
 
   /**
-   * Access callback example.
+   * Access callback example; Allow access only to IDs with even number.
    *
    * @param string $op
    *   Operation being performed.
