@@ -9,9 +9,7 @@ namespace Drupal\restful\Plugin\resource;
 
 use Drupal\restful\Exception\InternalServerErrorException;
 use Drupal\restful\Exception\ServerConfigurationException;
-use Drupal\restful\Plugin\resource\DataProvider\DataProviderEntity;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
-use Drupal\restful\Plugin\resource\DataProvider\DataProviderEntityTaxonomyTerm;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollection;
 
 abstract class ResourceEntity extends Resource {
