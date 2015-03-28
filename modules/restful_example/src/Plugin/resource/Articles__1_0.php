@@ -63,7 +63,7 @@ class Articles__1_0 extends ResourceEntity implements ResourceInterface {
     );
     $public_fields['status'] = array(
       'property' => 'status',
-      'methods' => array(RequestInterface::METHOD_POST, RequestInterface::METHOD_PUT),
+      'methods' => array(RequestInterface::METHOD_GET),
     );
     $public_fields['body'] = array(
       'property' => 'body',
