@@ -72,8 +72,7 @@ class Tags__1_0 extends ResourceEntity implements ResourceInterface {
    *   TRUE for access granted.
    */
   public function evenAccess($op, ResourceFieldInterface $resource_field, DataInterpreterInterface $interpreter) {
-    $account = $interpreter->getAccount();
-    $value = $interpreter->getWrapper()->getIdentifier() + $account->uid;
-    return $value % 2;
+    return $interpreter->getWrapper()->getIdentifier() % 2;
   }
+
 }
