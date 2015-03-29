@@ -17,8 +17,8 @@ class DataInterpreterEMW extends DataInterpreterBase implements DataInterpreterI
    */
   public function getWrapper() {
     // Note: this is just implemented to override the docblock. Now when we call
-    // DataInterpreterEMW::getWrapper we know we are getting a \EntityDrupalWrapper
-    // object back.
+    // DataInterpreterEMW::getWrapper we know we are getting a
+    // \EntityDrupalWrapper object back.
     return parent::getWrapper();
   }
 

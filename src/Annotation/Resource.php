@@ -121,16 +121,6 @@ class Resource extends Plugin {
   public $autocomplete = array();
 
   /**
-   * Arbitrary options that can be passed to the resource.
-   *
-   * Set the default validators, scheme, and replace as used in
-   * file_save_upload(). Used mainly for file resources.
-   *
-   * @var array
-   */
-  public $options = array();
-
-  /**
    * Access control using the HTTP Access-Control-Allow-Origin header.
    *
    * @var string

@@ -227,4 +227,12 @@ interface RequestInterface {
    */
   public function isSecure();
 
+  /**
+   * Get the files in the request.
+   *
+   * @return array
+   *   The available files in the request.
+   */
+  public function getFiles();
+
 }

@@ -459,4 +459,14 @@ class Request implements RequestInterface {
     return !empty($https) && strtolower($https) !== 'off';
   }
 
+  /**
+   * Get the files in the request.
+   *
+   * @return array
+   *   The available files in the request.
+   */
+  public function getFiles() {
+    return $this->files;
+  }
+
 }
