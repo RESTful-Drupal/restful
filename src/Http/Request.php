@@ -236,7 +236,7 @@ class Request implements RequestInterface {
       return $this->parsedBody;
     }
     // Find out the body format and parse it into the \ArrayObject.
-    $this->parsedBody = static::parseBody($this->method);
+    $this->parsedBody = $this->parseBody($this->method);
     return $this->parsedBody;
   }
 
@@ -269,31 +269,44 @@ class Request implements RequestInterface {
    * @return array
    *   The parsed body.
    */
-  protected static function parseBody($method) {
+  protected function parseBody($method) {
     if (!static::isWriteMethod($method)) {
       return NULL;
     }
+    $content_type = $this
+      ->getHeaders()
+      ->get('Content-Type')
+      ->getValueString();
+    $content_type = $content_type ?: 'application/x-www-form-urlencoded';
+    return static::parseBodyContentType($content_type);
+  }
+
+  /**
+   * Parses the provided payload according to a content type.
+   *
+   * @param string $content_type
+   *   The contents of the Content-Type header.
+   *
+   * @return array
+   *   The parsed body.
+   *
+   * @throws \Drupal\restful\Exception\BadRequestException
+   */
+  protected static function parseBodyContentType($content_type) {
     $body = NULL;
-    if ($method == static::METHOD_GET) {
-      return $_GET;
+    if (!$input_string = file_get_contents('php://input')) {
+      return NULL;
     }
-    elseif ($method == static::METHOD_POST && !empty($_POST)) {
-      return $_POST;
+    if ($content_type == 'application/x-www-form-urlencoded') {
+      parse_str($input_string, $body);
+      return $body;
     }
-
-    if ($query_string = file_get_contents('php://input')) {
-      // When trying to POST using curl on simpleTest it doesn't reach
-      // $_POST, so we try to re-grab it here.
-      // Also, sometimes the client might send the input still encoded.
-      if ($decoded_json = drupal_json_decode($query_string)) {
-        return $decoded_json;
+    elseif ($content_type == 'application/json') {
+      if (!$decoded_json = drupal_json_decode($input_string)) {
+        throw new BadRequestException(sprintf('Invalid JSON provided: %s.', $input_string));
       }
-      else {
-        parse_str($query_string, $body);
-        return $body;
-      }
+      return $decoded_json;
     }
-
     return NULL;
   }
 

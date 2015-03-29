@@ -166,6 +166,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
    * {@inheritdoc}
    */
   public function create($object) {
+    $this->validateBody($object);
     $entity_info = $this->getEntityInfo();
     $bundle_key = $entity_info['entity keys']['bundle'];
     // TODO: figure out how to derive the bundle when posting to a resource with
@@ -251,6 +252,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
    * {@inheritdoc}
    */
   public function update($identifier, $object, $replace = FALSE) {
+    $this->validateBody($object);
     $entity_id = $this->getEntityIdByFieldId($identifier);
     $this->isValidEntity('update', $entity_id);
 
@@ -814,6 +816,21 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     $this->entityValidate($wrapper);
 
     $wrapper->save();
+  }
+
+  /**
+   * Validates the body object for entities.
+   *
+   * @param mixed $body
+   *   The paresed body.
+   *
+   * @throws \Drupal\restful\Exception\BadRequestException
+   */
+  protected function validateBody($body) {
+    if (isset($body) && !is_array($body)) {
+      $message = sprintf('Incorrect object parsed: %s', print_r($body, TRUE));
+      throw new BadRequestException($message);
+    }
   }
 
 }
