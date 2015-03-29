@@ -63,18 +63,20 @@ dependencies[] = restful
  }
 ```
 
-####restful\_custom/plugins/restful/myplugin.inc
+####restful\_custom/plugins/restful/thenameoftheplugin.inc
 ```php
 $plugin = array(
   'label' => t('Articles'),
   'resource' => 'articles',
-  'name' => 'articles',
+  'name' => 'thenameoftheplugin',
   'entity_type' => 'node',
   'bundle' => 'article',
   'description' => t('Export the article content type.'),
   'class' => 'RestfulCustomResource',
 );
 ```
+
+The name of your plugin must match your file.
 
 ####restful\_custom/plugins/restful/RestfulCustomResource.class.php
 ```php
@@ -97,7 +99,7 @@ class RestfulCustomResource extends RestfulEntityBaseNode {
 ```
 
 After declaring this plugin, the resource could be accessed at its root URL,
-which would be `http://example.com/api/v1.0/articles`.
+which would be `http://example.com/api/v1.0/thenameoftheplugin`.
 
 ### Security, caching, output, and customization
 
