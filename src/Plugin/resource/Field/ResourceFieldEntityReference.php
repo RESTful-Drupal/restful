@@ -23,6 +23,12 @@ class ResourceFieldEntityReference extends ResourceFieldEntity implements Resour
       return NULL;
     }
 
+    // If the provided value is the ID to the referenced entity, then do not do
+    // a sub-request.
+    if (!is_array($value) || empty($value['values'])) {
+      return $value;
+    }
+
     $field_info = field_info_field($this->getProperty());
     if ($field_info['cardinality'] != 1 && !is_array($value)) {
       // If the field is entity reference type and its cardinality larger than
@@ -116,11 +122,11 @@ class ResourceFieldEntityReference extends ResourceFieldEntity implements Resour
       'method' => restful()->getRequest()->getMethod(),
       'path' => NULL,
       'query' => array(),
+      'csrf_token' => NULL,
     );
 
-    if (!empty($request_user_info['headers']) || is_array($request_user_info['headers'])) {
-      $request_user_info['headers'] = new HttpHeaderBag($request_user_info['headers']);
-    }
+    $headers = empty($request_user_info['headers']) ? array() : $request_user_info['headers'];
+    $request_user_info['headers'] = new HttpHeaderBag($headers);
     $request_user_info['via_router'] = FALSE;
     $request_user_info['cookies'] = $_COOKIE;
     $request_user_info['files'] = $_FILES;

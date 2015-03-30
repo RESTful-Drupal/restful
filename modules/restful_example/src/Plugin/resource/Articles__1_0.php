@@ -42,6 +42,7 @@ class Articles__1_0 extends ResourceEntity implements ResourceInterface {
     $public_fields = array();
     $public_fields['id'] = array(
       'property' => 'nid',
+      'methods' => array(RequestInterface::METHOD_GET),
     );
     $public_fields['label'] = array(
       'wrapper_method' => 'label',
