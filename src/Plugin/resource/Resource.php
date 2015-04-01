@@ -291,7 +291,7 @@ abstract class Resource extends PluginBase implements ResourceInterface {
    */
   protected function getControllerFromPath() {
     $path = $this->getPath();
-    $method = $this->request->getMethod();
+    $method = $this->getRequest()->getMethod();
 
     $selected_controller = NULL;
     foreach ($this->getControllers() as $pattern => $controllers) {

@@ -200,136 +200,6 @@ function restful_help($path, $arg) {
 }
 
 /**
- * Return the handler based on major and minor version, and resource name.
- *
- * @param $resource_name
- *   The name of the resource (e.g. "articles").
- * @param int $major_version
- *   (optional) The major version (not prefixed with "v"). Defaults to 1.
- * @param int $minor_version
- *   (optional) The minor version. Defaults to 0.
- *
- * @return RestfulInterface | NULL
- *   The handler object if found, or NULL.
- */
-function restful_get_restful_handler($resource_name, $major_version = 1, $minor_version = 0) {
-  $cache = &drupal_static(__FUNCTION__);
-  $identifier = implode(':', array($major_version, $resource_name, $minor_version));
-  if (isset($cache[$identifier])) {
-    return $cache[$identifier];
-  }
-
-  $cache[$identifier] = NULL;
-
-
-  // Array with all the handlers with the same major version and resource name.
-  // We get all of them, so we can find the correct one if minor version is
-  // present.
-  $valid_plugins = array();
-  foreach (restful_get_restful_plugins() as $plugin) {
-    if ($plugin['major_version'] != $major_version) {
-      continue;
-    }
-
-    if ($plugin['resource'] != $resource_name) {
-      continue;
-    }
-
-    if ($minor_version == $plugin['minor_version']) {
-      // We found out handler, so we can break.
-      $valid_plugins[$plugin['minor_version']] = $plugin;
-      break;
-    }
-
-    if ($plugin['minor_version'] > $minor_version) {
-      // Minor version is above the needed one.
-      continue;
-    }
-
-    $valid_plugins[$plugin['minor_version']] = $plugin;
-  }
-
-  if (!$valid_plugins) {
-    return;
-  }
-
-  // Sort the handlers, and get the last one, as it is the closest one to the
-  // requested minor version.
-  ksort($valid_plugins);
-  $plugin = end($valid_plugins);
-
-  $cache[$identifier] = restful_get_restful_handler_by_name($plugin['name']);
-
-  return $cache[$identifier];
-}
-
-/**
- * Return the handler based on major and minor version, and resource name.
- *
- * @param $plugin_name
- *   The name of the plugin, including version. (e.g. "articles__1_2").
- *
- * @return RestfulInterface
- *   The handler object if found, or NULL.
- *
- * @throws RestfulException
- */
-function restful_get_restful_handler_by_name($plugin_name) {
-  ctools_include('plugins');
-  $plugin = ctools_get_plugins('restful', 'restful', $plugin_name);
-  if (!$class = ctools_plugin_load_class('restful', 'restful', $plugin_name, 'class')) {
-    throw new ServiceUnavailableException(format_string('RESTful plugin class (@plugin) was not found.', array('@plugin' => $plugin_name)));
-  }
-  $handler = new $class($plugin);
-  // If the restful plugin needs authentication load the corresponding
-  // authentication plugin.
-
-  if ($plugin['authentication_types'] === TRUE) {
-    $handler->getAuthenticationManager()->addAllAuthenticationProviders();
-  }
-  else {
-    // We can have multiple authentication plugins.
-    foreach ($plugin['authentication_types'] as $auth_plugin_name) {
-      $handler->getAuthenticationManager()->addAuthenticationProvider($auth_plugin_name);
-    }
-  }
-
-  // Set the "optional" flag of the authentication manager.
-  $handler->getAuthenticationManager()->setIsOptional($plugin['authentication_optional']);
-
-  return $handler;
-}
-
-/**
- * Helper function to get the restful handler for the selected path.
- *
- * @param string $path
- *   The path you want to get the handler for. Defaults to the current page.
- *
- * @return \RestfulEntityBase
- *   The restful handler or NULL.
- */
-function restful_get_restful_handler_for_path($path = NULL) {
-  $handlers = &drupal_static(__FUNCTION__);
-  $path = is_null($path) ? $_GET['q'] : $path;
-  if (isset($handlers[$path])) {
-    return $handlers[$path];
-  }
-  $router_item = \RestfulBase::getMenuItem($path);
-  // We can only get the information if the current path was processed by
-  // restful_menu_process_callback.
-  if ($router_item['page_callback'] != 'restful_menu_process_callback') {
-    $handlers[$path] = FALSE;
-    return;
-  }
-  list($resource,) = \RestfulBase::getPageArguments($path);
-  list($major_version, $minor_version) = \RestfulBase::getVersionFromRequest($path);
-
-  $handlers[$path] = restful_get_restful_handler($resource, $major_version, $minor_version);
-  return $handlers[$path];
-}
-
-/**
  * Get the RestfulManager.
  *
  * Calling restful() from anywhere in the code will give you access to the
@@ -362,24 +232,34 @@ function restful() {
 /**
  * Access callback; Determine access for an API call.
  *
- * @param $version
- *   The version, prefixed with v (e.g. v1, v2.2).
- * @param $resource_name
+ * @param string $resource_name
  *   The name of the resource (e.g. "articles").
+ *
+ * @param $version_string
+ *   The version array.
  *
  * @return bool
  *   TRUE if user is allowed to access resource.
  */
-function restful_menu_access_callback($resource_name, $version = NULL) {
+function restful_menu_access_callback($resource_name, $version_string = NULL) {
   $resource_manager = restful()->getResourceManager();
-  if (!$versions = $resource_manager->getVersionFromRequest()) {
+  if (!empty($version_string) && preg_match('/v[0-9]+(\.[0-9]+)?/', $version_string)) {
+    $version_string = substr($version_string, 1);
+    $parsed_versions = explode('.', $version_string);
+    if (count($parsed_versions) == 2) {
+      // If there is only the major we need to get the version from the request,
+      // to get the latest version within the major version.
+      $versions = $parsed_versions;
+    }
+  }
+  if (empty($versions) && !$versions = $resource_manager->getVersionFromRequest()) {
     // No version could be found.
     return FALSE;
   }
 
   try {
     return $resource_manager
-      ->negotiate(restful()->getRequest())
+      ->getPlugin($resource_name . PluginBase::DERIVATIVE_SEPARATOR . implode('.', $versions))
       ->access();
   }
   catch (RestfulException $e) {
