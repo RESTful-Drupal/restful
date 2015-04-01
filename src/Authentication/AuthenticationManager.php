@@ -38,6 +38,8 @@ class AuthenticationManager implements AuthenticationManagerInterface {
   protected $isOptional = FALSE;
 
   /**
+   * Constructs a new AuthenticationManager object.
+   *
    * @param AuthenticationPluginManager $manager
    *   The authentication plugin manager.
    */
@@ -110,7 +112,7 @@ class AuthenticationManager implements AuthenticationManagerInterface {
       // Most of the cases the cookie provider will do this for us.
       $account = drupal_anonymous_user();
 
-      if (empty($request['__application']['rest_call'])) {
+      if (!$request->isViaRouter()) {
         // If we are using the API from within Drupal and we have not tried to
         // authenticate using the 'cookie' provider, then we expect to be logged
         // in using the cookie authentication as a last resort.

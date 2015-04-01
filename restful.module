@@ -413,6 +413,7 @@ function restful_menu_process_callback($resource_name, $version = NULL) {
   $resource_manager = restful()->getResourceManager();
   list($major_version, $minor_version) = $resource_manager->getVersionFromRequest();
   $request = restful()->getRequest();
+  $request->setViaRouter(TRUE);
   $resource = $resource_manager->getPlugin($resource_name . PluginBase::DERIVATIVE_SEPARATOR . $major_version . '.' . $minor_version, $request);
 
   // Vary the response with the presence of the X-API-Version or Accept headers.
@@ -482,54 +483,12 @@ function restful_menu_process_callback($resource_name, $version = NULL) {
 }
 
 /**
- * Build the request array from PHP globals and input stream.
- *
- * @return array
- *   The request array.
- */
-function restful_parse_request() {
-  $request = NULL;
-  $method = strtoupper($_SERVER['REQUEST_METHOD']);
-
-  if ($method == \RestfulInterface::GET) {
-    $request = $_GET;
-  }
-  elseif ($method == \RestfulInterface::POST) {
-    $request = $_POST;
-  }
-
-  if (!$request && $query_string = file_get_contents('php://input')) {
-    // When trying to POST using curl on simpleTest it doesn't reach
-    // $_POST, so we try to re-grab it here.
-    // Also, sometimes the client might send the input still encoded.
-    if ($decoded_json = drupal_json_decode($query_string)) {
-      $request = $decoded_json;
-    }
-    else {
-      parse_str($query_string, $request);
-    }
-  }
-
-  // This flag is used to identify if the request is done "via Drupal" or "via
-  // CURL";
-  $request['__application'] = array(
-    'rest_call' => TRUE,
-    'csrf_token' => \RestfulManager::getRequestHttpHeader('X-CSRF-Token'),
-  );
-
-  // Allow implemeting modules to alter the request.
-  drupal_alter('restful_parse_request', $request);
-
-  return $request;
-}
-
-/**
  * Returns data in JSON format.
  *
  * We do not use drupal_json_output(), in order to maintain the "Content-Type"
  * header.
  *
- * @param $var
+ * @param mixed $var
  *   (optional) If set, the variable will be converted to JSON and output.
  * @param string $method
  *   Name of the method for the formatter.

@@ -235,4 +235,28 @@ interface RequestInterface {
    */
   public function getFiles();
 
+  /**
+   * Get CSRF Token.
+   *
+   * @return string
+   *   Gets the CSRF token.
+   */
+  public function getCsrfToken();
+
+  /**
+   * Is via router.
+   *
+   * @return bool
+   *   TRUE if the request was generated via the Drupal's menu router.
+   */
+  public function isViaRouter();
+
+  /**
+   * Marks the request as being via router.
+   *
+   * @param bool $via_router
+   *   The flag to set.
+   */
+  public function setViaRouter($via_router);
+
 }
