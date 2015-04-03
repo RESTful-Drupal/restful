@@ -63,7 +63,7 @@ dependencies[] = restful
  }
 ```
 
-####restful\_custom/plugins/restful/myplugin.inc
+####restful\_custom/plugins/restful/articles.inc
 ```php
 $plugin = array(
   'label' => t('Articles'),
