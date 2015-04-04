@@ -12,6 +12,10 @@ class DataProviderTaxonomyTerm extends DataProviderEntity implements DataProvide
 
   /**
    * Overrides DataProviderEntity::setPropertyValues().
+   *
+   * This class is created to override this method. This method is overridden to
+   * add the vocabulary ID based on the vocabulary machine name when creating a
+   * taxonomy term.
    */
   protected function setPropertyValues(\EntityDrupalWrapper $wrapper, array $object, $replace = FALSE) {
     $term = $wrapper->value();
