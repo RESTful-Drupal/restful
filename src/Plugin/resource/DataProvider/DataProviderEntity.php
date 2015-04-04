@@ -819,10 +819,10 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
   }
 
   /**
-   * Validates the body object for entities.
+   * Validates the body payload object for entities.
    *
    * @param mixed $body
-   *   The paresed body.
+   *   The parsed body.
    *
    * @throws \Drupal\restful\Exception\BadRequestException
    */
