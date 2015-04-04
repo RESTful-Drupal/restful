@@ -39,13 +39,4 @@ use Drupal\restful\Plugin\resource\ResourceInterface;
  *   minorVersion = 0
  * )
  */
-class Articles__2_0 extends ResourceEntity implements ResourceInterface {
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function publicFields() {
-    return array();
-  }
-
-}
+class Articles__2_0 extends ResourceEntity implements ResourceInterface {}

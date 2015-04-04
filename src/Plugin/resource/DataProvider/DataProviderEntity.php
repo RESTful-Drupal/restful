@@ -185,7 +185,15 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     $wrapper = entity_metadata_wrapper($this->entityType, $entity);
 
     $this->setPropertyValues($wrapper, $object, TRUE);
-    return array($this->view($wrapper->getIdentifier()));
+
+    // The access calls use the request method. Fake the view to be a GET.
+    $old_request = $this->getRequest();
+    $this->getRequest()->setMethod(RequestInterface::METHOD_GET);
+    $output = array($this->view($wrapper->getIdentifier()));
+    // Put the original request back to a POST.
+    $this->request = $old_request;
+
+    return $output;
   }
 
   /**
@@ -819,10 +827,10 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
   }
 
   /**
-   * Validates the body object for entities.
+   * Validates the body payload object for entities.
    *
    * @param mixed $body
-   *   The paresed body.
+   *   The parsed body.
    *
    * @throws \Drupal\restful\Exception\BadRequestException
    */

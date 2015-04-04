@@ -13,13 +13,13 @@ use Drupal\restful\Exception\ServiceUnavailableException;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
 
-class DataProviderFile extends DataProvider implements DataProviderInterface {
+class DataProviderFile extends DataProviderEntity implements DataProviderInterface {
 
   /**
    * Constructs a DataProviderFile object.
    */
-  public function __construct(RequestInterface $request, ResourceFieldCollectionInterface $field_definitions, $account, array $options, $langcode = NULL) {
-    parent::__construct($request, $field_definitions, $account, $options, $langcode);
+  public function __construct(RequestInterface $request, ResourceFieldCollectionInterface $field_definitions, $account, $resource_path, array $options, $langcode = NULL) {
+    parent::__construct($request, $field_definitions, $account, $resource_path, $options, $langcode);
 
     $file_options = empty($this->options['options']) ? array() : $this->options['options'];
     $default_values = array(
@@ -31,13 +31,6 @@ class DataProviderFile extends DataProvider implements DataProviderInterface {
       'replace' => FILE_EXISTS_RENAME,
     );
     $this->options['options'] = drupal_array_merge_deep($default_values, $file_options);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function index() {
-    throw new NotImplementedException(sprintf('The %s method is not supported.', __FUNCTION__));
   }
 
   /**
@@ -72,39 +65,15 @@ class DataProviderFile extends DataProvider implements DataProviderInterface {
 
     $return = array();
     foreach ($ids as $id) {
-      $return[] = $this->view($id);
+      // The access calls use the request method. Fake the view to be a GET.
+      $old_request = $this->getRequest();
+      $this->getRequest()->setMethod(RequestInterface::METHOD_GET);
+      $return[] = array($this->view($id));
+      // Put the original request back to a POST.
+      $this->request = $old_request;
     }
 
     return $return;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function view($identifier) {
-    // TODO: Provide real support for files. Reading files is probably a good example for the DB Data provider.
-    return array('fid' => $identifier);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function viewMultiple(array $identifiers) {
-    throw new NotImplementedException(sprintf('The %s method is not supported.', __FUNCTION__));
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function update($identifier, $object, $replace = FALSE) {
-    throw new NotImplementedException(sprintf('The %s method is not supported.', __FUNCTION__));
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function remove($identifier) {
-    throw new NotImplementedException(sprintf('The %s method is not supported.', __FUNCTION__));
   }
 
   /**

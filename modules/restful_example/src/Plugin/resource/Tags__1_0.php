@@ -7,8 +7,6 @@
 
 namespace Drupal\restful_example\Plugin\resource;
 
-use Drupal\restful\Http\Request;
-use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
 use Drupal\restful\Plugin\resource\ResourceEntity;
@@ -41,23 +39,13 @@ class Tags__1_0 extends ResourceEntity implements ResourceInterface {
    * {@inheritdoc}
    */
   protected function publicFields() {
-    return array(
-      'id' => array(
-        'wrapper_method' => 'getIdentifier',
-        'wrapper_method_on_entity' => TRUE,
-        'methods' => array(RequestInterface::METHOD_GET),
-      ),
-      'label' => array(
-        'wrapper_method' => 'label',
-        'wrapper_method_on_entity' => TRUE,
-      ),
-      'self' => array(
-        'callback' => array($this, 'getEntitySelf'),
-        'access_callbacks' => array(
-          array($this, 'evenAccess'),
-        ),
-      ),
+    $public_fields = parent::publicFields();
+
+    // Dummy access callback for demo purposes.
+    $public_fields['self']['access_callbacks'] = array(
+      array($this, 'evenAccess'),
     );
+    return $public_fields;
   }
 
   /**

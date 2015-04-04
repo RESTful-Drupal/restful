@@ -436,6 +436,13 @@ class Request implements RequestInterface {
   /**
    * {@inheritdoc}
    */
+  public function setMethod($method) {
+    $this->method = strtoupper($method);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getServer() {
     return $this->server;
   }
