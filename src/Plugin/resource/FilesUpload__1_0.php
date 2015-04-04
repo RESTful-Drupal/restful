@@ -9,7 +9,6 @@ namespace Drupal\restful\Plugin\resource;
 
 use Drupal\restful\Exception\NotImplementedException;
 use Drupal\restful\Exception\UnauthorizedException;
-use Drupal\restful\Plugin\resource\DataProvider\DataProviderFile;
 use Drupal\restful\Plugin\resource\DataProvider\DataProviderInterface;
 
 /**
@@ -32,7 +31,7 @@ use Drupal\restful\Plugin\resource\DataProvider\DataProviderInterface;
  *   minorVersion = 0
  * )
  */
-class FilesUpload__1_0 extends Resource {
+class FilesUpload__1_0 extends ResourceEntity {
 
   /**
    * Constructs a FilesUpload__1_0 object.
@@ -53,31 +52,6 @@ class FilesUpload__1_0 extends Resource {
 
     // Store the plugin definition.
     $this->pluginDefinition = $plugin_definition;
-  }
-
-  /**
-   * Public fields.
-   *
-   * @return array
-   *   The field definition array.
-   */
-  protected function publicFields() {
-    return array();
-  }
-
-  /**
-   * Data provider factory.
-   *
-   * @return DataProviderInterface
-   *   The data provider for this resource.
-   *
-   * @throws NotImplementedException
-   */
-  public function dataProviderFactory() {
-    $plugin_definition = $this->getPluginDefinition();
-    $field_definitions = $this->getFieldDefinitions();
-
-    return new DataProviderFile($this->getRequest(), $field_definitions, $this->getAccount(), $plugin_definition['dataProvider']);
   }
 
   /**

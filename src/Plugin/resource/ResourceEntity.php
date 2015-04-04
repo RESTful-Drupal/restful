@@ -53,12 +53,24 @@ abstract class ResourceEntity extends Resource {
       $field_definitions_array = $this->viewModeFields($plugin_definition['dataProvider']['viewMode']);
       $field_definitions = ResourceFieldCollection::factory($field_definitions_array);
     }
-    $class_name = '\Drupal\restful\Plugin\resource\DataProvider\DataProviderEntity';
-    // TODO: Make this logic below alterable by the implementor user via info hook, or something similar.
-    if ($this->getEntityType() == 'taxonomy_term') {
-      $class_name = '\Drupal\restful\Plugin\resource\DataProvider\DataProviderTaxonomyTerm';
-    }
+    $class_name = $this->dataProviderClassName();
     return new $class_name($this->getRequest(), $field_definitions, $this->getAccount(), $this->getPath(), $plugin_definition['dataProvider']);
+  }
+
+  /**
+   * Data provider class.
+   *
+   * @return string
+   *   The name of the class of the provider factory.
+   */
+  protected function dataProviderClassName() {
+    if ($this->getEntityType() == 'taxonomy_term') {
+      return '\Drupal\restful\Plugin\resource\DataProvider\DataProviderTaxonomyTerm';
+    }
+    elseif ($this->getEntityType() == 'file') {
+      return '\Drupal\restful\Plugin\resource\DataProvider\DataProviderFile';
+    }
+    return '\Drupal\restful\Plugin\resource\DataProvider\DataProviderEntity';
   }
 
   /**

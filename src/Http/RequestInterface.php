@@ -179,6 +179,14 @@ interface RequestInterface {
   public function getMethod();
 
   /**
+   * Set the HTTP method.
+   *
+   * @param string $method
+   *   The method to set.
+   */
+  public function setMethod($method);
+
+  /**
    * Get the server information.
    *
    * @return array
