@@ -9,6 +9,7 @@ namespace Drupal\restful\Plugin\resource;
 
 use Drupal\restful\Exception\InternalServerErrorException;
 use Drupal\restful\Exception\ServerConfigurationException;
+use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollection;
 
@@ -58,6 +59,55 @@ abstract class ResourceEntity extends Resource {
       $class_name = '\Drupal\restful\Plugin\resource\DataProvider\DataProviderTaxonomyTerm';
     }
     return new $class_name($this->getRequest(), $field_definitions, $this->getAccount(), $this->getPath(), $plugin_definition['dataProvider']);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function publicFields() {
+    $public_fields = array();
+    $public_fields['id'] = array(
+      'wrapper_method' => 'getIdentifier',
+      'wrapper_method_on_entity' => TRUE,
+      'methods' => array(RequestInterface::METHOD_GET),
+      'discovery' => array(
+        // Information about the field for human consumption.
+        'info' => array(
+          'label' => t('ID'),
+          'description' => t('Base ID for the entity.'),
+        ),
+        // Describe the data.
+        'data' => array(
+          'type' => 'int',
+          'read_only' => TRUE,
+        ),
+      ),
+    );
+    $public_fields['label'] = array(
+      'wrapper_method' => 'label',
+      'wrapper_method_on_entity' => TRUE,
+      'discovery' => array(
+        // Information about the field for human consumption.
+        'info' => array(
+          'label' => t('Label'),
+          'description' => t('The label of the resource.'),
+        ),
+        // Describe the data.
+        'data' => array(
+          'type' => 'string',
+        ),
+        // Information about the form element.
+        'form_element' => array(
+          'type' => 'texfield',
+          'size' => 255,
+        ),
+      ),
+    );
+    $public_fields['self'] = array(
+      'callback' => array($this, 'getEntitySelf'),
+    );
+
+    return $public_fields;
   }
 
   /**

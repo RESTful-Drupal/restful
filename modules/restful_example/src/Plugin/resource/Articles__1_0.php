@@ -7,7 +7,6 @@
 
 namespace Drupal\restful_example\Plugin\resource;
 
-use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\ResourceEntity;
 use Drupal\restful\Plugin\resource\ResourceInterface;
@@ -39,21 +38,7 @@ class Articles__1_0 extends ResourceEntity implements ResourceInterface {
    * {@inheritdoc}
    */
   protected function publicFields() {
-    $public_fields = array();
-    $public_fields['id'] = array(
-      'property' => 'nid',
-      'methods' => array(RequestInterface::METHOD_GET),
-    );
-    $public_fields['label'] = array(
-      'wrapper_method' => 'label',
-      'wrapper_method_on_entity' => TRUE,
-      'process_callbacks' => array(
-        array(array($this, 'addPrefix'), array('Label: ')),
-      ),
-    );
-    $public_fields['self'] = array(
-      'callback' => array($this, 'getEntitySelf'),
-    );
+    $public_fields = parent::publicFields();
     $public_fields['tags'] = array(
       'property' => 'field_tags',
       'resource' => array(
