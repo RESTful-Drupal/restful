@@ -48,7 +48,7 @@ class RestfulCRUDTaxonomyTermTestCase extends DrupalWebTestCase {
     $handler->delete($id);
     $this->assertFalse(taxonomy_term_load($id), 'The taxonomy term has been deleted successfully');
 
-    // Verify user1 can't create terms.
+    // Verify user2 can't create terms.
     $handler->setAccount($user2);
     try {
       $text1 = $this->randomName();
@@ -56,9 +56,6 @@ class RestfulCRUDTaxonomyTermTestCase extends DrupalWebTestCase {
       $handler->post('', $request);
     } catch (RestfulForbiddenException $e) {
       $this->pass('user2 cannot create taxonomy term via restful.');
-    }
-    catch (\Exception $e) {
-      $this->fail('user2 can create taxonomy term via restful.');
     }
 
     // Creating a term and check that the normal user can consume the resource.
@@ -71,5 +68,19 @@ class RestfulCRUDTaxonomyTermTestCase extends DrupalWebTestCase {
     $terms = $handler->get();
 
     $this->assertEqual($terms[0]['label'], $text3, 'user2 can access to the terms via rest.');
+
+    // Check user can't patch a term.
+    try {
+      $handler->patch($taxonomy->tid, array('name' => $this->randomName()));
+    } catch (RestfulForbiddenException $e) {
+      $this->pass('user2 cannot patch taxonomy term.');
+    }
+
+    // Check user can't delete a term.
+    try {
+      $handler->delete($taxonomy->tid);
+    } catch (RestfulForbiddenException $e) {
+      $this->pass('user2 cannot delete taxonomy term.');
+    }
   }
 }
