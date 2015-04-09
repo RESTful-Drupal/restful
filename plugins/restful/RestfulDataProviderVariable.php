@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \RestfulDataProviderDbQuery
+ * Contains \RestfulDataProviderVariable
  */
 
 use Drupal\restful\Exception\BadRequestException;
