@@ -7,7 +7,6 @@
 
 namespace Drupal\restful_example\Plugin\resource;
 
-use Drupal\restful\Http\Request;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
 use Drupal\restful\Plugin\resource\ResourceEntity;
@@ -40,26 +39,17 @@ class Tags__1_0 extends ResourceEntity implements ResourceInterface {
    * {@inheritdoc}
    */
   protected function publicFields() {
-    return array(
-      'id' => array(
-        'wrapper_method' => 'getIdentifier',
-        'wrapper_method_on_entity' => TRUE,
-      ),
-      'label' => array(
-        'wrapper_method' => 'label',
-        'wrapper_method_on_entity' => TRUE,
-      ),
-      'self' => array(
-        'callback' => array($this, 'getEntitySelf'),
-        'access_callbacks' => array(
-          array($this, 'evenAccess'),
-        ),
-      ),
+    $public_fields = parent::publicFields();
+
+    // Dummy access callback for demo purposes.
+    $public_fields['self']['access_callbacks'] = array(
+      array($this, 'evenAccess'),
     );
+    return $public_fields;
   }
 
   /**
-   * Access callback example.
+   * Access callback example; Allow access only to IDs with even number.
    *
    * @param string $op
    *   Operation being performed.
@@ -72,8 +62,7 @@ class Tags__1_0 extends ResourceEntity implements ResourceInterface {
    *   TRUE for access granted.
    */
   public function evenAccess($op, ResourceFieldInterface $resource_field, DataInterpreterInterface $interpreter) {
-    $account = $interpreter->getAccount();
-    $value = $interpreter->getWrapper()->getIdentifier() + $account->uid;
-    return $value % 2;
+    return $interpreter->getWrapper()->getIdentifier() % 2;
   }
+
 }

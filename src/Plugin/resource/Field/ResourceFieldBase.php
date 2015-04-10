@@ -111,6 +111,7 @@ abstract class ResourceFieldBase implements ResourceFieldInterface {
     RequestInterface::METHOD_HEAD,
     RequestInterface::METHOD_POST,
     RequestInterface::METHOD_PUT,
+    RequestInterface::METHOD_PATCH,
     RequestInterface::METHOD_OPTIONS,
   );
 

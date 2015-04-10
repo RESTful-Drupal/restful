@@ -487,13 +487,27 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
     if ($wrapper_method == 'label') {
       // Store the label key.
       $property = empty($entity_info['entity keys']['label']) ? NULL : $entity_info['entity keys']['label'];
+    }
+    elseif ($wrapper_method == 'getBundle') {
+      // Store the label key.
       $this->decorated->setProperty($property);
     }
     elseif ($wrapper_method == 'getIdentifier') {
       // Store the ID key.
       $property = empty($entity_info['entity keys']['id']) ? NULL : $entity_info['entity keys']['id'];
-      $this->decorated->setProperty($property);
     }
+
+    // There are occasions when the wrapper property is not the schema
+    // database field.
+    $wrapper = entity_metadata_wrapper($entity_type);
+    foreach ($wrapper->getPropertyInfo() as $wrapper_property => $property_info) {
+      if ($property_info['schema field'] == $property) {
+        $property = $wrapper_property;
+        break;
+      }
+    }
+
+    $this->decorated->setProperty($property);
   }
 
   /**

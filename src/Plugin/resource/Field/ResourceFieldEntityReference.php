@@ -23,6 +23,12 @@ class ResourceFieldEntityReference extends ResourceFieldEntity implements Resour
       return NULL;
     }
 
+    // If the provided value is the ID to the referenced entity, then do not do
+    // a sub-request.
+    if (!is_array($value) || empty($value['values'])) {
+      return $value;
+    }
+
     $field_info = field_info_field($this->getProperty());
     if ($field_info['cardinality'] != 1 && !is_array($value)) {
       // If the field is entity reference type and its cardinality larger than
@@ -30,7 +36,7 @@ class ResourceFieldEntityReference extends ResourceFieldEntity implements Resour
       $value = explode(',', $value);
     }
 
-    $value = $this->mergeEntityFromReference($value);
+    $value = static::subRequestId($this->mergeEntityFromReference($value));
 
     return $value;
   }
@@ -100,7 +106,8 @@ class ResourceFieldEntityReference extends ResourceFieldEntity implements Resour
     // Multiple values.
     $return = array();
     foreach ($value['values'] as $value_item) {
-      $return[] = $resource_data_provider->merge(static::subRequestId($value_item), $value_item);
+      $merged = $resource_data_provider->merge(static::subRequestId($value_item), $value_item);
+      $return[] = reset($merged);
     }
 
     return $return;
@@ -110,14 +117,16 @@ class ResourceFieldEntityReference extends ResourceFieldEntity implements Resour
    * {@inheritdoc}
    */
   public static function subRequest(array $value) {
+    $value['request'] = empty($value['request']) ? array() : $value['request'];
     $request_user_info = $value['request'] + array(
+      'method' => restful()->getRequest()->getMethod(),
       'path' => NULL,
       'query' => array(),
+      'csrf_token' => NULL,
     );
 
-    if (!empty($request_user_info['headers']) || is_array($request_user_info['headers'])) {
-      $request_user_info['headers'] = new HttpHeaderBag($request_user_info['headers']);
-    }
+    $headers = empty($request_user_info['headers']) ? array() : $request_user_info['headers'];
+    $request_user_info['headers'] = new HttpHeaderBag($headers);
     $request_user_info['via_router'] = FALSE;
     $request_user_info['cookies'] = $_COOKIE;
     $request_user_info['files'] = $_FILES;
@@ -146,7 +155,14 @@ class ResourceFieldEntityReference extends ResourceFieldEntity implements Resour
    *   The ID.
    */
   protected static function subRequestId(array $value) {
-    return $value['id'];
+    if (!static::isArrayNumeric($value)) {
+      return empty($value['id']) ? NULL : $value['id'];
+    }
+    $output = array();
+    foreach ($value as $item) {
+      $output[] = static::subRequestId($item);
+    }
+    return $output;
   }
 
   /**

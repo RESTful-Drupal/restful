@@ -9,7 +9,6 @@ namespace Drupal\restful\Plugin\resource\DataProvider;
 
 use Drupal\restful\Exception\ForbiddenException;
 use Drupal\restful\Exception\InternalServerErrorException;
-use Drupal\restful\Exception\RestfulException;
 use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Http\HttpHeader;
 use Drupal\restful\Http\RequestInterface;
@@ -23,7 +22,7 @@ use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
 use Drupal\restful\Plugin\resource\Resource;
 use Drupal\restful\Resource\ResourceManager;
 
-class DataProviderEntity extends DataProvider implements DataProviderEntityInterface{
+class DataProviderEntity extends DataProvider implements DataProviderEntityInterface {
 
   // TODO: The Data Provider should be in charge of the entity_access checks.
 
@@ -167,6 +166,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
    * {@inheritdoc}
    */
   public function create($object) {
+    $this->validateBody($object);
     $entity_info = $this->getEntityInfo();
     $bundle_key = $entity_info['entity keys']['bundle'];
     // TODO: figure out how to derive the bundle when posting to a resource with
@@ -185,7 +185,15 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     $wrapper = entity_metadata_wrapper($this->entityType, $entity);
 
     $this->setPropertyValues($wrapper, $object, TRUE);
-    return array($this->view($wrapper->getIdentifier()));
+
+    // The access calls use the request method. Fake the view to be a GET.
+    $old_request = $this->getRequest();
+    $this->getRequest()->setMethod(RequestInterface::METHOD_GET);
+    $output = array($this->view($wrapper->getIdentifier()));
+    // Put the original request back to a POST.
+    $this->request = $old_request;
+
+    return $output;
   }
 
   /**
@@ -252,6 +260,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
    * {@inheritdoc}
    */
   public function update($identifier, $object, $replace = FALSE) {
+    $this->validateBody($object);
     $entity_id = $this->getEntityIdByFieldId($identifier);
     $this->isValidEntity('update', $entity_id);
 
@@ -815,6 +824,21 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     $this->entityValidate($wrapper);
 
     $wrapper->save();
+  }
+
+  /**
+   * Validates the body payload object for entities.
+   *
+   * @param mixed $body
+   *   The parsed body.
+   *
+   * @throws \Drupal\restful\Exception\BadRequestException
+   */
+  protected function validateBody($body) {
+    if (isset($body) && !is_array($body)) {
+      $message = sprintf('Incorrect object parsed: %s', print_r($body, TRUE));
+      throw new BadRequestException($message);
+    }
   }
 
 }

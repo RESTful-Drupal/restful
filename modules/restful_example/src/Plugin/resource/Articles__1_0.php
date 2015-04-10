@@ -7,7 +7,6 @@
 
 namespace Drupal\restful_example\Plugin\resource;
 
-use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\ResourceEntity;
 use Drupal\restful\Plugin\resource\ResourceInterface;
@@ -39,42 +38,30 @@ class Articles__1_0 extends ResourceEntity implements ResourceInterface {
    * {@inheritdoc}
    */
   protected function publicFields() {
-    return array(
-      'id' => array(
-        'property' => 'nid',
+    $public_fields = parent::publicFields();
+    $public_fields['tags'] = array(
+      'property' => 'field_tags',
+      'resource' => array(
+        'name' => 'tags',
+        'majorVersion' => 1,
+        'minorVersion' => 0,
       ),
-      'label' => array(
-        'wrapper_method' => 'label',
-        'wrapper_method_on_entity' => TRUE,
-        'process_callbacks' => array(
-          array(array($this, 'addPrefix'), array('Label: ')),
-        ),
-      ),
-      'self' => array(
-        'callback' => array($this, 'getEntitySelf'),
-      ),
-      'tags' => array(
-        'property' => 'field_tags',
-        'resource' => array(
-          'name' => 'tags',
-          'majorVersion' => 1,
-          'minorVersion' => 0,
-        ),
-      ),
-      'status' => array(
-        'property' => 'status',
-        'methods' => array(RequestInterface::METHOD_POST, RequestInterface::METHOD_PUT),
-      ),
-      'body' => array(
-        'property' => 'body',
-        'formatter' => array(
-          'type' => 'text_summary_or_trimmed',
-          'settings' => array(
-            'trim_length' => 100,
-          ),
+    );
+    $public_fields['status'] = array(
+      'property' => 'status',
+      'methods' => array(RequestInterface::METHOD_GET),
+    );
+    $public_fields['body'] = array(
+      'property' => 'body',
+      'formatter' => array(
+        'type' => 'text_summary_or_trimmed',
+        'settings' => array(
+          'trim_length' => 100,
         ),
       ),
     );
+
+    return $public_fields;
   }
 
   /**

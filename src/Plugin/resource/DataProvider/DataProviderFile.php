@@ -2,43 +2,26 @@
 
 /**
  * @file
- * Contains RestfulFilesUpload.
+ * Contains \Drupal\restful\Plugin\resource\DataProvider\DataProviderFile.
  */
 
-use Drupal\restful\Authentication\AuthenticationManager;
+namespace Drupal\restful\Plugin\resource\DataProvider;
+
 use Drupal\restful\Exception\BadRequestException;
+use Drupal\restful\Exception\NotImplementedException;
 use Drupal\restful\Exception\ServiceUnavailableException;
-use Drupal\restful\Exception\UnauthorizedException;
+use Drupal\restful\Http\RequestInterface;
+use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
 
-class RestfulFilesUpload extends \RestfulEntityBase {
-
-  /**
-   * Overrides \RestfulBase::controllersInfo().
-   */
-  public static function controllersInfo() {
-    return array(
-      '' => array(
-        \RestfulInterface::POST => 'createEntity',
-      ),
-    );
-  }
+class DataProviderFile extends DataProviderEntity implements DataProviderInterface {
 
   /**
-   * Overrides \RestfulEntityBase::__construct()
-   *
-   * Set the "options" key from the plugin info, specific for file upload, with
-   * the following keys:
-   * - "validators": By default no validation is done on the file extensions or
-   *   file size.
-   * - "scheme": By default the default scheme (e.g. public, private) is used.
+   * Constructs a DataProviderFile object.
    */
-  public function __construct(array $plugin, AuthenticationManager $auth_manager = NULL, \DrupalCacheInterface $cache_controller = NULL, $language = NULL) {
-    parent::__construct($plugin, $auth_manager, $cache_controller, $language);
+  public function __construct(RequestInterface $request, ResourceFieldCollectionInterface $field_definitions, $account, $resource_path, array $options, $langcode = NULL) {
+    parent::__construct($request, $field_definitions, $account, $resource_path, $options, $langcode);
 
-    if (!$options = $this->getPluginKey('options')) {
-      $options = array();
-    }
-
+    $file_options = empty($this->options['options']) ? array() : $this->options['options'];
     $default_values = array(
       'validators' => array(
         'file_validate_extensions' => array(),
@@ -47,33 +30,28 @@ class RestfulFilesUpload extends \RestfulEntityBase {
       'scheme' => file_default_scheme(),
       'replace' => FILE_EXISTS_RENAME,
     );
-
-    $this->setPluginKey('options', drupal_array_merge_deep($default_values, $options));
+    $this->options['options'] = drupal_array_merge_deep($default_values, $file_options);
   }
 
   /**
-   * Create and save files.
-   *
-   * @return array
-   *   Array with a list of file IDs that were created and saved.
-   *
-   * @throws \Exception
+   * {@inheritdoc}
    */
-  public function createEntity() {
-    if (!$_FILES) {
+  public function create($object) {
+    $files = $this->getRequest()->getFiles();
+    if (!$files) {
       throw new BadRequestException('No files sent with the request.');
     }
 
     $ids = array();
 
-    foreach ($_FILES as $file_info) {
+    foreach ($files as $file_info) {
       // Populate the $_FILES the way file_save_upload() expects.
       $name = $file_info['name'];
       foreach ($file_info as $key => $value) {
-        $_FILES['files'][$key][$name] = $value;
+        $files['files'][$key][$name] = $value;
       }
 
-      $file = $this->fileSaveUpload($name);
+      $file = $this->fileSaveUpload($name, $files);
 
       // Change the file status from temporary to permanent.
       $file->status = FILE_STATUS_PERMANENT;
@@ -87,36 +65,15 @@ class RestfulFilesUpload extends \RestfulEntityBase {
 
     $return = array();
     foreach ($ids as $id) {
-      $return[] = $this->viewEntity($id);
+      // The access calls use the request method. Fake the view to be a GET.
+      $old_request = $this->getRequest();
+      $this->getRequest()->setMethod(RequestInterface::METHOD_GET);
+      $return[] = array($this->view($id));
+      // Put the original request back to a POST.
+      $this->request = $old_request;
     }
 
     return $return;
-  }
-
-  /**
-   * Overrides RestfulEntityBase::access().
-   *
-   * If "File entity" module exists, determine access by its provided permissions
-   * otherwise, check if variable is set to allow anonymous users to upload.
-   * Defaults to authenticated user.
-   */
-  public function access() {
-    // The getAccount method may return an UnauthorizedException when an
-    // authenticated user cannot be found. Since this is called from the access
-    // callback, not from the page callback we need to catch the exception.
-    try {
-      $account = $this->getAccount();
-    }
-    catch (UnauthorizedException $e) {
-      // If a user is not found then load the anonymous user to check
-      // permissions.
-      $account = drupal_anonymous_user();
-    }
-    if (module_exists('file_entity')) {
-      return user_access('bypass file access', $account) || user_access('create files', $account);
-    }
-
-    return (variable_get('restful_file_upload_allow_anonymous_user', FALSE) || $account->uid) && parent::access();
   }
 
   /**
@@ -124,6 +81,8 @@ class RestfulFilesUpload extends \RestfulEntityBase {
    *
    * @param string $source
    *   A string specifying the filepath or URI of the uploaded file to save.
+   * @param array $files
+   *   Array containing information about the files.
    *
    * @return object
    *   The saved file object.
@@ -133,11 +92,11 @@ class RestfulFilesUpload extends \RestfulEntityBase {
    *
    * @see file_save_upload()
    */
-  protected function fileSaveUpload($source) {
+  protected function fileSaveUpload($source, array $files) {
     static $upload_cache;
 
-    $account = $this->getAccount();
-    $options = $this->getPluginKey('options');
+    $provider_options = $this->getOptions();
+    $options = $provider_options['options'];
 
     $validators = $options['validators'];
     $destination = $options['scheme'] . "://";
@@ -150,45 +109,23 @@ class RestfulFilesUpload extends \RestfulEntityBase {
     }
 
     // Make sure there's an upload to process.
-    if (empty($_FILES['files']['name'][$source])) {
+    if (empty($files['files']['name'][$source])) {
       return NULL;
     }
 
-    // Check for file upload errors and return FALSE if a lower level system
-    // error occurred. For a complete list of errors:
-    // See http://php.net/manual/features.file-upload.errors.php.
-    switch ($_FILES['files']['error'][$source]) {
-      case UPLOAD_ERR_INI_SIZE:
-      case UPLOAD_ERR_FORM_SIZE:
-        $message = format_string('The file %file could not be saved, because it exceeds %maxsize, the maximum allowed size for uploads.', array('%file' => $_FILES['files']['name'][$source], '%maxsize' => format_size(file_upload_max_size())));
-        throw new BadRequestException($message);
-
-      case UPLOAD_ERR_PARTIAL:
-      case UPLOAD_ERR_NO_FILE:
-        $message = format_string('The file %file could not be saved, because the upload did not complete.', array('%file' => $_FILES['files']['name'][$source]));
-        throw new BadRequestException($message);
-
-      case UPLOAD_ERR_OK:
-        // Final check that this is a valid upload, if it isn't, use the
-        // default error handler.
-        if (is_uploaded_file($_FILES['files']['tmp_name'][$source])) {
-          break;
-        }
-
-      // Unknown error
-      default:
-        $message = format_string('The file %file could not be saved. An unknown error has occurred.', array('%file' => $_FILES['files']['name'][$source]));
-        throw new ServiceUnavailableException($message);
-    }
+    $this->checkUploadErrors($source, $files);
 
     // Begin building file object.
-    $file = new stdClass();
-    $file->uid      = $account->uid;
-    $file->status   = 0;
-    $file->filename = trim(drupal_basename($_FILES['files']['name'][$source]), '.');
-    $file->uri      = $_FILES['files']['tmp_name'][$source];
-    $file->filemime = file_get_mimetype($file->filename);
-    $file->filesize = $_FILES['files']['size'][$source];
+    $file_array = array(
+      'uid' => $this->getAccount()->uid,
+      'status' => 0,
+      'filename' => trim(drupal_basename($files['files']['name'][$source]), '.'),
+      'uri' => $files['files']['tmp_name'][$source],
+      'filesize' => $files['files']['size'][$source],
+    );
+    $file_array['filemime'] = file_get_mimetype($file_array['filename']);
+
+    $file = (object) $file_array;
 
     $extensions = '';
     if (isset($validators['file_validate_extensions'])) {
@@ -198,8 +135,8 @@ class RestfulFilesUpload extends \RestfulEntityBase {
       }
       else {
         // If 'file_validate_extensions' is set and the list is empty then the
-        // caller wants to allow any extension. In this case we have to remove the
-        // validator or else it will reject all extensions.
+        // caller wants to allow any extension. In this case we have to remove
+        // the validator or else it will reject all extensions.
         unset($validators['file_validate_extensions']);
       }
     }
@@ -212,8 +149,8 @@ class RestfulFilesUpload extends \RestfulEntityBase {
     }
 
     if (!empty($extensions)) {
-      // Munge the filename to protect against possible malicious extension hiding
-      // within an unknown file type (ie: filename.html.foo).
+      // Munge the filename to protect against possible malicious extension
+      // hiding within an unknown file type (ie: filename.html.foo).
       $file->filename = file_munge_filename($file->filename, $extensions);
     }
 
@@ -225,8 +162,8 @@ class RestfulFilesUpload extends \RestfulEntityBase {
       $file->filemime = 'text/plain';
       $file->uri .= '.txt';
       $file->filename .= '.txt';
-      // The .txt extension may not be in the allowed list of extensions. We have
-      // to add it here or else the file upload will fail.
+      // The .txt extension may not be in the allowed list of extensions. We
+      // have to add it here or else the file upload will fail.
       if (!empty($extensions)) {
         $validators['file_validate_extensions'][0] .= ' txt';
 
@@ -254,8 +191,8 @@ class RestfulFilesUpload extends \RestfulEntityBase {
       $destination .= '/';
     }
     $file->destination = file_destination($destination . $file->filename, $replace);
-    // If file_destination() returns FALSE then $replace == FILE_EXISTS_ERROR and
-    // there's an existing file so we need to bail.
+    // If file_destination() returns FALSE then $replace == FILE_EXISTS_ERROR
+    // and there's an existing file so we need to bail.
     if ($file->destination === FALSE) {
       $message = format_string('The file %source could not be uploaded because a file by that name already exists in the destination %directory.', array('%source' => $source, '%directory' => $destination));
       throw new ServiceUnavailableException($message);
@@ -284,7 +221,7 @@ class RestfulFilesUpload extends \RestfulEntityBase {
     // directory. This overcomes open_basedir restrictions for future file
     // operations.
     $file->uri = $file->destination;
-    if (!drupal_move_uploaded_file($_FILES['files']['tmp_name'][$source], $file->uri)) {
+    if (!drupal_move_uploaded_file($files['files']['tmp_name'][$source], $file->uri)) {
       watchdog('file', 'Upload error. Could not move uploaded file %file to destination %destination.', array('%file' => $file->filename, '%destination' => $file->uri));
       $message = 'File upload error. Could not move uploaded file.';
       throw new ServiceUnavailableException($message);
@@ -312,4 +249,48 @@ class RestfulFilesUpload extends \RestfulEntityBase {
     // Something went wrong, so throw a general exception.
     throw new ServiceUnavailableException('Unknown error has occurred.');
   }
+
+  /**
+   * Checks of there is an error with the file upload and throws an exception.
+   *
+   * @param string $source
+   *   The name of the uploaded file
+   * @param array $files
+   *   Array containing information about the files.
+   *
+   * @throws \Drupal\restful\Exception\BadRequestException
+   * @throws \Drupal\restful\Exception\ServiceUnavailableException
+   */
+  protected function checkUploadErrors($source, array $files) {
+    // Check for file upload errors and return FALSE if a lower level system
+    // error occurred. For a complete list of errors:
+    // See http://php.net/manual/features.file-upload.errors.php.
+    switch ($files['files']['error'][$source]) {
+      case UPLOAD_ERR_INI_SIZE:
+      case UPLOAD_ERR_FORM_SIZE:
+        $message = format_string('The file %file could not be saved, because it exceeds %maxsize, the maximum allowed size for uploads.', array(
+          '%file' => $files['files']['name'][$source],
+          '%maxsize' => format_size(file_upload_max_size()),
+        ));
+        throw new BadRequestException($message);
+
+      case UPLOAD_ERR_PARTIAL:
+      case UPLOAD_ERR_NO_FILE:
+        $message = format_string('The file %file could not be saved, because the upload did not complete.', array('%file' => $files['files']['name'][$source]));
+        throw new BadRequestException($message);
+
+      case UPLOAD_ERR_OK:
+        // Final check that this is a valid upload, if it isn't, use the
+        // default error handler.
+        if (is_uploaded_file($files['files']['tmp_name'][$source])) {
+          break;
+        }
+
+      default:
+        // Unknown error.
+        $message = format_string('The file %file could not be saved. An unknown error has occurred.', array('%file' => $files['files']['name'][$source]));
+        throw new ServiceUnavailableException($message);
+    }
+  }
+
 }

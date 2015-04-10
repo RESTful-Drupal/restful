@@ -18,7 +18,7 @@ use Drupal\restful\Plugin\resource\ResourceInterface;
  *   name = "articles:2.0",
  *   resource = "articles",
  *   label = "Articles",
- *   description = "Export the article content type with cookie authentication.",
+ *   description = "Export the article content type with authentication.",
  *   authenticationTypes = TRUE,
  *   authenticationOptional = TRUE,
  *   dataProvider = {
@@ -39,13 +39,4 @@ use Drupal\restful\Plugin\resource\ResourceInterface;
  *   minorVersion = 0
  * )
  */
-class Articles__2_0 extends ResourceEntity implements ResourceInterface {
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function publicFields() {
-    return array();
-  }
-
-}
+class Articles__2_0 extends ResourceEntity implements ResourceInterface {}

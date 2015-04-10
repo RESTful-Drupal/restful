@@ -179,6 +179,14 @@ interface RequestInterface {
   public function getMethod();
 
   /**
+   * Set the HTTP method.
+   *
+   * @param string $method
+   *   The method to set.
+   */
+  public function setMethod($method);
+
+  /**
    * Get the server information.
    *
    * @return array
@@ -226,5 +234,13 @@ interface RequestInterface {
    * @return bool
    */
   public function isSecure();
+
+  /**
+   * Get the files in the request.
+   *
+   * @return array
+   *   The available files in the request.
+   */
+  public function getFiles();
 
 }
