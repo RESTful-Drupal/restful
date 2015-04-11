@@ -146,8 +146,20 @@ $plugin = array(
 );
 ```
 
+
 ## Setting the default range
 The range can be specified by setting `$this->range` in your plugin definition.
+
+
+## Setting plugin precedence
+Plugins can be sorted relative to each other by specifying a weight. This is useful, for example, in the case of formatters where the first formatter matching the Accept request header is used.
+
+```php
+$plugin = array(
+  ...
+  'weight' => -1,
+);
+```
 
 
 ### Disabling the range parameter
