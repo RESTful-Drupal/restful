@@ -79,6 +79,7 @@ files[] = tests/RestfulHookMenuTestCase.test
 files[] = tests/RestfulListEntityMultipleBundlesTestCase.test
 files[] = tests/RestfulListTestCase.test
 files[] = tests/RestfulPassThroughTestCase.test
+files[] = tests/RestfulPluginPrecedenceTestCase.test
 files[] = tests/RestfulRateLimitTestCase.test
 files[] = tests/RestfulReferenceTestCase.test
 files[] = tests/RestfulRenderCacheTestCase.test
