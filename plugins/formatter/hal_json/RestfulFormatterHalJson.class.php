@@ -78,7 +78,6 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
     }
     $request = $this->handler->getRequest();
 
-
     if (!isset($data['_links'])) {
       $data['_links'] = array();
     }
