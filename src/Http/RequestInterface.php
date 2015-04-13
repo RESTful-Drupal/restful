@@ -225,7 +225,8 @@ interface RequestInterface {
    * This method can read the client port from the "X-Forwarded-Proto" header
    * when trusted proxies were set via "setTrustedProxies()".
    *
-   * The "X-Forwarded-Proto" header must contain the protocol: "https" or "http".
+   * The "X-Forwarded-Proto" header must contain the protocol: "https" or
+   * "http".
    *
    * If your reverse proxy uses a different header name than "X-Forwarded-Proto"
    * ("SSL_HTTPS" for instance), configure it via "setTrustedHeaderName()" with
@@ -242,5 +243,29 @@ interface RequestInterface {
    *   The available files in the request.
    */
   public function getFiles();
+
+  /**
+   * Get CSRF Token.
+   *
+   * @return string
+   *   Gets the CSRF token.
+   */
+  public function getCsrfToken();
+
+  /**
+   * Is via router.
+   *
+   * @return bool
+   *   TRUE if the request was generated via the Drupal's menu router.
+   */
+  public function isViaRouter();
+
+  /**
+   * Marks the request as being via Drupal's menu router.
+   *
+   * @param bool $via_router
+   *   The flag to set.
+   */
+  public function setViaRouter($via_router);
 
 }

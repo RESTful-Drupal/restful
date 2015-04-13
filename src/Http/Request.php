@@ -480,13 +480,31 @@ class Request implements RequestInterface {
   }
 
   /**
-   * Get the files in the request.
-   *
-   * @return array
-   *   The available files in the request.
+   * {@inheritdoc}
    */
   public function getFiles() {
     return $this->files;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCsrfToken() {
+    return $this->csrfToken;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isViaRouter() {
+    return $this->viaRouter;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setViaRouter($via_router) {
+    $this->viaRouter = $via_router;
   }
 
 }

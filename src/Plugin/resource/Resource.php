@@ -8,13 +8,15 @@
 namespace Drupal\restful\Plugin\resource;
 
 use Drupal\Component\Plugin\PluginBase;
+use Drupal\restful\Authentication\AuthenticationManager;
+use Drupal\restful\Authentication\AuthenticationManagerInterface;
 use Drupal\restful\Exception\BadRequestException;
 use Drupal\restful\Exception\ForbiddenException;
 use Drupal\restful\Exception\GoneException;
 use Drupal\restful\Exception\NotImplementedException;
 use Drupal\restful\Exception\ServerConfigurationException;
+use Drupal\restful\Exception\UnauthorizedException;
 use Drupal\restful\Http\HttpHeader;
-use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\ConfigurablePluginTrait;
 use Drupal\restful\Plugin\resource\DataProvider\DataProviderInterface;
@@ -60,6 +62,13 @@ abstract class Resource extends PluginBase implements ResourceInterface {
   protected $fieldDefinitions;
 
   /**
+   * The authentication manager.
+   *
+   * @var AuthenticationManagerInterface
+   */
+  protected $authenticationManager;
+
+  /**
    * Constructs a Drupal\Component\Plugin\PluginBase object.
    *
    * @param array $configuration
@@ -72,13 +81,15 @@ abstract class Resource extends PluginBase implements ResourceInterface {
   public function __construct(array $configuration, $plugin_id, $plugin_definition) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->fieldDefinitions = ResourceFieldCollection::factory($this->processPublicFields($this->publicFields()));
+
+    $this->initAuthenticationManager();
   }
 
   /**
    * {@inheritdoc}
    */
   public function getAccount($cache = TRUE) {
-    return user_load($GLOBALS['user']->uid);
+    return $this->authenticationManager->getAccount($this->getRequest());
   }
 
   /**
@@ -280,7 +291,7 @@ abstract class Resource extends PluginBase implements ResourceInterface {
    */
   protected function getControllerFromPath() {
     $path = $this->getPath();
-    $method = $this->request->getMethod();
+    $method = $this->getRequest()->getMethod();
 
     $selected_controller = NULL;
     foreach ($this->getControllers() as $pattern => $controllers) {
@@ -408,6 +419,38 @@ abstract class Resource extends PluginBase implements ResourceInterface {
   protected function processPublicFields(array $field_definitions) {
     // By default do not do any special processing.
     return $field_definitions;
+  }
+
+  /**
+   * Initializes the authentication manager and adds the appropriate providers.
+   *
+   * This will return an AuthenticationManagerInterface if the current resource
+   * needs to be authenticated. To skip authentication completely do not set
+   * authenticationTypes and set authenticationOptional to TRUE.
+   */
+  protected function initAuthenticationManager() {
+    $this->authenticationManager = new AuthenticationManager();
+
+    $plugin_definition = $this->getPluginDefinition();
+    $authentication_types = $plugin_definition['authenticationTypes'];
+    $authentication_optional = $plugin_definition['authenticationOptional'];
+    $this->authenticationManager->setIsOptional($authentication_optional);
+    if (empty($authentication_types)) {
+      if (empty($authentication_optional)) {
+        // Fail early, fail good.
+        throw new UnauthorizedException('There are no authentication providers and authentication is not optional.');
+      }
+      return;
+    }
+    if ($authentication_types === TRUE) {
+      // Add all the available authentication providers to the manager.
+      $this->authenticationManager->addAllAuthenticationProviders();
+      return;
+    }
+    foreach ($authentication_types as $authentication_type) {
+      // Read the authentication providers and add them to the manager.
+      $this->authenticationManager->addAuthenticationProvider($authentication_type);
+    }
   }
 
 }
