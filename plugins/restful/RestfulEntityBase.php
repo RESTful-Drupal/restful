@@ -460,6 +460,15 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       elseif ($field['type'] == 'taxonomy_term_reference') {
         return 'taxonomy_term';
       }
+      elseif ($field['type'] == 'field_collection') {
+        return 'field_collection_item';
+      }
+      elseif ($field['type'] == 'commerce_product_reference') {
+        return 'commerce_product';
+      }
+      elseif ($field['type'] == 'commerce_line_item_reference') {
+        return 'commerce_line_item';
+      }
 
       throw new \RestfulException(format_string('Field @property is not an entity reference or taxonomy reference field.', $params));
     }
@@ -527,8 +536,9 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     }
     $bundle_handler = $handlers[$bundle];
 
-    // Pipe the parent request to the sub-request.
+    // Pipe the parent request and account to the sub-request.
     $piped_request = $this->getRequestForSubRequest();
+    $bundle_handler->setAccount($this->getAccount());
     $bundle_handler->setRequest($piped_request);
     return $bundle_handler->viewEntity($id);
   }
@@ -592,7 +602,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     // Set the HTTP headers.
     $this->setHttpHeaders('Status', 201);
 
-    if (!empty($wrapper->url) && $url = $wrapper->url->value()); {
+    if (!empty($wrapper->url) && $url = $wrapper->url->value()) {
       $this->setHttpHeaders('Location', $url);
     }
 
@@ -715,6 +725,9 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     switch ($field_info['type']) {
       case 'entityreference':
       case 'taxonomy_term_reference':
+      case 'field_collection':
+      case 'commerce_product_reference':
+      case 'commerce_line_item_reference':
         return $this->propertyValuesPreprocessReference($property_name, $value, $field_info, $public_field_name);
 
       case 'text':
@@ -1384,12 +1397,15 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     $field_types = array(
       'entityreference',
       'taxonomy_term_reference',
+      'field_collection',
+      'commerce_product_reference',
     );
 
     $widget_types = array(
       'taxonomy_autocomplete',
       'entityreference_autocomplete',
       'entityreference_autocomplete_tags',
+      'commerce_product_reference_autocomplete',
     );
 
     return !in_array($field['type'], $field_types) || !in_array($instance['widget']['type'], $widget_types);

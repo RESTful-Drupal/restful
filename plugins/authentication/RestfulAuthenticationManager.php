@@ -14,6 +14,13 @@ class RestfulAuthenticationManager extends \ArrayObject {
    */
   protected $account;
 
+  /**
+   * The original user object and session.
+   *
+   * @var array
+   */
+  protected $originalUserSession;
+
 
   /**
    * Determines if authentication is optional.
@@ -71,10 +78,12 @@ class RestfulAuthenticationManager extends \ArrayObject {
    */
   public function getAccount(array $request = array(), $method = \RestfulInterface::GET, $cache = TRUE) {
     global $user;
+
     // Return the previously resolved user, if any.
     if (!empty($this->account)) {
       return $this->account;
     }
+
     // Resolve the user based on the providers in the manager.
     $account = NULL;
     foreach ($this as $provider) {
@@ -105,6 +114,7 @@ class RestfulAuthenticationManager extends \ArrayObject {
     if ($cache) {
       $this->setAccount($account);
     }
+
     return $account;
   }
 
@@ -116,6 +126,76 @@ class RestfulAuthenticationManager extends \ArrayObject {
    */
   public function setAccount(\stdClass $account) {
     $this->account = $account;
+    $this->switchUser();
   }
+
+  /**
+   * Switch the user to the user authenticated by RESTful.
+   *
+   * @link https://www.drupal.org/node/218104
+   */
+  public function switchUser() {
+    global $user;
+
+    if (!restful_is_user_switched() && !$this->getOriginalUserSession()) {
+      // This is the first time a user switched, and there isn't an original
+      // user session.
+
+      $session = drupal_save_session();
+      $this->setOriginalUserSession(array(
+        'user' => $user,
+        'session' => $session,
+      ));
+
+      // Don't allow a session to be saved. Provider that require a session to
+      // be saved, like the cookie provider, need to explicitly set
+      // drupal_save_session(TRUE).
+      // @see \RestfulUserLoginCookie::loginUser().
+      drupal_save_session(FALSE);
+    }
+
+    $account = $this->getAccount();
+    // Set the global user.
+    $user = $account;
+
+  }
+
+  /**
+   * Switch the user to the authenticated user, and back.
+   *
+   * This should be called only for an API call. It should not be used for calls
+   * via the menu system, as it might be a login request, so we avoid switching
+   * back to the anonymous user.
+   */
+  public function switchUserBack() {
+    global $user;
+    if (!$user_state = $this->getOriginalUserSession()) {
+      return;
+    }
+
+    $user = $user_state['user'];
+    drupal_save_session($user_state['session']);
+  }
+
+  /**
+   * Set the original user object and session.
+   *
+   * @param array $original_user_session
+   *   Array keyed by 'user' and 'session'.
+   */
+  protected function setOriginalUserSession(array $original_user_session) {
+    $this->originalUserSession = $original_user_session;
+  }
+
+  /**
+   * Get the original user object and session.
+   *
+   * @return array
+   *   Array keyed by 'user' and 'session'.
+   */
+  protected function getOriginalUserSession() {
+    return $this->originalUserSession;
+  }
+
 
 }

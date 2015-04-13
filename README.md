@@ -7,7 +7,7 @@ practices for security, performance, and usability.
 
 
 ## Concept
-Here are the differences between RESTful and other modules, such as RestWs and
+These are the differences between RESTful and other modules, such as RestWs and
 Services Entity:
 
 * RESTful requires explicitly declaring the exposed API. When enabling
@@ -28,9 +28,8 @@ control.
 
 ## Module dependencies
 
-  * [Entity API](https://drupal.org/project/entity), with the following patches:
-  * [$wrapper->access() might be wrong for single entity reference field](https://www.drupal.org/node/2264079#comment-8911637)
-  * [Prevent notice in entity_metadata_no_hook_node_access() when node is not saved](https://drupal.org/node/2086225#comment-8768373)
+  * [Entity API](https://drupal.org/project/entity), with the following patch:
+  * [Prevent notice in entity_metadata_no_hook_node_access() when node is not saved](https://www.drupal.org/node/2086225#comment-9627407)
 
 ## Recipes
 Read even more examples on how to use the RESTful module in the [module documentation
@@ -64,7 +63,7 @@ dependencies[] = restful
  }
 ```
 
-####restful\_custom/plugins/restful/myplugin.inc
+####restful\_custom/plugins/restful/articles.inc
 ```php
 $plugin = array(
   'label' => t('Articles'),

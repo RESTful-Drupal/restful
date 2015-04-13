@@ -426,6 +426,20 @@ function restful_menu_access_callback($resource_name, $version = NULL) {
     return;
   }
 
+  // Set the request and method on the handler, so access callbacks have full
+  // access to the request and account.
+  $path = func_get_args();
+  array_shift($path);
+  if (preg_match('/^v\d+(\.\d+)?$/', $version)) {
+    array_shift($path);
+  }
+  $path = implode('/', $path);
+
+  $request = restful_parse_request();
+  $handler->setPath($path);
+  $handler->setMethod($method);
+  $handler->setRequest($request);
+
   return $handler->access();
 }
 
@@ -445,11 +459,6 @@ function restful_menu_access_callback($resource_name, $version = NULL) {
  * @see http://tools.ietf.org/html/draft-nottingham-http-problem-06
  */
 function restful_menu_process_callback($resource_name, $version = NULL) {
-  $path = func_get_args();
-  array_shift($path);
-  if (preg_match('/^v\d+(\.\d+)?$/', $version)) {
-    array_shift($path);
-  }
   list($major_version, $minor_version) = \RestfulBase::getVersionFromRequest();
   $handler = restful_get_restful_handler($resource_name, $major_version, $minor_version);
   if (!$handler instanceof \RestfulDataProviderInterface) {
@@ -472,15 +481,21 @@ function restful_menu_process_callback($resource_name, $version = NULL) {
     $handler->setHttpHeaders('Access-Control-Allow-Origin', $allowed_origin);
   }
 
-  $path = implode('/', $path);
-
   $method = strtoupper($_SERVER['REQUEST_METHOD']);
 
   if ($method == \RestfulInterface::POST && \RestfulManager::getRequestHttpHeader('X-HTTP-Method-Override')) {
-    $method = strtoupper(\RestfulManager::getRequestHttpHeader('X-HTTP-Method-Override'));
+    $method = \RestfulManager::getRequestHttpHeader('X-HTTP-Method-Override');
   }
 
   $method = strtolower($method);
+
+  $path = func_get_args();
+  array_shift($path);
+  if (preg_match('/^v\d+(\.\d+)?$/', $version)) {
+    array_shift($path);
+  }
+  $path = implode('/', $path);
+
   $request = restful_parse_request();
 
   try {
@@ -527,7 +542,11 @@ function restful_menu_process_callback($resource_name, $version = NULL) {
  *   The request array.
  */
 function restful_parse_request() {
-  $request = NULL;
+  $request = &drupal_static(__FUNCTION__, NULL);
+  if ($request) {
+    return $request;
+  }
+
   $method = strtoupper($_SERVER['REQUEST_METHOD']);
 
   if ($method == \RestfulInterface::GET) {
@@ -556,7 +575,7 @@ function restful_parse_request() {
     'csrf_token' => \RestfulManager::getRequestHttpHeader('X-CSRF-Token'),
   );
 
-  // Allow implemeting modules to alter the request.
+  // Allow implementing modules to alter the request.
   drupal_alter('restful_parse_request', $request);
 
   return $request;
@@ -749,3 +768,21 @@ function restful_date_time_format_element_validate($element, &$form_state) {
     )));
   }
 }
+
+/**
+ * Determine if this is the first time we try to switch the user.
+ *
+ * @return bool
+ *   TRUE if this static function was already called.
+ */
+function restful_is_user_switched() {
+  $restful_switch_user = &drupal_static(__FUNCTION__, FALSE);
+
+  if (!$restful_switch_user) {
+    $restful_switch_user = TRUE;
+    return FALSE;
+  }
+
+  return TRUE;
+}
+

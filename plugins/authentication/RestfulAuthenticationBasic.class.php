@@ -60,6 +60,7 @@ class RestfulAuthenticationBasic extends RestfulAuthenticationBase implements Re
       if ($uid = user_authenticate($username, $password)) {
         // Clear the user based flood control.
         flood_clear_event('failed_login_attempt_user', $identifier);
+
         return user_load($uid);
       }
       flood_register_event('failed_login_attempt_user', variable_get('user_failed_login_user_window', 3600), $identifier);
