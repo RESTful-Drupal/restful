@@ -87,13 +87,14 @@ class LoginCookie__1_0 extends ResourceEntity implements ResourceInterface {
       ->getResourceManager()
       ->getPlugin('users:1.0');
 
+    // User resource may be disabled.
     $output = $user_resource ? $user_resource->view($account->uid) : array();
     $output += restful_csrf_session_token();
     return $output;
   }
 
   /**
-   * Log the user.
+   * Log the user in.
    *
    * @param object $account
    *   The user object that was retrieved by the AuthenticationManager.

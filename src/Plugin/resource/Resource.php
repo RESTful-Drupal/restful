@@ -423,9 +423,12 @@ abstract class Resource extends PluginBase implements ResourceInterface {
 
   /**
    * Initializes the authentication manager and adds the appropriate providers.
+   *
+   * This will return an AuthenticationManagerInterface if the current resource
+   * needs to be authenticated. To skip authentication completely do not set
+   * authenticationTypes and set authenticationOptional to TRUE.
    */
   protected function initAuthenticationManager() {
-    // If there is authentication enabled, create the authentication manager.
     $this->authenticationManager = new AuthenticationManager();
 
     $plugin_definition = $this->getPluginDefinition();
@@ -440,7 +443,7 @@ abstract class Resource extends PluginBase implements ResourceInterface {
       return;
     }
     if ($authentication_types === TRUE) {
-      // All all the available authentication providers to the manager.
+      // Add all the available authentication providers to the manager.
       $this->authenticationManager->addAllAuthenticationProviders();
       return;
     }

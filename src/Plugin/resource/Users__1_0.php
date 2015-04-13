@@ -7,8 +7,6 @@
 
 namespace Drupal\restful\Plugin\resource;
 
-use Drupal\restful\Http\RequestInterface;
-
 /**
  * Class Articles
  * @package Drupal\restful\Plugin\resource
@@ -36,16 +34,11 @@ class Users__1_0 extends ResourceEntity implements ResourceInterface {
    * {@inheritdoc}
    */
   protected function publicFields() {
-    $public_fields = array();
-    $public_fields['id'] = array(
-      'property' => 'uid',
-      'methods' => array(RequestInterface::METHOD_GET),
-    );
+    $public_fields = parent::publicFields();
+
+    // The mail will be shown only to the own user or privileged users.
     $public_fields['mail'] = array(
       'property' => 'mail',
-    );
-    $public_fields['self'] = array(
-      'callback' => array($this, 'getEntitySelf'),
     );
 
     return $public_fields;
