@@ -15,7 +15,7 @@ use Drupal\restful\Plugin\resource\DataProvider\DataProviderEntityInterface;
  * Class AccessToken__1_0
  * @package Drupal\restful_token_auth\Plugin\resource
  *
- * @Resource (
+ * @Resource(
  *   name = "access_token:1.0",
  *   resource = "access_token",
  *   label = "Access token authentication",
@@ -26,9 +26,9 @@ use Drupal\restful\Plugin\resource\DataProvider\DataProviderEntityInterface;
  *   },
  *   authenticationOptional = FALSE,
  *   dataProvider = {
- *     "entityType": "user",
+ *     "entityType": "restful_token_auth",
  *     "bundles": {
- *       "user"
+ *       "access_token"
  *     },
  *   },
  *   majorVersion = 1,
@@ -52,7 +52,7 @@ class AccessToken__1_0 extends TokenAuthenticationBase implements ResourceInterf
     // Set dynamic options that cannot be set in the annotation.
     // Set the menuItem. restful_token_auth_menu_alter will add custom settings.
     $plugin_definition = $this->getPluginDefinition();
-    $plugin_definition['menuItem'] = variable_get('restful_hook_menu_base_path', 'api') . '/login';
+    $plugin_definition['menuItem'] = variable_get('restful_hook_menu_base_path', 'api') . '/login-token';
 
     // Store the plugin definition.
     $this->pluginDefinition = $plugin_definition;
@@ -106,14 +106,13 @@ class AccessToken__1_0 extends TokenAuthenticationBase implements ResourceInterf
       }
     }
 
-    $output = NULL;
     if (!$token_exists) {
-      /** @var \RestfulTokenAuthController $controller */
+      /** @var \Drupal\restful_token_auth\Entity\RestfulTokenAuthController $controller */
       $controller = entity_get_controller($this->getEntityType());
       $access_token = $controller->generateAccessToken($account->uid);
       $id = $access_token->id;
-      $output = $this->view($id);
     }
+    $output = $this->view($id);
 
     return $output;
   }

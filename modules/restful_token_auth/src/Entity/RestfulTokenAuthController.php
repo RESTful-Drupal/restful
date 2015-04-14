@@ -2,8 +2,10 @@
 
 /**
  * @file
- * Contains \RestfulTokenAuthController
+ * Contains Drupal\restful_token_auth\Entity\RestfulTokenAuthController.
  */
+
+namespace Drupal\restful_token_auth\Entity;
 
 use Drupal\restful\Exception\ServerConfigurationException;
 
@@ -15,7 +17,7 @@ class RestfulTokenAuthController extends \EntityAPIController {
    * @param int $uid
    *   The user ID.
    *
-   * @return \RestfulTokenAuth
+   * @return RestfulTokenAuth
    *   The created entity.
    */
   public function generateAccessToken($uid) {
@@ -50,7 +52,7 @@ class RestfulTokenAuthController extends \EntityAPIController {
    * @param int $uid
    *   The user ID.
    *
-   * @return \RestfulTokenAuth
+   * @return RestfulTokenAuth
    *   The token entity.
    */
   private function generateRefreshToken($uid) {

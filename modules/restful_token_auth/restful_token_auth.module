@@ -31,7 +31,7 @@ function restful_token_auth_menu() {
  * Implements hook_menu_alter().
  */
 function restful_token_auth_menu_alter(&$items) {
-  $access_token_plugins = array();
+  $access_token_plugin_definitions = array();
   $plugins = restful()
     ->getResourceManager()
     ->getPlugins();
@@ -39,15 +39,15 @@ function restful_token_auth_menu_alter(&$items) {
     /** @var ResourceInterface $plugin */
     $plugin_definition = $plugin->getPluginDefinition();
     if (!empty($plugin_definition['dataProvider']['entityType']) && $plugin_definition['dataProvider']['entityType'] == 'restful_token_auth') {
-      $access_token_plugins[] = $plugin;
+      $access_token_plugin_definitions[] = $plugin_definition;
     }
   }
-  if (empty($access_token_plugins)) {
+  if (empty($access_token_plugin_definitions)) {
     return;
   }
-  foreach ($access_token_plugins as $access_token_plugin) {
-    if (!empty($items[$access_token_plugin['menu_item']])) {
-      $items[$access_token_plugin['menuItem']]['delivery callback'] = 'restful_unprepared_delivery';
+  foreach ($access_token_plugin_definitions as $access_token_plugin_definition) {
+    if (!empty($items[$access_token_plugin_definition['menuItem']])) {
+      $items[$access_token_plugin_definition['menuItem']]['delivery callback'] = 'restful_unprepared_delivery';
     }
   }
 }
@@ -88,8 +88,8 @@ function restful_token_auth_ctools_plugin_directory($module, $plugin) {
 function restful_token_auth_entity_info() {
   $items['restful_token_auth'] = array(
     'label' => t('Authentication token'),
-    'entity class' => 'RestfulTokenAuth',
-    'controller class' => 'RestfulTokenAuthController',
+    'entity class' => '\\Drupal\\restful_token_auth\\Entity\\RestfulTokenAuth',
+    'controller class' => '\\Drupal\\restful_token_auth\\Entity\\RestfulTokenAuthController',
     'base table' => 'restful_token_auth',
     'fieldable' => TRUE,
     'entity keys' => array(

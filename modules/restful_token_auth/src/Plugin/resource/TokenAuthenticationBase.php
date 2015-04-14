@@ -9,6 +9,7 @@ namespace Drupal\restful_token_auth\Plugin\resource;
 
 use Drupal\restful\Plugin\resource\ResourceEntity;
 use Drupal\restful\Plugin\resource\ResourceInterface;
+use Drupal\restful_token_auth\Entity\RestfulTokenAuth;
 
 abstract class TokenAuthenticationBase extends ResourceEntity implements ResourceInterface {
 
@@ -27,13 +28,13 @@ abstract class TokenAuthenticationBase extends ResourceEntity implements Resourc
     $public_fields['expires_in'] = array(
       'property' => 'expire',
       'process_callbacks' => array(
-        'static::intervalInSeconds',
+        '\Drupal\restful_token_auth\Plugin\resource\TokenAuthenticationBase::intervalInSeconds',
       ),
     );
     $public_fields['refresh_token'] = array(
       'property' => 'refresh_token_reference',
       'process_callbacks' => array(
-        'static::getTokenFromEntity',
+        '\Drupal\restful_token_auth\Plugin\resource\TokenAuthenticationBase::getTokenFromEntity',
       ),
     );
 
@@ -57,13 +58,14 @@ abstract class TokenAuthenticationBase extends ResourceEntity implements Resourc
   /**
    * Get the token string from the token entity.
    *
-   * @param \RestfulTokenAuth $token
+   * @param int $token_id
    *   The restful_token_auth entity.
    *
    * @return string
    *   The token string.
    */
-  public static function getTokenFromEntity(\RestfulTokenAuth $token) {
+  public static function getTokenFromEntity($token_id) {
+    $token = entity_load_single('restful_token_auth', $token_id);
     return $token->token;
   }
 
