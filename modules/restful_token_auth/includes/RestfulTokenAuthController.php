@@ -30,9 +30,11 @@ class RestfulTokenAuthController extends \EntityAPIController {
       )),
       'token' => drupal_random_key(),
       'expire' => $this->getExpireTime(),
-      'refresh_token_reference' => array(LANGUAGE_NONE => array(array(
-        'target_id' => $refresh_token->id,
-      ))),
+      'refresh_token_reference' => array(
+        LANGUAGE_NONE => array(array(
+          'target_id' => $refresh_token->id,
+        )),
+      ),
     );
     $access_token = $this->create($values);
     $this->save($access_token);
@@ -41,7 +43,7 @@ class RestfulTokenAuthController extends \EntityAPIController {
   }
 
   /**
-   * Create a refresh token for the current user
+   * Create a refresh token for the current user.
    *
    * It will delete all the existing refresh tokens for that same user as well.
    *

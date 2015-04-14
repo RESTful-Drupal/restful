@@ -462,12 +462,9 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
   }
 
   /**
-   * Gets a EFQ object.
-   *
-   * @return \EntityFieldQuery
-   *   The object that inherits from \EntityFieldQuery.
+   * {@inheritdoc}
    */
-  protected function EFQObject() {
+  public function EFQObject() {
     $efq_class = $this->EFQClass;
     return new $efq_class();
   }

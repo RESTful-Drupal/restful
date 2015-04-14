@@ -13,6 +13,7 @@ use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Http\Response;
 use Drupal\restful\Http\ResponseInterface;
+use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
 use Drupal\restful\Resource\ResourceManager;
 use Drupal\restful\Resource\ResourceManagerInterface;
 
@@ -166,6 +167,21 @@ class RestfulManager {
     // The menu callback function is in charge of adding all the headers and
     // returning the body.
     return $this->response;
+  }
+
+  /**
+   * Helper function to echo static strings.
+   *
+   * @param DataInterpreterInterface $value
+   *   The resource value.
+   * @param string $message
+   *   The string to relay.
+   *
+   * @return string
+   *   Returns $message
+   */
+  public static function echoMessage(DataInterpreterInterface $value, $message) {
+    return $message;
   }
 
 }

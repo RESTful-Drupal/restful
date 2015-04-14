@@ -6,5 +6,4 @@
  */
 
 
-class RestfulTokenAuth extends Entity {
-}
+class RestfulTokenAuth extends Entity {}

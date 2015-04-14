@@ -19,7 +19,7 @@ use Drupal\restful\Plugin\authentication\Authentication;
  *   label = "Token based authentication",
  *   description = "Authenticate requests based on the token sent in the request.",
  *   options = {
- *     "param_name" = "access_token",
+ *     "paramName" = "access_token",
  *   },
  * )
  */
