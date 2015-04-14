@@ -80,25 +80,20 @@ class FormatterManager implements FormatterManagerInterface {
     $default_formatter_name = variable_get('restful_default_output_formatter', 'json');
     try {
       if ($formatter_name) {
-        return $this->plugins->get($formatter_name);
+        return  $this->getPluginByName($formatter_name);
       }
       // Sometimes we will get a default Accept: */* in that case we want to
       // return the default content type and not just any.
       if (empty($accept) || $accept == '*/*') {
         // Return the default formatter.
-        return $this->plugins->get($default_formatter_name);
+        return $this->getPluginByName($default_formatter_name);
       }
       foreach (explode(',', $accept) as $accepted_content_type) {
         // Loop through all the formatters and find the first one that matches
         // the Content-Type header.
         $accepted_content_type = trim($accepted_content_type);
         if (strpos($accepted_content_type, '*/*') === 0) {
-          /** @var FormatterInterface $formatter */
-          $formatter = $this->plugins->get($default_formatter_name);
-          $formatter->setConfiguration(array(
-            'resource' => $this->resource,
-          ));
-          return $formatter;
+          return $this->getPluginByName($default_formatter_name);
         }
         foreach ($this->plugins as $formatter_name => $formatter) {
           /** @var FormatterInterface $formatter */
@@ -198,6 +193,24 @@ class FormatterManager implements FormatterManagerInterface {
    */
   public function getPlugin($instance_id) {
     return $this->plugins->get($instance_id);
+  }
+
+  /**
+   * Gets a plugin by name initializing the resource.
+   *
+   * @param string $name
+   *   The formatter name.
+   *
+   * @return FormatterInterface
+   *   The plugin.
+   */
+  protected function getPluginByName($name) {
+    /** @var FormatterInterface $formatter */
+    $formatter = $this->plugins->get($name);
+    $formatter->setConfiguration(array(
+      'resource' => $this->resource,
+    ));
+    return $formatter;
   }
 
 }

@@ -6,6 +6,7 @@
  */
 
 namespace Drupal\restful\Plugin\formatter;
+use Drupal\restful\Exception\ServerConfigurationException;
 
 /**
  * Class FormatterHalJson
@@ -41,6 +42,9 @@ class FormatterHalJson extends Formatter implements FormatterInterface {
       return $data;
     }
     // Here we get the data after calling the backend storage for the resources.
+    if (empty($this->resource)) {
+      throw new ServerConfigurationException('Resource unavailable for HAL formatter.');
+    }
 
     $curies_resource = $this->withCurie($this->resource->getResourceName());
     $output = array();
