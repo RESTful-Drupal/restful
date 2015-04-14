@@ -34,8 +34,7 @@ class TokenAuthentication extends Authentication {
     $key_name = !empty($options['paramName']) ? $options['paramName'] : 'access_token';
 
     // Access token may be on the request, or in the headers.
-    $body = $request->getParsedBody();
-    $token = $request->getApplicationData($key_name) ? $request->getApplicationData($key_name) : $body[$key_name];
+    $token = $request->getApplicationData($key_name) ? $request->getApplicationData($key_name) : $request->getHeaders()->get($key_name)->getValueString();
     return (bool) $token;
   }
 
@@ -46,8 +45,10 @@ class TokenAuthentication extends Authentication {
     $plugin_definition = $this->getPluginDefinition();
     $options = $plugin_definition['options'];
     $key_name = !empty($options['paramName']) ? $options['paramName'] : 'access_token';
-    $body = $request->getParsedBody();
-    $token = $request->getApplicationData($key_name) ? $request->getApplicationData($key_name) : $body[$key_name];
+    // Access token may be on the request, or in the headers.
+    if (!$token = $request->getApplicationData($key_name) ? $request->getApplicationData($key_name) : $request->getHeaders()->get($key_name)->getValueString()) {
+      return NULL;
+    }
 
     // Check if there is a token that did not expire yet.
 

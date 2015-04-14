@@ -22,8 +22,7 @@ use Drupal\restful_token_auth\Entity\RestfulTokenAuth;
  *   resource = "refresh_token",
  *   label = "Refresh token authentication",
  *   description = "Export the refresh token authentication resource.",
- *   authenticationTypes = {},
- *   authenticationOptional = FALSE,
+ *   authenticationOptional = TRUE,
  *   dataProvider = {
  *     "entityType": "restful_token_auth",
  *     "bundles": {

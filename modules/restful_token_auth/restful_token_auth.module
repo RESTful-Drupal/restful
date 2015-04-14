@@ -11,7 +11,7 @@ use Drupal\restful\Authentication\AuthenticationManager;
 use Drupal\restful\Plugin\resource\ResourceInterface;
 
 /**
- *  Implements hook_menu().
+ * Implements hook_menu().
  */
 function restful_token_auth_menu() {
   // Add administration page.
