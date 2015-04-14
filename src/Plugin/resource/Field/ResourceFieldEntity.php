@@ -501,7 +501,7 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
     // database field.
     $wrapper = entity_metadata_wrapper($entity_type);
     foreach ($wrapper->getPropertyInfo() as $wrapper_property => $property_info) {
-      if ($property_info['schema field'] == $property) {
+      if (!empty($property_info['schema field']) && $property_info['schema field'] == $property) {
         $property = $wrapper_property;
         break;
       }
