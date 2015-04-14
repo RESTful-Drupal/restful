@@ -9,7 +9,6 @@ namespace Drupal\restful_token_auth\Plugin\resource;
 
 use Drupal\restful\Plugin\resource\ResourceEntity;
 use Drupal\restful\Plugin\resource\ResourceInterface;
-use Drupal\restful_token_auth\Entity\RestfulTokenAuth;
 
 abstract class TokenAuthenticationBase extends ResourceEntity implements ResourceInterface {
 
@@ -65,8 +64,10 @@ abstract class TokenAuthenticationBase extends ResourceEntity implements Resourc
    *   The token string.
    */
   public static function getTokenFromEntity($token_id) {
-    $token = entity_load_single('restful_token_auth', $token_id);
-    return $token->token;
+    if ($token = entity_load_single('restful_token_auth', $token_id)) {
+      return $token->token;
+    }
+    return NULL;
   }
 
 }

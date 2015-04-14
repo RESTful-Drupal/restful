@@ -38,7 +38,7 @@ use Drupal\restful\Plugin\resource\DataProvider\DataProviderEntityInterface;
 class AccessToken__1_0 extends TokenAuthenticationBase implements ResourceInterface {
 
   /**
-   * Constructs a LoginCookie__1_0 object.
+   * Constructs a AccessToken__1_0 object.
    *
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.

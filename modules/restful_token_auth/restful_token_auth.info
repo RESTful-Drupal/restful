@@ -4,6 +4,3 @@ core = 7.x
 dependencies[] = restful
 dependencies[] = entityreference
 configure = admin/config/services/restful/token-auth
-
-; Tests
-files[] = tests/RestfulTokenAuthenticationTestCase.test
