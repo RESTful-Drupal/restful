@@ -556,7 +556,7 @@ function restful_parse_request() {
     $request = $_POST;
   }
 
-  if (!$request && $query_string = file_get_contents('php://input')) {
+  if (!$request && $query_string = _restful_get_query_string_from_php_input()) {
     // When trying to POST using curl on simpleTest it doesn't reach
     // $_POST, so we try to re-grab it here.
     // Also, sometimes the client might send the input still encoded.
@@ -786,3 +786,18 @@ function restful_is_user_switched() {
   return TRUE;
 }
 
+/**
+ * Get the query string from php Input.
+ *
+ * @return string
+ *   The query string from request.
+ */
+function _restful_get_query_string_from_php_input() {
+    $query_string = &drupal_static(__FUNCTION__);
+    if (!isset($query_string)) {
+      // In php 5.6 and below php://input can only be read once.
+      $query_string = file_get_contents('php://input');
+    }
+
+    return $query_string;
+}
