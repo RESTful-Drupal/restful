@@ -359,6 +359,20 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function addMetadata($key, $value) {
+    $this->decorated->addMetadata($key, $value);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getMetadata($key) {
+    return $this->decorated->getMetadata($key);
+  }
+
+  /**
    * Get value for a field based on another resource.
    *
    * @param DataInterpreterInterface $source
