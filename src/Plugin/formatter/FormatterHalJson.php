@@ -48,7 +48,8 @@ class FormatterHalJson extends Formatter implements FormatterInterface {
       throw new ServerConfigurationException('Resource unavailable for HAL formatter.');
     }
 
-    $curies_resource = $this->withCurie($this->getResource()->getResourceName());
+    $plugin_definition = $this->getResource()->getPluginDefinition();
+    $curies_resource = $this->withCurie($plugin_definition['resource']);
     $output = array();
 
     foreach ($data as &$row) {
@@ -180,8 +181,6 @@ class FormatterHalJson extends Formatter implements FormatterInterface {
         continue;
       }
 
-      $output += array('_embedded' => array());
-
       $this->moveReferencesToEmbeds($output, $row, $resource_field);
     }
 
@@ -263,11 +262,11 @@ class FormatterHalJson extends Formatter implements FormatterInterface {
           continue;
         }
         $metadata = $value_metadata[$index];
-        $this->moveMetadataResource($output, $resource_field, $metadata, $resource_row);
+        $this->moveMetadataResource($row, $resource_field, $metadata, $resource_row);
       }
     }
     else {
-      $this->moveMetadataResource($output, $resource_field, $value_metadata, $row[$public_field_name]);
+      $this->moveMetadataResource($row, $resource_field, $value_metadata, $row[$public_field_name]);
     }
 
     // Remove the original reference.
