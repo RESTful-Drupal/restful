@@ -7,6 +7,7 @@
 
 namespace Drupal\restful\Plugin\formatter;
 use Drupal\restful\Exception\ServerConfigurationException;
+use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
 
 /**
  * Class FormatterHalJson
@@ -42,11 +43,11 @@ class FormatterHalJson extends Formatter implements FormatterInterface {
       return $data;
     }
     // Here we get the data after calling the backend storage for the resources.
-    if (empty($this->resource)) {
+    if (!$this->getResource()) {
       throw new ServerConfigurationException('Resource unavailable for HAL formatter.');
     }
 
-    $curies_resource = $this->withCurie($this->resource->getResourceName());
+    $curies_resource = $this->withCurie($this->getResource()->getResourceName());
     $output = array();
 
     foreach ($data as &$row) {
@@ -61,7 +62,8 @@ class FormatterHalJson extends Formatter implements FormatterInterface {
         method_exists($this->resource, 'isListRequest') &&
         $this->resource->isListRequest($this->resource->getPath())
       ) {
-        // Get the total number of items for the current request without pagination.
+        // Get the total number of items for the current request without
+        // pagination.
         $output['count'] = $this->resource->getTotalCount();
       }
       if (method_exists($this->resource, 'additionalHateoas')) {
@@ -165,8 +167,9 @@ class FormatterHalJson extends Formatter implements FormatterInterface {
       return $row;
     }
 
-    foreach ($this->resource->getPublicFields() as $pubilc_field_name => $public_field) {
-      if (empty($public_field['resource'])) {
+    foreach ($this->getResource()->getFieldDefinitions() as $pubilc_field_name => $resource_field) {
+      /** @var \Drupal\restful\Plugin\resource\Field\ResourceFieldInterface $resource_field */
+      if (!$resource_field->getResource()) {
         // Not a resource.
         continue;
       }
@@ -178,7 +181,7 @@ class FormatterHalJson extends Formatter implements FormatterInterface {
 
       $output += array('_embedded' => array());
 
-      $this->moveReferencesToEmbeds($output, $row, $public_field, $pubilc_field_name);
+      $this->moveReferencesToEmbeds($output, $row, $resource_field);
     }
 
     return $row;
@@ -246,13 +249,12 @@ class FormatterHalJson extends Formatter implements FormatterInterface {
    *   Output array to be modified.
    * @param array $row
    *   The row being processed.
-   * @param array $public_field
+   * @param ResourceFieldInterface  $resource_field
    *   The public field configuration array.
-   * @param $public_field_name
-   *   The name of the public field.
    */
-  protected function moveReferencesToEmbeds(array &$output, array &$row, $public_field, $public_field_name) {
-    $value_metadata = $this->resource->getValueMetadata($row['id'], $public_field_name);
+  protected function moveReferencesToEmbeds(array &$output, array &$row, ResourceFieldInterface $resource_field) {
+    $public_field_name = $resource_field->getPublicName();
+    $value_metadata = $this->getResource()->getValueMetadata($row['id'], $public_field_name);
     if (\RestfulBase::isArrayNumeric($row[$public_field_name])) {
       foreach ($row[$public_field_name] as $index => $resource_row) {
         if (empty($value_metadata[$index])) {
