@@ -100,6 +100,13 @@ abstract class ResourceFieldBase implements ResourceFieldInterface {
   protected $resource = array();
 
   /**
+   * A generic array storage.
+   *
+   * @var array
+   */
+  protected $metadata = array();
+
+  /**
    * The HTTP methods where this field applies.
    *
    * This replaces the create_or_update_passthrough feature. Defaults to all.
@@ -242,6 +249,20 @@ abstract class ResourceFieldBase implements ResourceFieldInterface {
       }
     }
     return TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function addMetadata($key, $value) {
+    $this->metadata[$key] = $value;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getMetadata($key) {
+    return $this->metadata[$key];
   }
 
 }

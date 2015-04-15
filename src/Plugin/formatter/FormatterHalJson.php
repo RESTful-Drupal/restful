@@ -7,6 +7,7 @@
 
 namespace Drupal\restful\Plugin\formatter;
 use Drupal\restful\Exception\ServerConfigurationException;
+use Drupal\restful\Plugin\resource\Field\ResourceFieldBase;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
 
 /**
@@ -255,7 +256,7 @@ class FormatterHalJson extends Formatter implements FormatterInterface {
   protected function moveReferencesToEmbeds(array &$output, array &$row, ResourceFieldInterface $resource_field) {
     $public_field_name = $resource_field->getPublicName();
     $value_metadata = $this->getResource()->getValueMetadata($row['id'], $public_field_name);
-    if (\RestfulBase::isArrayNumeric($row[$public_field_name])) {
+    if (ResourceFieldBase::isArrayNumeric($row[$public_field_name])) {
       foreach ($row[$public_field_name] as $index => $resource_row) {
         if (empty($value_metadata[$index])) {
           // No metadata.
