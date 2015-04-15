@@ -165,6 +165,10 @@ interface ResourceFieldInterface {
    * This is a general purpose metadata storage for the field to store other
    * things that are not specifically the field value.
    *
+   * You can pass in a namespaced $key using a : as a delimiter. Namespaces will
+   * result in nested arrays. That means that addMetadata('foo:bar:baz', 'oof')
+   * will result in metadata['foo']['bar']['baz'] = 'oof'.
+   *
    * @param string $key
    *   The metadata item identifier.
    * @param mixed $value

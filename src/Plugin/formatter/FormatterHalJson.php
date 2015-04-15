@@ -255,7 +255,7 @@ class FormatterHalJson extends Formatter implements FormatterInterface {
    */
   protected function moveReferencesToEmbeds(array &$output, array &$row, ResourceFieldInterface $resource_field) {
     $public_field_name = $resource_field->getPublicName();
-    $value_metadata = $this->getResource()->getValueMetadata($row['id'], $public_field_name);
+    $value_metadata = $resource_field->getMetadata($row['id']);
     if (ResourceFieldBase::isArrayNumeric($row[$public_field_name])) {
       foreach ($row[$public_field_name] as $index => $resource_row) {
         if (empty($value_metadata[$index])) {
@@ -263,11 +263,11 @@ class FormatterHalJson extends Formatter implements FormatterInterface {
           continue;
         }
         $metadata = $value_metadata[$index];
-        $this->moveMetadataResource($output, $public_field, $metadata, $resource_row);
+        $this->moveMetadataResource($output, $resource_field, $metadata, $resource_row);
       }
     }
     else {
-      $this->moveMetadataResource($output, $public_field, $value_metadata, $row[$public_field_name]);
+      $this->moveMetadataResource($output, $resource_field, $value_metadata, $row[$public_field_name]);
     }
 
     // Remove the original reference.
@@ -279,32 +279,19 @@ class FormatterHalJson extends Formatter implements FormatterInterface {
    *
    * @param array $output
    *   Output array to be modified. Passed by reference.
-   * @param array $public_field
+   * @param ResourceFieldInterface $resource_field
    *   The public field configuration array.
-   * @param $metadata
+   * @param array $metadata
    *   The metadata to add.
-   * @param $resource_row
+   * @param mixed $resource_row
    *   The resource row.
    */
-  protected function moveMetadataResource(array &$output, $public_field, $metadata, $resource_row) {
+  protected function moveMetadataResource(array &$output, ResourceFieldInterface $resource_field, array $metadata, $resource_row) {
     // If there is no resource name in the metadata for this particular value,
     // assume that we are referring to the first resource in the field
     // definition.
-    $resource_name = NULL;
-    if (!empty($metadata['resource_name'])) {
-      // Make sure that the resource in the metadata exists in the list of
-      // resources available for this particular public field.
-      foreach ($public_field['resource'] as $resource) {
-        if ($resource['name'] != $metadata['resource_name']) {
-          continue;
-        }
-        $resource_name = $metadata['resource_name'];
-      }
-    }
-    if (empty($resource_name)) {
-      $resource = reset($public_field['resource']);
-      $resource_name = $resource['name'];
-    }
+    $resource = $resource_field->getResource();
+    $resource_name = $resource['name'];
 
     $curies_resource = $this->withCurie($resource_name);
     $resource_row = $this->prepareRow($resource_row, $output);

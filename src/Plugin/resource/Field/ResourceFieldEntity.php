@@ -174,6 +174,9 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
   /**
    * Returns the value for the current single field.
    *
+   * This implementation will also add some metadata to the resource field
+   * object about the entity it is referencing.
+   *
    * @param \EntityMetadataWrapper $property_wrapper
    *   The property wrapper. Either \EntityDrupalWrapper or \EntityListWrapper.
    * @param \EntityDrupalWrapper $wrapper
@@ -210,6 +213,10 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
         $resource['minorVersion'],
       ));
 
+      $metadata = $this->getMetadata($wrapper->getIdentifier());
+      $metadata ?: array();
+      $metadata[] = $this->buildResourceMetadataItem($property_wrapper);
+      $this->addMetadata($wrapper->getIdentifier(), $metadata);
       return $resource_data_provider->view($embedded_identifier);
     }
 
@@ -775,6 +782,29 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
    */
   public static function isArrayNumeric(array $input) {
     return ResourceFieldBase::isArrayNumeric($input);
+  }
+
+  /**
+   * Builds a metadata item for a field value.
+   *
+   * It will add information about the referenced entity.
+   *
+   * @param \EntityDrupalWrapper $wrapper
+   *   The wrapper to the referenced entity.
+   *
+   * @return array
+   *   The metadata array item.
+   */
+  protected function buildResourceMetadataItem(\EntityDrupalWrapper $wrapper) {
+    $id = $wrapper->getIdentifier();
+    $bundle = $wrapper->getBundle();
+    $resource = $this->getResource();
+    return array(
+      'id' => $id,
+      'entity_type' => $wrapper->type(),
+      'bundle' => $bundle,
+      'resource_name' => $resource['name'],
+    );
   }
 
 }
