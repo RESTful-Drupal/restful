@@ -337,4 +337,11 @@ class CachedResource extends PluginBase implements ResourceInterface {
     return $cache_info;
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getResourceMachineName() {
+    return $this->subject->getResourceMachineName();
+  }
+
 }

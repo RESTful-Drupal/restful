@@ -150,6 +150,14 @@ abstract class Resource extends PluginBase implements ResourceInterface {
   /**
    * {@inheritdoc}
    */
+  public function getResourceMachineName() {
+    $definition = $this->getPluginDefinition();
+    return $definition['resource'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function defaultConfiguration() {
     return array(
       'request' => restful()->getRequest(),

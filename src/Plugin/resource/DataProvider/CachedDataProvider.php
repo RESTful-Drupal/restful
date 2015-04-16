@@ -12,7 +12,7 @@ use Drupal\restful\Exception\UnauthorizedException;
 use Drupal\restful\Http\Request;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
 
-class CachedDataProvider implements DataProviderInterface {
+class CachedDataProvider implements CachedDataProviderInterface {
 
   /**
    * The decorated object.
@@ -242,9 +242,11 @@ class CachedDataProvider implements DataProviderInterface {
     $plugins = restful()
       ->getResourceManager()
       ->getPlugins();
+    $request = restful()->getRequest();
     foreach ($plugins as $instance_id => $plugin) {
       /** @var \Drupal\restful\Plugin\resource\Resource $plugin */
-      if (method_exists($plugin, 'cacheInvalidate')) {
+      $plugin->setRequest($request);
+      if (method_exists($plugin->getDataProvider(), 'cacheInvalidate')) {
         $version = $plugin->getVersion();
         // Get the uid for the invalidation.
         try {
@@ -255,10 +257,33 @@ class CachedDataProvider implements DataProviderInterface {
           // in user.
           $uid = $GLOBALS['user']->uid;
         }
-        $version_cid = 'v' . $version['major'] . '.' . $version['minor'] . '::' . $plugin->getResourceName() . '::uu' . $uid;
-        $plugin->cacheInvalidate($version_cid . '::' . $cid);
+        $version_cid = 'v' . $version['major'] . '.' . $version['minor'] . '::' . $plugin->getResourceMachineName() . '::uu' . $uid;
+        $plugin->getDataProvider()->cacheInvalidate($version_cid . '::' . $cid);
       }
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function cacheInvalidate($cid) {
+    $options = $this->getOptions();
+    $cache_info = $options['renderCache'];
+
+    if (!$cache_info['simple_invalidate']) {
+      // Simple invalidation is disabled. This means it is up to the
+      // implementing module to take care of the invalidation.
+      return;
+    }
+    // If the $cid is not '*' then remove the asterisk since it can mess with
+    // dynamically built wildcards.
+    if ($cid != '*') {
+      $pos = strpos($cid, '*');
+      if ($pos !== FALSE) {
+        $cid = substr($cid, 0, $pos);
+      }
+    }
+    $this->cacheController->clear($cid, TRUE);
   }
 
   /**

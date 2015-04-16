@@ -258,4 +258,11 @@ class RateLimitedResource extends PluginBase implements ResourceInterface {
     return $this->subject->getControllerFromPath($resource ?: $this);
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getResourceMachineName() {
+    return $this->subject->getResourceMachineName();
+  }
+
 }

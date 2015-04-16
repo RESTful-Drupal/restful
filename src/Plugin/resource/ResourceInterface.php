@@ -114,6 +114,14 @@ interface ResourceInterface extends PluginInspectionInterface, ConfigurablePlugi
   public function getResourceName();
 
   /**
+   * Gets the resource machine name.
+   *
+   * @return string
+   *   The machine name.
+   */
+  public function getResourceMachineName();
+
+  /**
    * Controller function that passes the data along and executes right action.
    *
    * @return array

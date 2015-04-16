@@ -168,4 +168,16 @@ class RestfulManager {
     return $this->response;
   }
 
+  /**
+   * Checks if the passed in request belongs to RESTful.
+   *
+   * @param RequestInterface $request
+   *   The path to check.
+   *
+   * @return bool
+   *   TRUE if the path belongs to RESTful.
+   */
+  public static function isRestfulPath(RequestInterface $request) {
+    return strpos($request->getPath(), variable_get('restful_hook_menu_base_path', 'api')) === 0;
+  }
 }
