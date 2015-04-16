@@ -596,7 +596,7 @@ function restful_parse_request() {
  */
 function restful_delivery($var = NULL, $method = 'format') {
   if (!isset($var)) {
-    return;
+    $var = array();
   }
 
   if (is_int($var)) {
