@@ -262,7 +262,7 @@ function restful_menu_access_callback($resource_name, $version_string = NULL) {
 
   try {
     return $resource_manager
-      ->getPlugin($resource_name . PluginBase::DERIVATIVE_SEPARATOR . implode('.', $versions))
+      ->getPlugin($resource_name . PluginBase::DERIVATIVE_SEPARATOR . implode('.', $versions), restful()->getRequest())
       ->access();
   }
   catch (RestfulException $e) {
@@ -575,7 +575,7 @@ function restful_restful_resource_alter(ResourceInterface &$resource) {
     $resource = new RateLimitedResource($resource);
   }
   // Check for the rate limit configuration.
-  if (!empty($plugin_definition['renderCache'])) {
+  if (!empty($plugin_definition['renderCache']) && !empty($plugin_definition['renderCache']['render'])) {
     $resource = new CachedResource($resource);
   }
 }

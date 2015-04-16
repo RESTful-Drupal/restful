@@ -8,6 +8,10 @@
 namespace Drupal\restful\Plugin\resource;
 
 use Drupal\Component\Plugin\PluginBase;
+use Drupal\restful\Exception\BadRequestException;
+use Drupal\restful\Exception\ForbiddenException;
+use Drupal\restful\Exception\GoneException;
+use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\RateLimit\RateLimitManager;
 use Drupal\restful\Exception\NotImplementedException;
@@ -245,6 +249,13 @@ class RateLimitedResource extends PluginBase implements ResourceInterface {
    */
   public function access() {
     return $this->subject->access();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getControllerFromPath($path = NULL, ResourceInterface $resource = NULL) {
+    return $this->subject->getControllerFromPath($resource ?: $this);
   }
 
 }

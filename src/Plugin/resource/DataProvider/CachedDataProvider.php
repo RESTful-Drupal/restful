@@ -166,7 +166,7 @@ class CachedDataProvider implements DataProviderInterface {
    * {@inheritdoc}
    */
   public function canonicalPath($path) {
-    $this->subject->canonicalPath($path);
+    return $this->subject->canonicalPath($path);
   }
 
   /**
