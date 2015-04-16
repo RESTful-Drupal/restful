@@ -23,9 +23,14 @@ class RestfulCRUDTaxonomyTermTestCase extends DrupalWebTestCase {
    * Test the CRUD actions.
    */
   function testCRUD() {
+    $vid = taxonomy_vocabulary_machine_name_load('tags')->vid;
 
     // Test creation of a taxonomy term.
-    $user1 = $this->drupalCreateuser(array('administer taxonomy'));
+    $user1 = $this->drupalCreateuser(array(
+      'administer taxonomy',
+      'edit terms in ' . $vid,
+      'delete terms in ' . $vid,
+    ));
     $user2 = $this->drupalCreateUser(array('access content'));
 
     $handler = restful_get_restful_handler('test_tags');
@@ -54,7 +59,8 @@ class RestfulCRUDTaxonomyTermTestCase extends DrupalWebTestCase {
       $text1 = $this->randomName();
       $request = array('label' => $text1);
       $handler->post('', $request);
-    } catch (RestfulForbiddenException $e) {
+    }
+    catch (RestfulForbiddenException $e) {
       $this->pass('user2 cannot create taxonomy term via restful.');
     }
 
@@ -72,14 +78,16 @@ class RestfulCRUDTaxonomyTermTestCase extends DrupalWebTestCase {
     // Check user can't patch a term.
     try {
       $handler->patch($taxonomy->tid, array('name' => $this->randomName()));
-    } catch (RestfulForbiddenException $e) {
+    }
+    catch (RestfulForbiddenException $e) {
       $this->pass('user2 cannot patch taxonomy term.');
     }
 
     // Check user can't delete a term.
     try {
       $handler->delete($taxonomy->tid);
-    } catch (RestfulForbiddenException $e) {
+    }
+    catch (RestfulForbiddenException $e) {
       $this->pass('user2 cannot delete taxonomy term.');
     }
   }

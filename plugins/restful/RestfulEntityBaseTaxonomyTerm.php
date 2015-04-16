@@ -49,12 +49,25 @@ class RestfulEntityBaseTaxonomyTerm extends RestfulEntityBase {
   /**
    * Overrides \RestfulEntityBaseTaxonomyTerm::checkEntityAccess().
    *
-   * Allow access to create "Tags" resource for privileged users, as
-   * we can't use entity_access() since entity_metadata_taxonomy_access()
-   * denies it for a non-admin user.
+   * Taxonomy access for different operations has defined in the menu in various
+   * ways. This method will implement the same access logic of the menu items.
    */
   protected function checkEntityAccess($op, $entity_type, $entity) {
-    $account = $this->getAccount();
-    return user_access($op == 'view' ? 'access content' : 'administer taxonomy', $account);
+    if ($this->getMethod() == \RestfulBase::GET) {
+      $permission = 'access content';
+    }
+    else {
+      if ($this->getMethod() == \RestfulBase::POST) {
+        $permission = 'administer taxonomy';
+      }
+      else {
+        $vocabulary = taxonomy_vocabulary_machine_name_load($this->getBundle());
+        $operation = $this->getMethod() == \RestfulBase::DELETE ? 'delete' : 'edit';
+        $permission = $operation . ' terms in ' . $vocabulary->vid;
+      }
+    }
+
+    return user_access($permission, $this->getAccount());
+
   }
 }
