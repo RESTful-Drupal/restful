@@ -8,6 +8,7 @@
 namespace Drupal\restful\Plugin\resource;
 
 use Drupal\Component\Plugin\PluginBase;
+use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\RateLimit\RateLimitManager;
 use Drupal\restful\Exception\NotImplementedException;
 use Drupal\restful\Plugin\resource\DataProvider\DataProviderInterface;
@@ -36,9 +37,10 @@ class RateLimitedResource extends PluginBase implements ResourceInterface {
    * @param RateLimitManager $rate_limit_manager
    *   Injected rate limit manager.
    */
-  public function __construct(ResourceInterface $subject, RateLimitManager $rate_limit_manager) {
+  public function __construct(ResourceInterface $subject, RateLimitManager $rate_limit_manager = NULL) {
     $this->subject = $subject;
-    $this->rateLimitManager = $rate_limit_manager;
+    $plugin_definition = $subject->getPluginDefinition();
+    $this->rateLimitManager = $rate_limit_manager ? $rate_limit_manager : new RateLimitManager($this, $plugin_definition['rateLimit']);
   }
 
   /**
@@ -194,6 +196,55 @@ class RateLimitedResource extends PluginBase implements ResourceInterface {
    */
   public function getVersion() {
     return $this->subject->getVersion();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function versionedUrl($path = '', $options = array(), $version_string = TRUE) {
+    return $this->subject->versionedUrl($path, $options, $version_string);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getConfiguration() {
+    return $this->subject->getConfiguration();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setConfiguration(array $configuration) {
+    $this->subject->setConfiguration($configuration);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function defaultConfiguration() {
+    return $this->subject->defaultConfiguration();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function calculateDependencies() {
+    return $this->subject->calculateDependencies();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setRequest(RequestInterface $request) {
+    $this->subject->setRequest($request);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function access() {
+    return $this->subject->access();
   }
 
 }

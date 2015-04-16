@@ -9,6 +9,7 @@ namespace Drupal\restful\Plugin\resource;
 
 use Drupal\Component\Plugin\PluginBase;
 use Drupal\restful\Exception\NotImplementedException;
+use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataProvider\DataProviderInterface;
 
 class CachedResource extends PluginBase implements ResourceInterface {
@@ -42,7 +43,7 @@ class CachedResource extends PluginBase implements ResourceInterface {
    * @param \DrupalCacheInterface $cache_controller
    *   Injected cache manager.
    */
-  public function __construct(ResourceInterface $subject, \DrupalCacheInterface $cache_controller) {
+  public function __construct(ResourceInterface $subject, \DrupalCacheInterface $cache_controller = NULL) {
     // TODO: Implement the ResourceManager factory to use the CachedResource.
     $this->subject = $subject;
     $this->cacheController = $cache_controller ? $cache_controller : $this->newCacheObject();
@@ -102,7 +103,12 @@ class CachedResource extends PluginBase implements ResourceInterface {
    * @throws NotImplementedException
    */
   public function dataProviderFactory() {
-    return $this->subject->dataProviderFactory();
+    $data_provider = $this->subject->dataProviderFactory();
+    // TODO: See how this connects to the CachedDataProvider.
+    $data_provider->addOptions(array(
+      'renderCache' => $this->getPluginDefinition()['renderCache'],
+    ));
+    return $data_provider;
   }
 
   /**
@@ -241,6 +247,48 @@ class CachedResource extends PluginBase implements ResourceInterface {
    */
   public function versionedUrl($path = '', $options = array(), $version_string = TRUE) {
     return $this->subject->versionedUrl($path, $options, $version_string);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getConfiguration() {
+    return $this->subject->getConfiguration();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setConfiguration(array $configuration) {
+    $this->subject->setConfiguration($configuration);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function defaultConfiguration() {
+    return $this->subject->defaultConfiguration();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function calculateDependencies() {
+    return $this->subject->calculateDependencies();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setRequest(RequestInterface $request) {
+    $this->subject->setRequest($request);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function access() {
+    return $this->subject->access();
   }
 
 }

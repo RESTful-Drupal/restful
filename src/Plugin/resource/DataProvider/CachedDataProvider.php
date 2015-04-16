@@ -181,12 +181,6 @@ class CachedDataProvider implements DataProviderInterface {
    * @see DataProviderEntity::view()
    */
   protected function getRenderedCache(array $context = array()) {
-    // TODO: The render cache information will not be in the data provider
-    // options annotation. That means that it will not make it through to this
-    // class from the ResourceInterface object. We need to add
-    // $dataProvider->addOptions(array(
-    // 'renderCache' => Resource::getPluginDefinition()['renderCache']),
-    // ).
     $options = $this->getOptions();
     $cache_info = $options['renderCache'];
     if (!$cache_info['render']) {

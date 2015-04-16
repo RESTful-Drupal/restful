@@ -12,7 +12,10 @@ use Drupal\restful\Exception\RestfulException;
 use Drupal\restful\Exception\ServiceUnavailableException;
 use Drupal\restful\Http\HttpHeader;
 use Drupal\restful\Http\RequestInterface;
+use Drupal\restful\Plugin\resource\CachedResource;
+use Drupal\restful\Plugin\resource\RateLimitedResource;
 use Drupal\restful\Plugin\resource\ResourceInterface;
+use Drupal\restful\RateLimit\RateLimitManager;
 use Drupal\restful\RestfulManager;
 
 /**
@@ -559,5 +562,20 @@ function restful_date_time_format_element_validate($element, &$form_state) {
       '%name' => $element['#title'],
       '!link' => l(t('\DateInterval format'), 'http://php.net/manual/en/class.dateinterval.php'),
     )));
+  }
+}
+
+/**
+ * Implements hook_restful_resource_alter().
+ */
+function restful_restful_resource_alter(ResourceInterface &$resource) {
+  $plugin_definition = $resource->getPluginDefinition();
+  // Check for the rate limit configuration.
+  if (!empty($plugin_definition['rateLimit'])) {
+    $resource = new RateLimitedResource($resource);
+  }
+  // Check for the rate limit configuration.
+  if (!empty($plugin_definition['renderCache'])) {
+    $resource = new CachedResource($resource);
   }
 }

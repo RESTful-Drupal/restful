@@ -172,11 +172,6 @@ abstract class Resource extends PluginBase implements ResourceInterface {
 
   /**
    * {@inheritdoc}
-   *
-   * Provide sensible defaults for the HTTP methods. These methods (index,
-   * create, view, update and delete) are not implemented in this layer but
-   * they are guaranteed to exist because we are enforcing that all restful
-   * resources are an instance of \RestfulDataProviderInterface.
    */
   public function controllersInfo() {
     return array(

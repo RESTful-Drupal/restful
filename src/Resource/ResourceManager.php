@@ -69,9 +69,6 @@ class ResourceManager implements ResourceManagerInterface {
   public function getPlugin($instance_id) {
     /** @var ResourceInterface $plugin */
     $plugin = $this->plugins->get($instance_id);
-    $plugin->setConfiguration(array(
-      'request' => $this->request,
-    ));
     return $plugin;
   }
 

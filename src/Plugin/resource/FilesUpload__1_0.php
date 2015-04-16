@@ -10,6 +10,7 @@ namespace Drupal\restful\Plugin\resource;
 use Drupal\restful\Exception\NotImplementedException;
 use Drupal\restful\Exception\UnauthorizedException;
 use Drupal\restful\Plugin\resource\DataProvider\DataProviderInterface;
+use Drupal\restful\Plugin\resource\Field\ResourceFieldEntityInterface;
 
 /**
  * Class FilesUpload__1_0
