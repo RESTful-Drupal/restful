@@ -145,6 +145,7 @@ class CachedDataProvider implements CachedDataProviderInterface {
    * {@inheritdoc}
    */
   public function update($identifier, $object, $replace = TRUE) {
+    $this->clearRenderedCache($this->getContext($identifier));
     return $this->subject->update($identifier, $object, $replace);
   }
 
@@ -181,10 +182,8 @@ class CachedDataProvider implements CachedDataProviderInterface {
    * @see DataProviderEntity::view()
    */
   protected function getRenderedCache(array $context = array()) {
-    $options = $this->getOptions();
-    $cache_info = $options['renderCache'];
-    if (!$cache_info['render']) {
-      return NULL;
+    if (!$this->isCacheEnabled()) {
+      return;
     }
 
     $cid = $this->generateCacheId($context);
@@ -333,17 +332,44 @@ class CachedDataProvider implements CachedDataProviderInterface {
    * @return array
    *   The rendered entity as returned by \RestfulEntityInterface::viewEntity().
    *
-   * @see \RestfulEntityInterface::viewEntity().
+   * @see static::view()
    */
   protected function setRenderedCache($data, array $context = array()) {
-    $options = $this->getOptions();
-    $cache_info = $options['renderCache'];
-    if (!$cache_info['render']) {
+    if (!$this->isCacheEnabled()) {
       return;
     }
 
     $cid = $this->generateCacheId($context);
-    $this->cacheController->set($cid, $data, $cache_info['expire']);
+    $this->cacheController->set($cid, $data, $this->getOptions()['renderCache']['expire']);
+  }
+
+  /**
+   * Clear an entry from the rendered cache.
+   *
+   * @param array $context
+   *   An associative array with additional information to build the cache ID.
+   *
+   * @see static::view()
+   */
+  protected function clearRenderedCache(array $context = array()) {
+    if (!$this->isCacheEnabled()) {
+      return;
+    }
+
+    $cid = $this->generateCacheId($context);
+    $this->cacheController->clear($cid);
+  }
+
+  /**
+   * Helper function that checks if cache is enabled.
+   *
+   * @return bool
+   *   TRUE if the resource has cache enabled.
+   */
+  protected function isCacheEnabled() {
+    $options = $this->getOptions();
+    $cache_info = $options['renderCache'];
+    return isset($cache_info['render']);
   }
 
 }
