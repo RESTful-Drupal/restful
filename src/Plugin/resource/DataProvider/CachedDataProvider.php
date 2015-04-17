@@ -153,6 +153,7 @@ class CachedDataProvider implements CachedDataProviderInterface {
    * {@inheritdoc}
    */
   public function remove($identifier) {
+    $this->clearRenderedCache($this->getContext($identifier));
     $this->subject->remove($identifier);
   }
 
@@ -183,7 +184,7 @@ class CachedDataProvider implements CachedDataProviderInterface {
    */
   protected function getRenderedCache(array $context = array()) {
     if (!$this->isCacheEnabled()) {
-      return;
+      return NULL;
     }
 
     $cid = $this->generateCacheId($context);
