@@ -373,7 +373,7 @@ class CachedResource extends PluginBase implements ResourceInterface {
    * {@inheritdoc}
    */
   public function isEnabled() {
-    return $this->isEnabled();
+    return $this->subject->isEnabled();
   }
 
 }
