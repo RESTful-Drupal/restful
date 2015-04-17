@@ -46,7 +46,7 @@ function restful_token_auth_menu_alter(&$items) {
 }
 
 /**
- * Implements hook_restful_parse_request_alter()
+ * Implements hook_restful_parse_request_alter().
  */
 function restful_token_auth_restful_parse_request_alter(RequestInterface &$request) {
   // In this hook we cannot rely on the service to be ready.
