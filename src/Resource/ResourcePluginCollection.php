@@ -39,7 +39,7 @@ class ResourcePluginCollection extends DefaultLazyPluginCollection {
       return $current;
     }
     // Skip disabled resources.
-    return $this->next();
+    return $this->get(next($this->instanceIDs));
   }
 
 }
