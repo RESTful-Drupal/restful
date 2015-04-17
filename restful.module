@@ -578,4 +578,9 @@ function restful_restful_resource_alter(ResourceInterface &$resource) {
   if (!empty($plugin_definition['rateLimit'])) {
     $resource = new RateLimitedResource($resource);
   }
+
+  // Disable the Files Upload resource based on the settings variable.
+  if ($resource->getResourceMachineName() == 'files_upload' && variable_get('restful_file_upload', FALSE)) {
+    $resource->disable();
+  }
 }

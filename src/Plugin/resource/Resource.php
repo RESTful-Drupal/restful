@@ -64,6 +64,13 @@ abstract class Resource extends PluginBase implements ResourceInterface {
   protected $authenticationManager;
 
   /**
+   * Indicates if the resource is enabled.
+   *
+   * @var bool
+   */
+  protected $enabled = TRUE;
+
+  /**
    * Constructs a Drupal\Component\Plugin\PluginBase object.
    *
    * @param array $configuration
@@ -365,6 +372,27 @@ abstract class Resource extends PluginBase implements ResourceInterface {
    */
   public function access() {
     return $this->accessByAllowOrigin();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function enable() {
+    $this->enabled = TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function disable() {
+    $this->enabled = FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isEnabled() {
+    return $this->enabled;
   }
 
   /**

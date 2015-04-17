@@ -30,4 +30,16 @@ class ResourcePluginCollection extends DefaultLazyPluginCollection {
     return $resource;
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function current() {
+    $current = $this->get($this->key());
+    if ($current->isEnabled()) {
+      return $current;
+    }
+    // Skip disabled resources.
+    return $this->next();
+  }
+
 }

@@ -288,4 +288,25 @@ class RateLimitedResource extends PluginBase implements ResourceInterface {
     return $this->subject->getPluginDefinition();
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function enable() {
+    $this->subject->enable();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function disable() {
+    $this->subject->disable();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isEnabled() {
+    return $this->isEnabled();
+  }
+
 }
