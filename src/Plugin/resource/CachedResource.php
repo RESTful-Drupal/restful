@@ -104,7 +104,24 @@ class CachedResource extends PluginBase implements ResourceInterface {
    * {@inheritdoc}
    */
   public function dataProviderFactory() {
-    return $this->subject->dataProviderFactory();
+    if ($this->dataProvider && $this->dataProvider instanceof DataProvider\CachedDataProvider) {
+      return $this->dataProvider;
+    }
+    // Get the data provider from the subject of the decorator.
+    $decorated_provider = $this->subject->dataProviderFactory();
+    $this->dataProvider = new DataProvider\CachedDataProvider($decorated_provider, $this->getCacheController());
+    $plugin_definition = $this->getPluginDefinition();
+    $this->dataProvider->addOptions(array(
+      'renderCache' => $this->defaultCacheInfo(),
+      'resource' => array(
+        'version' => array(
+          'major' => $plugin_definition['majorVersion'],
+          'minor' => $plugin_definition['minorVersion'],
+        ),
+        'name' => $plugin_definition['resource'],
+      ),
+    ));
+    return $this->dataProvider;
   }
 
   /**
@@ -152,23 +169,7 @@ class CachedResource extends PluginBase implements ResourceInterface {
     if (isset($this->dataProvider)) {
       return $this->dataProvider;
     }
-    $data_provider = $this->dataProviderFactory();
-    if ($data_provider instanceof DataProvider\CachedDataProvider) {
-      $this->dataProvider = $data_provider;
-      return $this->dataProvider;
-    }
-    $this->dataProvider = new DataProvider\CachedDataProvider($data_provider, $this->getCacheController());
-    $plugin_definition = $this->subject->getPluginDefinition();
-    $this->dataProvider->addOptions(array(
-      'renderCache' => $this->defaultCacheInfo(),
-      'resource' => array(
-        'version' => array(
-          'major' => $plugin_definition['majorVersion'],
-          'minor' => $plugin_definition['minorVersion'],
-        ),
-        'name' => $plugin_definition['resource'],
-      ),
-    ));
+    $this->dataProvider = $this->dataProviderFactory();
     return $this->dataProvider;
   }
 
@@ -324,7 +325,7 @@ class CachedResource extends PluginBase implements ResourceInterface {
    *   The cache info.
    */
   protected function defaultCacheInfo() {
-    $plugin_definition = $this->subject->getPluginDefinition();
+    $plugin_definition = $this->getPluginDefinition();
     $cache_info = empty($plugin_definition['renderCache']) ? array() : $plugin_definition['renderCache'];
     $cache_info += array(
       'render' => variable_get('restful_render_cache', FALSE),
@@ -342,6 +343,16 @@ class CachedResource extends PluginBase implements ResourceInterface {
    */
   public function getResourceMachineName() {
     return $this->subject->getResourceMachineName();
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * This is a decorated resource, get proxy the call until you reach the
+   * annotated resource.
+   */
+  public function getPluginDefinition() {
+    return $this->subject->getPluginDefinition();
   }
 
 }

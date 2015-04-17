@@ -7,9 +7,11 @@
 
 namespace Drupal\restful_example\Plugin\resource;
 
+use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\ResourceEntity;
 use Drupal\restful\Plugin\resource\ResourceInterface;
+use SebastianBergmann\Exporter\Exception;
 
 /**
  * Class Articles
@@ -30,6 +32,17 @@ use Drupal\restful\Plugin\resource\ResourceInterface;
  *   },
  *   renderCache = {
  *     "render": TRUE
+ *   },
+ *   rateLimit = {
+ *     "request": {
+ *       "event": "request",
+ *       "period": "P1D",
+ *       "limits": {
+ *         "authenticated user": 3,
+ *         "anonymous user": 2,
+ *         "administrator": -1,
+ *       }
+ *     }
  *   },
  *   majorVersion = 1,
  *   minorVersion = 1

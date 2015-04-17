@@ -571,11 +571,11 @@ function restful_date_time_format_element_validate($element, &$form_state) {
 function restful_restful_resource_alter(ResourceInterface &$resource) {
   $plugin_definition = $resource->getPluginDefinition();
   // Check for the rate limit configuration.
-  if (!empty($plugin_definition['rateLimit'])) {
-    $resource = new RateLimitedResource($resource);
-  }
-  // Check for the rate limit configuration.
   if (!empty($plugin_definition['renderCache']) && !empty($plugin_definition['renderCache']['render'])) {
     $resource = new CachedResource($resource);
+  }
+  // Check for the rate limit configuration.
+  if (!empty($plugin_definition['rateLimit'])) {
+    $resource = new RateLimitedResource($resource);
   }
 }

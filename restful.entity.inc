@@ -13,8 +13,8 @@ use Drupal\restful\Plugin\resource\DataProvider\CachedDataProvider;
 function restful_entity_info() {
   $items['rate_limit'] = array(
     'label' => t('Rate limit'),
-    'entity class' => 'RestfulRateLimit',
-    'controller class' => 'EntityAPIController',
+    'entity class' => '\\Drupal\\restful\\RateLimit\\Entity\\RateLimit',
+    'controller class' => '\\Drupal\\restful\\RateLimit\\Entity\\RateLimitController',
     'base table' => 'restful_rate_limit',
     'fieldable' => TRUE,
     'entity keys' => array(

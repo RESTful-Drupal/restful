@@ -8,10 +8,6 @@
 namespace Drupal\restful\Plugin\resource;
 
 use Drupal\Component\Plugin\PluginBase;
-use Drupal\restful\Exception\BadRequestException;
-use Drupal\restful\Exception\ForbiddenException;
-use Drupal\restful\Exception\GoneException;
-use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\RateLimit\RateLimitManager;
 use Drupal\restful\Exception\NotImplementedException;
@@ -34,6 +30,13 @@ class RateLimitedResource extends PluginBase implements ResourceInterface {
   protected $rateLimitManager;
 
   /**
+   * The data provider.
+   *
+   * @var DataProviderInterface
+   */
+  protected $dataProvider;
+
+  /**
    * Constructs a Drupal\Component\Plugin\PluginBase object.
    *
    * @param ResourceInterface $subject
@@ -44,7 +47,7 @@ class RateLimitedResource extends PluginBase implements ResourceInterface {
   public function __construct(ResourceInterface $subject, RateLimitManager $rate_limit_manager = NULL) {
     $this->subject = $subject;
     $plugin_definition = $subject->getPluginDefinition();
-    $this->rateLimitManager = $rate_limit_manager ? $rate_limit_manager : new RateLimitManager($this, $plugin_definition['rateLimit']);
+    $this->rateLimitManager = $rate_limit_manager ? $rate_limit_manager : new RateLimitManager($this, $plugin_definition['rateLimit'], $this->getAccount());
   }
 
   /**
@@ -76,7 +79,17 @@ class RateLimitedResource extends PluginBase implements ResourceInterface {
    * @throws NotImplementedException
    */
   public function dataProviderFactory() {
-    return $this->subject->dataProviderFactory();
+    if ($this->dataProvider && $this->dataProvider instanceof DataProvider\RateLimitedDataProvider) {
+      return $this->dataProvider;
+    }
+    // Get the data provider from the subject of the decorator.
+    $decorated_provider = $this->subject->dataProviderFactory();
+    $this->dataProvider = new DataProvider\RateLimitedDataProvider($decorated_provider);
+    $plugin_definition = $this->getPluginDefinition();
+    $this->dataProvider->addOptions(array(
+      'rateLimit' => $plugin_definition['rateLimit'],
+    ));
+    return $this->dataProvider;
   }
 
   /**
@@ -255,7 +268,7 @@ class RateLimitedResource extends PluginBase implements ResourceInterface {
    * {@inheritdoc}
    */
   public function getControllerFromPath($path = NULL, ResourceInterface $resource = NULL) {
-    return $this->subject->getControllerFromPath($resource ?: $this);
+    return $this->subject->getControllerFromPath($path, $resource ?: $this);
   }
 
   /**
@@ -263,6 +276,16 @@ class RateLimitedResource extends PluginBase implements ResourceInterface {
    */
   public function getResourceMachineName() {
     return $this->subject->getResourceMachineName();
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * This is a decorated resource, get proxy the request until you reach the
+   * annotated resource.
+   */
+  public function getPluginDefinition() {
+    return $this->subject->getPluginDefinition();
   }
 
 }
