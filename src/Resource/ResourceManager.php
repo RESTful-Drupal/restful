@@ -68,7 +68,9 @@ class ResourceManager implements ResourceManagerInterface {
    */
   public function getPlugin($instance_id, RequestInterface $request = NULL) {
     /** @var ResourceInterface $plugin */
-    $plugin = $this->plugins->get($instance_id);
+    if (!$plugin = $this->plugins->get($instance_id)) {
+      return NULL;
+    }
     if ($request) {
       $plugin->setRequest($request);
     }
@@ -108,7 +110,8 @@ class ResourceManager implements ResourceManagerInterface {
     $version = $this->getVersionFromRequest();
     list($resource_name,) = static::getPageArguments($this->request->getPath(FALSE));
     try {
-      return $this->getPlugin($resource_name . PluginBase::DERIVATIVE_SEPARATOR . $version[0] . '.' . $version[1]);
+      $resource = $this->getPlugin($resource_name . PluginBase::DERIVATIVE_SEPARATOR . $version[0] . '.' . $version[1]);
+      return $resource->isEnabled() ? $resource : NULL;
     }
     catch (PluginNotFoundException $e) {
       throw new ServerConfigurationException($e->getMessage());

@@ -15,7 +15,6 @@ use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\CachedResource;
 use Drupal\restful\Plugin\resource\RateLimitedResource;
 use Drupal\restful\Plugin\resource\ResourceInterface;
-use Drupal\restful\RateLimit\RateLimitManager;
 use Drupal\restful\RestfulManager;
 
 /**
@@ -116,7 +115,7 @@ function restful_menu() {
   $plugins = restful()
     ->getResourceManager()
     ->getPlugins();
-  foreach ($plugins as $plugin) {
+  foreach ($plugins->getIterator() as $plugin) {
     /** @var ResourceInterface $plugin */
     $plugin_definition = $plugin->getPluginDefinition();
     if (!$plugin_definition['hookMenu']) {

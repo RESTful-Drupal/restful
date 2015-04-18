@@ -24,22 +24,18 @@ class ResourcePluginCollection extends DefaultLazyPluginCollection {
   public function &get($instance_id) {
     /** @var \Drupal\restful\Plugin\resource\ResourceInterface $resource */
     $resource = parent::get($instance_id);
+
     // Allow altering the resource, this way we can read the resource's
     // definition to return a different class that is using composition.
     drupal_alter('restful_resource', $resource);
-    return $resource;
+    return $resource->isEnabled() ? $resource : NULL;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function current() {
-    $current = $this->get($this->key());
-    if ($current->isEnabled()) {
-      return $current;
-    }
-    // Skip disabled resources.
-    return $this->get(next($this->instanceIDs));
+  public function getIterator() {
+    return new EnabledArrayIterator(parent::getIterator());
   }
 
 }

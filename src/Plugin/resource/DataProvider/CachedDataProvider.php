@@ -243,7 +243,7 @@ class CachedDataProvider implements CachedDataProviderInterface {
       ->getResourceManager()
       ->getPlugins();
     $request = restful()->getRequest();
-    foreach ($plugins as $instance_id => $plugin) {
+    foreach ($plugins->getIterator() as $instance_id => $plugin) {
       /** @var \Drupal\restful\Plugin\resource\Resource $plugin */
       $plugin->setRequest($request);
       if (method_exists($plugin->getDataProvider(), 'cacheInvalidate')) {
