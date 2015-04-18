@@ -18,7 +18,10 @@ class EnabledArrayIterator extends \FilterIterator {
    * @link http://php.net/manual/en/filteriterator.accept.php
    */
   public function accept() {
-    return $this->current()->isEnabled();
+    if (!$resource = $this->current()) {
+      return FALSE;
+    }
+    return $resource->isEnabled();
   }
 
 }
