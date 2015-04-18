@@ -28,7 +28,8 @@ class ResourcePluginCollection extends DefaultLazyPluginCollection {
     // Allow altering the resource, this way we can read the resource's
     // definition to return a different class that is using composition.
     drupal_alter('restful_resource', $resource);
-    return $resource->isEnabled() ? $resource : NULL;
+    $resource = $resource->isEnabled() ? $resource : NULL;
+    return $resource;
   }
 
   /**
