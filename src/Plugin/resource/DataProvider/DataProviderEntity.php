@@ -25,8 +25,6 @@ use Drupal\restful\Resource\ResourceManager;
 
 class DataProviderEntity extends DataProvider implements DataProviderEntityInterface {
 
-  // TODO: The Data Provider should be in charge of the entity_access checks.
-
   /**
    * Field definitions.
    *
