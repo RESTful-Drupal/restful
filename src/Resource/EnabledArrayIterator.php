@@ -21,5 +21,4 @@ class EnabledArrayIterator extends \FilterIterator {
     return $this->current()->isEnabled();
   }
 
-
 }
