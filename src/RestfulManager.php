@@ -13,6 +13,7 @@ use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Http\Response;
 use Drupal\restful\Http\ResponseInterface;
+use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
 use Drupal\restful\Resource\ResourceManager;
 use Drupal\restful\Resource\ResourceManagerInterface;
 
@@ -180,4 +181,20 @@ class RestfulManager {
   public static function isRestfulPath(RequestInterface $request) {
     return strpos($request->getPath(), variable_get('restful_hook_menu_base_path', 'api')) === 0;
   }
+
+  /**
+   * Helper function to echo static strings.
+   *
+   * @param DataInterpreterInterface $value
+   *   The resource value.
+   * @param string $message
+   *   The string to relay.
+   *
+   * @return string
+   *   Returns $message
+   */
+  public static function echoMessage(DataInterpreterInterface $value, $message) {
+    return $message;
+  }
+
 }

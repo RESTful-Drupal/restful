@@ -10,6 +10,7 @@ namespace Drupal\restful\Plugin\resource\DataProvider;
 use Drupal\restful\Exception\BadRequestException;
 
 interface DataProviderEntityInterface extends DataProviderInterface {
+
   /**
    * Allow manipulating the entity before it is saved.
    *
@@ -27,5 +28,13 @@ interface DataProviderEntityInterface extends DataProviderInterface {
    * @throws BadRequestException
    */
   public function entityValidate(\EntityDrupalWrapper $wrapper);
+
+  /**
+   * Gets a EFQ object.
+   *
+   * @return \EntityFieldQuery
+   *   The object that inherits from \EntityFieldQuery.
+   */
+  public function EFQObject();
 
 }

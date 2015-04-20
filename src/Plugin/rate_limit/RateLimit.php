@@ -122,7 +122,7 @@ abstract class RateLimit extends PluginBase implements RateLimitInterface {
       ->propertyCondition('identifier', $this->generateIdentifier($account))
       ->execute();
     if (empty($results['rate_limit'])) {
-      return;
+      return NULL;
     }
     $rlid = key($results['rate_limit']);
     return entity_load_single('rate_limit', $rlid);
