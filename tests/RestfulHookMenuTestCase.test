@@ -2,11 +2,16 @@
 
 /**
  * @file
- * Contains RestfulHookMenuTestCase
+ * Contains \RestfulHookMenuTestCase.
  */
+
+use Drupal\restful\Http\RequestInterface;
 
 class RestfulHookMenuTestCase extends RestfulCurlBaseTestCase {
 
+  /**
+   * Overrides DrupalWebTestCase::getInfo().
+   */
   public static function getInfo() {
     return array(
       'name' => 'Menu API',
@@ -15,7 +20,10 @@ class RestfulHookMenuTestCase extends RestfulCurlBaseTestCase {
     );
   }
 
-  function setUp() {
+  /**
+   * Overrides DrupalWebTestCase::setUp().
+   */
+  public function setUp() {
     parent::setUp('restful_example');
 
     // Allow anonymous users to edit articles.
@@ -25,7 +33,7 @@ class RestfulHookMenuTestCase extends RestfulCurlBaseTestCase {
   /**
    * Test viewing an entity (GET method).
    */
-  function testViewEntity() {
+  public function testViewEntity() {
     $user1 = $this->drupalCreateUser();
 
     $title = $this->randomName();
@@ -53,17 +61,17 @@ class RestfulHookMenuTestCase extends RestfulCurlBaseTestCase {
     $this->assertEqual($result['body'], json_encode($expected_result));
 
     // Test version 1.1
-    $result = $this->httpRequest('api/v1.1/articles/' . $node1->nid, \RestfulInterface::GET);
+    $result = $this->httpRequest('api/v1.1/articles/' . $node1->nid, RequestInterface::METHOD_GET);
     $expected_result['self']['href'] = url('api/v1.1/articles/' . $node1->nid, array('absolute' => TRUE));
     unset($expected_result['data'][0]['self']);
     $this->assertEqual($result['body'], json_encode($expected_result));
 
     // Test method override.
-    $headers = array('X-HTTP-Method-Override' => \RestfulInterface::PATCH);
+    $headers = array('X-HTTP-Method-Override' => RequestInterface::METHOD_PATCH);
     $body = array(
       'label' => 'new title',
     );
-    $this->httpRequest('api/v1.0/articles/' . $node1->nid, \RestfulInterface::POST, $body, $headers);
+    $this->httpRequest('api/v1.0/articles/' . $node1->nid, RequestInterface::METHOD_POST, $body, $headers);
 
     $node1 = node_load($node1->nid);
     $this->assertEqual($node1->title, 'new title', 'HTTP method was overriden.');
@@ -72,13 +80,13 @@ class RestfulHookMenuTestCase extends RestfulCurlBaseTestCase {
   /**
    * Test HTTP headers change according to the response.
    */
-  function testHttpHeadersAndStatus() {
-    // Valid request (eventough it's empty).
-    $result = $this->httpRequest('api/v1.0/articles/', \RestfulInterface::GET);
+  public function testHttpHeadersAndStatus() {
+    // Valid request (even though it's empty).
+    $result = $this->httpRequest('api/v1.0/articles/', RequestInterface::METHOD_GET);
     $this->assertTrue(strpos($result['headers'], 'application/json;'), '"application/json" found in valid request.');
 
     // Invalid request.
-    $result = $this->httpRequest('api/v1.0/articles/', \RestfulInterface::GET, array('sort' => 'invalid_key'));
+    $result = $this->httpRequest('api/v1.0/articles/', RequestInterface::METHOD_GET, array('sort' => 'invalid_key'));
     $this->assertTrue(strpos($result['headers'], 'application/problem+json;'), '"application/problem+json" found in valid request.');
 
     // Switch site to offline mode.
@@ -91,7 +99,7 @@ class RestfulHookMenuTestCase extends RestfulCurlBaseTestCase {
   /**
    * Test hijacking of api/* pages and showing proper error messages.
    */
-  function testNotFoundDelivery() {
+  public function testNotFoundDelivery() {
     // Invalid URLs.
     $urls = array(
       'api/invalid',
@@ -115,7 +123,7 @@ class RestfulHookMenuTestCase extends RestfulCurlBaseTestCase {
   /**
    * Test the version negotiation.
    */
-  function testVersionNegotiation() {
+  public function __testVersionNegotiation() {
     // Fake the HTTP header.
     $original_header = \RestfulManager::getRequestHttpHeader('X-API-Version');
 
