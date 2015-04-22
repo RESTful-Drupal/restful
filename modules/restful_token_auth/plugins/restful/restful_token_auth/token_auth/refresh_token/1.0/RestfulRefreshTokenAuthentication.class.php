@@ -31,7 +31,6 @@ class RestfulRefreshTokenAuthentication extends \RestfulTokenAuthenticationBase 
    *   The new access token.
    */
   public function refreshToken($token) {
-    $account = $this->getAccount();
     // Check if there is a token that did not expire yet.
     $query = new EntityFieldQuery();
     $results = $query
@@ -47,11 +46,12 @@ class RestfulRefreshTokenAuthentication extends \RestfulTokenAuthenticationBase 
 
     // Remove the refresh token once used.
     $refresh_token = entity_load_single('restful_token_auth', key($results['restful_token_auth']));
+    $uid = $refresh_token->uid;
     $refresh_token->delete();
 
     // Create the new access token and return it.
     $controller = entity_get_controller($this->getEntityType());
-    $token = $controller->generateAccessToken($account->uid);
+    $token = $controller->generateAccessToken($uid);
     return $this->viewEntity($token->id);
   }
 
