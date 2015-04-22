@@ -125,9 +125,9 @@ function restful_menu() {
     }
     $item = array(
       'title' => $plugin_definition['name'],
-      'access callback' => 'restful_menu_access_callback',
+      'access callback' => RestfulManager::FRONT_CONTROLLER_ACCESS_CALLBACK,
       'access arguments' => array($plugin_definition['resource']),
-      'page callback' => 'restful_menu_process_callback',
+      'page callback' => RestfulManager::FRONT_CONTROLLER_CALLBACK,
       'page arguments' => array($plugin_definition['resource']),
       'delivery callback' => 'restful_formatted_delivery',
       'type' => MENU_CALLBACK,
