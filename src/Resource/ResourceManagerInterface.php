@@ -111,4 +111,15 @@ interface ResourceManagerInterface {
    */
   public function getResourceLastVersion($resource_name, $major_version = NULL);
 
+  /**
+   * Get the menu item callback.
+   *
+   * @param string $path
+   *   The path to match the router item. Leave it empty to use the current one.
+   *
+   * @return string
+   *   The callback function to be executed.
+   */
+  public static function getPageCallback($path = NULL);
+
 }
