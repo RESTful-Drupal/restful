@@ -12,6 +12,7 @@ use Drupal\restful\Exception\FloodException;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\RateLimitPluginManager;
 use Drupal\restful\Plugin\rate_limit\RateLimit;
+use Drupal\restful\Plugin\resource\ResourceInterface;
 
 class RateLimitManager implements RateLimitManagerInterface {
 
@@ -60,7 +61,7 @@ class RateLimitManager implements RateLimitManagerInterface {
   /**
    * Constructor for RateLimitManager.
    *
-   * @param \RestfulBase $resource
+   * @param ResourceInterface $resource
    *   Resource being checked.
    * @param array $plugin_options
    *   Array of options keyed by plugin id.
@@ -69,7 +70,7 @@ class RateLimitManager implements RateLimitManagerInterface {
    * @param RateLimitPluginManager $manager
    *   The plugin manager.
    */
-  public function __construct(\RestfulBase $resource, $plugin_options, $account = NULL, RateLimitPluginManager $manager = NULL) {
+  public function __construct(ResourceInterface $resource, array $plugin_options, $account = NULL, RateLimitPluginManager $manager = NULL) {
     $this->resource = $resource;
     $this->account = $account ? $account : drupal_anonymous_user();
     $manager = $manager ?: RateLimitPluginManager::create();
