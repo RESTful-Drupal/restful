@@ -272,7 +272,7 @@ interface ResourceInterface extends PluginInspectionInterface, ConfigurablePlugi
   public function access();
 
   /**
-   * Return the controller from a given path.
+   * Return the controller for a given path.
    *
    * @param string $path
    *   (optional) The path to use. If none is provided the path from the
