@@ -71,7 +71,10 @@ abstract class ResourceEntity extends Resource {
    *   The name of the class of the provider factory.
    */
   protected function dataProviderClassName() {
-    if ($this->getEntityType() == 'taxonomy_term') {
+    if ($this->getEntityType() == 'node') {
+      return '\Drupal\restful\Plugin\resource\DataProvider\DataProviderNode';
+    }
+    elseif ($this->getEntityType() == 'taxonomy_term') {
       return '\Drupal\restful\Plugin\resource\DataProvider\DataProviderTaxonomyTerm';
     }
     elseif ($this->getEntityType() == 'file') {

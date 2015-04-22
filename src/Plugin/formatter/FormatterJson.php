@@ -39,17 +39,17 @@ class FormatterJson extends Formatter implements FormatterInterface {
 
     $output = array('data' => $data);
 
-    if (!empty($this->resource)) {
+    if ($resource = $this->getResource()) {
       if (
-        method_exists($this->resource, 'getTotalCount') &&
-        method_exists($this->resource, 'isListRequest') &&
-        $this->resource->isListRequest($this->resource->getPath())
+        method_exists($resource, 'getTotalCount') &&
+        method_exists($resource, 'isListRequest') &&
+        $resource->isListRequest($resource->getPath())
       ) {
         // Get the total number of items for the current request without pagination.
-        $output['count'] = $this->resource->getTotalCount();
+        $output['count'] = $resource->getTotalCount();
       }
-      if (method_exists($this->resource, 'additionalHateoas')) {
-        $output = array_merge($output, $this->resource->additionalHateoas());
+      if (method_exists($resource, 'additionalHateoas')) {
+        $output = array_merge($output, $resource->additionalHateoas());
       }
 
       // Add HATEOAS to the output.
@@ -66,15 +66,15 @@ class FormatterJson extends Formatter implements FormatterInterface {
    *   The data array after initial massaging.
    */
   protected function addHateoas(array &$data) {
-    if (!$this->resource) {
+    if (!$resource = $this->getResource()) {
       return;
     }
-    $request = $this->resource->getRequest();
+    $request = $resource->getRequest();
 
     // Get self link.
     $data['self'] = array(
       'title' => 'Self',
-      'href' => $this->resource->versionedUrl($this->resource->getPath()),
+      'href' => $resource->versionedUrl($resource->getPath()),
     );
 
     $page = !empty($request['page']) ? $request['page'] : 1;
@@ -83,20 +83,20 @@ class FormatterJson extends Formatter implements FormatterInterface {
       $request['page'] = $page - 1;
       $data['previous'] = array(
         'title' => 'Previous',
-        'href' => $this->resource->getUrl($request),
+        'href' => $resource->getUrl($request),
       );
     }
 
     // We know that there are more pages if the total count is bigger than the
     // number of items of the current request plus the number of items in
     // previous pages.
-    $items_per_page = $this->resource->getRange();
+    $items_per_page = $resource->getRange();
     $previous_items = ($page - 1) * $items_per_page;
     if (isset($data['count']) && $data['count'] > count($data['data']) + $previous_items) {
       $request['page'] = $page + 1;
       $data['next'] = array(
         'title' => 'Next',
-        'href' => $this->resource->getUrl($request),
+        'href' => $resource->getUrl($request),
       );
     }
 
