@@ -265,6 +265,8 @@ class CachedDataProvider implements CachedDataProviderInterface {
 
   /**
    * {@inheritdoc}
+   *
+   * @see https://api.drupal.org/api/drupal/includes%21cache.inc/function/DrupalCacheInterface%3A%3Aclear/7
    */
   public function cacheInvalidate($cid) {
     $options = $this->getOptions();

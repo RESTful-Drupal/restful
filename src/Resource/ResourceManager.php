@@ -186,6 +186,14 @@ class ResourceManager implements ResourceManagerInterface {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public static function getPageCallback($path = NULL) {
+    $router_item = static::getMenuItem($path);
+    return isset($router_item['page_callback']) ? $router_item['page_callback'] : NULL;
+  }
+
+  /**
    * Parses the version string.
    *
    * @param string $version
@@ -227,7 +235,7 @@ class ResourceManager implements ResourceManagerInterface {
    * @return array
    *   The page arguments.
    *
-   * @see menu_get_item().
+   * @see menu_get_item()
    */
   protected static function getMenuItem($path = NULL) {
     $router_items = &drupal_static(__METHOD__);
