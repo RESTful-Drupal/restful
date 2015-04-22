@@ -2,22 +2,19 @@
 
 /**
  * @file
- * Contains \Drupal\restful\Plugin\resource\RateLimitedResource
+ * Contains \Drupal\restful\Plugin\resource\Decorators\ResourceDecoratorBase.
  */
 
-namespace Drupal\restful\Plugin\resource;
+namespace Drupal\restful\Plugin\resource\Decorators;
+
 
 use Drupal\Component\Plugin\PluginBase;
-use Drupal\restful\Exception\BadRequestException;
-use Drupal\restful\Exception\ForbiddenException;
-use Drupal\restful\Exception\GoneException;
-use Drupal\restful\Exception\ServerConfigurationException;
-use Drupal\restful\Http\RequestInterface;
-use Drupal\restful\RateLimit\RateLimitManager;
 use Drupal\restful\Exception\NotImplementedException;
+use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataProvider\DataProviderInterface;
+use Drupal\restful\Plugin\resource\ResourceInterface;
 
-class RateLimitedResource extends PluginBase implements ResourceInterface {
+abstract class ResourceDecoratorBase extends PluginBase implements ResourceDecoratorInterface {
 
   /**
    * The decorated resource.
@@ -27,44 +24,13 @@ class RateLimitedResource extends PluginBase implements ResourceInterface {
   protected $subject;
 
   /**
-   * Authentication manager.
+   * Gets the decorated resource.
    *
-   * @var RateLimitManager
+   * @return ResourceInterface
+   *   The underlying resource.
    */
-  protected $rateLimitManager;
-
-  /**
-   * Constructs a Drupal\Component\Plugin\PluginBase object.
-   *
-   * @param ResourceInterface $subject
-   *   The decorated object.
-   * @param RateLimitManager $rate_limit_manager
-   *   Injected rate limit manager.
-   */
-  public function __construct(ResourceInterface $subject, RateLimitManager $rate_limit_manager = NULL) {
-    $this->subject = $subject;
-    $plugin_definition = $subject->getPluginDefinition();
-    $this->rateLimitManager = $rate_limit_manager ? $rate_limit_manager : new RateLimitManager($this, $plugin_definition['rateLimit']);
-  }
-
-  /**
-   * Setter for $rateLimitManager.
-   *
-   * @param RateLimitManager $rate_limit_manager
-   *   The rate limit manager.
-   */
-  protected function setRateLimitManager(RateLimitManager $rate_limit_manager) {
-    $this->rateLimitManager = $rate_limit_manager;
-  }
-
-  /**
-   * Getter for $rate_limit_manager.
-   *
-   * @return RateLimitManager
-   *   The rate limit manager.
-   */
-  protected function getRateLimitManager() {
-    return $this->rateLimitManager;
+  public function getDecoratedResource() {
+    return $this->subject;
   }
 
   /**
@@ -134,8 +100,6 @@ class RateLimitedResource extends PluginBase implements ResourceInterface {
    * {@inheritdoc}
    */
   public function process() {
-    // This will throw the appropriate exception if needed.
-    $this->getRateLimitManager()->checkRateLimit($this->getRequest());
     return $this->subject->process();
   }
 
@@ -255,7 +219,7 @@ class RateLimitedResource extends PluginBase implements ResourceInterface {
    * {@inheritdoc}
    */
   public function getControllerFromPath($path = NULL, ResourceInterface $resource = NULL) {
-    return $this->subject->getControllerFromPath($resource ?: $this);
+    return $this->subject->getControllerFromPath($path, $resource ?: $this);
   }
 
   /**

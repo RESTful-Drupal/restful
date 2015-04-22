@@ -12,10 +12,9 @@ use Drupal\restful\Exception\RestfulException;
 use Drupal\restful\Exception\ServiceUnavailableException;
 use Drupal\restful\Http\HttpHeader;
 use Drupal\restful\Http\RequestInterface;
-use Drupal\restful\Plugin\resource\CachedResource;
-use Drupal\restful\Plugin\resource\RateLimitedResource;
+use Drupal\restful\Plugin\resource\Decorators\CachedResource;
+use Drupal\restful\Plugin\resource\Decorators\RateLimitedResource;
 use Drupal\restful\Plugin\resource\ResourceInterface;
-use Drupal\restful\RateLimit\RateLimitManager;
 use Drupal\restful\RestfulManager;
 
 /**
