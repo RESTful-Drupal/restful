@@ -9,6 +9,7 @@ namespace Drupal\restful\Resource;
 
 use \Drupal\restful\Exception\RestfulException;
 use \Drupal\restful\Exception\ServerConfigurationException;
+use Drupal\restful\Http\RequestInterface;
 use \Drupal\restful\Plugin\ResourcePluginManager;
 use \Drupal\restful\Plugin\resource\ResourceInterface;
 use \Drupal\Component\Plugin\Exception\PluginNotFoundException;
@@ -28,6 +29,8 @@ interface ResourceManagerInterface {
    *
    * @param string $instance_id
    *   The instance ID.
+   * @param RequestInterface $request
+   *   The request object.
    *
    * @return ResourceInterface
    *   The plugin.
@@ -35,7 +38,7 @@ interface ResourceManagerInterface {
    * @throws PluginNotFoundException
    *   If the plugin instance cannot be found.
    */
-  public function getPlugin($instance_id);
+  public function getPlugin($instance_id, RequestInterface $request = NULL);
 
   /**
    * Gets the major and minor version for the current request.
@@ -107,5 +110,16 @@ interface ResourceManagerInterface {
    *   Array containing the majorVersion and minorVersion.
    */
   public function getResourceLastVersion($resource_name, $major_version = NULL);
+
+  /**
+   * Get the menu item callback.
+   *
+   * @param string $path
+   *   The path to match the router item. Leave it empty to use the current one.
+   *
+   * @return string
+   *   The callback function to be executed.
+   */
+  public static function getPageCallback($path = NULL);
 
 }

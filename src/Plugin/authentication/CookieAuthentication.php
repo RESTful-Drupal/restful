@@ -10,6 +10,7 @@ use Drupal\restful\Exception\BadRequestException;
 use Drupal\restful\Exception\ForbiddenException;
 use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
+use Drupal\restful\RestfulManager;
 
 /**
  * Class CookieAuthentication
@@ -44,7 +45,7 @@ class CookieAuthentication extends Authentication {
       throw new BadRequestException('No CSRF token passed in the HTTP header.');
     }
 
-    if (!drupal_valid_token($request->getApplicationData('csrf_token'), Authentication::TOKEN_VALUE)) {
+    if (RestfulManager::isRestfulPath($request) && !drupal_valid_token($request->getApplicationData('csrf_token'), Authentication::TOKEN_VALUE)) {
       throw new ForbiddenException('CSRF token validation failed.');
     }
 

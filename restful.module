@@ -12,6 +12,8 @@ use Drupal\restful\Exception\RestfulException;
 use Drupal\restful\Exception\ServiceUnavailableException;
 use Drupal\restful\Http\HttpHeader;
 use Drupal\restful\Http\RequestInterface;
+use Drupal\restful\Plugin\resource\Decorators\CachedResource;
+use Drupal\restful\Plugin\resource\Decorators\RateLimitedResource;
 use Drupal\restful\Plugin\resource\ResourceInterface;
 use Drupal\restful\RestfulManager;
 
@@ -123,9 +125,9 @@ function restful_menu() {
     }
     $item = array(
       'title' => $plugin_definition['name'],
-      'access callback' => 'restful_menu_access_callback',
+      'access callback' => RestfulManager::FRONT_CONTROLLER_ACCESS_CALLBACK,
       'access arguments' => array($plugin_definition['resource']),
-      'page callback' => 'restful_menu_process_callback',
+      'page callback' => RestfulManager::FRONT_CONTROLLER_CALLBACK,
       'page arguments' => array($plugin_definition['resource']),
       'delivery callback' => 'restful_formatted_delivery',
       'type' => MENU_CALLBACK,
@@ -259,7 +261,7 @@ function restful_menu_access_callback($resource_name, $version_string = NULL) {
 
   try {
     return $resource_manager
-      ->getPlugin($resource_name . PluginBase::DERIVATIVE_SEPARATOR . implode('.', $versions))
+      ->getPlugin($resource_name . PluginBase::DERIVATIVE_SEPARATOR . implode('.', $versions), restful()->getRequest())
       ->access();
   }
   catch (RestfulException $e) {
@@ -559,5 +561,23 @@ function restful_date_time_format_element_validate($element, &$form_state) {
       '%name' => $element['#title'],
       '!link' => l(t('\DateInterval format'), 'http://php.net/manual/en/class.dateinterval.php'),
     )));
+  }
+}
+
+/**
+ * Implements hook_restful_resource_alter().
+ *
+ * Decorate an existing resource with other services (e.g. rate limit and render
+ * cache).
+ */
+function restful_restful_resource_alter(ResourceInterface &$resource) {
+  $plugin_definition = $resource->getPluginDefinition();
+  // Check for the rate limit configuration.
+  if (!empty($plugin_definition['rateLimit'])) {
+    $resource = new RateLimitedResource($resource);
+  }
+  // Check for the rate limit configuration.
+  if (!empty($plugin_definition['renderCache']['render'])) {
+    $resource = new CachedResource($resource);
   }
 }

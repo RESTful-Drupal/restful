@@ -10,6 +10,7 @@ namespace Drupal\restful\Authentication;
 use Drupal\restful\Exception\UnauthorizedException;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\AuthenticationPluginManager;
+use Drupal\restful\RestfulManager;
 
 class AuthenticationManager implements AuthenticationManagerInterface {
 
@@ -103,7 +104,7 @@ class AuthenticationManager implements AuthenticationManagerInterface {
 
     if (!$account) {
 
-      if ($this->plugins->count() && !$this->getIsOptional()) {
+      if (RestfulManager::isRestfulPath($request) && $this->plugins->count() && !$this->getIsOptional()) {
         // User didn't authenticate against any provider, so we throw an error.
         throw new UnauthorizedException('Bad credentials');
       }

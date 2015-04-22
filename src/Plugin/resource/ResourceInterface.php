@@ -9,12 +9,22 @@ namespace Drupal\restful\Plugin\resource;
 
 use Drupal\Component\Plugin\ConfigurablePluginInterface;
 use Drupal\Component\Plugin\PluginInspectionInterface;
+use Drupal\restful\Exception\BadRequestException;
+use Drupal\restful\Exception\ForbiddenException;
+use Drupal\restful\Exception\GoneException;
 use Drupal\restful\Exception\NotImplementedException;
+use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataProvider\DataProviderInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
+use Drupal\restful\Resource\ResourceManager;
 
 interface ResourceInterface extends PluginInspectionInterface, ConfigurablePluginInterface {
+
+  /**
+   * The string that separates multiple ids.
+   */
+  const IDS_SEPARATOR = ',';
 
   /**
    * Data provider factory.
@@ -102,6 +112,14 @@ interface ResourceInterface extends PluginInspectionInterface, ConfigurablePlugi
    *   The name of the current resource.
    */
   public function getResourceName();
+
+  /**
+   * Gets the resource machine name.
+   *
+   * @return string
+   *   The machine name.
+   */
+  public function getResourceMachineName();
 
   /**
    * Controller function that passes the data along and executes right action.
@@ -252,5 +270,28 @@ interface ResourceInterface extends PluginInspectionInterface, ConfigurablePlugi
    *   otherwise.
    */
   public function access();
+
+  /**
+   * Return the controller for a given path.
+   *
+   * @param string $path
+   *   (optional) The path to use. If none is provided the path from the
+   *   resource will be used.
+   * @param ResourceInterface $resource
+   *   (optional) Use the passed in resource instead of $this. This is mainly
+   *   used by decorator resources.
+   *
+   * @return callable
+   *   A callable as expected by ResourceManager::executeCallback.
+   *
+   * @throws BadRequestException
+   * @throws ForbiddenException
+   * @throws GoneException
+   * @throws NotImplementedException
+   * @throws ServerConfigurationException
+   *
+   * @see ResourceManager::executeCallback()
+   */
+  public function getControllerFromPath($path = NULL, ResourceInterface $resource = NULL);
 
 }
