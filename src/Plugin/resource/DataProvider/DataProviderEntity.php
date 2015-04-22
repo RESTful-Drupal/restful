@@ -130,6 +130,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
    */
   public function getContext($identifier) {
     if (is_array($identifier)) {
+      // Like in https://example.org/api/articles/1,2,3.
       $identifier = implode(ResourceInterface::IDS_SEPARATOR, $identifier);
     }
     return array(

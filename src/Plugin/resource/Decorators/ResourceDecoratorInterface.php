@@ -20,4 +20,12 @@ interface ResourceDecoratorInterface extends ResourceInterface {
    */
   public function getDecoratedResource();
 
+  /**
+   * Gets the primary resource, the one that is not a decorator.
+   *
+   * @return ResourceInterface
+   *   The resource.
+   */
+  public function getPrimaryResource();
+
 }

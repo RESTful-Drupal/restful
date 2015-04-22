@@ -24,13 +24,21 @@ abstract class ResourceDecoratorBase extends PluginBase implements ResourceDecor
   protected $subject;
 
   /**
-   * Gets the decorated resource.
-   *
-   * @return ResourceInterface
-   *   The underlying resource.
+   * {@inheritdoc}
    */
   public function getDecoratedResource() {
     return $this->subject;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getPrimaryResource() {
+    $resource = $this->getDecoratedResource();
+    while ($resource instanceof ResourceDecoratorInterface) {
+      $resource = $resource->getDecoratedResource();
+    }
+    return $resource;
   }
 
   /**

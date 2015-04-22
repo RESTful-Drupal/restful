@@ -566,6 +566,9 @@ function restful_date_time_format_element_validate($element, &$form_state) {
 
 /**
  * Implements hook_restful_resource_alter().
+ *
+ * Decorate an existing resource with other services (e.g. rate limit and render
+ * cache).
  */
 function restful_restful_resource_alter(ResourceInterface &$resource) {
   $plugin_definition = $resource->getPluginDefinition();
@@ -574,7 +577,7 @@ function restful_restful_resource_alter(ResourceInterface &$resource) {
     $resource = new RateLimitedResource($resource);
   }
   // Check for the rate limit configuration.
-  if (!empty($plugin_definition['renderCache']) && !empty($plugin_definition['renderCache']['render'])) {
+  if (!empty($plugin_definition['renderCache']['render'])) {
     $resource = new CachedResource($resource);
   }
 }
