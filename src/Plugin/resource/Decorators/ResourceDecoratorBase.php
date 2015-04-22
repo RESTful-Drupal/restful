@@ -2,18 +2,17 @@
 
 /**
  * @file
- * Contains \Drupal\restful\Plugin\resource\RateLimitedResource
+ * Contains \Drupal\restful\Plugin\resource\Decorators\ResourceDecoratorBase.
  */
 
-namespace Drupal\restful\Plugin\resource;
+namespace Drupal\restful\Plugin\resource\Decorators;
+
 
 use Drupal\Component\Plugin\PluginBase;
 use Drupal\restful\Http\RequestInterface;
-use Drupal\restful\RateLimit\RateLimitManager;
-use Drupal\restful\Exception\NotImplementedException;
-use Drupal\restful\Plugin\resource\DataProvider\DataProviderInterface;
+use Drupal\restful\Plugin\resource\ResourceInterface;
 
-class RateLimitedResource extends PluginBase implements ResourceInterface {
+abstract class ResourceDecoratorBase extends PluginBase implements ResourceDecoratorInterface {
 
   /**
    * The decorated resource.
@@ -23,73 +22,28 @@ class RateLimitedResource extends PluginBase implements ResourceInterface {
   protected $subject;
 
   /**
-   * Authentication manager.
-   *
-   * @var RateLimitManager
+   * {@inheritdoc}
    */
-  protected $rateLimitManager;
-
-  /**
-   * The data provider.
-   *
-   * @var DataProviderInterface
-   */
-  protected $dataProvider;
-
-  /**
-   * Constructs a Drupal\Component\Plugin\PluginBase object.
-   *
-   * @param ResourceInterface $subject
-   *   The decorated object.
-   * @param RateLimitManager $rate_limit_manager
-   *   Injected rate limit manager.
-   */
-  public function __construct(ResourceInterface $subject, RateLimitManager $rate_limit_manager = NULL) {
-    $this->subject = $subject;
-    $plugin_definition = $subject->getPluginDefinition();
-    $this->rateLimitManager = $rate_limit_manager ? $rate_limit_manager : new RateLimitManager($this, $plugin_definition['rateLimit'], $this->getAccount());
+  public function getDecoratedResource() {
+    return $this->subject;
   }
 
   /**
-   * Setter for $rateLimitManager.
-   *
-   * @param RateLimitManager $rate_limit_manager
-   *   The rate limit manager.
+   * {@inheritdoc}
    */
-  protected function setRateLimitManager(RateLimitManager $rate_limit_manager) {
-    $this->rateLimitManager = $rate_limit_manager;
+  public function getPrimaryResource() {
+    $resource = $this->getDecoratedResource();
+    while ($resource instanceof ResourceDecoratorInterface) {
+      $resource = $resource->getDecoratedResource();
+    }
+    return $resource;
   }
 
   /**
-   * Getter for $rate_limit_manager.
-   *
-   * @return RateLimitManager
-   *   The rate limit manager.
-   */
-  protected function getRateLimitManager() {
-    return $this->rateLimitManager;
-  }
-
-  /**
-   * Data provider factory.
-   *
-   * @return DataProviderInterface
-   *   The data provider for this resource.
-   *
-   * @throws NotImplementedException
+   * {@inheritdoc}
    */
   public function dataProviderFactory() {
-    if ($this->dataProvider && $this->dataProvider instanceof DataProvider\RateLimitedDataProvider) {
-      return $this->dataProvider;
-    }
-    // Get the data provider from the subject of the decorator.
-    $decorated_provider = $this->subject->dataProviderFactory();
-    $this->dataProvider = new DataProvider\RateLimitedDataProvider($decorated_provider);
-    $plugin_definition = $this->getPluginDefinition();
-    $this->dataProvider->addOptions(array(
-      'rateLimit' => $plugin_definition['rateLimit'],
-    ));
-    return $this->dataProvider;
+    return $this->subject->dataProviderFactory();
   }
 
   /**
@@ -147,8 +101,6 @@ class RateLimitedResource extends PluginBase implements ResourceInterface {
    * {@inheritdoc}
    */
   public function process() {
-    // This will throw the appropriate exception if needed.
-    $this->getRateLimitManager()->checkRateLimit($this->getRequest());
     return $this->subject->process();
   }
 
