@@ -10,6 +10,7 @@ namespace Drupal\restful_example\Plugin\resource\node\article\v1;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\ResourceEntity;
 use Drupal\restful\Plugin\resource\ResourceInterface;
+use Drupal\restful\Plugin\resource\ResourceNode;
 
 /**
  * Class Articles
@@ -19,7 +20,7 @@ use Drupal\restful\Plugin\resource\ResourceInterface;
  *   name = "articles:1.0",
  *   resource = "articles",
  *   label = "Articles",
- *   description = "Export the article content type with cookie authentication.",
+ *   description = "Export the articles with all authentication providers.",
  *   authenticationTypes = TRUE,
  *   authenticationOptional = TRUE,
  *   dataProvider = {
@@ -32,4 +33,4 @@ use Drupal\restful\Plugin\resource\ResourceInterface;
  *   minorVersion = 0
  * )
  */
-class Articles__1_0 extends ResourceEntity implements ResourceInterface {}
+class Articles__1_0 extends ResourceNode implements ResourceInterface {}

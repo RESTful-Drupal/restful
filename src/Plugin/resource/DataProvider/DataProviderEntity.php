@@ -784,7 +784,10 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
    *
    * @throws BadRequestException
    */
-  protected function setPropertyValues(\EntityDrupalWrapper $wrapper, array $object, $replace = FALSE) {
+  protected function setPropertyValues(\EntityDrupalWrapper $wrapper, $object, $replace = FALSE) {
+    if (!is_array($object)) {
+      throw new BadRequestException('Bad input data provided. Please, check your input and your Content-Type header.');
+    }
     $save = FALSE;
     $original_object = $object;
 
