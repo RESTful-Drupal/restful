@@ -172,7 +172,8 @@ abstract class DataProvider implements DataProviderInterface {
    * @return array
    *   With the different sorting options.
    *
-   * @throws BadRequestException
+   * @throws \Drupal\restful\Exception\BadRequestException
+   * @throws \Drupal\restful\Exception\ServiceUnavailableException
    */
   protected function parseRequestForListSort() {
     $input = $this->getRequest()->getParsedInput();
@@ -203,13 +204,11 @@ abstract class DataProvider implements DataProviderInterface {
   /**
    * Filter the query for list.
    *
-   * @throws BadRequestException
-   *
    * @returns array
    *   An array of filters to apply.
    *
-   * @throws BadRequestException
-   * @throws ServiceUnavailableException
+   * @throws \Drupal\restful\Exception\BadRequestException
+   * @throws \Drupal\restful\Exception\ServiceUnavailableException
    *
    * @see \RestfulEntityBase::getQueryForList
    */
@@ -351,7 +350,7 @@ abstract class DataProvider implements DataProviderInterface {
    * @param string $conjunction
    *   The operator.
    *
-   * @throws BadRequestException
+   * @throws \Drupal\restful\Exception\BadRequestException
    */
   protected static function isValidConjunctionForFilter($conjunction) {
     $allowed_conjunctions = array(

@@ -168,6 +168,26 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
   /**
    * {@inheritdoc}
    */
+  public function count() {
+    $query = $this->getEntityFieldQuery();
+
+    // If we are trying to filter on a computed field, just ignore it and log an
+    // exception.
+    try {
+      $this->queryForListFilter($query);
+    }
+    catch (BadRequestException $e) {
+      watchdog_exception('restful', $e);
+    }
+
+    $this->addExtraInfoToQuery($query);
+
+    return intval($query->count()->execute());
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function create($object) {
     $this->validateBody($object);
     $entity_info = $this->getEntityInfo();
