@@ -188,10 +188,10 @@ class RestfulManager {
    *
    * @param DataInterpreterInterface $value
    *   The resource value.
-   * @param string $message
+   * @param mixed $message
    *   The string to relay.
    *
-   * @return string
+   * @return mixed
    *   Returns $message
    */
   public static function echoMessage(DataInterpreterInterface $value, $message) {
