@@ -20,6 +20,16 @@ use Drupal\restful\Resource\ResourceManagerInterface;
 class RestfulManager {
 
   /**
+   * The front controller callback function.
+   */
+  const FRONT_CONTROLLER_CALLBACK = 'restful_menu_process_callback';
+
+  /**
+   * The front controller access callback function.
+   */
+  const FRONT_CONTROLLER_ACCESS_CALLBACK = 'restful_menu_access_callback';
+
+  /**
    * The request object.
    *
    * @var RequestInterface
@@ -48,9 +58,10 @@ class RestfulManager {
   protected $formatterManager;
 
   /**
-   * Accessor for the request.ç
+   * Accessor for the request.
    *
    * @return RequestInterface
+   *   The request object.
    */
   public function getRequest() {
     return $this->request;
@@ -60,6 +71,7 @@ class RestfulManager {
    * Mutator for the request.
    *
    * @param RequestInterface $request
+   *   The request object.
    */
   public function setRequest(RequestInterface $request) {
     $this->request = $request;
@@ -69,6 +81,7 @@ class RestfulManager {
    * Accessor for the response.
    *
    * @return ResponseInterface
+   *   The response object.
    */
   public function getResponse() {
     return $this->response;
@@ -78,6 +91,7 @@ class RestfulManager {
    * Mutator for the response.
    *
    * @param ResponseInterface $response
+   *   The response object.
    */
   public function setResponse(ResponseInterface $response) {
     $this->response = $response;
@@ -179,7 +193,7 @@ class RestfulManager {
    *   TRUE if the path belongs to RESTful.
    */
   public static function isRestfulPath(RequestInterface $request) {
-    return strpos($request->getPath(), variable_get('restful_hook_menu_base_path', 'api')) === 0;
+    return ResourceManager::getPageCallback($request->getPath(FALSE)) == static::FRONT_CONTROLLER_CALLBACK;
   }
 
   /**
