@@ -105,6 +105,13 @@ class RateLimitedDataProvider implements DataProviderInterface {
   /**
    * {@inheritdoc}
    */
+  public function count() {
+    return $this->subject->count();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function create($object) {
     // Check the rate limits and carry on.
     $this->getRateLimitManager()->checkRateLimit($this->getRequest());
