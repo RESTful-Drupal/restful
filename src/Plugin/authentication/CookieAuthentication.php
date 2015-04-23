@@ -41,11 +41,10 @@ class CookieAuthentication extends Authentication {
       return $account;
     }
 
-    if ($request->getApplicationData('csrf_token')) {
+    if (!$request->getCsrfToken()) {
       throw new BadRequestException('No CSRF token passed in the HTTP header.');
     }
-
-    if (RestfulManager::isRestfulPath($request) && !drupal_valid_token($request->getApplicationData('csrf_token'), Authentication::TOKEN_VALUE)) {
+    if (RestfulManager::isRestfulPath($request) && !drupal_valid_token($request->getCsrfToken(), Authentication::TOKEN_VALUE)) {
       throw new ForbiddenException('CSRF token validation failed.');
     }
 

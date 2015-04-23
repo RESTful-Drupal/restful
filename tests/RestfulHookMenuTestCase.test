@@ -67,10 +67,12 @@ class RestfulHookMenuTestCase extends RestfulCurlBaseTestCase {
     $this->assertEqual($result['body'], json_encode($expected_result));
 
     // Test method override.
-    $headers = array('X-HTTP-Method-Override' => RequestInterface::METHOD_PATCH);
-    $body = array(
-      'label' => 'new title',
+    $headers = array(
+      'X-HTTP-Method-Override' => RequestInterface::METHOD_PATCH,
+      'X-CSRF-Token' => drupal_get_token(\Drupal\restful\Plugin\authentication\Authentication::TOKEN_VALUE),
+      'Content-Type' => 'application/json',
     );
+    $body = '{"label": "new title"}';
     $this->httpRequest('api/v1.0/articles/' . $node1->nid, RequestInterface::METHOD_POST, $body, $headers);
 
     $node1 = node_load($node1->nid);
@@ -86,7 +88,7 @@ class RestfulHookMenuTestCase extends RestfulCurlBaseTestCase {
     $this->assertTrue(strpos($result['headers'], 'application/json;'), '"application/json" found in valid request.');
 
     // Invalid request.
-    $result = $this->httpRequest('api/v1.0/articles/', RequestInterface::METHOD_GET, array('sort' => 'invalid_key'));
+    $result = $this->httpRequest('api/v1.0/articles/invalid_id', RequestInterface::METHOD_GET);
     $this->assertTrue(strpos($result['headers'], 'application/problem+json;'), '"application/problem+json" found in valid request.');
 
     // Switch site to offline mode.

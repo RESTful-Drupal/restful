@@ -477,7 +477,7 @@ function _restful_get_data_from_menu_status(&$var) {
       break;
 
     case MENU_SITE_OFFLINE:
-      $class_name = '\Drupal\restful\Exception\ServiceUnavailable';
+      $class_name = '\Drupal\restful\Exception\ServiceUnavailableException';
       $message = 'Site is offline.';
       break;
   }

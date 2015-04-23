@@ -178,7 +178,7 @@ class Request implements RequestInterface {
     // CURL";
     $via_router = TRUE;
     $headers = static::parseHeadersFromGlobals();
-    $csrf_token = $headers->get('x-csrf-Token')->getValueString();
+    $csrf_token = $headers->get('x-csrf-token')->getValueString();
 
     return static::create($path, $query, $method, $headers, $via_router, $csrf_token, $_COOKIE, $_FILES, $_SERVER);
   }
