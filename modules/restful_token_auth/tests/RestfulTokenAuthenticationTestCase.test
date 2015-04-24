@@ -74,6 +74,30 @@ class RestfulTokenAuthenticationTestCase extends DrupalWebTestCase {
       $this->fail('Exception different from "Unauthorized" exception was thrown.');
     }
 
+    // Get a "protected" resource with refresh token as access token.
+    try {
+      $handler->get($id, array('access_token' => $refresh_token));
+      $this->fail('"Unauthorized" exception not thrown.');
+    }
+    catch (\RestfulUnauthorizedException $e) {
+      $this->pass('"Unauthorized" exception was thrown.');
+    }
+    catch (\Exception $e) {
+      $this->fail('Exception different from "Unauthorized" exception was thrown.');
+    }
+
+    // Get a "protected" resource with refresh token.
+    try {
+      $handler->get($id, array('refresh_token' => $refresh_token));
+      $this->fail('"Unauthorized" exception not thrown.');
+    }
+    catch (\RestfulUnauthorizedException $e) {
+      $this->pass('"Unauthorized" exception was thrown.');
+    }
+    catch (\Exception $e) {
+      $this->fail('Exception different from "Unauthorized" exception was thrown.');
+    }
+
     // Get a "protected" resource with the access token.
     $response = $handler->get(1, array('access_token' => $access_token));
     $result = $response[0];
@@ -83,8 +107,8 @@ class RestfulTokenAuthenticationTestCase extends DrupalWebTestCase {
     $query = new \EntityFieldQuery();
     $results = $query
       ->entityCondition('entity_type', 'restful_token_auth')
-      ->entityCondition('bundle', 'refresh_token')
-      ->propertyCondition('token', $refresh_token)
+      ->entityCondition('bundle', 'access_token')
+      ->propertyCondition('token', $access_token)
       ->execute();
 
     if (empty($results['restful_token_auth'])) {
@@ -103,7 +127,7 @@ class RestfulTokenAuthenticationTestCase extends DrupalWebTestCase {
     $query = new \EntityFieldQuery();
     $result = $query
       ->entityCondition('entity_type', 'restful_token_auth')
-      ->entityCondition('bundle', 'refresh_token')
+      ->entityCondition('bundle', 'access_token')
       ->propertyCondition('token', $access_token)
       ->execute();
 
