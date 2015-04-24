@@ -101,8 +101,8 @@ class RefreshToken__1_0 extends TokenAuthenticationBase implements ResourceInter
     $refresh_token->delete();
 
     // Create the new access token and return it.
-    $controller = entity_get_controller($this->getEntityType());
     /** @var \Drupal\restful_token_auth\Entity\RestfulTokenAuthController $controller */
+    $controller = entity_get_controller($this->getEntityType());
     $token = $controller->generateAccessToken($account->uid);
     return $this->view($token->id);
   }

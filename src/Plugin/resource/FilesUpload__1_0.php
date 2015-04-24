@@ -46,7 +46,6 @@ class FilesUpload__1_0 extends ResourceEntity {
     // Set dynamic options that cannot be set in the annotation.
     $plugin_definition = $this->getPluginDefinition();
     $plugin_definition['authenticationOptional'] = variable_get('restful_file_upload_allow_anonymous_user', FALSE);
-    // TODO: Allow toggling resources on and off.
     $plugin_definition['menuItem'] = variable_get('restful_hook_menu_base_path', 'api') . '/file-upload';
 
     // Store the plugin definition.
