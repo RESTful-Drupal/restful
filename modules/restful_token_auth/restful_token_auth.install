@@ -93,6 +93,7 @@ function restful_token_auth_install() {
  */
 function restful_token_auth_uninstall() {
   variable_del('restful_token_auth_delete_expired_tokens');
+  field_delete_field('refresh_token_reference');
 }
 
 /**
