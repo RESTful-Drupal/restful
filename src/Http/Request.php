@@ -465,6 +465,9 @@ class Request implements RequestInterface {
    * {@inheritdoc}
    */
   public function getApplicationData($key) {
+    if (!isset($this->applicationData[$key])) {
+      return NULL;
+    }
     return $this->applicationData[$key];
   }
 

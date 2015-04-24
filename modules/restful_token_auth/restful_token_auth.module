@@ -5,11 +5,13 @@
  * RESTful token authentication.
  */
 
-use \Drupal\Component\Plugin\Exception\PluginNotFoundException;
-use \Drupal\restful\Http\RequestInterface;
-use \Drupal\restful\Authentication\AuthenticationManager;
+use Drupal\Component\Plugin\Exception\PluginNotFoundException;
+use Drupal\restful\Http\RequestInterface;
+use Drupal\restful\Authentication\AuthenticationManager;
+use Drupal\restful\Plugin\resource\ResourceInterface;
+
 /**
- *  Implements hook_menu().
+ * Implements hook_menu().
  */
 function restful_token_auth_menu() {
   // Add administration page.
@@ -29,24 +31,29 @@ function restful_token_auth_menu() {
  * Implements hook_menu_alter().
  */
 function restful_token_auth_menu_alter(&$items) {
-  $access_token_plugins = array();
-  foreach (restful_get_restful_plugins() as $plugin) {
-    if ($plugin['entity_type'] == 'restful_token_auth') {
-      $access_token_plugins[] = $plugin;
+  $access_token_plugin_definitions = array();
+  $plugins = restful()
+    ->getResourceManager()
+    ->getPlugins();
+  foreach ($plugins as $plugin) {
+    /** @var ResourceInterface $plugin */
+    $plugin_definition = $plugin->getPluginDefinition();
+    if (!empty($plugin_definition['dataProvider']['entityType']) && $plugin_definition['dataProvider']['entityType'] == 'restful_token_auth') {
+      $access_token_plugin_definitions[] = $plugin_definition;
     }
   }
-  if (empty($access_token_plugins)) {
+  if (empty($access_token_plugin_definitions)) {
     return;
   }
-  foreach ($access_token_plugins as $access_token_plugin) {
-    if (!empty($items[$access_token_plugin['menu_item']])) {
-      $items[$access_token_plugin['menu_item']]['delivery callback'] = 'restful_unprepared_delivery';
+  foreach ($access_token_plugin_definitions as $access_token_plugin_definition) {
+    if (!empty($items[$access_token_plugin_definition['menuItem']])) {
+      $items[$access_token_plugin_definition['menuItem']]['delivery callback'] = 'restful_unprepared_delivery';
     }
   }
 }
 
 /**
- * Implements hook_restful_parse_request_alter()
+ * Implements hook_restful_parse_request_alter().
  */
 function restful_token_auth_restful_parse_request_alter(RequestInterface &$request) {
   // In this hook we cannot rely on the service to be ready.
@@ -81,8 +88,8 @@ function restful_token_auth_ctools_plugin_directory($module, $plugin) {
 function restful_token_auth_entity_info() {
   $items['restful_token_auth'] = array(
     'label' => t('Authentication token'),
-    'entity class' => 'RestfulTokenAuth',
-    'controller class' => 'RestfulTokenAuthController',
+    'entity class' => '\\Drupal\\restful_token_auth\\Entity\\RestfulTokenAuth',
+    'controller class' => '\\Drupal\\restful_token_auth\\Entity\\RestfulTokenAuthController',
     'base table' => 'restful_token_auth',
     'fieldable' => TRUE,
     'entity keys' => array(
@@ -119,7 +126,7 @@ function restful_token_auth_cron() {
     return;
   }
 
-  $query = new EntityFieldQuery();
+  $query = new \EntityFieldQuery();
   $result = $query
     ->entityCondition('entity_type', 'restful_token_auth')
     ->propertyCondition('expire', REQUEST_TIME, '<')

@@ -12,7 +12,7 @@ use Drupal\restful\Exception\UnauthorizedException;
 use Drupal\restful\Http\Request;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
 
-class CachedDataProvider implements DataProviderInterface {
+class CachedDataProvider implements CachedDataProviderInterface {
 
   /**
    * The decorated object.
@@ -145,6 +145,7 @@ class CachedDataProvider implements DataProviderInterface {
    * {@inheritdoc}
    */
   public function update($identifier, $object, $replace = TRUE) {
+    $this->clearRenderedCache($this->getContext($identifier));
     return $this->subject->update($identifier, $object, $replace);
   }
 
@@ -152,6 +153,7 @@ class CachedDataProvider implements DataProviderInterface {
    * {@inheritdoc}
    */
   public function remove($identifier) {
+    $this->clearRenderedCache($this->getContext($identifier));
     $this->subject->remove($identifier);
   }
 
@@ -166,7 +168,7 @@ class CachedDataProvider implements DataProviderInterface {
    * {@inheritdoc}
    */
   public function canonicalPath($path) {
-    $this->subject->canonicalPath($path);
+    return $this->subject->canonicalPath($path);
   }
 
   /**
@@ -181,15 +183,7 @@ class CachedDataProvider implements DataProviderInterface {
    * @see DataProviderEntity::view()
    */
   protected function getRenderedCache(array $context = array()) {
-    // TODO: The render cache information will not be in the data provider
-    // options annotation. That means that it will not make it through to this
-    // class from the ResourceInterface object. We need to add
-    // $dataProvider->addOptions(array(
-    // 'renderCache' => Resource::getPluginDefinition()['renderCache']),
-    // ).
-    $options = $this->getOptions();
-    $cache_info = $options['renderCache'];
-    if (!$cache_info['render']) {
+    if (!$this->isCacheEnabled()) {
       return NULL;
     }
 
@@ -248,9 +242,11 @@ class CachedDataProvider implements DataProviderInterface {
     $plugins = restful()
       ->getResourceManager()
       ->getPlugins();
+    $request = restful()->getRequest();
     foreach ($plugins as $instance_id => $plugin) {
       /** @var \Drupal\restful\Plugin\resource\Resource $plugin */
-      if (method_exists($plugin, 'cacheInvalidate')) {
+      $plugin->setRequest($request);
+      if (method_exists($plugin->getDataProvider(), 'cacheInvalidate')) {
         $version = $plugin->getVersion();
         // Get the uid for the invalidation.
         try {
@@ -261,10 +257,35 @@ class CachedDataProvider implements DataProviderInterface {
           // in user.
           $uid = $GLOBALS['user']->uid;
         }
-        $version_cid = 'v' . $version['major'] . '.' . $version['minor'] . '::' . $plugin->getResourceName() . '::uu' . $uid;
-        $plugin->cacheInvalidate($version_cid . '::' . $cid);
+        $version_cid = 'v' . $version['major'] . '.' . $version['minor'] . '::' . $plugin->getResourceMachineName() . '::uu' . $uid;
+        $plugin->getDataProvider()->cacheInvalidate($version_cid . '::' . $cid);
       }
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * @see https://api.drupal.org/api/drupal/includes%21cache.inc/function/DrupalCacheInterface%3A%3Aclear/7
+   */
+  public function cacheInvalidate($cid) {
+    $options = $this->getOptions();
+    $cache_info = $options['renderCache'];
+
+    if (!$cache_info['simple_invalidate']) {
+      // Simple invalidation is disabled. This means it is up to the
+      // implementing module to take care of the invalidation.
+      return;
+    }
+    // If the $cid is not '*' then remove the asterisk since it can mess with
+    // dynamically built wildcards.
+    if ($cid != '*') {
+      $pos = strpos($cid, '*');
+      if ($pos !== FALSE) {
+        $cid = substr($cid, 0, $pos);
+      }
+    }
+    $this->cacheController->clear($cid, TRUE);
   }
 
   /**
@@ -314,17 +335,44 @@ class CachedDataProvider implements DataProviderInterface {
    * @return array
    *   The rendered entity as returned by \RestfulEntityInterface::viewEntity().
    *
-   * @see \RestfulEntityInterface::viewEntity().
+   * @see static::view()
    */
   protected function setRenderedCache($data, array $context = array()) {
-    $options = $this->getOptions();
-    $cache_info = $options['renderCache'];
-    if (!$cache_info['render']) {
+    if (!$this->isCacheEnabled()) {
       return;
     }
 
     $cid = $this->generateCacheId($context);
-    $this->cacheController->set($cid, $data, $cache_info['expire']);
+    $this->cacheController->set($cid, $data, $this->getOptions()['renderCache']['expire']);
+  }
+
+  /**
+   * Clear an entry from the rendered cache.
+   *
+   * @param array $context
+   *   An associative array with additional information to build the cache ID.
+   *
+   * @see static::view()
+   */
+  protected function clearRenderedCache(array $context = array()) {
+    if (!$this->isCacheEnabled()) {
+      return;
+    }
+
+    $cid = $this->generateCacheId($context);
+    $this->cacheController->clear($cid);
+  }
+
+  /**
+   * Helper function that checks if cache is enabled.
+   *
+   * @return bool
+   *   TRUE if the resource has cache enabled.
+   */
+  protected function isCacheEnabled() {
+    $options = $this->getOptions();
+    $cache_info = $options['renderCache'];
+    return isset($cache_info['render']);
   }
 
 }

@@ -2,17 +2,19 @@
 
 /**
  * @file
- * Contains \Drupal\restful\Plugin\resource\RateLimitedResource
+ * Contains \Drupal\restful\Plugin\resource\Decorators\ResourceDecoratorBase.
  */
 
-namespace Drupal\restful\Plugin\resource;
+namespace Drupal\restful\Plugin\resource\Decorators;
+
 
 use Drupal\Component\Plugin\PluginBase;
-use Drupal\restful\RateLimit\RateLimitManager;
 use Drupal\restful\Exception\NotImplementedException;
+use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataProvider\DataProviderInterface;
+use Drupal\restful\Plugin\resource\ResourceInterface;
 
-class RateLimitedResource extends PluginBase implements ResourceInterface {
+abstract class ResourceDecoratorBase extends PluginBase implements ResourceDecoratorInterface {
 
   /**
    * The decorated resource.
@@ -22,43 +24,21 @@ class RateLimitedResource extends PluginBase implements ResourceInterface {
   protected $subject;
 
   /**
-   * Authentication manager.
-   *
-   * @var RateLimitManager
+   * {@inheritdoc}
    */
-  protected $rateLimitManager;
-
-  /**
-   * Constructs a Drupal\Component\Plugin\PluginBase object.
-   *
-   * @param ResourceInterface $subject
-   *   The decorated object.
-   * @param RateLimitManager $rate_limit_manager
-   *   Injected rate limit manager.
-   */
-  public function __construct(ResourceInterface $subject, RateLimitManager $rate_limit_manager) {
-    $this->subject = $subject;
-    $this->rateLimitManager = $rate_limit_manager;
+  public function getDecoratedResource() {
+    return $this->subject;
   }
 
   /**
-   * Setter for $rateLimitManager.
-   *
-   * @param RateLimitManager $rate_limit_manager
-   *   The rate limit manager.
+   * {@inheritdoc}
    */
-  protected function setRateLimitManager(RateLimitManager $rate_limit_manager) {
-    $this->rateLimitManager = $rate_limit_manager;
-  }
-
-  /**
-   * Getter for $rate_limit_manager.
-   *
-   * @return RateLimitManager
-   *   The rate limit manager.
-   */
-  protected function getRateLimitManager() {
-    return $this->rateLimitManager;
+  public function getPrimaryResource() {
+    $resource = $this->getDecoratedResource();
+    while ($resource instanceof ResourceDecoratorInterface) {
+      $resource = $resource->getDecoratedResource();
+    }
+    return $resource;
   }
 
   /**
@@ -128,8 +108,6 @@ class RateLimitedResource extends PluginBase implements ResourceInterface {
    * {@inheritdoc}
    */
   public function process() {
-    // This will throw the appropriate exception if needed.
-    $this->getRateLimitManager()->checkRateLimit($this->getRequest());
     return $this->subject->process();
   }
 
@@ -194,6 +172,69 @@ class RateLimitedResource extends PluginBase implements ResourceInterface {
    */
   public function getVersion() {
     return $this->subject->getVersion();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function versionedUrl($path = '', $options = array(), $version_string = TRUE) {
+    return $this->subject->versionedUrl($path, $options, $version_string);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getConfiguration() {
+    return $this->subject->getConfiguration();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setConfiguration(array $configuration) {
+    $this->subject->setConfiguration($configuration);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function defaultConfiguration() {
+    return $this->subject->defaultConfiguration();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function calculateDependencies() {
+    return $this->subject->calculateDependencies();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setRequest(RequestInterface $request) {
+    $this->subject->setRequest($request);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function access() {
+    return $this->subject->access();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getControllerFromPath($path = NULL, ResourceInterface $resource = NULL) {
+    return $this->subject->getControllerFromPath($path, $resource ?: $this);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getResourceMachineName() {
+    return $this->subject->getResourceMachineName();
   }
 
 }

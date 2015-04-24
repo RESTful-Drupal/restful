@@ -29,11 +29,6 @@ abstract class Resource extends PluginBase implements ResourceInterface {
   use ConfigurablePluginTrait;
 
   /**
-   * The string that separates multiple ids.
-   */
-  const IDS_SEPARATOR = ',';
-
-  /**
    * The requested path.
    *
    * @var string
@@ -155,6 +150,14 @@ abstract class Resource extends PluginBase implements ResourceInterface {
   /**
    * {@inheritdoc}
    */
+  public function getResourceMachineName() {
+    $definition = $this->getPluginDefinition();
+    return $definition['resource'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function defaultConfiguration() {
     return array(
       'request' => restful()->getRequest(),
@@ -172,11 +175,6 @@ abstract class Resource extends PluginBase implements ResourceInterface {
 
   /**
    * {@inheritdoc}
-   *
-   * Provide sensible defaults for the HTTP methods. These methods (index,
-   * create, view, update and delete) are not implemented in this layer but
-   * they are guaranteed to exist because we are enforcing that all restful
-   * resources are an instance of \RestfulDataProviderInterface.
    */
   public function controllersInfo() {
     return array(
@@ -276,25 +274,17 @@ abstract class Resource extends PluginBase implements ResourceInterface {
   }
 
   /**
-   * Return the controller from a given path.
-   *
-   * @return callable
-   *   A callable as expected by ResourceManager::executeCallback.
-   *
-   * @throws BadRequestException
-   * @throws ForbiddenException
-   * @throws GoneException
-   * @throws NotImplementedException
-   * @throws ServerConfigurationException
-   *
-   * @see ResourceManager::executeCallback()
+   * {@inheritdoc}
    */
-  protected function getControllerFromPath() {
-    $path = $this->getPath();
-    $method = $this->getRequest()->getMethod();
+  public function getControllerFromPath($path = NULL, ResourceInterface $resource = NULL) {
+    if (empty($resource)) {
+      $resource = $this;
+    }
+    $path = $path ?: $resource->getPath();
+    $method = $resource->getRequest()->getMethod();
 
     $selected_controller = NULL;
-    foreach ($this->getControllers() as $pattern => $controllers) {
+    foreach ($resource->getControllers() as $pattern => $controllers) {
       // Find the controllers for the provided path.
       if ($pattern != $path && !($pattern && preg_match('/' . $pattern . '/', $path))) {
         continue;
@@ -315,7 +305,7 @@ abstract class Resource extends PluginBase implements ResourceInterface {
       $selected_controller = $controllers[$method];
       if (is_array($selected_controller)) {
         // If there is a custom access method for this endpoint check it.
-        if (!empty($selected_controller['access callback']) && !ResourceManager::executeCallback(array($this, $selected_controller['access callback']), array($path))) {
+        if (!empty($selected_controller['access callback']) && !ResourceManager::executeCallback(array($resource, $selected_controller['access callback']), array($path))) {
           throw new ForbiddenException(sprintf('You do not have access to this endpoint: %s - %s', $method, $path));
         }
         $selected_controller = $selected_controller['callback'];
@@ -325,13 +315,13 @@ abstract class Resource extends PluginBase implements ResourceInterface {
       if (!ResourceManager::isValidCallback($selected_controller)) {
         // This means that the provided value means to be a public method on the
         // current class.
-        $selected_controller = array($this, $selected_controller);
+        $selected_controller = array($resource, $selected_controller);
       }
       break;
     }
 
     if (empty($selected_controller)) {
-      throw new NotImplementedException(sprintf('There is no handler for "%s" on the path: %s', $this->getRequest()->getMethod(), $path));
+      throw new NotImplementedException(sprintf('There is no handler for "%s" on the path: %s', $resource->getRequest()->getMethod(), $path));
     }
 
     return $selected_controller;

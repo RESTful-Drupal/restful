@@ -2,8 +2,10 @@
 
 /**
  * @file
- * Contains \RestfulTokenAuthController
+ * Contains Drupal\restful_token_auth\Entity\RestfulTokenAuthController.
  */
+
+namespace Drupal\restful_token_auth\Entity;
 
 use Drupal\restful\Exception\ServerConfigurationException;
 
@@ -15,7 +17,7 @@ class RestfulTokenAuthController extends \EntityAPIController {
    * @param int $uid
    *   The user ID.
    *
-   * @return \RestfulTokenAuth
+   * @return RestfulTokenAuth
    *   The created entity.
    */
   public function generateAccessToken($uid) {
@@ -30,9 +32,11 @@ class RestfulTokenAuthController extends \EntityAPIController {
       )),
       'token' => drupal_random_key(),
       'expire' => $this->getExpireTime(),
-      'refresh_token_reference' => array(LANGUAGE_NONE => array(array(
-        'target_id' => $refresh_token->id,
-      ))),
+      'refresh_token_reference' => array(
+        LANGUAGE_NONE => array(array(
+          'target_id' => $refresh_token->id,
+        )),
+      ),
     );
     $access_token = $this->create($values);
     $this->save($access_token);
@@ -41,14 +45,14 @@ class RestfulTokenAuthController extends \EntityAPIController {
   }
 
   /**
-   * Create a refresh token for the current user
+   * Create a refresh token for the current user.
    *
    * It will delete all the existing refresh tokens for that same user as well.
    *
    * @param int $uid
    *   The user ID.
    *
-   * @return \RestfulTokenAuth
+   * @return RestfulTokenAuth
    *   The token entity.
    */
   private function generateRefreshToken($uid) {

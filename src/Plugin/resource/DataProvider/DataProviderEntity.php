@@ -20,6 +20,7 @@ use Drupal\restful\Exception\BadRequestException;
 use Drupal\restful\Exception\UnprocessableEntityException;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
 use Drupal\restful\Plugin\resource\Resource;
+use Drupal\restful\Plugin\resource\ResourceInterface;
 use Drupal\restful\Resource\ResourceManager;
 
 class DataProviderEntity extends DataProvider implements DataProviderEntityInterface {
@@ -128,6 +129,10 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
    * {@inheritdoc}
    */
   public function getContext($identifier) {
+    if (is_array($identifier)) {
+      // Like in https://example.org/api/articles/1,2,3.
+      $identifier = implode(ResourceInterface::IDS_SEPARATOR, $identifier);
+    }
     return array(
       'et' => $this->entityType,
       'ei' => $identifier,
@@ -462,12 +467,9 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
   }
 
   /**
-   * Gets a EFQ object.
-   *
-   * @return \EntityFieldQuery
-   *   The object that inherits from \EntityFieldQuery.
+   * {@inheritdoc}
    */
-  protected function EFQObject() {
+  public function EFQObject() {
     $efq_class = $this->EFQClass;
     return new $efq_class();
   }
