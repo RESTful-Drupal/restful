@@ -8,9 +8,11 @@
 namespace Drupal\restful\Plugin\resource;
 
 use Drupal\restful\Exception\InternalServerErrorException;
+use Drupal\restful\Exception\NotImplementedException;
 use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
+use Drupal\restful\Plugin\resource\DataProvider\DataProviderEntityInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollection;
 
 abstract class ResourceEntity extends Resource {
@@ -44,7 +46,12 @@ abstract class ResourceEntity extends Resource {
   }
 
   /**
-   * {@inheritdoc}
+   * Data provider factory.
+   *
+   * @return DataProviderEntityInterface
+   *   The data provider for this resource.
+   *
+   * @throws NotImplementedException
    */
   public function dataProviderFactory() {
     $plugin_definition = $this->getPluginDefinition();

@@ -1,34 +1,39 @@
 <?php
-
 /**
  * @file
- * Contains \RestfulTokenAuthenticationBase
+ * Contains Drupal\restful_token_auth\Plugin\resource\TokenAuthenticationBase.
  */
 
-class RestfulTokenAuthenticationBase extends \RestfulEntityBase {
+namespace Drupal\restful_token_auth\Plugin\resource;
+
+
+use Drupal\restful\Plugin\resource\ResourceEntity;
+use Drupal\restful\Plugin\resource\ResourceInterface;
+
+abstract class TokenAuthenticationBase extends ResourceEntity implements ResourceInterface {
 
   /**
    * Overrides RestfulEntityBase::publicFieldsInfo().
    *
    * @see http://tools.ietf.org/html/rfc6750#section-4
    */
-  public function publicFieldsInfo() {
+  public function publicFields() {
     $public_fields['access_token'] = array(
       'property' => 'token',
     );
     $public_fields['type'] = array(
-      'callback' => array('\RestfulManager::echoMessage', array('Bearer')),
+      'callback' => array('\Drupal\restful\RestfulManager::echoMessage', array('Bearer')),
     );
     $public_fields['expires_in'] = array(
       'property' => 'expire',
       'process_callbacks' => array(
-        'static::intervalInSeconds',
+        '\Drupal\restful_token_auth\Plugin\resource\TokenAuthenticationBase::intervalInSeconds',
       ),
     );
     $public_fields['refresh_token'] = array(
       'property' => 'refresh_token_reference',
       'process_callbacks' => array(
-        'static::getTokenFromEntity',
+        '\Drupal\restful_token_auth\Plugin\resource\TokenAuthenticationBase::getTokenFromEntity',
       ),
     );
 
@@ -52,14 +57,17 @@ class RestfulTokenAuthenticationBase extends \RestfulEntityBase {
   /**
    * Get the token string from the token entity.
    *
-   * @param \RestfulTokenAuth $token
+   * @param int $token_id
    *   The restful_token_auth entity.
    *
    * @return string
    *   The token string.
    */
-  public static function getTokenFromEntity(\RestfulTokenAuth $token) {
-    return $token->token;
+  public static function getTokenFromEntity($token_id) {
+    if ($token = entity_load_single('restful_token_auth', $token_id)) {
+      return $token->token;
+    }
+    return NULL;
   }
 
 }

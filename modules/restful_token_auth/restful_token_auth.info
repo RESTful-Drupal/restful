@@ -4,11 +4,3 @@ core = 7.x
 dependencies[] = restful
 dependencies[] = entityreference
 configure = admin/config/services/restful/token-auth
-
-; Plugins
-files[] = includes/RestfulTokenAuth.php
-files[] = includes/RestfulTokenAuthController.php
-files[] = includes/RestfulTokenAuthenticationBase.php
-
-; Tests
-files[] = tests/RestfulTokenAuthenticationTestCase.test
