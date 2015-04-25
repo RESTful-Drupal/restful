@@ -140,10 +140,10 @@ class FormatterManager implements FormatterManagerInterface {
     // an error code. Therefore we need to set the content type header after
     // formatting the output.
     $content_type = $formatter->getContentTypeHeader();
-    restful()
+    $response_headers = restful()
       ->getResponse()
-      ->getHeaders()
-      ->add(HttpHeader::create('Content-Type', $content_type));
+      ->getHeaders();
+    $response_headers->add(HttpHeader::create('Content-Type', $content_type));
 
     return $output;
   }
