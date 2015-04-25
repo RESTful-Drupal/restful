@@ -2,11 +2,16 @@
 
 /**
  * @file
- * Contains RestfulViewEntityTestCase
+ * Contains \RestfulViewEntityTestCase.
  */
+
+use Drupal\restful\Http\RequestInterface;
 
 class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
 
+  /**
+   * Overrides DrupalWebTestCase::getInfo().
+   */
   public static function getInfo() {
     return array(
       'name' => 'View entity',
@@ -15,7 +20,10 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
     );
   }
 
-  function setUp() {
+  /**
+   * Overrides DrupalWebTestCase::setUp().
+   */
+  public function setUp() {
     parent::setUp('restful_example', 'restful_test', 'entityreference');
 
     restful_test_add_fields();
@@ -294,7 +302,7 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
     // Make sure that the version header is present in the response.
     $this->assertTrue(preg_match('/v1\.1/', $response['headers']), 'The Vary header was added.');
 
-    $response = $this->httpRequest('api/articles', \RestfulInterface::GET, NULL, array('X-API-Version' => 'v1.1'));
+    $response = $this->httpRequest('api/articles', RequestInterface::METHOD_GET, NULL, array('X-API-Version' => 'v1.1'));
     $this->assertTrue(preg_match('/X-API-Version/', $response['headers']), 'The Vary header was added.');
 
     // Make sure that the version header is present in the response.
@@ -304,32 +312,32 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
     // it is selected based on the Accept header.
     variable_set('restful_default_output_formatter', 'invalid');
 
-    $response = $this->httpRequest('api/v1.0/articles/' . $node->nid, \RestfulInterface::GET, NULL, array(
+    $response = $this->httpRequest('api/v1.0/articles/' . $node->nid, RequestInterface::METHOD_GET, NULL, array(
       'Accept' => 'application/hal+json',
     ));
     $this->assertNotNull(drupal_json_decode($response['body']), 'JSON output detected.');
 
     // Test XML selection.
-    $response = $this->httpRequest('api/v1.0/articles/' . $node->nid, \RestfulInterface::GET, NULL, array(
+    $response = $this->httpRequest('api/v1.0/articles/' . $node->nid, RequestInterface::METHOD_GET, NULL, array(
       'Accept' => 'application/xml',
     ));
     $this->assertNotNull(new SimpleXMLElement($response['body']), 'XML output detected.');
 
     // Test wildcard selection.
-    $response = $this->httpRequest('api/v1.0/articles/' . $node->nid, \RestfulInterface::GET, NULL, array(
+    $response = $this->httpRequest('api/v1.0/articles/' . $node->nid, RequestInterface::METHOD_GET, NULL, array(
       'Accept' => 'application/*',
     ));
     $this->assertEqual($response['code'], 200, 'Some output format detected for wildcard Accept.');
 
     // Test that plugin definition takes precedence.
-    $response = $this->httpRequest('api/v1.6/articles/' . $node->nid, \RestfulInterface::GET, NULL, array(
+    $response = $this->httpRequest('api/v1.6/articles/' . $node->nid, RequestInterface::METHOD_GET, NULL, array(
       'Accept' => 'application/hal+json',
     ));
     $this->assertNotNull(new SimpleXMLElement($response['body']), 'Plugin definition takes precedence.');
 
     // The following should resolve to the 'invalid' formatter. It should raise
     // an exception.
-    $response = $this->httpRequest('api/v1.0/articles/' . $node->nid, \RestfulInterface::GET, NULL, array(
+    $response = $this->httpRequest('api/v1.0/articles/' . $node->nid, RequestInterface::METHOD_GET, NULL, array(
       'Accept' => 'non-existing',
     ));
     $this->assertEqual($response['code'], 503, 'Error shown for invalid formatter.');
