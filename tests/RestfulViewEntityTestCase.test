@@ -6,6 +6,7 @@
  */
 
 use Drupal\restful\Http\RequestInterface;
+use Drupal\restful\Http\Request;
 
 class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
 
@@ -26,7 +27,7 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
   public function setUp() {
     parent::setUp('restful_example', 'restful_test', 'entityreference');
 
-    // restful_test_add_fields();
+    restful_test_add_fields();
   }
 
   /**
@@ -39,7 +40,7 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
    * v1.4 - Non-existing "process callback" property.
    * v1.6 - XML output format.
    */
-  public function __testViewEntity() {
+  public function testViewEntity() {
     $user1 = $this->drupalCreateUser();
     $entity1 = entity_create('entity_test', array('name' => 'main', 'uid' => $user1->uid));
     $entity1->save();

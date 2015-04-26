@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\restful_example\Plugin\resource\node\article\v1\Articles__1_0.
+ * Contains \Drupal\restful_example\Plugin\resource\node\article\v1\Articles__1_6.
  */
 
 namespace Drupal\restful_example\Plugin\resource\node\article\v1;
@@ -13,7 +13,7 @@ use Drupal\restful\Plugin\resource\ResourceInterface;
 use Drupal\restful\Plugin\resource\ResourceNode;
 
 /**
- * Class Articles
+ * Class Articles__1_6
  * @package Drupal\restful\Plugin\resource
  *
  * @Resource(

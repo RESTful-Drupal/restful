@@ -7,6 +7,8 @@
 
 namespace Drupal\restful\Plugin\resource\Field;
 
+use Drupal\restful\Plugin\resource\ResourceInterface;
+
 class ResourceFieldCollection implements ResourceFieldCollectionInterface {
 
   /**
@@ -120,6 +122,13 @@ class ResourceFieldCollection implements ResourceFieldCollectionInterface {
    */
   public function get($key) {
     return isset($this->fields[$key]) ? $this->fields[$key] : NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function set($key, ResourceFieldInterface $field) {
+    $this->fields[$key] = $field;
   }
 
   /**

@@ -139,6 +139,13 @@ abstract class Resource extends PluginBase implements ResourceInterface {
   /**
    * {@inheritdoc}
    */
+  public function setFieldDefinitions(ResourceFieldCollectionInterface $field_definitions) {
+    $this->fieldDefinitions = $field_definitions;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getDataProvider() {
     if (isset($this->dataProvider)) {
       return $this->dataProvider;
