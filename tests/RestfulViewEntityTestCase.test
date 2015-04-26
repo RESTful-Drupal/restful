@@ -71,19 +71,27 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
       'label' => 'Main test type',
     );
 
+    $resource_manager = restful()->getResourceManager();
+
     // v1.0 - Simple entity view (id, label, self).
-    $handler = restful_get_restful_handler('main', 1, 0);
+    $handler = $resource_manager->getPlugin('main:1.0');
+    $request = Request::create('api/main/v1.0/' . $id);
+    $handler->setRequest($request);
     $base_expected_result['self'] = $handler->versionedUrl($id);
     $expected_result = $base_expected_result;
 
-    $response = $handler->get($id);
+    $handler->setPath($id);
+    $response = $handler->process();
     $result = $response[0];
     $this->assertEqual($result, $expected_result, 'Entity view has expected result for "main" resource v1');
 
     // v1.1 - Text and entity reference field.
-    $handler = restful_get_restful_handler('main', 1, 1);
+    $handler = $resource_manager->getPlugin('main:1.1');
+    $request = Request::create('api/main/v1.1/' . $id);
+    $handler->setRequest($request);
     $base_expected_result['self'] = $handler->versionedUrl($id);
-    $response = $handler->get($id);
+    $handler->setPath($id);
+    $response = $handler->process();
     $result = $response[0];
 
     $base_expected_result_v1 = $base_expected_result;
@@ -109,10 +117,15 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
       $entity2->pid,
     );
 
-    $response = $handler->get($entity1->pid);
+    $request = Request::create('api/main/v1.1/' . $entity1->pid);
+    $handler->setRequest($request);
+    $handler->setPath($entity1->pid);
+    $response = $handler->process();
     $expected_result['entity_reference_single_resource'] = $response[0];
-    $response1 = $handler->get($entity1->pid);
-    $response2 = $handler->get($entity2->pid);
+    $response1 = $handler->process();
+    $request2 = Request::create('api/main/v1.1/' . $entity2->pid);
+    $handler->setRequest($request2);
+    $response2 = $handler->process();
     $expected_result['entity_reference_multiple_resource'] = array(
       $response1[0],
       $response2[0],
@@ -130,17 +143,22 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
     // Test the "full_view" property on a referenced entity.
     // We change the definition via the handler instead of creating another
     // plugin.
-    $public_fields = $handler->getPublicFields();
+    $field_definitions = $handler->getFieldDefinitions();
     // Single entity reference field with "resource".
-    $public_fields['entity_reference_single_resource']['resource'] = array(
+    $reference_field = $field_definitions->get('entity_reference_single_resource');
+    $reference_field['resource'] = array(
       'main' => array(
         'name' => 'main',
         'full_view' => FALSE,
       ),
     );
-    $handler->setPublicFields($public_fields);
+    $field_definitions->set('entity_reference_single_resource', $reference_field);
+    $handler->setFieldDefinitions($field_definitions);
 
-    $result = $handler->get($id);
+    $request = Request::create('api/main/v1.1/' . $id);
+    $handler->setRequest($request);
+    $handler->setPath($id);
+    $result = $handler->process();
     $this->assertEqual($result[0]['entity_reference_single_resource'], $entity1->pid, '"full_view" property is working properly.');
 
     // Empty the text and entity reference fields.
@@ -150,7 +168,7 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
     $wrapper->entity_reference_multiple->set(NULL);
     $wrapper->save();
 
-    $response = $handler->get($id);
+    $response = $handler->process();
     $result = $response[0];
     $expected_result = $base_expected_result_v1;
     $expected_result['text_single'] = NULL;
@@ -174,18 +192,23 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
     $wrapper->text_single->set($text);
     $wrapper->save();
 
-    $request = array('loadByFieldName' => 'text_single');
-    $result = $handler->get($text, $request);
+    $request = Request::create('api/main/v1.1/' . $text, array('loadByFieldName' => 'text_single'));
+    $handler->setRequest($request);
+    $handler->setPath($text);
+    $result = $handler->process();
     $this->assertNotNull($result[0]);
 
     // Make sure canonical header is added.
-    $headers = $handler->getHttpHeaders();
-    $this->assertEqual($headers['Link'], $handler->versionedUrl($wrapper->getIdentifier(), array(), FALSE) . '; rel="canonical"');
+    $result = $this->httpRequest('api/main/v1.1/' . $text, RequestInterface::METHOD_GET, array('loadByFieldName' => 'text_single'));
+    $this->assertTrue(strpos($result['headers'], $handler->versionedUrl($wrapper->getIdentifier(), array(), FALSE) . '; rel="canonical"'));
 
     // v1.2 - "callback" and "process callback".
-    $handler = restful_get_restful_handler('main', 1, 2);
+    $handler = $resource_manager->getPlugin('main:1.2');
+    $request = Request::create('api/main/v1.2/' . $id);
+    $handler->setRequest($request);
     $base_expected_result['self'] = $handler->versionedUrl($id);
-    $response = $handler->get($id);
+    $handler->setPath($id);
+    $response = $handler->process();
     $result = $response[0];
     $expected_result = $base_expected_result;
     $expected_result['callback'] = 'callback';
@@ -194,9 +217,12 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
     $this->assertEqual($result, $expected_result, 'Entity view has correct result for "main" resource v1.2');
 
     // v1.3 - Non-existing "callback" property.
-    $handler = restful_get_restful_handler('main', 1, 3);
+    $handler = $resource_manager->getPlugin('main:1.3');
+    $request = Request::create('api/main/v1.3/' . $id);
+    $handler->setRequest($request);
     try {
-      $handler->get($id);
+      $handler->setPath($id);
+      $handler->process();
       $this->fail('Non-existing "callback" property did not trigger an exception.');
     }
     catch(Exception $e) {
@@ -204,9 +230,12 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
     }
 
     // v1.4 - Non-existing "process callback" property.
-    $handler = restful_get_restful_handler('main', 1, 4);
+    $handler = $resource_manager->getPlugin('main:1.4');
+    $request = Request::create('api/main/v1.4/' . $id);
+    $handler->setRequest($request);
     try {
-      $handler->get($id);
+      $handler->setPath($id);
+      $handler->process();
       $this->fail('Non-existing "process callback" property did not trigger an exception.');
     }
     catch(Exception $e) {
@@ -220,7 +249,7 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
     );
     $node = $this->drupalCreateNode($settings);
 
-    $response = $this->httpRequest('api/v1.6/articles', \RestfulInterface::GET);
+    $response = $this->httpRequest('api/v1.6/articles', RequestInterface::METHOD_GET);
     // Returns something like:
     // <api>
     //   <data>
@@ -268,8 +297,11 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
       'type' => 'article',
       'field_image' => array(LANGUAGE_NONE => array(array('fid' => $image->fid))),
     ));
-    $handler = restful_get_restful_handler('articles', 1, 5);
-    $result = $handler->get($article->nid);
+    $handler = $resource_manager->getPlugin('articles:1.5');
+    $request = Request::create('api/main/v1.5/' . $article->nid);
+    $handler->setRequest($request);
+    $handler->setPath($article->nid);
+    $result = $handler->process();
     $this->assertEqual(array_keys($result[0]['image']['styles']) == array('thumbnail', 'medium', 'large'), 'The selected image styles are present.');
     $this->assertEqual(count(array_filter(array_values($result[0]['image']['styles']))) == 3, 'The image styles are populated.');
 
@@ -283,8 +315,11 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
       $article['field_images'][LANGUAGE_NONE][] = array('fid' => $image->fid);
     }
     $article = $this->drupalCreateNode($article);
-    $handler = restful_get_restful_handler('articles', 1, 5);
-    $result = $handler->get($article->nid);
+    $handler = $resource_manager->getPlugin('articles:1.5');
+    $request = Request::create('api/v1.5/main/' . $article->nid);
+    $handler->setRequest($request);
+    $handler->setPath($article->nid);
+    $result = $handler->process();
     $this->assertEqual(count($result[0]['images']), count($images), 'The number of images is correct.');
     $this->assertEqual(array_keys($result[0]['images'][0]['styles']) == array('thumbnail', 'medium', 'large'), 'The selected image styles are present.');
     $this->assertEqual(count(array_filter(array_values($result[0]['images'][0]['styles']))) == 3, 'The image styles are populated.');
