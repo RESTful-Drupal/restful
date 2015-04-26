@@ -56,4 +56,14 @@ interface ResourceFieldCollectionInterface extends \Iterator, \Countable {
    */
   public function get($key);
 
+  /**
+   * Sets a field in the collection.
+   *
+   * @param string $key
+   *   The key of the field.
+   * @param ResourceFieldInterface $field
+   *   The field to set.
+   */
+  public function set($key, ResourceFieldInterface $field);
+
 }
