@@ -87,6 +87,6 @@ script:
 
   # Enable the RESTful modules
   - drush en --yes simpletest
-  - drush --yes pm-enable restful restful_token_auth restful_test
+  - drush --yes pm-enable restful restful_token_auth
   # Run the tests
   - drush test-run RESTful --uri=http://localhost
