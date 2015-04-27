@@ -49,7 +49,9 @@ class Articles__1_5 extends ResourceNode implements ResourceInterface {
     $public_fields['tags'] = array(
       'property' => 'field_tags',
       'resource' => array(
-        'tags' => 'tags',
+        'name' => 'tags',
+        'majorVersion' => 1,
+        'minorVersion' => 0,
       ),
     );
 
@@ -76,18 +78,17 @@ class Articles__1_5 extends ResourceNode implements ResourceInterface {
     $public_fields['user'] = array(
       'property' => 'author',
       'resource' => array(
-        // The bundle of the entity.
-        'user' => array(
-          // The name of the resource to map to.
-          'name' => 'users',
-          // Determines if the entire resource should appear, or only the ID.
-          'full_view' => TRUE,
-        ),
+        // The name of the resource to map to.
+        'name' => 'users',
+        // Determines if the entire resource should appear, or only the ID.
+        'full_view' => TRUE,
+        'majorVersion' => 1,
+        'minorVersion' => 0,
       ),
     );
 
     $public_fields['static'] = array(
-      'callback' => 'static::randomNumber',
+      'callback' => 'Articles__1_5::randomNumber',
     );
 
     return $public_fields;
