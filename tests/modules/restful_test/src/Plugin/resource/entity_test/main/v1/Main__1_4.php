@@ -14,7 +14,7 @@ use Drupal\restful\Plugin\resource\ResourceInterface;
  * @package Drupal\restful_test\Plugin\resource
  *
  * @Resource(
- *   name = "main:1.1",
+ *   name = "main:1.4",
  *   resource = "main",
  *   label = "Main",
  *   description = "Export the entity test 'main' bundle.",
