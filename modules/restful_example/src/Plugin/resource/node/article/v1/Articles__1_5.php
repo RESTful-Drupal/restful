@@ -88,7 +88,7 @@ class Articles__1_5 extends ResourceNode implements ResourceInterface {
     );
 
     $public_fields['static'] = array(
-      'callback' => 'Articles__1_5::randomNumber',
+      'callback' => '\Drupal\restful_example\Plugin\resource\node\article\v1\Articles__1_5::randomNumber',
     );
 
     return $public_fields;
