@@ -581,6 +581,7 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
           array($this, 'getImageUris'),
           array($image_styles),
         ));
+        $this->setProcessCallbacks($process_callbacks);
       }
     }
   }
