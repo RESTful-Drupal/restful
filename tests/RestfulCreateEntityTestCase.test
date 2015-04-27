@@ -181,7 +181,6 @@ class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
   public function testFileUploadOptions() {
     variable_set('restful_file_upload', TRUE);
     variable_set('restful_file_upload_allow_anonymous_user', TRUE);
-    $handler = restful_get_restful_handler('files', 1, 0);
 
     // Upload a permanent file.
     $return = $this->uploadFile();
@@ -199,6 +198,12 @@ class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
 
 
     // Upload a temporary file
+    //drupal_static_reset('restful_get_restful_handler');
+    cache_clear_all();
+print_r(array_keys(restful_get_restful_plugins()));
+    $handler = restful_get_restful_handler('files', 1, 0);
+    $this->assertNotNull($handler);
+var_dump($handler);
     $options = $handler->getPluginKey('options');
     $options['make_permanent'] = FALSE;
     $handler->setPluginKey('options');
