@@ -85,11 +85,9 @@ class Main__1_1 extends Main__1_0 implements ResourceInterface {
     $public_fields['entity_reference_single_resource'] = array(
       'property' => 'entity_reference_single',
       'resource' => array(
-        'main' => array(
-          'name' => 'main',
-          'major_version' => 1,
-          'minor_version' => 1,
-        ),
+        'name' => 'main',
+        'majorVersion' => 1,
+        'minorVersion' => 1,
       ),
     );
 
@@ -97,11 +95,9 @@ class Main__1_1 extends Main__1_0 implements ResourceInterface {
     $public_fields['entity_reference_multiple_resource'] = array(
       'property' => 'entity_reference_multiple',
       'resource' => array(
-        'main' => array(
-          'name' => 'main',
-          'major_version' => 1,
-          'minor_version' => 1,
-        ),
+        'name' => 'main',
+        'majorVersion' => 1,
+        'minorVersion' => 1,
       ),
     );
 

@@ -62,21 +62,21 @@ class Main__1_2 extends Main__1_0 implements ResourceInterface {
   /**
    * Return a computed value.
    */
-  protected function callback() {
+  public function callback() {
     return 'callback';
   }
 
   /**
    * Process a computed value.
    */
-  protected function processCallbackFromCallback($value) {
+  public function processCallbackFromCallback($value) {
     return $value . ' processed from callback';
   }
 
   /**
    * Process a property value.
    */
-  protected function processCallbackFromValue($value) {
+  public function processCallbackFromValue($value) {
     return $value . ' processed from value';
   }
 

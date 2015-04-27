@@ -137,7 +137,7 @@ class Request implements RequestInterface {
    */
   public function __construct($path, array $query, $method = 'GET', HttpHeaderBag $headers, $via_router = FALSE, $csrf_token = NULL, array $cookies = array(), array $files = array(), array $server = array()) {
     $this->path = $path;
-    $this->query = $query;
+    $this->query = empty($query) ? static::parseInput($method) : $query;
     $this->method = $method;
     $this->headers = $headers;
     $this->viaRouter = $via_router;
@@ -248,7 +248,7 @@ class Request implements RequestInterface {
       return $this->parsedInput;
     }
     // Get the input data provided via URL.
-    $this->parsedInput = static::parseInput($this->method);
+    $this->parsedInput = $this->query;
     unset($this->parsedInput['q']);
     return $this->parsedInput;
   }
