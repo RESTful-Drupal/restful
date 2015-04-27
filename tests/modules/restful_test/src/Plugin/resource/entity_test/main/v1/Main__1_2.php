@@ -7,6 +7,7 @@
 
 namespace Drupal\restful_test\Plugin\resource\entity_test\main\v1;
 
+use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
 use Drupal\restful\Plugin\resource\ResourceInterface;
 
 /**
@@ -61,8 +62,14 @@ class Main__1_2 extends Main__1_0 implements ResourceInterface {
 
   /**
    * Return a computed value.
+   *
+   * @param DataInterpreterInterface $interpreter
+   *   The data interpreter.
+   *
+   * @return mixed
+   *   The output for the computed field.
    */
-  public function callback() {
+  public function callback(DataInterpreterInterface $interpreter) {
     return 'callback';
   }
 

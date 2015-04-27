@@ -7,8 +7,6 @@
 
 namespace Drupal\restful_example\Plugin\resource\node\article\v1;
 
-use Drupal\restful\Http\RequestInterface;
-use Drupal\restful\Plugin\resource\ResourceEntity;
 use Drupal\restful\Plugin\resource\ResourceInterface;
 use Drupal\restful\Plugin\resource\ResourceNode;
 

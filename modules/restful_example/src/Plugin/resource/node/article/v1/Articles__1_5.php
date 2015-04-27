@@ -2,16 +2,44 @@
 
 /**
  * @file
- * Contains RestfulExampleArticlesResource__1_5.
+ * Contains \Drupal\restful_example\Plugin\resource\node\article\v1\Articles__1_5.
  */
 
-class RestfulExampleArticlesResource__1_5 extends RestfulEntityBaseNode {
+namespace Drupal\restful_example\Plugin\resource\node\article\v1;
+
+use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
+use Drupal\restful\Plugin\resource\Field\ResourceFieldBase;
+use Drupal\restful\Plugin\resource\ResourceInterface;
+use Drupal\restful\Plugin\resource\ResourceNode;
+
+/**
+ * Class Articles__1_5
+ * @package Drupal\restful\Plugin\resource
+ *
+ * @Resource(
+ *   name = "articles:1.5",
+ *   resource = "articles",
+ *   label = "Articles",
+ *   description = "Export the articles with all authentication providers.",
+ *   authenticationTypes = TRUE,
+ *   authenticationOptional = TRUE,
+ *   dataProvider = {
+ *     "entityType": "node",
+ *     "bundles": {
+ *       "article"
+ *     },
+ *   },
+ *   majorVersion = 1,
+ *   minorVersion = 5
+ * )
+ */
+class Articles__1_5 extends ResourceNode implements ResourceInterface {
 
   /**
-   * Overrides RestfulExampleArticlesResource::publicFieldsInfo().
+   * Overrides ResourceNode::publicFields().
    */
-  public function publicFieldsInfo() {
-    $public_fields = parent::publicFieldsInfo();
+  protected function publicFields() {
+    $public_fields = parent::publicFields();
 
     $public_fields['body'] = array(
       'property' => 'body',
@@ -74,8 +102,8 @@ class RestfulExampleArticlesResource__1_5 extends RestfulEntityBaseNode {
    * @return array
    *   A cleaned image array.
    */
-  protected function imageProcess($value) {
-    if (static::isArrayNumeric($value)) {
+  public function imageProcess($value) {
+    if (ResourceFieldBase::isArrayNumeric($value)) {
       $output = array();
       foreach ($value as $item) {
         $output[] = $this->imageProcess($item);
@@ -96,13 +124,13 @@ class RestfulExampleArticlesResource__1_5 extends RestfulEntityBaseNode {
   /**
    * Callback, Generate a random number.
    *
-   * @param DataInter $wrapper
-   *   The EMW.
+   * @param DataInterpreterInterface $interpreter
+   *   The data interpreter containing the wrapper.
    *
    * @return int
    *   A random integer.
    */
-  public static function randomNumber($wrapper) {
+  public static function randomNumber(DataInterpreterInterface $interpreter) {
     return mt_rand();
   }
 
