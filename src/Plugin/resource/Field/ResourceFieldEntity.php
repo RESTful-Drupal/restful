@@ -201,6 +201,9 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
         // the embedded identifier.
         $embedded_identifier = $this->fieldValue($property_wrapper);
       }
+      if (empty($embedded_identifier)) {
+        return NULL;
+      }
       if (isset($resource['full_view']) && $resource['full_view'] === FALSE) {
         return $embedded_identifier;
       }
@@ -459,6 +462,19 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
    * {@inheritdoc}
    */
   public function getColumn() {
+    if (isset($this->column)) {
+      return $this->column;
+    }
+    if ($this->getProperty() && $field = field_info_field($this->getProperty())) {
+      if ($field['type'] == 'text_long') {
+        // Do not default to format.
+        $this->setColumn('value');
+      }
+      else {
+        // Set the column name.
+        $this->setColumn(key($field['columns']));
+      }
+    }
     return $this->column;
   }
 
@@ -564,10 +580,6 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
           array($this, 'getImageUris'),
           array($image_styles),
         ));
-      }
-      if (!$this->getColumn()) {
-        // Set the column name.
-        $this->setColumn(key($field['columns']));
       }
     }
   }

@@ -146,12 +146,10 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
     $field_definitions = $handler->getFieldDefinitions();
     // Single entity reference field with "resource".
     $reference_field = $field_definitions->get('entity_reference_single_resource');
-    $reference_field['resource'] = array(
-      'main' => array(
-        'name' => 'main',
-        'full_view' => FALSE,
-      ),
-    );
+    $reference_field->setResource(array(
+      'name' => 'main',
+      'full_view' => FALSE,
+    ));
     $field_definitions->set('entity_reference_single_resource', $reference_field);
     $handler->setFieldDefinitions($field_definitions);
 
@@ -168,6 +166,8 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
     $wrapper->entity_reference_multiple->set(NULL);
     $wrapper->save();
 
+    $handler->setRequest($request);
+    $handler->setPath($id);
     $response = $handler->process();
     $result = $response[0];
     $expected_result = $base_expected_result_v1;
