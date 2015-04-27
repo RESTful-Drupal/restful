@@ -2,15 +2,16 @@
 
 /**
  * @file
- * Contains \Drupal\restful_test\Plugin\resource\entity_test\main\v1\Main__1_4.
+ * Contains \Drupal\restful_test\Plugin\resource\entity_test\main\v1\Main__1_5.
  */
 
 namespace Drupal\restful_test\Plugin\resource\entity_test\main\v1;
 
+use Drupal\restful\Plugin\resource\ResourceEntity;
 use Drupal\restful\Plugin\resource\ResourceInterface;
 
 /**
- * Class Main__1_4
+ * Class Main__1_5
  * @package Drupal\restful_test\Plugin\resource
  *
  * @Resource(
@@ -18,7 +19,10 @@ use Drupal\restful\Plugin\resource\ResourceInterface;
  *   resource = "main",
  *   label = "Main",
  *   description = "Export the entity test 'main' bundle.",
- *   authenticationOptional = TRUE,
+ *   authenticationTypes = {
+ *     "basic_auth",
+ *     "cookie"
+ *   },
  *   dataProvider = {
  *     "entityType": "entity_test",
  *     "bundles": {
@@ -26,10 +30,10 @@ use Drupal\restful\Plugin\resource\ResourceInterface;
  *     },
  *   },
  *   majorVersion = 1,
- *   minorVersion = 4
+ *   minorVersion = 5
  * )
  */
-class Main__1_4 extends Main__1_0 implements ResourceInterface {
+class Main__1_5 extends ResourceEntity implements ResourceInterface {
 
   /**
    * Overrides ResourceEntity::publicFields().
