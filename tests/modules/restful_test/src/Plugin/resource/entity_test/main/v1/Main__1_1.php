@@ -117,10 +117,9 @@ class Main__1_1 extends Main__1_0 implements ResourceInterface {
 
     $public_fields['file_single'] = array(
       'property' => 'file_single',
-      'process_callbacks' =>
-        array(
-          array($this, 'getFilesId'),
-        ),
+      'process_callbacks' => array(
+        array($this, 'getFilesId'),
+      ),
     );
 
     $public_fields['file_multiple'] = array(
