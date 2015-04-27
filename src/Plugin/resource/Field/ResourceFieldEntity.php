@@ -576,7 +576,8 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
       // If it's an image check if we need to add image style processing.
       $image_styles = $this->getImageStyles();
       if ($field['type'] == 'image' && !empty($image_styles)) {
-        array_unshift($this->getProcessCallbacks(), array(
+        $process_callbacks = $this->getProcessCallbacks();
+        array_unshift($process_callbacks, array(
           array($this, 'getImageUris'),
           array($image_styles),
         ));
