@@ -470,6 +470,9 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       elseif ($field['type'] == 'commerce_line_item_reference') {
         return 'commerce_line_item';
       }
+      elseif ($field['type'] == 'node_reference') {
+        return 'node';
+      }
 
       throw new \RestfulException(format_string('Field @property is not an entity reference or taxonomy reference field.', $params));
     }
