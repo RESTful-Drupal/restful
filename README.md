@@ -75,6 +75,9 @@ $plugin = array(
   'class' => 'RestfulCustomResource',
 );
 ```
+The `resource` key determines the root URL of the resource.  The `name` key must match
+the filename of the plugin: in this case, the name is `articles`, and therefore, the
+filename is `articles.inc`.
 
 ####restful\_custom/plugins/restful/RestfulCustomResource.class.php
 ```php
