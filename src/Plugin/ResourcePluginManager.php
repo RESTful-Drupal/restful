@@ -56,6 +56,9 @@ class ResourcePluginManager extends DefaultPluginManager {
 
   /**
    * Overrides PluginManagerBase::createInstance().
+   *
+   * This method is overridden to set the request object when the resource
+   * object is instantiated.
    */
   public function createInstance($plugin_id, array $configuration = array()) {
     /** @var ResourceInterface $resource */
