@@ -138,7 +138,7 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
 
     ksort($stripped_result);
     ksort($expected_result);
-    $this->assertEqual($stripped_result, $expected_result, 'Entity view has correct result for "main" resource v1.1');
+    $this->assertFalse(drupal_array_diff_assoc_recursive($result, $stripped_result), 'Entity view has correct result for "main" resource v1.1');
 
     // Test the "full_view" property on a referenced entity.
     // We change the definition via the handler instead of creating another
@@ -200,7 +200,8 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
 
     // Make sure canonical header is added.
     $result = $this->httpRequest('api/main/v1.1/' . $text, RequestInterface::METHOD_GET, array('loadByFieldName' => 'text_single'));
-    $this->assertTrue(strpos($result['headers'], $handler->versionedUrl($wrapper->getIdentifier(), array(), FALSE) . '; rel="canonical"'));
+    $canonical_link = $handler->versionedUrl($wrapper->getIdentifier(), array(), FALSE) . '; rel="canonical"';
+    $this->assertTrue(strpos($result['headers'], $canonical_link));
 
     // v1.2 - "callback" and "process callback".
     $handler = $resource_manager->getPlugin('main:1.2');
@@ -293,33 +294,26 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
     $images = $this->drupalGetTestFiles('image');
     $image = array_shift($images);
     $image = file_save((object) $image);
-    $article = $this->drupalCreateNode(array(
-      'type' => 'article',
-      'field_image' => array(LANGUAGE_NONE => array(array('fid' => $image->fid))),
-    ));
-    $handler = $resource_manager->getPlugin('articles:1.5');
-    $request = Request::create('api/main/v1.5/' . $article->nid);
-    $handler->setRequest($request);
-    $handler->setPath($article->nid);
-    $result = $handler->process();
-    $this->assertEqual(array_keys($result[0]['image']['styles']) == array('thumbnail', 'medium', 'large'), 'The selected image styles are present.');
-    $this->assertEqual(count(array_filter(array_values($result[0]['image']['styles']))) == 3, 'The image styles are populated.');
-
     // Test multiple Image variations based on image styles.
     $article = array(
       'type' => 'article',
       'field_images' => array(LANGUAGE_NONE => array()),
+      'field_image' => array(LANGUAGE_NONE => array(array('fid' => $image->fid))),
     );
     foreach ($images as $image) {
       $image = file_save((object) $image);
       $article['field_images'][LANGUAGE_NONE][] = array('fid' => $image->fid);
     }
     $article = $this->drupalCreateNode($article);
+    $resource_manager->clearPluginCache('articles:1.5');
     $handler = $resource_manager->getPlugin('articles:1.5');
-    $request = Request::create('api/v1.5/main/' . $article->nid);
+    $request = Request::create('api/v1.5/articles/' . $article->nid);
     $handler->setRequest($request);
     $handler->setPath($article->nid);
     $result = $handler->process();
+    $this->assertEqual(array_keys($result[0]['image']['styles']) == array('thumbnail', 'medium', 'large'), 'The selected image styles are present.');
+    $this->assertEqual(count(array_filter(array_values($result[0]['image']['styles']))) == 3, 'The image styles are populated.');
+
     $this->assertEqual(count($result[0]['images']), count($images), 'The number of images is correct.');
     $this->assertEqual(array_keys($result[0]['images'][0]['styles']) == array('thumbnail', 'medium', 'large'), 'The selected image styles are present.');
     $this->assertEqual(count(array_filter(array_values($result[0]['images'][0]['styles']))) == 3, 'The image styles are populated.');
