@@ -85,7 +85,8 @@ class ResourceField extends ResourceFieldBase implements ResourceFieldInterface 
     // Almost all the defaults come are applied by the object's property
     // defaults.
 
-    foreach ($this->getResource() as &$resource) {
+    $resources = $this->getResource();
+    foreach ($resources as &$resource) {
       // Expand array to be verbose.
       if (!is_array($resource)) {
         $resource = array('name' => $resource);
