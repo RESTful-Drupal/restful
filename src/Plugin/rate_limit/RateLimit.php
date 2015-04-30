@@ -43,7 +43,7 @@ abstract class RateLimit extends PluginBase implements RateLimitInterface {
       $this->period = new \DateInterval($configuration['period']);
     }
     catch (\Exception $e) {
-      throw new ServerConfigurationException(sprintf('Invalid rate limit period: %s.', $configuration['period']));
+      throw new ServerConfigurationException(sprintf('Invalid rate limit period: %s. Should be a valid format of \DateInterval.', $configuration['period']));
     }
     $this->limits = $configuration['limits'];
     $this->resource = $configuration['resource'];
