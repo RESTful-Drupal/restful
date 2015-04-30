@@ -160,9 +160,6 @@ class Request implements RequestInterface {
     if ($method == static::METHOD_POST && $headers->get('x-http-method-override')->getValueString()) {
       $method = $headers->get('x-http-method-override')->getValueString();
     }
-    if (!static::isValidMethod($method)) {
-      throw new BadRequestException('Unrecognized HTTP method.');
-    }
     return new static($path, $query, $method, $headers, $via_router, $csrf_token, $cookies, $files, $server);
   }
 
