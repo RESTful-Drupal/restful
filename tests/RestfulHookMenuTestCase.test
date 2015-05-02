@@ -76,7 +76,7 @@ class RestfulHookMenuTestCase extends RestfulCurlBaseTestCase {
     $this->httpRequest('api/v1.0/articles/' . $node1->nid, RequestInterface::METHOD_POST, $body, $headers);
 
     $node1 = node_load($node1->nid);
-    $this->assertEqual($node1->title, 'new title', 'HTTP method was overriden.');
+    $this->assertEqual($node1->title, 'new title', 'HTTP method was overridden.');
   }
 
   /**
