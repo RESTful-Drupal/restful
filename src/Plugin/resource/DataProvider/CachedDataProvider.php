@@ -390,4 +390,11 @@ class CachedDataProvider implements CachedDataProviderInterface {
     return isset($cache_info['render']);
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function setOptions(array $options) {
+    $this->subject->setOptions($options);
+  }
+
 }

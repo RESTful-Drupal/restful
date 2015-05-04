@@ -166,6 +166,13 @@ class CachedResource extends ResourceDecoratorBase implements CachedResourceInte
   /**
    * {@inheritdoc}
    */
+  public function setDataProvider(DataProviderInterface $data_provider = NULL) {
+    $this->dataProvider = $data_provider;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function process() {
     $path = $this->getPath();
 
