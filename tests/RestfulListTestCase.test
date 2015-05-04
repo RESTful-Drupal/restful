@@ -21,7 +21,7 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     );
   }
 
-  function setUp() {
+  public function setUp() {
     parent::setUp('restful_example', 'restful_test');
   }
 
@@ -327,7 +327,8 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
   /**
    * Test filtering.
    */
-  function testFilter() {
+  public function testFilter() {
+    $resource_manager = restful()->getResourceManager();
     $user1 = $this->drupalCreateUser();
     $user2 = $this->drupalCreateUser();
 
@@ -375,20 +376,21 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
       $nodes[$title] = $node->nid;
     }
 
-    $handler = restful_get_restful_handler('test_articles', 1, 2);
+    $handler = $resource_manager->getPlugin('test_articles:1.2');
     $fields = array(
       'id',
       'label',
       'integer_single',
       'intger_multiple',
     );
-    $request['fields'] = implode(',', $fields);
+    $query['fields'] = implode(',', $fields);
 
 
     // Single value property.
-    $request['filter'] = array('label' => 'abc');
-    /** @var \RestfulBase $handler */
-    $result = $handler->get('', $request);
+    $query['filter'] = array('label' => 'abc');
+    $handler->setRequest(Request::create('', $query, RequestInterface::METHOD_GET));
+    $handler->setPath('');
+    $result = $handler->process();
     $this->assertEqual($result[0]['id'], $nodes['abc'], 'Filter list by single value property.');
 
     // Assert count is correct.
@@ -397,24 +399,28 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     $this->assertEqual($output['count'], 1, '"count" property is correct.');
 
     // Single value field.
-    $request['filter'] = array('integer_single' => '1');
-    $result = $handler->get('', $request);
+    $query['filter'] = array('integer_single' => '1');
+    $handler->setRequest(Request::create('', $query, RequestInterface::METHOD_GET));
+    $handler->setPath('');
+    $result = $handler->process();
     $this->assertEqual($result[0]['id'], $nodes['abc'], 'Filter list by Single value field.');
 
     // Multiple value field.
-    $request['filter'] = array(
+    $query['filter'] = array(
       'integer_multiple' => array(
         'value' => array(4, 5),
         'operator' => 'BETWEEN',
       ),
     );
-    $result = $handler->get('', $request);
+    $handler->setRequest(Request::create('', $query, RequestInterface::METHOD_GET));
+    $handler->setPath('');
+    $result = $handler->process();
     $this->assertEqual($result[0]['id'], $nodes['another abc'], 'Filter list by multiple value field.');
 
     // Invalid key.
-    $request['filter'] = array('invalid_key' => '3');
+    $query['filter'] = array('invalid_key' => '3');
     try {
-      $handler->get('', $request);
+      $handler->get('', $query);
       $this->fail('No exception was thrown on invalid key for filter.');
     }
     catch (BadRequestException $e) {
@@ -425,47 +431,54 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     }
 
     // Assert filtering doesn't apply for non-list request
-    // (e.g. /api/v1.0/articles/1?filter[label]=foo), as this might be called from
-    // a formatter plugin, after RESTful's error handling has finished.
-    $query = array('filter' => array('invalid-key' => 'foo'));
-    $result = $this->httpRequest('api/v1.0/articles/1', \RestfulInterface::GET, $query);
+    // (e.g. /api/v1.0/articles/1?filter[label]=foo), as this might be called
+    // from a formatter plugin, after RESTful's error handling has finished.
+    $query_string = array('filter' => array('invalid-key' => 'foo'));
+    $result = $this->httpRequest('api/v1.0/articles/1', RequestInterface::METHOD_GET, $query_string);
     $this->assertEqual($result['code'], '200', 'Invalid filter key was ignored on non-list query.');
 
     // Test multiple filters on the same field.
-    $request = array('filter' => array('integer_single' => array(
+    $query = array('filter' => array('integer_single' => array(
       'value' => array(1, 4),
       'operator' => array('>', '<>'),
     )));
-    $result = $handler->get('', $request);
+    $handler->setRequest(Request::create('', $query, RequestInterface::METHOD_GET));
+    $handler->setPath('');
+    $result = $handler->process();
     $this->assertEqual($nodes['another abc'], $result[0]['id']);
 
-    $request = array('filter' => array('integer_single' => array(
+    $query = array('filter' => array('integer_single' => array(
       'value' => array(1, 5),
       'operator' => array('>', '<>'),
     )));
-    $result = $handler->get('', $request);
+    $handler->setRequest(Request::create('', $query, RequestInterface::METHOD_GET));
+    $handler->setPath('');
+    $result = $handler->process();
     $this->assertEqual($result, array());
 
-    $request = array('filter' => array('integer_multiple' => array(
+    $query = array('filter' => array('integer_multiple' => array(
       'value' => array(3, 4),
     )));
-    $result = $handler->get('', $request);
+    $handler->setRequest(Request::create('', $query, RequestInterface::METHOD_GET));
+    $handler->setPath('');
+    $result = $handler->process();
     $this->assertEqual($nodes['another abc'], $result[0]['id']);
 
     // Test valid filter with filter params disabled.
-    $data_provider = $handler->getDataProvider();
-    $options = $data_provider->getOptions();
-    $options['urlParams'] = array(
+    $plugin_definition = $handler->getPluginDefinition();
+    $options['dataProvider']['urlParams'] = array(
       'filter' => FALSE,
       'sort' => TRUE,
       'range' => TRUE,
     );
-    $data_provider->setOptions($options);
-    $handler->setDataProvider($data_provider);
+    $handler->setPluginDefinition($plugin_definition);
+    $handler->setDataProvider(NULL);
 
-    $request['filter'] = array('label' => 'abc');
+    $query['filter'] = array('label' => 'abc');
+    $handler->setRequest(Request::create('', $query, RequestInterface::METHOD_GET));
+    $handler->setPath('');
     try {
-      $handler->get('', $request);
+      $handler->process();
       $this->fail('Exception not raised for disabled filter parameter.');
     }
     catch (BadRequestException $e) {
@@ -474,8 +487,8 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
 
     // Filter by an entity metadata wrapper property that is different from the
     // DB column name.
-    $handler = restful_get_restful_handler('articles', 1, 5);
-    $request = array(
+    $handler = $resource_manager->getPlugin('articles:1.5');
+    $query = array(
       'filter' => array(
         'user' => array(
           'value' => $user1->uid,
@@ -483,16 +496,21 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
       ),
     );
 
-    $result = $handler->get('', $request);
+    $handler->setRequest(Request::create('', $query, RequestInterface::METHOD_GET));
+    $handler->setPath('');
+    $result = $handler->process();
     $this->assertEqual(count($result), 2, 'List filtered by the "author" entity metadata wrapper property, which maps to the "uid" DB column name.');
 
-    $request = array('filter' => array(
+    $query = array('filter' => array(
       'static' => array(
         'value' => 0,
-      )
+      ),
     ));
+
+    $handler->setRequest(Request::create('', $query, RequestInterface::METHOD_GET));
+    $handler->setPath('');
     try {
-      $handler->get('', $request);
+      $handler->process();
       $this->fail('Exception not thrown for invalid filter.');
     }
     catch (BadRequestException $e) {
