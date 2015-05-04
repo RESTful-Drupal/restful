@@ -319,4 +319,20 @@ interface ResourceInterface extends PluginInspectionInterface, ConfigurablePlugi
    */
   public function isEnabled();
 
+  /**
+   * Sets the data provider.
+   *
+   * @param DataProviderInterface $data_provider
+   *   The data provider to set.
+   */
+  public function setDataProvider(DataProviderInterface $data_provider = NULL);
+
+  /**
+   * Sets the plugin definition to the provided array.
+   *
+   * @param array $plugin_definition
+   *   Definition array to set manually.
+   */
+  public function setPluginDefinition(array $plugin_definition);
+
 }

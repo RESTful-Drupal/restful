@@ -156,6 +156,13 @@ abstract class Resource extends PluginBase implements ResourceInterface {
   /**
    * {@inheritdoc}
    */
+  public function setDataProvider(DataProviderInterface $data_provider = NULL) {
+    $this->dataProvider = $data_provider;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getResourceName() {
     $definition = $this->getPluginDefinition();
     return $definition['name'];
@@ -400,6 +407,13 @@ abstract class Resource extends PluginBase implements ResourceInterface {
    */
   public function isEnabled() {
     return $this->enabled;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setPluginDefinition(array $plugin_definition) {
+    $this->pluginDefinition = $plugin_definition;
   }
 
   /**

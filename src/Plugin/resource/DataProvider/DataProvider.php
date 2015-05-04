@@ -84,6 +84,7 @@ abstract class DataProvider implements DataProviderInterface {
     $this->account = $account;
     $this->options = $options;
     if (!empty($options['range'])) {
+      // TODO: Document that the range is now overridable in the annotation.
       $this->range = $options['range'];
     }
     $this->langcode = $langcode ?: static::getLanguage();
@@ -129,6 +130,13 @@ abstract class DataProvider implements DataProviderInterface {
    */
   public function getOptions() {
     return $this->options;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setOptions(array $options) {
+    $this->options = $options;
   }
 
   /**
@@ -287,16 +295,26 @@ abstract class DataProvider implements DataProviderInterface {
    *   A numeric array with the offset and length options.
    *
    * @throws BadRequestException
+   * @throws ServiceUnavailableException
    */
   protected function parseRequestForListPagination() {
     $input = $this->getRequest()->getParsedInput();
-    $page = isset($input['page']) ? $input['page'] : 1;
 
+    $page = isset($input['page']) ? $input['page'] : 1;
     if (!ctype_digit((string) $page) || $page < 1) {
       throw new BadRequestException('"Page" property should be numeric and equal or higher than 1.');
     }
 
-    $range = $this->getRange();
+    $range = isset($input['range']) ? $input['range'] : $this->getRange();
+    if (!ctype_digit((string) $range) || $range < 1) {
+      throw new BadRequestException('"Range" property should be numeric and equal or higher than 1.');
+    }
+
+    $url_params = $this->options['urlParams'];
+    if (isset($url_params['range']) && !$url_params['range']) {
+      throw new ServiceUnavailableException('Range parameters have been disabled in server configuration.');
+    }
+
     $offset = ($page - 1) * $range;
     return array($offset, $range);
   }
