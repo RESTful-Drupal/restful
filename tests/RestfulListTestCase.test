@@ -7,8 +7,10 @@
 
 use Drupal\restful\Exception\BadRequestException;
 use Drupal\restful\Exception\ForbiddenException;
+use Drupal\restful\Exception\ServiceUnavailableException;
 use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
+
 class RestfulListTestCase extends RestfulCurlBaseTestCase {
 
   public static function getInfo() {
@@ -53,6 +55,7 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     $handler = $resource_manager->getPlugin('articles:1.0');
     $query['fields'] = 'id,label';
     $handler->setRequest(Request::create('', $query, RequestInterface::METHOD_GET));
+    $handler->setPath('');
 
     // No sorting (default sorting).
     $result = $handler->process();
@@ -171,6 +174,7 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     // Test that the default sort can be overridden.
     $query['sort'] = 'id';
     $handler->setRequest(Request::create('', $query, RequestInterface::METHOD_GET));
+    $handler->setPath('');
     $result = $handler->process();
     $expected_result = array(
       array(
@@ -195,6 +199,7 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     // Illegal sort property.
     $query['sort'] = 'wrong_key';
     $handler->setRequest(Request::create('', $query, RequestInterface::METHOD_GET));
+    $handler->setPath('');
     try {
       $handler->process();
       $this->fail('Illegal sort property used.');
@@ -206,6 +211,7 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     // Illegal sort property, descending.
     $query['sort'] = '-wrong_key';
     $handler->setRequest(Request::create('', $query, RequestInterface::METHOD_GET));
+    $handler->setPath('');
     try {
       $handler->process();
       $this->fail('Illegal sort property, descending, used.');
@@ -215,18 +221,24 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     }
 
     // Test valid sort with sort params disabled.
-    $handler->setPluginKey('url_params', array(
+    $resource_manager->clearPluginCache($handler->getPluginId());
+    $plugin_definition = $handler->getPluginDefinition();
+    $plugin_definition['dataProvider']['urlParams'] = array(
       'filter' => TRUE,
       'sort' => FALSE,
       'range' => TRUE,
-    ));
+    );
+    $handler->setPluginDefinition($plugin_definition);
+    // Re-instantiate the data provider.
+    $handler->setDataProvider(NULL);
     $query['sort'] = 'label,id';
     $handler->setRequest(Request::create('', $query, RequestInterface::METHOD_GET));
+    $handler->setPath('');
     try {
       $handler->process();
       $this->fail('Exception not raised for disabled sort parameter.');
     }
-    catch (BadRequestException $e) {
+    catch (ServiceUnavailableException $e) {
       $this->pass('Exception raised for disabled sort parameter.');
     }
 
@@ -234,12 +246,14 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     unset($query['sort']);
     $query['range'] = 2;
     $handler->setRequest(Request::create('', $query, RequestInterface::METHOD_GET));
+    $handler->setPath('');
     $result = $handler->process();
     $this->assertEqual(count($result), $query['range'], 'Range parameter overridden correctly');
 
     // Test invalid range.
     $query['range'] = $this->randomName();
     $handler->setRequest(Request::create('', $query, RequestInterface::METHOD_GET));
+    $handler->setPath('');
     try {
       $handler->process();
       $this->fail('Exception not raised on invalid range parameter.');
@@ -249,18 +263,24 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     }
 
     // Test valid range with range params disabled.
-    $handler->setPluginKey('url_params', array(
+    $resource_manager->clearPluginCache($handler->getPluginId());
+    $plugin_definition = $handler->getPluginDefinition();
+    $plugin_definition['dataProvider']['urlParams'] = array(
       'filter' => TRUE,
       'sort' => TRUE,
       'range' => FALSE,
-    ));
+    );
+    $handler->setPluginDefinition($plugin_definition);
+    // Re-instantiate the data provider.
+    $handler->setDataProvider(NULL);
     $query['range'] = 2;
     $handler->setRequest(Request::create('', $query, RequestInterface::METHOD_GET));
+    $handler->setPath('');
     try {
       $handler->process();
       $this->fail('Exception not raised for disabled range parameter.');
     }
-    catch (BadRequestException $e) {
+    catch (ServiceUnavailableException $e) {
       $this->pass('Exception raised for disabled range parameter.');
     }
 
@@ -288,11 +308,13 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     $handler = $resource_manager->getPlugin('articles:1.5');
     $query = array('sort' => '-user');
     $handler->setRequest(Request::create('', $query, RequestInterface::METHOD_GET));
+    $handler->setPath('');
     $result = $handler->process();
     $this->assertEqual($result[0]['user']['id'], 3, 'List sorted by the "author" entity metadata wrapper property, which maps to the "uid" DB column name.');
 
     $query = array('sort' => 'static');
     $handler->setRequest(Request::create('', $query, RequestInterface::METHOD_GET));
+    $handler->setPath('');
     try {
       $handler->process();
       $this->fail('Exception not thrown for invalid sort.');
@@ -431,11 +453,16 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     $this->assertEqual($nodes['another abc'], $result[0]['id']);
 
     // Test valid filter with filter params disabled.
-    $handler->setPluginKey('url_params', array(
+    $data_provider = $handler->getDataProvider();
+    $options = $data_provider->getOptions();
+    $options['urlParams'] = array(
       'filter' => FALSE,
       'sort' => TRUE,
       'range' => TRUE,
-    ));
+    );
+    $data_provider->setOptions($options);
+    $handler->setDataProvider($data_provider);
+
     $request['filter'] = array('label' => 'abc');
     try {
       $handler->get('', $request);

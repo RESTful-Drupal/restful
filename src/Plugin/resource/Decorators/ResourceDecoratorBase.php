@@ -10,6 +10,7 @@ namespace Drupal\restful\Plugin\resource\Decorators;
 
 use Drupal\Component\Plugin\PluginBase;
 use Drupal\restful\Http\RequestInterface;
+use Drupal\restful\Plugin\resource\DataProvider\DataProviderInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
 use Drupal\restful\Plugin\resource\ResourceInterface;
 
@@ -89,6 +90,13 @@ abstract class ResourceDecoratorBase extends PluginBase implements ResourceDecor
    */
   public function getDataProvider() {
     return $this->subject->getDataProvider();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setDataProvider(DataProviderInterface $data_provider = NULL) {
+    $this->subject->setDataProvider($data_provider);
   }
 
   /**
@@ -239,6 +247,16 @@ abstract class ResourceDecoratorBase extends PluginBase implements ResourceDecor
    */
   public function getPluginDefinition() {
     return $this->subject->getPluginDefinition();
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * This is a decorated resource, set proxy the request until you reach the
+   * annotated resource.
+   */
+  public function setPluginDefinition(array $plugin_definition) {
+    $this->subject->setPluginDefinition($plugin_definition);
   }
 
   /**

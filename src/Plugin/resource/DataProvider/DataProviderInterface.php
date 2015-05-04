@@ -99,4 +99,12 @@ interface DataProviderInterface extends CrudInterface {
    */
   public function methodAccess(ResourceFieldInterface $resource_field);
 
+  /**
+   * Sets the options.
+   *
+   * @param array $options
+   *   The options to set.
+   */
+  public function setOptions(array $options);
+
 }
