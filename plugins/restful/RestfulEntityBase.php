@@ -323,6 +323,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
 
         // Check user has access to the property.
         if ($property && !$this->checkPropertyAccess('view', $public_field_name, $sub_wrapper, $wrapper)) {
+          $values[$public_field_name] = $value;
           continue;
         }
 
