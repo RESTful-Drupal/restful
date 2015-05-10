@@ -7,6 +7,7 @@
 
 use Drupal\restful\Exception\BadRequestException;
 use Drupal\restful\Exception\ForbiddenException;
+use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Exception\ServiceUnavailableException;
 use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
@@ -394,11 +395,18 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     $this->assertEqual($result[0]['id'], $nodes['abc'], 'Filter list by single value property.');
 
     // Assert count is correct.
-    $formatter_handler = $handler->getFormatterManager()->getPlugin('hal_json');
+    $formatter_handler = restful()->getFormatterManager()->getPlugin('hal_json');
+    $instance_configuration = $formatter_handler->getConfiguration();
+    $formatter_handler->setConfiguration(($instance_configuration ?: array()) + array(
+      'resource' => $handler,
+    ));
     $output = $formatter_handler->prepare($result);
     $this->assertEqual($output['count'], 1, '"count" property is correct.');
 
     // Single value field.
+    $resource_manager->clearPluginCache($handler->getPluginId());
+    $handler = $resource_manager->getPlugin('test_articles:1.2');
+
     $query['filter'] = array('integer_single' => '1');
     $handler->setRequest(Request::create('', $query, RequestInterface::METHOD_GET));
     $handler->setPath('');
@@ -419,8 +427,11 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
 
     // Invalid key.
     $query['filter'] = array('invalid_key' => '3');
+
+    $handler->setRequest(Request::create('', $query, RequestInterface::METHOD_GET));
+    $handler->setPath('');
     try {
-      $handler->get('', $query);
+      $handler->process();
       $this->fail('No exception was thrown on invalid key for filter.');
     }
     catch (BadRequestException $e) {
@@ -465,8 +476,9 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     $this->assertEqual($nodes['another abc'], $result[0]['id']);
 
     // Test valid filter with filter params disabled.
+    $resource_manager->clearPluginCache($handler->getPluginId());
     $plugin_definition = $handler->getPluginDefinition();
-    $options['dataProvider']['urlParams'] = array(
+    $plugin_definition['dataProvider']['urlParams'] = array(
       'filter' => FALSE,
       'sort' => TRUE,
       'range' => TRUE,
@@ -481,7 +493,7 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
       $handler->process();
       $this->fail('Exception not raised for disabled filter parameter.');
     }
-    catch (BadRequestException $e) {
+    catch (ServiceUnavailableException $e) {
       $this->pass('Exception raised for disabled filter parameter.');
     }
 
@@ -509,13 +521,8 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
 
     $handler->setRequest(Request::create('', $query, RequestInterface::METHOD_GET));
     $handler->setPath('');
-    try {
-      $handler->process();
-      $this->fail('Exception not thrown for invalid filter.');
-    }
-    catch (BadRequestException $e) {
-      $this->pass('Exception thrown for invalid filter.');
-    }
+    $handler->process();
+    $this->assert(count($result[0]) > 0, 'Ignored filter on a non-entity or Field API property.');
   }
 
   /**

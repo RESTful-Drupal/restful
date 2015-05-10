@@ -287,4 +287,11 @@ abstract class ResourceDecoratorBase extends PluginBase implements ResourceDecor
     return $this->subject->setFieldDefinitions($field_definitions);
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getUrl(array $options = array(), $keep_query = TRUE, RequestInterface $request = NULL) {
+    return $this->subject->getUrl($options, $keep_query, $request);
+  }
+
 }

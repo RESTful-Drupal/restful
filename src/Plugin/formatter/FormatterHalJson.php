@@ -44,11 +44,11 @@ class FormatterHalJson extends Formatter implements FormatterInterface {
       return $data;
     }
     // Here we get the data after calling the backend storage for the resources.
-    if (!$this->getResource()) {
+    if (!$resource = $this->getResource()) {
       throw new ServerConfigurationException('Resource unavailable for HAL formatter.');
     }
 
-    $plugin_definition = $this->getResource()->getPluginDefinition();
+    $plugin_definition = $resource->getPluginDefinition();
     $curies_resource = $this->withCurie($plugin_definition['resource']);
     $output = array();
 
@@ -58,18 +58,19 @@ class FormatterHalJson extends Formatter implements FormatterInterface {
 
     $output[$curies_resource] = $data;
 
-    if (!empty($this->resource)) {
+    if (!empty($resource)) {
+      $data_provider = $resource->getDataProvider();
       if (
-        method_exists($this->resource, 'getTotalCount') &&
-        method_exists($this->resource, 'isListRequest') &&
-        $this->resource->isListRequest($this->resource->getPath())
+        $data_provider &&
+        method_exists($data_provider, 'count') &&
+        $resource->getRequest()->isListRequest($resource->getPath())
       ) {
         // Get the total number of items for the current request without
         // pagination.
-        $output['count'] = $this->resource->getTotalCount();
+        $output['count'] = $data_provider->count();
       }
-      if (method_exists($this->resource, 'additionalHateoas')) {
-        $output = array_merge($output, $this->resource->additionalHateoas());
+      if (method_exists($resource, 'additionalHateoas')) {
+        $output = array_merge($output, $resource->additionalHateoas());
       }
 
       // Add HATEOAS to the output.
@@ -97,41 +98,43 @@ class FormatterHalJson extends Formatter implements FormatterInterface {
    *   The data array after initial massaging.
    */
   protected function addHateoas(array &$data) {
-    if (!$this->resource) {
+    if (!$resource = $this->getResource()) {
       return;
     }
-    $request = $this->resource->getRequest();
+    $request = $resource->getRequest();
 
     $data['_links'] = array();
 
     // Get self link.
     $data['_links']['self'] = array(
       'title' => 'Self',
-      'href' => $this->resource->versionedUrl($this->resource->getPath()),
+      'href' => $resource->versionedUrl($resource->getPath()),
     );
 
-    $page = !empty($request['page']) ? $request['page'] : 1;
+    $input = $request->getParsedInput();
+    $data_provider = $resource->getDataProvider();
+    $page = !empty($input['page']) ? $input['page'] : 1;
 
     if ($page > 1) {
-      $request['page'] = $page - 1;
+      $input['page'] = $page - 1;
       $data['_links']['previous'] = array(
         'title' => 'Previous',
-        'href' => $this->resource->getUrl($request),
+        'href' => $resource->getUrl(),
       );
     }
 
-    $curies_resource = $this->withCurie($this->resource->getResourceName());
+    $curies_resource = $this->withCurie($resource->getResourceMachineName());
 
     // We know that there are more pages if the total count is bigger than the
     // number of items of the current request plus the number of items in
     // previous pages.
-    $items_per_page = $this->resource->getRange();
+    $items_per_page = $data_provider->getRange();
     $previous_items = ($page - 1) * $items_per_page;
     if (isset($data['count']) && $data['count'] > count($data[$curies_resource]) + $previous_items) {
-      $request['page'] = $page + 1;
+      $input['page'] = $page + 1;
       $data['_links']['next'] = array(
         'title' => 'Next',
-        'href' => $this->resource->getUrl($request),
+        'href' => $resource->getUrl(),
       );
     }
 
