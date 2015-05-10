@@ -19,7 +19,7 @@ class RestfulHalJsonTestCase extends RestfulCurlBaseTestCase {
     );
   }
 
-  function setUp() {
+  public function setUp() {
     parent::setUp('restful_example', 'restful_test', 'entityreference');
 
     restful_test_add_fields();
@@ -28,7 +28,7 @@ class RestfulHalJsonTestCase extends RestfulCurlBaseTestCase {
   /**
    * Test embedded resources.
    */
-  function testHalEmbeddedResources() {
+  public function testHalEmbeddedResources() {
     $user1 = $this->drupalCreateUser();
     /** @var \Entity $entity1 */
     $entity1 = entity_create('entity_test', array('name' => 'main', 'uid' => $user1->uid));
