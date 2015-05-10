@@ -49,6 +49,11 @@ interface ResourceInterface extends PluginInspectionInterface, ConfigurablePlugi
   public function getAccount($cache = TRUE);
 
   /**
+   * {@inheritdoc}
+   */
+  public function setAccount($account);
+
+  /**
    * Get the request object.
    *
    * @return RequestInterface

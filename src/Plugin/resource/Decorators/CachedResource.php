@@ -117,15 +117,6 @@ class CachedResource extends ResourceDecoratorBase implements CachedResourceInte
   }
 
   /**
-   * Proxy method to get the account from the rateLimitManager.
-   *
-   * {@inheritdoc}
-   */
-  public function getAccount($cache = TRUE) {
-    return $this->subject->getAccount();
-  }
-
-  /**
    * {@inheritdoc}
    */
   public function getRequest() {

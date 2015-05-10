@@ -66,6 +66,13 @@ class CachedDataProvider implements CachedDataProviderInterface {
   /**
    * {@inheritdoc}
    */
+  public function setAccount($account) {
+    $this->subject->setAccount($account);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getRequest() {
     return $this->subject->getRequest();
   }
