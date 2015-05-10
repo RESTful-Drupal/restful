@@ -18,7 +18,7 @@ interface AuthenticationInterface extends PluginInspectionInterface {
    * @param RequestInterface $request
    *   The request.
    *
-   * @return \stdClass|null
+   * @return object
    *   The user object.
    */
   public function authenticate(RequestInterface $request);

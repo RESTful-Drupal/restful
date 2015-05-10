@@ -157,8 +157,11 @@ class Request implements RequestInterface {
     if (!$headers) {
       $headers = new HttpHeaderBag();
     }
-    if ($method == static::METHOD_POST && $headers->get('x-http-method-override')->getValueString()) {
-      $method = $headers->get('x-http-method-override')->getValueString();
+    if (($overridden_method = strtoupper($headers->get('x-http-method-override')->getValueString())) && ($method == static::METHOD_POST)) {
+      if (!static::isValidMethod($overridden_method)) {
+        throw new BadRequestException(sprintf('Invalid overridden method: %s.', $overridden_method));
+      }
+      $method = $overridden_method;
     }
     return new static($path, $query, $method, $headers, $via_router, $csrf_token, $cookies, $files, $server);
   }
@@ -422,11 +425,6 @@ class Request implements RequestInterface {
    * {@inheritdoc}
    */
   public function getMethod() {
-    $method_override = $this->getHeaders()->get('X-HTTP-Method-Override')->getValueString();
-    // TODO: Add helper method to get header string from RequestInterface.
-    if ($this->method == static::METHOD_POST && $method_override) {
-      return strtoupper($method_override);
-    }
     return $this->method;
   }
 
