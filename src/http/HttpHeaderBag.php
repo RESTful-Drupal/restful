@@ -7,8 +7,6 @@
 
 namespace Drupal\restful\Http;
 
-use \Drupal\restful\Exception\ServerConfigurationException;
-
 class HttpHeaderBag implements HttpHeaderBagInterface, \Iterator {
 
   /**
