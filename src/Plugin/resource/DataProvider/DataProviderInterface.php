@@ -22,6 +22,14 @@ interface DataProviderInterface extends CrudInterface {
   public function getRange();
 
   /**
+   * Sets the range.
+   *
+   * @param int $range
+   *   The range
+   */
+  public function setRange($range);
+
+  /**
    * Gets the authenticated account.
    *
    * @return object
@@ -33,9 +41,17 @@ interface DataProviderInterface extends CrudInterface {
    * Gets the request.
    *
    * @return RequestInterface
-   *   The request
+   *   The request.
    */
   public function getRequest();
+
+  /**
+   * Sets the request.
+   *
+   * @param RequestInterface $request
+   *   The request.
+   */
+  public function setRequest(RequestInterface $request);
 
   /**
    * Get the language code.
