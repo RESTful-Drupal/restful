@@ -36,33 +36,15 @@ use Drupal\restful\Plugin\resource\ResourceInterface;
 class Tags__1_0 extends ResourceEntity implements ResourceInterface {
 
   /**
-   * {@inheritdoc}
-   */
-  protected function publicFields() {
-    $public_fields = parent::publicFields();
-
-    // Dummy access callback for demo purposes.
-    $public_fields['self']['access_callbacks'] = array(
-      array($this, 'evenAccess'),
-    );
-    return $public_fields;
-  }
-
-  /**
-   * Access callback example; Allow access only to IDs with even number.
+   * Overrides ResourceEntity::checkEntityAccess().
    *
-   * @param string $op
-   *   Operation being performed.
-   * @param ResourceFieldInterface $resource_field
-   *   The resource field definition object.
-   * @param DataInterpreterInterface $interpreter
-   *   The data interpreter.
-   *
-   * @return bool
-   *   TRUE for access granted.
+   * Allow access to create "Tags" resource for privileged users, as
+   * we can't use entity_access() since entity_metadata_taxonomy_access()
+   * denies it for a non-admin user.
    */
-  public function evenAccess($op, ResourceFieldInterface $resource_field, DataInterpreterInterface $interpreter) {
-    return $interpreter->getWrapper()->getIdentifier() % 2;
+  protected function checkEntityAccess($op, $entity_type, $entity) {
+    $account = $this->getAccount();
+    return user_access('create article content', $account);
   }
 
 }
