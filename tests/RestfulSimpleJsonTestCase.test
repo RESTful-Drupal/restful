@@ -18,7 +18,7 @@ class RestfulSimpleJsonTestCase extends RestfulCurlBaseTestCase {
     );
   }
 
-  function setUp() {
+  public function setUp() {
     parent::setUp('restful_example', 'restful_test', 'entityreference');
 
     restful_test_add_fields();
