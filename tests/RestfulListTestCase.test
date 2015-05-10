@@ -664,7 +664,7 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
   /**
    * Test error handling when no access is granted to an entity in a list.
    */
-  function testAccessHandling() {
+  public function testAccessHandling() {
     $resource_manager = restful()->getResourceManager();
     $settings = array(
       'type' => 'article',
