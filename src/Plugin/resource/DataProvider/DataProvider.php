@@ -114,6 +114,13 @@ abstract class DataProvider implements DataProviderInterface {
   /**
    * {@inheritdoc}
    */
+  public function setAccount($account) {
+    $this->account = $account;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getRequest() {
     return $this->request;
   }

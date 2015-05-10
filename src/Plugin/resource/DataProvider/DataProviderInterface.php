@@ -38,6 +38,14 @@ interface DataProviderInterface extends CrudInterface {
   public function getAccount();
 
   /**
+   * Sets the authenticated account.
+   *
+   * @param object $account
+   *   The fully loaded user account.
+   */
+  public function setAccount($account);
+
+  /**
    * Gets the request.
    *
    * @return RequestInterface
