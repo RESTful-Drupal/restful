@@ -216,6 +216,8 @@ abstract class ResourceDecoratorBase extends PluginBase implements ResourceDecor
    */
   public function setRequest(RequestInterface $request) {
     $this->subject->setRequest($request);
+    // Make sure that the request is updated in the data provider.
+    $this->getDataProvider()->setRequest($request);
   }
 
   /**
@@ -257,6 +259,9 @@ abstract class ResourceDecoratorBase extends PluginBase implements ResourceDecor
    */
   public function setPluginDefinition(array $plugin_definition) {
     $this->subject->setPluginDefinition($plugin_definition);
+    if (!empty($plugin_definition['dataProvider'])) {
+      $this->getDataProvider()->addOptions($plugin_definition['dataProvider']);
+    }
   }
 
   /**
