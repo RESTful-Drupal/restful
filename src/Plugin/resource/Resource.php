@@ -91,7 +91,15 @@ abstract class Resource extends PluginBase implements ResourceInterface {
    * {@inheritdoc}
    */
   public function getAccount($cache = TRUE) {
-    return $this->authenticationManager->getAccount($this->getRequest());
+    return $this->authenticationManager->getAccount($this->getRequest(), $cache);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setAccount($account) {
+    $this->authenticationManager->setAccount($account);
+    $this->getDataProvider()->setAccount($account);
   }
 
   /**

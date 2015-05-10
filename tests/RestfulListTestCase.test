@@ -664,7 +664,8 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
   /**
    * Test error handling when no access is granted to an entity in a list.
    */
-  function testAccessHandeling() {
+  function testAccessHandling() {
+    $resource_manager = restful()->getResourceManager();
     $settings = array(
       'type' => 'article',
     );
@@ -678,10 +679,11 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     // Deny access via hook_node_access() to a specific node.
     restful_test_deny_access_node($node2->nid);
 
-    $handler = restful_get_restful_handler('articles');
+    $handler = $resource_manager->getPlugin('articles:1.0');
     $handler->setAccount($user1);
 
-    $result = $handler->get();
+    $handler->setRequest(Request::create(''));
+    $result = $handler->process();
 
     $this->assertEqual(count($result), 2, 'List returned and ignored un-accessible entity.');
 
@@ -691,8 +693,9 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
       $node2->nid,
       $node3->nid,
     );
+    $handler->setRequest(Request::create(implode(',', $ids)));
     try {
-      $handler->get(implode(',', $ids));
+      $handler->process();
       $this->fail('Exception was not thrown for un-accessible node for specific IDs list.');
     }
     catch (ForbiddenException $e) {

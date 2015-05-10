@@ -54,7 +54,17 @@ abstract class ResourceDecoratorBase extends PluginBase implements ResourceDecor
    * {@inheritdoc}
    */
   public function getAccount($cache = TRUE) {
-    return $this->subject->getAccount();
+    return $this->subject->getAccount($cache);
+  }
+
+  /**
+   * Proxy method to get the account from the rateLimitManager.
+   *
+   * {@inheritdoc}
+   */
+  public function setAccount($account) {
+    $this->subject->setAccount($account);
+    $this->getDataProvider()->setAccount($account);
   }
 
   /**
