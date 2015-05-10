@@ -7,6 +7,7 @@
 
 namespace Drupal\restful\Plugin\resource\Decorators;
 
+use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataProvider\DataProviderInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollection;
 use Drupal\restful\Plugin\resource\ResourceInterface;

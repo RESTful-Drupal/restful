@@ -335,4 +335,23 @@ interface ResourceInterface extends PluginInspectionInterface, ConfigurablePlugi
    */
   public function setPluginDefinition(array $plugin_definition);
 
+  /**
+   * Helper method; Get the URL of the resource and query strings.
+   *
+   * By default the URL is absolute.
+   *
+   * @param array $options
+   *   Array with options passed to url().
+   * @param bool $keep_query
+   *   If TRUE the $request will be appended to the $options['query']. This is
+   *   the typical behavior for $_GET method, however it is not for $_POST.
+   *   Defaults to TRUE.
+   * @param RequestInterface $request
+   *   The request object.
+   *
+   * @return string
+   *   The URL address.
+   */
+  public function getUrl(array $options = array(), $keep_query = TRUE, RequestInterface $request = NULL);
+
 }

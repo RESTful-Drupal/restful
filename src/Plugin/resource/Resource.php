@@ -384,6 +384,29 @@ abstract class Resource extends PluginBase implements ResourceInterface {
   /**
    * {@inheritdoc}
    */
+  public function getUrl(array $options = array(), $keep_query = TRUE, RequestInterface $request = NULL) {
+    $request  = $request ?: $this->getRequest();
+    $input = $request->getParsedInput();
+    // By default set URL to be absolute.
+    $options += array(
+      'absolute' => TRUE,
+      'query' => array(),
+    );
+
+    if ($keep_query) {
+      // Remove special params.
+      unset($input['q']);
+
+      // Add the request as query strings.
+      $options['query'] += $input;
+    }
+
+    return $this->versionedUrl($this->getPath(), $options);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function access() {
     return $this->accessByAllowOrigin();
   }
