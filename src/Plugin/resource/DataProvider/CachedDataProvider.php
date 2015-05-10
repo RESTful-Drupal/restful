@@ -10,6 +10,7 @@ namespace Drupal\restful\Plugin\resource\DataProvider;
 use Drupal\restful\Exception\NotImplementedException;
 use Drupal\restful\Exception\UnauthorizedException;
 use Drupal\restful\Http\Request;
+use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
 
 class CachedDataProvider implements CachedDataProviderInterface {
@@ -51,6 +52,13 @@ class CachedDataProvider implements CachedDataProviderInterface {
   /**
    * {@inheritdoc}
    */
+  public function setRange($range) {
+    return $this->subject->setRange($range);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getAccount() {
     return $this->subject->getAccount();
   }
@@ -60,6 +68,13 @@ class CachedDataProvider implements CachedDataProviderInterface {
    */
   public function getRequest() {
     return $this->subject->getRequest();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setRequest(RequestInterface $request) {
+    $this->subject->setRequest($request);
   }
 
   /**

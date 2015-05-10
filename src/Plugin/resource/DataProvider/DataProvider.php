@@ -100,6 +100,13 @@ abstract class DataProvider implements DataProviderInterface {
   /**
    * {@inheritdoc}
    */
+  public function setRange($range) {
+    $this->range = $range;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getAccount() {
     return $this->account;
   }
@@ -109,6 +116,13 @@ abstract class DataProvider implements DataProviderInterface {
    */
   public function getRequest() {
     return $this->request;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setRequest(RequestInterface $request) {
+    $this->request = $request;
   }
 
   /**

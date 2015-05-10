@@ -113,6 +113,8 @@ abstract class Resource extends PluginBase implements ResourceInterface {
    */
   public function setRequest(RequestInterface $request) {
     $this->request = $request;
+    // Make sure that the request is updated in the data provider.
+    $this->getDataProvider()->setRequest($request);
   }
 
   /**
@@ -150,7 +152,8 @@ abstract class Resource extends PluginBase implements ResourceInterface {
     if (isset($this->dataProvider)) {
       return $this->dataProvider;
     }
-    return $this->dataProviderFactory();
+    $this->dataProvider = $this->dataProviderFactory();
+    return $this->dataProvider;
   }
 
   /**
