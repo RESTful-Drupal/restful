@@ -5,6 +5,8 @@
  * Contains RestfulViewEntityMultiLingualTestCase
  */
 
+use Drupal\restful\Http\Request;
+
 class RestfulViewEntityMultiLingualTestCase extends RestfulCurlBaseTestCase {
 
   /**
@@ -141,10 +143,13 @@ class RestfulViewEntityMultiLingualTestCase extends RestfulCurlBaseTestCase {
    *   The second expected string (text_multiple[2]).
    */
   private function assertExpectedResult($langcode, $id, $text1, $text2) {
-    $handler = restful_get_restful_handler('restful_test_translatable_entity');
+    $resource_manager = restful()->getResourceManager();
+    $handler = $resource_manager->getPlugin('restful_test_translatable_entity:1.0');
     // Explicitly set the langcode.
-    $handler->setLangCode($langcode);
-    $response = $handler->get($id);
+    $handler->getDataProvider()->setLangCode($langcode);
+    $handler->setRequest(Request::create('api/restful_test_translatable_entity/' . $id));
+    $handler->setPath($id);
+    $response = $handler->process();
     $result = $response[0];
 
     $this->assertEqual(trim(strip_tags($result['text_single'])), $text1, 'Entity view has correct result for "text_single" in language "' . $langcode . '".');
