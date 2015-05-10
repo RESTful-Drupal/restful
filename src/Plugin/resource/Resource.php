@@ -440,6 +440,9 @@ abstract class Resource extends PluginBase implements ResourceInterface {
    */
   public function setPluginDefinition(array $plugin_definition) {
     $this->pluginDefinition = $plugin_definition;
+    if (!empty($plugin_definition['dataProvider'])) {
+      $this->getDataProvider()->addOptions($plugin_definition['dataProvider']);
+    }
   }
 
   /**
