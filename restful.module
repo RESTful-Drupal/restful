@@ -590,7 +590,7 @@ function restful_restful_resource_alter(ResourceInterface &$resource) {
     $resource = new CachedResource($resource);
   }
   // Check for the rate limit configuration.
-  if (!empty($plugin_definition['rateLimit'])) {
+  if (!empty($plugin_definition['rateLimit']) || variable_get('restful_global_rate_limit', 0)) {
     $resource = new RateLimitedResource($resource);
   }
 

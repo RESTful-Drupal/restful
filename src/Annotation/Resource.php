@@ -92,7 +92,7 @@ class Resource extends Plugin {
    *
    * @var array|bool
    */
-  public $cacheRender = array();
+  public $renderCache = array();
 
   /**
    * Hook menu. TRUE if the resource should declare a menu item automatically.

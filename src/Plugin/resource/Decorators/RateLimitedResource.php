@@ -33,7 +33,17 @@ class RateLimitedResource extends ResourceDecoratorBase implements ResourceDecor
   public function __construct(ResourceInterface $subject, RateLimitManager $rate_limit_manager = NULL) {
     $this->subject = $subject;
     $plugin_definition = $subject->getPluginDefinition();
-    $this->rateLimitManager = $rate_limit_manager ? $rate_limit_manager : new RateLimitManager($this, $plugin_definition['rateLimit']);
+    $rate_limit_info = empty($plugin_definition['rateLimit']) ? array() : $plugin_definition['rateLimit'];
+    if ($limit = variable_get('restful_global_rate_limit', 0)) {
+      $rate_limit_info['global'] = array(
+        'period' => variable_get('restful_global_rate_period', 'P1D'),
+        'limits' => array(),
+      );
+      foreach (user_roles() as $role_name) {
+        $rate_limit_info['global']['limits'][$role_name] = $limit;
+      }
+    }
+    $this->rateLimitManager = $rate_limit_manager ? $rate_limit_manager : new RateLimitManager($this, $rate_limit_info);
   }
 
   /**
@@ -63,6 +73,14 @@ class RateLimitedResource extends ResourceDecoratorBase implements ResourceDecor
     // This will throw the appropriate exception if needed.
     $this->getRateLimitManager()->checkRateLimit($this->getRequest());
     return $this->subject->process();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setAccount($account) {
+    $this->subject->setAccount($account);
+    $this->rateLimitManager->setAccount($account);
   }
 
 }
