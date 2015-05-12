@@ -2,13 +2,13 @@
 
 /**
  * @file
- * Contains Drupal\restful\Plugin\resource\DataProvider\CachedDataProviderInterface.
+ * Contains Drupal\restful\Plugin\resource\DataProvider\CacheDecoratedDataProviderInterface.
  */
 
 namespace Drupal\restful\Plugin\resource\DataProvider;
 
 
-interface CachedDataProviderInterface extends DataProviderInterface {
+interface CacheDecoratedDataProviderInterface extends DataProviderInterface {
 
   /**
    * Invalidates cache for a certain entity.
