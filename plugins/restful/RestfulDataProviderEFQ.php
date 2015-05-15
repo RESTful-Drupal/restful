@@ -209,6 +209,34 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
   }
 
   /**
+   * Overrides \RestfulBase::isValidOperatorsForFilter().
+   */
+  protected static function isValidOperatorsForFilter(array $operators) {
+    $allowed_operators = array(
+      '=',
+      '>',
+      '<',
+      '>=',
+      '<=',
+      '<>',
+      '!=',
+      'IN',
+      'BETWEEN',
+      'LIKE',
+      'STARTS_WITH',
+    );
+
+    foreach ($operators as $operator) {
+      if (!in_array($operator, $allowed_operators)) {
+        throw new \RestfulBadRequestException(format_string('Operator "@operator" is not allowed for filtering on this resource. Allowed operators are: !allowed', array(
+          '@operator' => $operator,
+          '!allowed' => implode(', ', $allowed_operators),
+        )));
+      }
+    }
+  }
+
+  /**
    * Overrides \RestfulBase::isValidConjuctionForFilter().
    */
   protected static function isValidConjunctionForFilter($conjunction) {
