@@ -5,7 +5,7 @@
  * Contains entity related code.
  */
 
-use Drupal\restful\Plugin\resource\DataProvider\CachedDataProvider;
+use Drupal\restful\Plugin\resource\DataProvider\CacheDecoratedDataProvider;
 
 /**
  * Implements hook_entity_info().
@@ -13,8 +13,8 @@ use Drupal\restful\Plugin\resource\DataProvider\CachedDataProvider;
 function restful_entity_info() {
   $items['rate_limit'] = array(
     'label' => t('Rate limit'),
-    'entity class' => 'RestfulRateLimit',
-    'controller class' => 'EntityAPIController',
+    'entity class' => '\\Drupal\\restful\\RateLimit\\Entity\\RateLimit',
+    'controller class' => '\\Drupal\\restful\\RateLimit\\Entity\\RateLimitController',
     'base table' => 'restful_rate_limit',
     'fieldable' => TRUE,
     'entity keys' => array(
@@ -39,7 +39,7 @@ function restful_entity_info() {
 function restful_entity_update($entity, $type) {
   list($entity_id) = entity_extract_ids($type, $entity);
   $cid = 'paet:' . $type . '::ei:' . $entity_id;
-  CachedDataProvider::invalidateEntityCache($cid);
+  CacheDecoratedDataProvider::invalidateEntityCache($cid);
 }
 
 /**
@@ -48,7 +48,7 @@ function restful_entity_update($entity, $type) {
 function restful_entity_delete($entity, $type) {
   list($entity_id) = entity_extract_ids($type, $entity);
   $cid = 'paet:' . $type . '::ei:' . $entity_id;
-  CachedDataProvider::invalidateEntityCache($cid);
+  CacheDecoratedDataProvider::invalidateEntityCache($cid);
 }
 
 /**
@@ -57,7 +57,7 @@ function restful_entity_delete($entity, $type) {
 function restful_user_update(&$edit, $account, $category) {
   // Due to the limitations for cid matching on clearing caches, we need to
   // clear all the bin. We cannot do $cid = '%::uu' . $account->uid . '::pa';
-  CachedDataProvider::invalidateEntityCache('*');
+  CacheDecoratedDataProvider::invalidateEntityCache('*');
 }
 
 /**
@@ -66,5 +66,5 @@ function restful_user_update(&$edit, $account, $category) {
 function restful_user_delete($account) {
   // Due to the limitations for cid matching on clearing caches, we need to
   // clear all the bin. We cannot do $cid = '%::uu' . $account->uid . '::pa';
-  CachedDataProvider::invalidateEntityCache('*');
+  CacheDecoratedDataProvider::invalidateEntityCache('*');
 }

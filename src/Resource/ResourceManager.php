@@ -47,7 +47,7 @@ class ResourceManager implements ResourceManagerInterface {
    */
   public function __construct(RequestInterface $request, ResourcePluginManager $manager = NULL) {
     $this->request = $request;
-    $this->pluginManager = $manager ?: ResourcePluginManager::create();
+    $this->pluginManager = $manager ?: ResourcePluginManager::create('cache', $request);
     $options = array();
     foreach ($this->pluginManager->getDefinitions() as $plugin_id => $plugin_definition) {
       // Set the instance id to articles::1.5 (for example).

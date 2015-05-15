@@ -2,19 +2,18 @@
 
 /**
  * @file
- * Contains \Drupal\restful\Plugin\resource\Decorators\CachedResource
+ * Contains \Drupal\restful\Plugin\resource\Decorators\CacheDecoratedResource
  */
 
 namespace Drupal\restful\Plugin\resource\Decorators;
 
 use Drupal\restful\Http\HttpHeader;
-use Drupal\restful\Plugin\resource\DataProvider\CachedDataProvider;
-use Drupal\restful\Plugin\resource\DataProvider\CachedDataProviderInterface;
+use Drupal\restful\Plugin\resource\DataProvider\CacheDecoratedDataProvider;
 use Drupal\restful\Plugin\resource\DataProvider\DataProviderInterface;
 use Drupal\restful\Plugin\resource\ResourceInterface;
 use Drupal\restful\Resource\ResourceManager;
 
-class CachedResource extends ResourceDecoratorBase implements CachedResourceInterface {
+class CacheDecoratedResource extends ResourceDecoratorBase implements CacheDecoratedResourceInterface {
 
   /**
    * Cache controller object.
@@ -39,7 +38,7 @@ class CachedResource extends ResourceDecoratorBase implements CachedResourceInte
    *   Injected cache manager.
    */
   public function __construct(ResourceInterface $subject, \DrupalCacheInterface $cache_controller = NULL) {
-    // TODO: Implement the ResourceManager factory to use the CachedResource.
+    // TODO: Implement the ResourceManager factory to use the CacheDecoratedResource.
     $this->subject = $subject;
     $this->cacheController = $cache_controller ? $cache_controller : $this->newCacheObject();
     $cache_info = $this->defaultCacheInfo();
@@ -94,18 +93,14 @@ class CachedResource extends ResourceDecoratorBase implements CachedResourceInte
   /**
    * {@inheritdoc}
    */
-  public function getDataProvider() {
-    // Make sure that this returns a cached data provider.
-    if (isset($this->dataProvider)) {
+  public function dataProviderFactory() {
+    if ($this->dataProvider && $this->dataProvider instanceof CacheDecoratedDataProvider) {
       return $this->dataProvider;
     }
-    $data_provider = $this->dataProviderFactory();
-    if ($data_provider instanceof CachedDataProviderInterface) {
-      $this->dataProvider = $data_provider;
-      return $this->dataProvider;
-    }
-    $this->dataProvider = new CachedDataProvider($data_provider, $this->getCacheController());
-    $plugin_definition = $this->subject->getPluginDefinition();
+    // Get the data provider from the subject of the decorator.
+    $decorated_provider = $this->subject->dataProviderFactory();
+    $this->dataProvider = new CacheDecoratedDataProvider($decorated_provider, $this->getCacheController());
+    $plugin_definition = $this->getPluginDefinition();
     $this->dataProvider->addOptions(array(
       'renderCache' => $this->defaultCacheInfo(),
       'resource' => array(
@@ -116,6 +111,54 @@ class CachedResource extends ResourceDecoratorBase implements CachedResourceInte
         'name' => $plugin_definition['resource'],
       ),
     ));
+    return $this->dataProvider;
+  }
+
+  /**
+   * Proxy method to get the account from the rateLimitManager.
+   *
+   * {@inheritdoc}
+   */
+  public function getAccount($cache = TRUE) {
+    return $this->subject->getAccount();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getRequest() {
+    return $this->subject->getRequest();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getPath() {
+    return $this->subject->getPath();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setPath($path) {
+    $this->subject->setPath($path);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFieldDefinitions() {
+    return $this->subject->getFieldDefinitions();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDataProvider() {
+    if (isset($this->dataProvider)) {
+      return $this->dataProvider;
+    }
+    $this->dataProvider = $this->dataProviderFactory();
     return $this->dataProvider;
   }
 
@@ -152,7 +195,7 @@ class CachedResource extends ResourceDecoratorBase implements CachedResourceInte
    *   The cache info.
    */
   protected function defaultCacheInfo() {
-    $plugin_definition = $this->subject->getPluginDefinition();
+    $plugin_definition = $this->getPluginDefinition();
     $cache_info = empty($plugin_definition['renderCache']) ? array() : $plugin_definition['renderCache'];
     $cache_info += array(
       'render' => variable_get('restful_render_cache', FALSE),
@@ -170,6 +213,16 @@ class CachedResource extends ResourceDecoratorBase implements CachedResourceInte
    */
   public function getResourceMachineName() {
     return $this->subject->getResourceMachineName();
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * This is a decorated resource, get proxy the call until you reach the
+   * annotated resource.
+   */
+  public function getPluginDefinition() {
+    return $this->subject->getPluginDefinition();
   }
 
 }
