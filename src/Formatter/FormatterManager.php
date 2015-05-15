@@ -80,7 +80,7 @@ class FormatterManager implements FormatterManagerInterface {
     $default_formatter_name = variable_get('restful_default_output_formatter', 'json');
     try {
       if ($formatter_name) {
-        return  $this->getPluginByName($formatter_name);
+        return $this->getPluginByName($formatter_name);
       }
       // Sometimes we will get a default Accept: */* in that case we want to
       // return the default content type and not just any.
