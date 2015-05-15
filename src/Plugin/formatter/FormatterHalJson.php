@@ -27,7 +27,7 @@ use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
  */
 class FormatterHalJson extends Formatter implements FormatterInterface {
 
-  const CURIE_SEPARATOR = '\\';
+  const CURIE_SEPARATOR = ':';
 
   /**
    * Content Type
