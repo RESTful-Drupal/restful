@@ -2,13 +2,13 @@
 
 /**
  * @file
- * Contains \Drupal\restful\Plugin\resource\Decorators\CachedResourceInterface.
+ * Contains \Drupal\restful\Plugin\resource\Decorators\CacheDecoratedResourceInterface.
  */
 
 namespace Drupal\restful\Plugin\resource\Decorators;
 
 
-interface CachedResourceInterface extends ResourceDecoratorInterface {
+interface CacheDecoratedResourceInterface extends ResourceDecoratorInterface {
 
 
   /**

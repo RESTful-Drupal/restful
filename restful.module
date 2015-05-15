@@ -12,8 +12,8 @@ use Drupal\restful\Exception\RestfulException;
 use Drupal\restful\Exception\ServiceUnavailableException;
 use Drupal\restful\Http\HttpHeader;
 use Drupal\restful\Http\RequestInterface;
-use Drupal\restful\Plugin\resource\Decorators\CachedResource;
-use Drupal\restful\Plugin\resource\Decorators\RateLimitedResource;
+use Drupal\restful\Plugin\resource\Decorators\CacheDecoratedResource;
+use Drupal\restful\Plugin\resource\Decorators\RateLimitDecoratedResource;
 use Drupal\restful\Plugin\resource\ResourceInterface;
 use Drupal\restful\RestfulManager;
 
@@ -115,7 +115,7 @@ function restful_menu() {
   $plugins = restful()
     ->getResourceManager()
     ->getPlugins();
-  foreach ($plugins as $plugin) {
+  foreach ($plugins->getIterator() as $plugin) {
     /** @var ResourceInterface $plugin */
     $plugin_definition = $plugin->getPluginDefinition();
     if (!$plugin_definition['hookMenu']) {
@@ -573,11 +573,16 @@ function restful_date_time_format_element_validate($element, &$form_state) {
 function restful_restful_resource_alter(ResourceInterface &$resource) {
   $plugin_definition = $resource->getPluginDefinition();
   // Check for the rate limit configuration.
-  if (!empty($plugin_definition['rateLimit'])) {
-    $resource = new RateLimitedResource($resource);
+  if (!empty($plugin_definition['renderCache']['render'])) {
+    $resource = new CacheDecoratedResource($resource);
   }
   // Check for the rate limit configuration.
-  if (!empty($plugin_definition['renderCache']['render'])) {
-    $resource = new CachedResource($resource);
+  if (!empty($plugin_definition['rateLimit'])) {
+    $resource = new RateLimitDecoratedResource($resource);
+  }
+
+  // Disable the Files Upload resource based on the settings variable.
+  if ($resource->getResourceMachineName() == 'files_upload' && variable_get('restful_file_upload', FALSE)) {
+    $resource->disable();
   }
 }

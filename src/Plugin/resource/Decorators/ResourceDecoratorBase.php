@@ -9,9 +9,7 @@ namespace Drupal\restful\Plugin\resource\Decorators;
 
 
 use Drupal\Component\Plugin\PluginBase;
-use Drupal\restful\Exception\NotImplementedException;
 use Drupal\restful\Http\RequestInterface;
-use Drupal\restful\Plugin\resource\DataProvider\DataProviderInterface;
 use Drupal\restful\Plugin\resource\ResourceInterface;
 
 abstract class ResourceDecoratorBase extends PluginBase implements ResourceDecoratorInterface {
@@ -42,12 +40,7 @@ abstract class ResourceDecoratorBase extends PluginBase implements ResourceDecor
   }
 
   /**
-   * Data provider factory.
-   *
-   * @return DataProviderInterface
-   *   The data provider for this resource.
-   *
-   * @throws NotImplementedException
+   * {@inheritdoc}
    */
   public function dataProviderFactory() {
     return $this->subject->dataProviderFactory();
@@ -235,6 +228,37 @@ abstract class ResourceDecoratorBase extends PluginBase implements ResourceDecor
    */
   public function getResourceMachineName() {
     return $this->subject->getResourceMachineName();
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * This is a decorated resource, get proxy the request until you reach the
+   * annotated resource.
+   */
+  public function getPluginDefinition() {
+    return $this->subject->getPluginDefinition();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function enable() {
+    $this->subject->enable();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function disable() {
+    $this->subject->disable();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isEnabled() {
+    return $this->subject->isEnabled();
   }
 
 }

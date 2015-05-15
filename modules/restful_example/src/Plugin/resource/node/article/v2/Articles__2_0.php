@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains \Drupal\restful_example\Plugin\resource\Articles__1_0.
+ * Contains \Drupal\restful_example\Plugin\resource\node\article\v2\Articles__1_0.
  */
 
-namespace Drupal\restful_example\Plugin\resource;
+namespace Drupal\restful_example\Plugin\resource\node\article\v2;
 
 use Drupal\restful\Plugin\resource\ResourceEntity;
 use Drupal\restful\Plugin\resource\ResourceInterface;

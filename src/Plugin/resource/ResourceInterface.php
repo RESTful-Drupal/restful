@@ -294,4 +294,22 @@ interface ResourceInterface extends PluginInspectionInterface, ConfigurablePlugi
    */
   public function getControllerFromPath($path = NULL, ResourceInterface $resource = NULL);
 
+  /**
+   * Enable the resource.
+   */
+  public function enable();
+
+  /**
+   * Disable the resource.
+   */
+  public function disable();
+
+  /**
+   * Checks if the resource is enabled.
+   *
+   * @return bool
+   *   TRUE if the resource plugin is enabled.
+   */
+  public function isEnabled();
+
 }
