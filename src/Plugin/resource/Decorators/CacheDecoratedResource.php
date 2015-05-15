@@ -2,20 +2,19 @@
 
 /**
  * @file
- * Contains \Drupal\restful\Plugin\resource\Decorators\CachedResource
+ * Contains \Drupal\restful\Plugin\resource\Decorators\CacheDecoratedResource
  */
 
 namespace Drupal\restful\Plugin\resource\Decorators;
 
 use Drupal\restful\Http\HttpHeader;
-use Drupal\restful\Http\RequestInterface;
-use Drupal\restful\Plugin\resource\DataProvider\CachedDataProvider;
+use Drupal\restful\Plugin\resource\DataProvider\CacheDecoratedDataProvider;
 use Drupal\restful\Plugin\resource\DataProvider\DataProviderInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollection;
 use Drupal\restful\Plugin\resource\ResourceInterface;
 use Drupal\restful\Resource\ResourceManager;
 
-class CachedResource extends ResourceDecoratorBase implements CachedResourceInterface {
+class CacheDecoratedResource extends ResourceDecoratorBase implements CacheDecoratedResourceInterface {
 
   /**
    * Cache controller object.
@@ -40,7 +39,7 @@ class CachedResource extends ResourceDecoratorBase implements CachedResourceInte
    *   Injected cache manager.
    */
   public function __construct(ResourceInterface $subject, \DrupalCacheInterface $cache_controller = NULL) {
-    // TODO: Implement the ResourceManager factory to use the CachedResource.
+    // TODO: Implement the ResourceManager factory to use the CacheDecoratedResource.
     $this->subject = $subject;
     $this->cacheController = $cache_controller ? $cache_controller : $this->newCacheObject();
     $cache_info = $this->defaultCacheInfo();
@@ -96,12 +95,12 @@ class CachedResource extends ResourceDecoratorBase implements CachedResourceInte
    * {@inheritdoc}
    */
   public function dataProviderFactory() {
-    if ($this->dataProvider && $this->dataProvider instanceof CachedDataProvider) {
+    if ($this->dataProvider && $this->dataProvider instanceof CacheDecoratedDataProvider) {
       return $this->dataProvider;
     }
     // Get the data provider from the subject of the decorator.
     $decorated_provider = $this->subject->dataProviderFactory();
-    $this->dataProvider = new CachedDataProvider($decorated_provider, $this->getCacheController());
+    $this->dataProvider = new CacheDecoratedDataProvider($decorated_provider, $this->getCacheController());
     $plugin_definition = $this->getPluginDefinition();
     $this->dataProvider->addOptions(array(
       'renderCache' => $this->defaultCacheInfo(),
