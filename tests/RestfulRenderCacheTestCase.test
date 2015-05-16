@@ -5,7 +5,7 @@
  * Contains RestfulRenderCacheTestCase
  */
 
-class RestfulRenderCacheTestCase extends DrupalWebTestCase {
+class RestfulRenderCacheTestCase extends \RestfulCurlBaseTestCase {
 
   public static function getInfo() {
     return array(
@@ -137,6 +137,73 @@ class RestfulRenderCacheTestCase extends DrupalWebTestCase {
     $role_cid = 'v1.1::test_articles::ur' . implode(',', array_keys($account->roles)) . '::pa' . 'et:node::ei:' . $node->nid;
     $record = $cache->get($role_cid);
     $this->assertTrue($record->data, 'Cache key contains role information.');
+  }
+
+  /**
+   * Tests for SA 154563.
+   */
+  public function testPageCache() {
+    // Enable page cache.
+    variable_set('cache', TRUE);
+    variable_set('restful_page_cache', TRUE);
+
+    // Make anonymous users not to be able to access content.
+    user_role_change_permissions(DRUPAL_ANONYMOUS_RID, array(
+      'access content' => FALSE,
+    ));
+
+    // Create a new article.
+    $settings = array('type' => 'article');
+    $settings['title'] = 'Node title';
+    $node = $this->drupalCreateNode($settings);
+    $path = 'api/v1.0/test_articles/' . $node->nid;
+    $url = url($path, array('absolute' => TRUE));
+    $cache = _cache_get_object('cache_page');
+
+    // Create a user that can access content.
+    $account = $this->drupalCreateUser(array('access content'));
+
+    // 1. Test the cookie authentication.
+    // Log in the user (creating the cookie).
+    $this->drupalLogin($account);
+    // Access the created article creating a page cache entry.
+    $response = $this->httpRequest($path);
+    $this->assertEqual($response['code'], 200, 'Access granted for logged in user.');
+    // Make sure that there is not a page cache entry.
+    $this->assertFalse($cache->get($url), 'A page cache entry was not created for a authenticated user.');
+    // Log out the user.
+    $this->drupalLogout();
+    // Try to access the cached resource.
+    $response = $this->httpRequest($path);
+    // The user should get a 401.
+    $this->assertEqual($response['code'], 401, 'Access denied for anonymous user.');
+    // Make sure that there is a page cache entry.
+    $this->assertTrue($cache->get($url), 'A page cache entry was created for an anonymous user.');
+    // Remove the cache entry.
+    $cache->clear($url);
+
+    // 2. Test the basic authentication.
+    $response = $this->httpRequest($path, \RestfulInterface::GET, NULL, array(
+      'Authorization' => 'Basic ' . drupal_base64_encode($account->name . ':' . $account->pass_raw),
+    ));
+    $this->assertEqual($response['code'], 200, 'Access granted for logged in user.');
+    // Make sure that there is a page cache entry.
+    $this->assertFalse($cache->get($url), 'A page cache entry was not created with basic auth.');
+
+    // Try to access the cached resource.
+    $response = $this->httpRequest($path);
+    // The user should get a 401.
+    $this->assertEqual($response['code'], 401, 'Access denied for anonymous user.');
+    // Make sure that there is not a page cache entry.
+    $this->assertTrue($cache->get($url), 'A page cache entry was created for an anonymous user.');
+    // Remove the cache entry.
+    $cache->clear($url);
+
+    // 3. Test that when restful_page_cache is off there is no page cache.
+    variable_set('restful_page_cache', FALSE);
+    // Try to access the cached resource as anonymous users.
+    $this->httpRequest($path);
+    $this->assertFalse($cache->get($url), 'A page cache entry was not created for an anonymous users when restful_page_cache is off.');
   }
 
 }
