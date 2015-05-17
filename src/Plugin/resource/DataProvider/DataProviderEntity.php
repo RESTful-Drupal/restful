@@ -151,7 +151,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
   /**
    * {@inheritdoc}
    */
-  public function index() {
+  public function getIndexIds() {
     $result = $this
       ->getQueryForList()
       ->execute();
@@ -160,9 +160,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
       return array();
     }
 
-    $ids = array_keys($result[$this->entityType]);
-
-    return $this->viewMultiple($ids);
+    return array_keys($result[$this->entityType]);
   }
 
   /**

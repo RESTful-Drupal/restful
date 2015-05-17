@@ -123,7 +123,17 @@ class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface 
    * {@inheritdoc}
    */
   public function index() {
-    return $this->subject->index();
+    // TODO: This is duplicating the code from DataProvider::index
+    $ids = $this->getIndexIds();
+
+    return $this->viewMultiple($ids);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getIndexIds() {
+    return $this->subject->getIndexIds();
   }
 
   /**
@@ -164,7 +174,14 @@ class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface 
     if (!empty($cached_data->data)) {
       return $cached_data->data;
     }
-    $output = $this->subject->viewMultiple($identifiers);
+    $output = array();
+    // If no IDs were requested, we should not throw an exception in case an
+    // entity is un-accessible by the user.
+    foreach ($identifiers as $identifier) {
+      if ($row = $this->view($identifier)) {
+        $output[] = $row;
+      }
+    }
 
     $this->setRenderedCache($output, $context);
     return $output;
@@ -262,16 +279,13 @@ class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface 
   }
 
   /**
-   * Delete cached entities from all the cache bins for resources.
-   *
-   * @param string $cid
-   *   The wildcard cache id to invalidate.
+   * {@inheritdoc}
    */
-  public static function invalidateEntityCache($cid) {
+  public static function invalidateEntityCache($cid, RequestInterface $request = NULL) {
     $plugins = restful()
       ->getResourceManager()
       ->getPlugins();
-    $request = restful()->getRequest();
+    $request = $request ?: restful()->getRequest();
     foreach ($plugins->getIterator() as $instance_id => $plugin) {
       /** @var \Drupal\restful\Plugin\resource\Resource $plugin */
       $plugin->setRequest($request);

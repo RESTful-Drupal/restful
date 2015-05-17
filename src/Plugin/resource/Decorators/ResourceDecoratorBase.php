@@ -77,6 +77,15 @@ abstract class ResourceDecoratorBase extends PluginBase implements ResourceDecor
   /**
    * {@inheritdoc}
    */
+  public function setRequest(RequestInterface $request) {
+    $this->subject->setRequest($request);
+    // Make sure that the request is updated in the data provider.
+    $this->getDataProvider()->setRequest($request);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getPath() {
     return $this->subject->getPath();
   }
@@ -219,15 +228,6 @@ abstract class ResourceDecoratorBase extends PluginBase implements ResourceDecor
    */
   public function calculateDependencies() {
     return $this->subject->calculateDependencies();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setRequest(RequestInterface $request) {
-    $this->subject->setRequest($request);
-    // Make sure that the request is updated in the data provider.
-    $this->getDataProvider()->setRequest($request);
   }
 
   /**

@@ -10,7 +10,6 @@ namespace Drupal\restful\Plugin\resource\Decorators;
 use Drupal\restful\Http\HttpHeader;
 use Drupal\restful\Plugin\resource\DataProvider\CacheDecoratedDataProvider;
 use Drupal\restful\Plugin\resource\DataProvider\DataProviderInterface;
-use Drupal\restful\Plugin\resource\Field\ResourceFieldCollection;
 use Drupal\restful\Plugin\resource\ResourceInterface;
 use Drupal\restful\Resource\ResourceManager;
 
@@ -118,13 +117,6 @@ class CacheDecoratedResource extends ResourceDecoratorBase implements CacheDecor
   /**
    * {@inheritdoc}
    */
-  public function getRequest() {
-    return $this->subject->getRequest();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function getPath() {
     return $this->subject->getPath();
   }
@@ -188,6 +180,14 @@ class CacheDecoratedResource extends ResourceDecoratorBase implements CacheDecor
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function index($path) {
+    // TODO: This is duplicating the code from Resource::index
+    return $this->getDataProvider()->index();
+  }
+
+  /**
    * Gets the default cache info.
    *
    * @return array
@@ -205,6 +205,18 @@ class CacheDecoratedResource extends ResourceDecoratorBase implements CacheDecor
       'granularity' => DRUPAL_CACHE_PER_USER,
     );
     return $cache_info;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function invalidateResourceCache() {
+    $version = $this->getVersion();
+    $cid = 'v' . $version['major'] . '.' . $version['minor'] . '::' . $this->getResourceMachineName();
+    $data_provider = $this->getDataProvider();
+    if (method_exists($data_provider, 'cacheInvalidate')) {
+      $data_provider->cacheInvalidate($cid);
+    }
   }
 
   /**

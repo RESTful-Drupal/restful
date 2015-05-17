@@ -131,4 +131,12 @@ interface DataProviderInterface extends CrudInterface {
    */
   public function setOptions(array $options);
 
+  /**
+   * Returns the ID to render for the current index GET request.
+   *
+   * @return array
+   *   Numeric array containing the identifiers to be sent to viewMultiple.
+   */
+  public function getIndexIds();
+
 }
