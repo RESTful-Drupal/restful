@@ -26,6 +26,9 @@ use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
  * )
  */
 class FormatterHalJson extends Formatter implements FormatterInterface {
+
+  const CURIE_SEPARATOR = ':';
+
   /**
    * Content Type
    *
@@ -227,7 +230,7 @@ class FormatterHalJson extends Formatter implements FormatterInterface {
    */
   protected function withCurie($property_name) {
     if ($curie = $this->getCurie()) {
-      return $property_name ? $curie['name'] . ':' . $property_name : $curie['name'];
+      return $property_name ? $curie['name'] . static::CURIE_SEPARATOR . $property_name : $curie['name'];
     }
     return $property_name;
   }
