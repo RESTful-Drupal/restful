@@ -5,6 +5,10 @@
  * Contains RestfulHalJsonTestCase
  */
 
+use Drupal\restful\Http\RequestInterface;
+use Drupal\restful\Http\Request;
+use Drupal\restful\Http\HttpHeaderBag;
+
 class RestfulHalJsonTestCase extends RestfulCurlBaseTestCase {
 
   public static function getInfo() {
@@ -15,7 +19,7 @@ class RestfulHalJsonTestCase extends RestfulCurlBaseTestCase {
     );
   }
 
-  function setUp() {
+  public function setUp() {
     parent::setUp('restful_example', 'restful_test', 'entityreference');
 
     restful_test_add_fields();
@@ -24,15 +28,18 @@ class RestfulHalJsonTestCase extends RestfulCurlBaseTestCase {
   /**
    * Test embedded resources.
    */
-  function testHalEmbeddedResources() {
+  public function testHalEmbeddedResources() {
     $user1 = $this->drupalCreateUser();
+    /** @var \Entity $entity1 */
     $entity1 = entity_create('entity_test', array('name' => 'main', 'uid' => $user1->uid));
     $entity1->save();
 
+    /** @var \Entity $entity2 */
     $entity2 = entity_create('entity_test', array('name' => 'main', 'uid' => $user1->uid));
     $entity2->save();
 
     $entity3 = entity_create('entity_test', array('name' => 'main', 'uid' => $user1->uid));
+    /** @var \EntityDrupalWrapper $wrapper */
     $wrapper = entity_metadata_wrapper('entity_test', $entity3);
 
     $text1 = $this->randomName();
@@ -48,11 +55,18 @@ class RestfulHalJsonTestCase extends RestfulCurlBaseTestCase {
 
     $wrapper->save();
 
-    $response = $this->httpRequest('api/main/' . $wrapper->getIdentifier(), \RestfulInterface::GET, NULL, array(
+    $handler = restful()->getResourceManager()->getPlugin('main:1.1');
+    $headers = new HttpHeaderBag(array(
       'X-API-Version' => 'v1.1',
       'Accept' => 'application/hal+json',
     ));
-    $results = drupal_json_decode($response['body']);
+    $handler->setRequest(Request::create('api/main/' . $wrapper->getIdentifier(), array(), RequestInterface::METHOD_GET, $headers));
+    $handler->setPath($wrapper->getIdentifier());
+    $response = $handler->process();
+    $formatter_manager = restful()->getFormatterManager();
+    $formatter_manager->setResource($handler);
+    $formatter_result = $formatter_manager->format($response);
+    $results = drupal_json_decode($formatter_result);
     $this->assertEqual($wrapper->entity_reference_multiple->count() + 1, count($results['_embedded']['hal:main']));
   }
 

@@ -116,22 +116,6 @@ class CacheDecoratedResource extends ResourceDecoratorBase implements CacheDecor
   }
 
   /**
-   * Proxy method to get the account from the rateLimitManager.
-   *
-   * {@inheritdoc}
-   */
-  public function getAccount($cache = TRUE) {
-    return $this->subject->getAccount();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getRequest() {
-    return $this->subject->getRequest();
-  }
-
-  /**
    * {@inheritdoc}
    */
   public function getPath() {
@@ -166,6 +150,13 @@ class CacheDecoratedResource extends ResourceDecoratorBase implements CacheDecor
   /**
    * {@inheritdoc}
    */
+  public function setDataProvider(DataProviderInterface $data_provider = NULL) {
+    $this->dataProvider = $data_provider;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function process() {
     $path = $this->getPath();
 
@@ -190,6 +181,14 @@ class CacheDecoratedResource extends ResourceDecoratorBase implements CacheDecor
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function index($path) {
+    // TODO: This is duplicating the code from Resource::index
+    return $this->getDataProvider()->index();
+  }
+
+  /**
    * Gets the default cache info.
    *
    * @return array
@@ -207,6 +206,18 @@ class CacheDecoratedResource extends ResourceDecoratorBase implements CacheDecor
       'granularity' => DRUPAL_CACHE_PER_USER,
     );
     return $cache_info;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function invalidateResourceCache() {
+    $version = $this->getVersion();
+    $cid = 'v' . $version['major'] . '.' . $version['minor'] . '::' . $this->getResourceMachineName();
+    $data_provider = $this->getDataProvider();
+    if (method_exists($data_provider, 'cacheInvalidate')) {
+      $data_provider->cacheInvalidate($cid);
+    }
   }
 
   /**

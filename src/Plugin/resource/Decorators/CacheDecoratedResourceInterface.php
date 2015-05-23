@@ -19,4 +19,9 @@ interface CacheDecoratedResourceInterface extends ResourceDecoratorInterface {
    */
   public function getCacheController();
 
+  /**
+   * Clear all the cache entries for the resource.
+   */
+  public function invalidateResourceCache();
+
 }

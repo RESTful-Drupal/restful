@@ -145,13 +145,13 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
    *   value.
    */
   protected function defaultSortInfo() {
-    return array('id' => 'ASC');
+    return empty($this->options['sort']) ? array('id' => 'ASC') : $this->options['sort'];
   }
 
   /**
    * {@inheritdoc}
    */
-  public function index() {
+  public function getIndexIds() {
     $result = $this
       ->getQueryForList()
       ->execute();
@@ -160,9 +160,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
       return array();
     }
 
-    $ids = array_keys($result[$this->entityType]);
-
-    return $this->viewMultiple($ids);
+    return array_keys($result[$this->entityType]);
   }
 
   /**
@@ -523,13 +521,13 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     try {
       $this->queryForListSort($query);
     }
-    catch (BadRequestException $e) {
+    catch (ServerConfigurationException $e) {
       watchdog_exception('restful', $e);
     }
     try {
       $this->queryForListFilter($query);
     }
-    catch (BadRequestException $e) {
+    catch (ServerConfigurationException $e) {
       watchdog_exception('restful', $e);
     }
 
@@ -562,7 +560,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
    * @param \EntityFieldQuery $query
    *   The query object.
    *
-   * @throws BadRequestException
+   * @throws ServerConfigurationException
    *
    * @see \RestfulEntityBase::getQueryForList
    */
@@ -599,7 +597,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
    * @param \EntityFieldQuery $query
    *   The query object.
    *
-   * @throws BadRequestException
+   * @throws ServerConfigurationException
    *
    * @see \RestfulEntityBase::getQueryForList
    */
@@ -612,7 +610,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
         return;
       }
       if (!$property_name = $resource_field->getProperty()) {
-        throw new BadRequestException('The current filter selection does not map to any entity property or Field API field.');
+        throw new ServerConfigurationException(sprintf('The current filter "%s" selection does not map to any entity property or Field API field.', $filter['public_field']));
       }
       if (field_info_field($property_name)) {
         if (in_array(strtoupper($filter['operator'][0]), array('IN', 'BETWEEN'))) {

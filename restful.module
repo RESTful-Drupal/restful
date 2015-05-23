@@ -392,6 +392,9 @@ function restful_delivery($var = NULL, $method = 'format') {
     ->add(HttpHeader::create('Content-Type', 'application/problem+json; charset=utf-8'));
   if (is_int($var)) {
     _restful_get_data_from_menu_status($var);
+    if (!empty($var['status'])) {
+      $response->setStatusCode($var['status']);
+    }
 
     try {
       // Adhere to the API Problem draft proposal.
@@ -587,7 +590,7 @@ function restful_restful_resource_alter(ResourceInterface &$resource) {
     $resource = new CacheDecoratedResource($resource);
   }
   // Check for the rate limit configuration.
-  if (!empty($plugin_definition['rateLimit'])) {
+  if (!empty($plugin_definition['rateLimit']) || variable_get('restful_global_rate_limit', 0)) {
     $resource = new RateLimitDecoratedResource($resource);
   }
 

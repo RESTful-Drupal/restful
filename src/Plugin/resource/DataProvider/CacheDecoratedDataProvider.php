@@ -10,6 +10,7 @@ namespace Drupal\restful\Plugin\resource\DataProvider;
 use Drupal\restful\Exception\NotImplementedException;
 use Drupal\restful\Exception\UnauthorizedException;
 use Drupal\restful\Http\Request;
+use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
 
 class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface {
@@ -51,6 +52,13 @@ class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface 
   /**
    * {@inheritdoc}
    */
+  public function setRange($range) {
+    return $this->subject->setRange($range);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getAccount() {
     return $this->subject->getAccount();
   }
@@ -58,8 +66,22 @@ class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface 
   /**
    * {@inheritdoc}
    */
+  public function setAccount($account) {
+    $this->subject->setAccount($account);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getRequest() {
     return $this->subject->getRequest();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setRequest(RequestInterface $request) {
+    $this->subject->setRequest($request);
   }
 
   /**
@@ -101,7 +123,24 @@ class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface 
    * {@inheritdoc}
    */
   public function index() {
-    return $this->subject->index();
+    // TODO: This is duplicating the code from DataProvider::index
+    $ids = $this->getIndexIds();
+
+    return $this->viewMultiple($ids);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getIndexIds() {
+    return $this->subject->getIndexIds();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function count() {
+    return $this->subject->count();
   }
 
   /**
@@ -142,7 +181,14 @@ class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface 
     if (!empty($cached_data->data)) {
       return $cached_data->data;
     }
-    $output = $this->subject->viewMultiple($identifiers);
+    $output = array();
+    // If no IDs were requested, we should not throw an exception in case an
+    // entity is un-accessible by the user.
+    foreach ($identifiers as $identifier) {
+      if ($row = $this->view($identifier)) {
+        $output[] = $row;
+      }
+    }
 
     $this->setRenderedCache($output, $context);
     return $output;
@@ -240,16 +286,13 @@ class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface 
   }
 
   /**
-   * Delete cached entities from all the cache bins for resources.
-   *
-   * @param string $cid
-   *   The wildcard cache id to invalidate.
+   * {@inheritdoc}
    */
-  public static function invalidateEntityCache($cid) {
+  public static function invalidateEntityCache($cid, RequestInterface $request = NULL) {
     $plugins = restful()
       ->getResourceManager()
       ->getPlugins();
-    $request = restful()->getRequest();
+    $request = $request ?: restful()->getRequest();
     foreach ($plugins->getIterator() as $instance_id => $plugin) {
       /** @var \Drupal\restful\Plugin\resource\Resource $plugin */
       $plugin->setRequest($request);
@@ -388,6 +431,13 @@ class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface 
     $options = $this->getOptions();
     $cache_info = $options['renderCache'];
     return isset($cache_info['render']);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setOptions(array $options) {
+    $this->subject->setOptions($options);
   }
 
 }

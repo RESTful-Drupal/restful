@@ -34,7 +34,7 @@ class RestfulHookMenuTestCase extends RestfulCurlBaseTestCase {
    * Test viewing an entity (GET method).
    */
   public function testViewEntity() {
-    $user1 = $this->drupalCreateUser();
+    $user1 = $this->drupalCreateUser(array('edit own article content'));
 
     $title = $this->randomName();
     $settings = array(
@@ -71,12 +71,13 @@ class RestfulHookMenuTestCase extends RestfulCurlBaseTestCase {
       'X-HTTP-Method-Override' => RequestInterface::METHOD_PATCH,
       'X-CSRF-Token' => drupal_get_token(\Drupal\restful\Plugin\authentication\Authentication::TOKEN_VALUE),
       'Content-Type' => 'application/json',
+      'Authorization' => 'Basic ' . base64_encode($user1->name . ':' . $user1->pass_raw),
     );
     $body = '{"label": "new title"}';
     $this->httpRequest('api/v1.0/articles/' . $node1->nid, RequestInterface::METHOD_POST, $body, $headers);
 
     $node1 = node_load($node1->nid);
-    $this->assertEqual($node1->title, 'new title', 'HTTP method was overriden.');
+    $this->assertEqual($node1->title, 'new title', 'HTTP method was overridden.');
   }
 
   /**
@@ -136,12 +137,12 @@ class RestfulHookMenuTestCase extends RestfulCurlBaseTestCase {
       array(
         'path' => 'api/v1/articles',
         'version_header' => NULL,
-        'expected_version' => array(1, 1),
+        'expected_version' => array(1, 6),
       ),
       array(
         'path' => 'api/articles',
         'version_header' => 'v1',
-        'expected_version' => array(1, 1),
+        'expected_version' => array(1, 6),
       ),
       array(
         'path' => 'api/articles',

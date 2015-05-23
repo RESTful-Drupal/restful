@@ -22,6 +22,14 @@ interface DataProviderInterface extends CrudInterface {
   public function getRange();
 
   /**
+   * Sets the range.
+   *
+   * @param int $range
+   *   The range
+   */
+  public function setRange($range);
+
+  /**
    * Gets the authenticated account.
    *
    * @return object
@@ -30,12 +38,28 @@ interface DataProviderInterface extends CrudInterface {
   public function getAccount();
 
   /**
+   * Sets the authenticated account.
+   *
+   * @param object $account
+   *   The fully loaded user account.
+   */
+  public function setAccount($account);
+
+  /**
    * Gets the request.
    *
    * @return RequestInterface
-   *   The request
+   *   The request.
    */
   public function getRequest();
+
+  /**
+   * Sets the request.
+   *
+   * @param RequestInterface $request
+   *   The request.
+   */
+  public function setRequest(RequestInterface $request);
 
   /**
    * Get the language code.
@@ -98,5 +122,21 @@ interface DataProviderInterface extends CrudInterface {
    *   TRUE if acces is granted. FALSE otherwise.
    */
   public function methodAccess(ResourceFieldInterface $resource_field);
+
+  /**
+   * Sets the options.
+   *
+   * @param array $options
+   *   The options to set.
+   */
+  public function setOptions(array $options);
+
+  /**
+   * Returns the ID to render for the current index GET request.
+   *
+   * @return array
+   *   Numeric array containing the identifiers to be sent to viewMultiple.
+   */
+  public function getIndexIds();
 
 }

@@ -49,6 +49,11 @@ interface ResourceInterface extends PluginInspectionInterface, ConfigurablePlugi
   public function getAccount($cache = TRUE);
 
   /**
+   * {@inheritdoc}
+   */
+  public function setAccount($account);
+
+  /**
    * Get the request object.
    *
    * @return RequestInterface
@@ -318,5 +323,40 @@ interface ResourceInterface extends PluginInspectionInterface, ConfigurablePlugi
    *   TRUE if the resource plugin is enabled.
    */
   public function isEnabled();
+
+  /**
+   * Sets the data provider.
+   *
+   * @param DataProviderInterface $data_provider
+   *   The data provider to set.
+   */
+  public function setDataProvider(DataProviderInterface $data_provider = NULL);
+
+  /**
+   * Sets the plugin definition to the provided array.
+   *
+   * @param array $plugin_definition
+   *   Definition array to set manually.
+   */
+  public function setPluginDefinition(array $plugin_definition);
+
+  /**
+   * Helper method; Get the URL of the resource and query strings.
+   *
+   * By default the URL is absolute.
+   *
+   * @param array $options
+   *   Array with options passed to url().
+   * @param bool $keep_query
+   *   If TRUE the $request will be appended to the $options['query']. This is
+   *   the typical behavior for $_GET method, however it is not for $_POST.
+   *   Defaults to TRUE.
+   * @param RequestInterface $request
+   *   The request object.
+   *
+   * @return string
+   *   The URL address.
+   */
+  public function getUrl(array $options = array(), $keep_query = TRUE, RequestInterface $request = NULL);
 
 }

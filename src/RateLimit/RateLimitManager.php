@@ -9,6 +9,7 @@ namespace Drupal\restful\RateLimit;
 
 use Drupal\Component\Plugin\PluginBase;
 use Drupal\restful\Exception\FloodException;
+use Drupal\restful\Http\HttpHeader;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\RateLimitPluginManager;
 use Drupal\restful\Plugin\rate_limit\RateLimit;
@@ -72,6 +73,7 @@ class RateLimitManager implements RateLimitManagerInterface {
    */
   public function __construct(ResourceInterface $resource, array $plugin_options, $account = NULL, RateLimitPluginManager $manager = NULL) {
     $this->resource = $resource;
+    $account = $account ? $account : $resource->getAccount();
     $this->account = $account ? $account : drupal_anonymous_user();
     $manager = $manager ?: RateLimitPluginManager::create();
     $options = array();
@@ -157,10 +159,12 @@ class RateLimitManager implements RateLimitManagerInterface {
 
       // Add the limit headers to the response.
       $remaining = $limit == static::UNLIMITED_RATE_LIMIT ? 'unlimited' : $limit - ($rate_limit_entity->hits + 1);
-      drupal_add_http_header('X-Rate-Limit-Limit', $limit, TRUE);
-      drupal_add_http_header('X-Rate-Limit-Remaining', $remaining, TRUE);
+      $response = restful()->getResponse();
+      $headers = $response->getHeaders();
+      $headers->append(HttpHeader::create('X-Rate-Limit-Limit', $limit));
+      $headers->append(HttpHeader::create('X-Rate-Limit-Remaining', $remaining));
       $time_remaining = $rate_limit_entity->expiration - REQUEST_TIME;
-      drupal_add_http_header('X-Rate-Limit-Reset', $time_remaining, TRUE);
+      $headers->append(HttpHeader::create('X-Rate-Limit-Reset', $time_remaining));
     }
   }
 

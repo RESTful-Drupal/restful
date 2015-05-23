@@ -91,7 +91,15 @@ abstract class Resource extends PluginBase implements ResourceInterface {
    * {@inheritdoc}
    */
   public function getAccount($cache = TRUE) {
-    return $this->authenticationManager->getAccount($this->getRequest());
+    return $this->authenticationManager->getAccount($this->getRequest(), $cache);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setAccount($account) {
+    $this->authenticationManager->setAccount($account);
+    $this->getDataProvider()->setAccount($account);
   }
 
   /**
@@ -113,6 +121,8 @@ abstract class Resource extends PluginBase implements ResourceInterface {
    */
   public function setRequest(RequestInterface $request) {
     $this->request = $request;
+    // Make sure that the request is updated in the data provider.
+    $this->getDataProvider()->setRequest($request);
   }
 
   /**
@@ -150,7 +160,15 @@ abstract class Resource extends PluginBase implements ResourceInterface {
     if (isset($this->dataProvider)) {
       return $this->dataProvider;
     }
-    return $this->dataProviderFactory();
+    $this->dataProvider = $this->dataProviderFactory();
+    return $this->dataProvider;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setDataProvider(DataProviderInterface $data_provider = NULL) {
+    $this->dataProvider = $data_provider;
   }
 
   /**
@@ -377,6 +395,29 @@ abstract class Resource extends PluginBase implements ResourceInterface {
   /**
    * {@inheritdoc}
    */
+  public function getUrl(array $options = array(), $keep_query = TRUE, RequestInterface $request = NULL) {
+    $request  = $request ?: $this->getRequest();
+    $input = $request->getParsedInput();
+    // By default set URL to be absolute.
+    $options += array(
+      'absolute' => TRUE,
+      'query' => array(),
+    );
+
+    if ($keep_query) {
+      // Remove special params.
+      unset($input['q']);
+
+      // Add the request as query strings.
+      $options['query'] += $input;
+    }
+
+    return $this->versionedUrl($this->getPath(), $options);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function access() {
     return $this->accessByAllowOrigin();
   }
@@ -400,6 +441,16 @@ abstract class Resource extends PluginBase implements ResourceInterface {
    */
   public function isEnabled() {
     return $this->enabled;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setPluginDefinition(array $plugin_definition) {
+    $this->pluginDefinition = $plugin_definition;
+    if (!empty($plugin_definition['dataProvider'])) {
+      $this->getDataProvider()->addOptions($plugin_definition['dataProvider']);
+    }
   }
 
   /**

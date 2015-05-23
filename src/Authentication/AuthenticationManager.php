@@ -97,6 +97,9 @@ class AuthenticationManager implements AuthenticationManagerInterface {
     foreach ($this->plugins as $provider) {
       /** @var \Drupal\restful\Plugin\authentication\AuthenticationInterface $provider */
       if ($provider->applies($request) && $account = $provider->authenticate($request)) {
+        // Allow caching pages for anonymous users.
+        drupal_page_is_cacheable(variable_get('restful_page_cache', FALSE));
+
         // The account has been loaded, we can stop looking.
         break;
       }
@@ -123,6 +126,11 @@ class AuthenticationManager implements AuthenticationManagerInterface {
     if ($cache) {
       $this->setAccount($account);
     }
+    // Disable page caching for security reasons so that an authenticated user
+    // response never gets into the page cache for anonymous users.
+    // This is necessary because the page cache system only looks at session
+    // cookies, but not at HTTP Basic Auth headers.
+    drupal_page_is_cacheable(!$account->uid && variable_get('restful_page_cache', FALSE));
     return $account;
   }
 

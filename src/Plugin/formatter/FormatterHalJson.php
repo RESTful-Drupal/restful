@@ -47,32 +47,34 @@ class FormatterHalJson extends Formatter implements FormatterInterface {
       return $data;
     }
     // Here we get the data after calling the backend storage for the resources.
-    if (!$this->getResource()) {
+    if (!$resource = $this->getResource()) {
       throw new ServerConfigurationException('Resource unavailable for HAL formatter.');
     }
 
-    $plugin_definition = $this->getResource()->getPluginDefinition();
-    $curies_resource = $this->withCurie($plugin_definition['resource']);
+    $curies_resource = $this->withCurie($resource->getResourceMachineName());
     $output = array();
 
     foreach ($data as &$row) {
-      $row = $this->prepareRow($row, $output);
+      if (is_array($row)) {
+        $row = $this->prepareRow($row, $output);
+      }
     }
 
     $output[$curies_resource] = $data;
 
-    if (!empty($this->resource)) {
+    if (!empty($resource)) {
+      $data_provider = $resource->getDataProvider();
       if (
-        method_exists($this->resource, 'getTotalCount') &&
-        method_exists($this->resource, 'isListRequest') &&
-        $this->resource->isListRequest($this->resource->getPath())
+        $data_provider &&
+        method_exists($data_provider, 'count') &&
+        $resource->getRequest()->isListRequest($resource->getPath())
       ) {
         // Get the total number of items for the current request without
         // pagination.
-        $output['count'] = $this->resource->getTotalCount();
+        $output['count'] = $data_provider->count();
       }
-      if (method_exists($this->resource, 'additionalHateoas')) {
-        $output = array_merge($output, $this->resource->additionalHateoas());
+      if (method_exists($resource, 'additionalHateoas')) {
+        $output = array_merge($output, $resource->additionalHateoas());
       }
 
       // Add HATEOAS to the output.
@@ -96,45 +98,49 @@ class FormatterHalJson extends Formatter implements FormatterInterface {
   /**
    * Add HATEOAS links to list of item.
    *
-   * @param $data
+   * @param array $data
    *   The data array after initial massaging.
    */
   protected function addHateoas(array &$data) {
-    if (!$this->resource) {
+    if (!$resource = $this->getResource()) {
       return;
     }
-    $request = $this->resource->getRequest();
+    $request = $resource->getRequest();
 
-    $data['_links'] = array();
+    if (!isset($data['_links'])) {
+      $data['_links'] = array();
+    }
 
     // Get self link.
     $data['_links']['self'] = array(
       'title' => 'Self',
-      'href' => $this->resource->versionedUrl($this->resource->getPath()),
+      'href' => $resource->versionedUrl($resource->getPath()),
     );
 
-    $page = !empty($request['page']) ? $request['page'] : 1;
+    $input = $request->getParsedInput();
+    $data_provider = $resource->getDataProvider();
+    $page = !empty($input['page']) ? $input['page'] : 1;
 
     if ($page > 1) {
-      $request['page'] = $page - 1;
+      $input['page'] = $page - 1;
       $data['_links']['previous'] = array(
         'title' => 'Previous',
-        'href' => $this->resource->getUrl($request),
+        'href' => $resource->getUrl(),
       );
     }
 
-    $curies_resource = $this->withCurie($this->resource->getResourceName());
+    $curies_resource = $this->withCurie($resource->getResourceMachineName());
 
     // We know that there are more pages if the total count is bigger than the
     // number of items of the current request plus the number of items in
     // previous pages.
-    $items_per_page = $this->resource->getRange();
+    $items_per_page = $data_provider->getRange();
     $previous_items = ($page - 1) * $items_per_page;
     if (isset($data['count']) && $data['count'] > count($data[$curies_resource]) + $previous_items) {
-      $request['page'] = $page + 1;
+      $input['page'] = $page + 1;
       $data['_links']['next'] = array(
         'title' => 'Next',
-        'href' => $this->resource->getUrl($request),
+        'href' => $resource->getUrl(),
       );
     }
 
@@ -172,7 +178,14 @@ class FormatterHalJson extends Formatter implements FormatterInterface {
       return $row;
     }
 
-    foreach ($this->getResource()->getFieldDefinitions() as $pubilc_field_name => $resource_field) {
+    $embedded = array();
+    $nested_embed = $this
+      ->getResource()
+      ->getRequest()
+      ->isListRequest($this->getResource()->getPath());
+
+    $field_definitions = clone $this->getResource()->getFieldDefinitions();
+    foreach ($field_definitions as $pubilc_field_name => $resource_field) {
       /** @var \Drupal\restful\Plugin\resource\Field\ResourceFieldInterface $resource_field */
       if (!$resource_field->getResource()) {
         // Not a resource.
@@ -184,7 +197,15 @@ class FormatterHalJson extends Formatter implements FormatterInterface {
         continue;
       }
 
-      $this->moveReferencesToEmbeds($output, $row, $resource_field);
+      if ($nested_embed) {
+        $output += array('_embedded' => array());
+      }
+
+      $this->moveReferencesToEmbeds($output, $row, $resource_field, $embedded);
+    }
+
+    if (!empty($embedded) && $nested_embed) {
+      $row['_embedded'] = $embedded;
     }
 
     return $row;
@@ -248,56 +269,59 @@ class FormatterHalJson extends Formatter implements FormatterInterface {
   /**
    * Move the fields referencing other resources to the _embed key.
    *
+   * Note that for multiple value entityreference
+   * fields $row[$public_field_name] will be an array of values rather than a
+   * single value.
+   *
    * @param array $output
    *   Output array to be modified.
    * @param array $row
    *   The row being processed.
    * @param ResourceFieldInterface  $resource_field
    *   The public field configuration array.
+   * @param array $embedded
+   *   Embedded array to be modified.
    */
-  protected function moveReferencesToEmbeds(array &$output, array &$row, ResourceFieldInterface $resource_field) {
+  protected function moveReferencesToEmbeds(array &$output, array &$row, ResourceFieldInterface $resource_field, array &$embedded) {
+    $resource = $this->getResource();
     $public_field_name = $resource_field->getPublicName();
-    $value_metadata = $resource_field->getMetadata($row['id']);
-    if (ResourceFieldBase::isArrayNumeric($row[$public_field_name])) {
-      foreach ($row[$public_field_name] as $index => $resource_row) {
-        if (empty($value_metadata[$index])) {
+    $is_list_request = $resource
+      ->getRequest()
+      ->isListRequest($resource->getPath());
+    $values_metadata = $resource_field->getMetadata($row['id']);
+
+    // Wrap the row in an array if it isn't.
+    if (!is_array($row[$public_field_name])) {
+      $row[$public_field_name] = array();
+    }
+    $rows = ResourceFieldBase::isArrayNumeric($row[$public_field_name]) ? $row[$public_field_name] : array($row[$public_field_name]);
+
+    foreach ($rows as $subindex => $subrow) {
+      $metadata = $values_metadata[$subindex];
+
+      // Loop through each value for the field.
+      foreach ($subrow as $index => $resource_row) {
+        if (empty($metadata[$index])) {
           // No metadata.
           continue;
         }
-        $metadata = $value_metadata[$index];
-        $this->moveMetadataResource($row, $resource_field, $metadata, $resource_row);
+
+        $resource_info = $resource_field->getResource();
+        $resource_name = $resource_info['name'];
+
+        $curies_resource = $this->withCurie($resource_name);
+        $prepared_row = $this->prepareRow($subrow, $output);
+        if ($is_list_request) {
+          $embedded[$curies_resource][] = $prepared_row;
+        }
+        else {
+          $output['_embedded'][$curies_resource][] = $prepared_row;
+        }
       }
-    }
-    else {
-      $this->moveMetadataResource($row, $resource_field, $value_metadata, $row[$public_field_name]);
     }
 
     // Remove the original reference.
     unset($row[$public_field_name]);
-  }
-
-  /**
-   * Move a single "embedded resource" to be under the "_embedded" property.
-   *
-   * @param array $output
-   *   Output array to be modified. Passed by reference.
-   * @param ResourceFieldInterface $resource_field
-   *   The public field configuration array.
-   * @param array $metadata
-   *   The metadata to add.
-   * @param mixed $resource_row
-   *   The resource row.
-   */
-  protected function moveMetadataResource(array &$output, ResourceFieldInterface $resource_field, array $metadata, $resource_row) {
-    // If there is no resource name in the metadata for this particular value,
-    // assume that we are referring to the first resource in the field
-    // definition.
-    $resource = $resource_field->getResource();
-    $resource_name = $resource['name'];
-
-    $curies_resource = $this->withCurie($resource_name);
-    $resource_row = $this->prepareRow($resource_row, $output);
-    $output['_embedded'][$curies_resource][] = $resource_row;
   }
 
 }
