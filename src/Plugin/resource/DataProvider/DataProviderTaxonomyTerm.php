@@ -17,7 +17,7 @@ class DataProviderTaxonomyTerm extends DataProviderEntity implements DataProvide
    * add the vocabulary ID based on the vocabulary machine name when creating a
    * taxonomy term.
    */
-  protected function setPropertyValues(\EntityDrupalWrapper $wrapper, array $object, $replace = FALSE) {
+  protected function setPropertyValues(\EntityDrupalWrapper $wrapper, $object, $replace = FALSE) {
     $term = $wrapper->value();
     if (!empty($term->vid)) {
       return;

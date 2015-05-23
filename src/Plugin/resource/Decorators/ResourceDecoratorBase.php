@@ -10,6 +10,7 @@ namespace Drupal\restful\Plugin\resource\Decorators;
 
 use Drupal\Component\Plugin\PluginBase;
 use Drupal\restful\Http\RequestInterface;
+use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
 use Drupal\restful\Plugin\resource\ResourceInterface;
 
 abstract class ResourceDecoratorBase extends PluginBase implements ResourceDecoratorInterface {
@@ -259,6 +260,13 @@ abstract class ResourceDecoratorBase extends PluginBase implements ResourceDecor
    */
   public function isEnabled() {
     return $this->subject->isEnabled();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setFieldDefinitions(ResourceFieldCollectionInterface $field_definitions) {
+    return $this->subject->setFieldDefinitions($field_definitions);
   }
 
 }

@@ -139,6 +139,13 @@ abstract class Resource extends PluginBase implements ResourceInterface {
   /**
    * {@inheritdoc}
    */
+  public function setFieldDefinitions(ResourceFieldCollectionInterface $field_definitions) {
+    $this->fieldDefinitions = $field_definitions;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getDataProvider() {
     if (isset($this->dataProvider)) {
       return $this->dataProvider;
@@ -237,8 +244,8 @@ abstract class Resource extends PluginBase implements ResourceInterface {
 
     // REST requires a canonical URL for every resource.
     $canonical_path = $this->getDataProvider()->canonicalPath($path);
-    $this
-      ->getRequest()
+    restful()
+      ->getResponse()
       ->getHeaders()
       ->add(HttpHeader::create('Link', $this->versionedUrl($canonical_path, array(), FALSE) . '; rel="canonical"'));
 

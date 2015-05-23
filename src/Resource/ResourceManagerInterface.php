@@ -41,6 +41,14 @@ interface ResourceManagerInterface {
   public function getPlugin($instance_id, RequestInterface $request = NULL);
 
   /**
+   * Clears the static cache version of the plugin.
+   *
+   * @param string $instance_id
+   *   Instance ID of the plugin.
+   */
+  public function clearPluginCache($instance_id);
+
+  /**
    * Gets the major and minor version for the current request.
    *
    * @return array

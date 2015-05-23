@@ -18,6 +18,14 @@ interface CrudInterface {
   public function index();
 
   /**
+   * Counts the total results for the index call.
+   *
+   * @return int
+   *   The total number of results for the index call.
+   */
+  public function count();
+
+  /**
    * Create operation.
    *
    * @param mixed $object

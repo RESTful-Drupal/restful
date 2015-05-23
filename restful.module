@@ -298,6 +298,14 @@ function restful_menu_process_callback($resource_name, $version = NULL) {
   $request->setViaRouter(TRUE);
   $resource = $resource_manager->getPlugin($resource_name . PluginBase::DERIVATIVE_SEPARATOR . $major_version . '.' . $minor_version, $request);
 
+  $response_headers = restful()
+    ->getResponse()
+    ->getHeaders();
+
+  $version_array = $resource->getVersion();
+  $version_string = 'v' . $version_array['major'] . '.' . $version_array['minor'];
+  $response_headers->add(HttpHeader::create('X-API-Version', $version_string));
+
   // Vary the response with the presence of the X-API-Version or Accept headers.
   $vary = $request
     ->getHeaders()
@@ -311,19 +319,13 @@ function restful_menu_process_callback($resource_name, $version = NULL) {
     $additional_variations[] = 'X-API-Version';
   }
   if ($additional_variations) {
-    restful()
-      ->getResponse()
-      ->getHeaders()
-      ->append(HttpHeader::create('Vary', implode(',', $additional_variations)));
+    $response_headers->append(HttpHeader::create('Vary', implode(',', $additional_variations)));
   }
 
   // Always add the allow origin if configured.
   $plugin_definition = $resource->getPluginDefinition();
   if (!empty($plugin_definition['allowOrigin'])) {
-    restful()
-      ->getResponse()
-      ->getHeaders()
-      ->append(HttpHeader::create('Access-Control-Allow-Origin', $plugin_definition['allowOrigin']));
+    $response_headers->append(HttpHeader::create('Access-Control-Allow-Origin', $plugin_definition['allowOrigin']));
   }
 
   try {
@@ -358,9 +360,6 @@ function restful_menu_process_callback($resource_name, $version = NULL) {
     );
   }
 
-  // Adhere to the API Problem draft proposal.
-  drupal_add_http_header('Status', $result['status']);
-  drupal_add_http_header('Content-Type', 'application/problem+json; charset=utf-8');
   return $result;
 }
 
@@ -384,22 +383,33 @@ function restful_delivery($var = NULL, $method = 'format') {
 
   $request = restful()->getRequest();
   $response = restful()->getResponse();
+  if (!empty($var['status'])) {
+    $response->setStatusCode($var['status']);
+  }
+  // Adhere to the API Problem draft proposal.
+  $response
+    ->getHeaders()
+    ->add(HttpHeader::create('Content-Type', 'application/problem+json; charset=utf-8'));
   if (is_int($var)) {
     _restful_get_data_from_menu_status($var);
 
-    // Adhere to the API Problem draft proposal.
-    $formatter_id = variable_get('restful_default_output_formatter', 'json');
-    // Get the data in the default output format.
-    $data = restful()
-      ->getFormatterManager()
-      ->negotiateFormatter(NULL, $formatter_id)
-      ->format($var);
+    try {
+      // Adhere to the API Problem draft proposal.
+      $formatter_id = variable_get('restful_default_output_formatter', 'json');
+      // Get the data in the default output format.
+      $data = restful()
+        ->getFormatterManager()
+        ->negotiateFormatter(NULL, $formatter_id)
+        ->format($var);
 
-    $response->setStatusCode($var['status']);
-    $response->getHeaders()->add(HttpHeader::create('Content-Type', 'application/problem+' . $formatter_id . '; charset=utf-8'));
-    $response->setContent($data);
-    $response->prepare($request);
-    $response->send();
+      $response->setContent($data);
+      $response->prepare($request);
+      $response->send();
+    }
+    catch (RestfulException $e) {
+      // If there is an exception during delivery, just JSON encode this.
+      echo drupal_json_encode($var);
+    }
     return;
   }
 
@@ -477,7 +487,7 @@ function _restful_get_data_from_menu_status(&$var) {
       break;
 
     case MENU_SITE_OFFLINE:
-      $class_name = '\Drupal\restful\Exception\ServiceUnavailable';
+      $class_name = '\Drupal\restful\Exception\ServiceUnavailableException';
       $message = 'Site is offline.';
       break;
   }

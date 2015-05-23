@@ -107,6 +107,13 @@ class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface 
   /**
    * {@inheritdoc}
    */
+  public function count() {
+    return $this->subject->count();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function create($object) {
     return $this->subject->create($object);
   }
@@ -246,7 +253,15 @@ class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface 
     foreach ($plugins->getIterator() as $instance_id => $plugin) {
       /** @var \Drupal\restful\Plugin\resource\Resource $plugin */
       $plugin->setRequest($request);
-      if (method_exists($plugin->getDataProvider(), 'cacheInvalidate')) {
+      try {
+        $data_provider = $plugin->getDataProvider();
+      }
+      catch (UnauthorizedException $e) {
+        // If the user cannot be authorized we don't need to worry about
+        // invalidating cache entries, since they won't be there.
+        continue;
+      }
+      if (method_exists($data_provider, 'cacheInvalidate')) {
         $version = $plugin->getVersion();
         // Get the uid for the invalidation.
         try {
@@ -258,7 +273,7 @@ class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface 
           $uid = $GLOBALS['user']->uid;
         }
         $version_cid = 'v' . $version['major'] . '.' . $version['minor'] . '::' . $plugin->getResourceMachineName() . '::uu' . $uid;
-        $plugin->getDataProvider()->cacheInvalidate($version_cid . '::' . $cid);
+        $data_provider->cacheInvalidate($version_cid . '::' . $cid);
       }
     }
   }

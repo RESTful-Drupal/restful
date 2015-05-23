@@ -85,11 +85,8 @@ script:
   - curl -O https://www.drupal.org/files/issues/2086225-entity-access-check-node-create-3.patch
   - patch -p1 $TRAVIS_BUILD_DIR/../drupal/sites/all/modules/entity/modules/callbacks.inc  < 2086225-entity-access-check-node-create-3.patch
 
-  - curl -O https://www.drupal.org/files/issues/2264079-entity-wrapper-access-single-entity-reference-2.patch
-  - patch -p1 $TRAVIS_BUILD_DIR/../drupal/sites/all/modules/entity/includes/entity.wrapper.inc < 2264079-entity-wrapper-access-single-entity-reference-2.patch
-
   # Enable the RESTful modules
   - drush en --yes simpletest
-  - drush --yes pm-enable restful restful_token_auth restful_test
+  - drush --yes pm-enable restful restful_token_auth
   # Run the tests
   - drush test-run RESTful --uri=http://localhost

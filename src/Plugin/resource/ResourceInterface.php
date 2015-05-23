@@ -17,7 +17,6 @@ use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataProvider\DataProviderInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
-use Drupal\restful\Resource\ResourceManager;
 
 interface ResourceInterface extends PluginInspectionInterface, ConfigurablePluginInterface {
 
@@ -96,6 +95,14 @@ interface ResourceInterface extends PluginInspectionInterface, ConfigurablePlugi
    *   The field definitions
    */
   public function getFieldDefinitions();
+
+  /**
+   * Sets the field definitions.
+   *
+   * @param ResourceFieldCollectionInterface $field_definitions
+   *   The field definitions to set.
+   */
+  public function setFieldDefinitions(ResourceFieldCollectionInterface $field_definitions);
 
   /**
    * Gets the data provider.
