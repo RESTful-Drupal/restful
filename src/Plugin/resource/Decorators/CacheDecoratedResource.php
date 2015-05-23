@@ -10,6 +10,7 @@ namespace Drupal\restful\Plugin\resource\Decorators;
 use Drupal\restful\Http\HttpHeader;
 use Drupal\restful\Plugin\resource\DataProvider\CacheDecoratedDataProvider;
 use Drupal\restful\Plugin\resource\DataProvider\DataProviderInterface;
+use Drupal\restful\Plugin\resource\Field\ResourceFieldCollection;
 use Drupal\restful\Plugin\resource\ResourceInterface;
 use Drupal\restful\Resource\ResourceManager;
 

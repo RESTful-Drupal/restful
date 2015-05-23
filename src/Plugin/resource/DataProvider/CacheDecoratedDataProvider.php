@@ -146,6 +146,13 @@ class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface 
   /**
    * {@inheritdoc}
    */
+  public function count() {
+    return $this->subject->count();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function create($object) {
     return $this->subject->create($object);
   }

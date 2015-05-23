@@ -184,6 +184,19 @@ class RestfulManager {
   }
 
   /**
+   * Checks if the passed in request belongs to RESTful.
+   *
+   * @param RequestInterface $request
+   *   The path to check.
+   *
+   * @return bool
+   *   TRUE if the path belongs to RESTful.
+   */
+  public static function isRestfulPath(RequestInterface $request) {
+    return ResourceManager::getPageCallback($request->getPath(FALSE)) == static::FRONT_CONTROLLER_CALLBACK;
+  }
+
+  /**
    * Helper function to echo static strings.
    *
    * @param DataInterpreterInterface $value
@@ -196,19 +209,6 @@ class RestfulManager {
    */
   public static function echoMessage(DataInterpreterInterface $value, $message) {
     return $message;
-  }
-
-  /**
-   * Checks if the passed in request belongs to RESTful.
-   *
-   * @param RequestInterface $request
-   *   The path to check.
-   *
-   * @return bool
-   *   TRUE if the path belongs to RESTful.
-   */
-  public static function isRestfulPath(RequestInterface $request) {
-    return ResourceManager::getPageCallback($request->getPath(FALSE)) == static::FRONT_CONTROLLER_CALLBACK;
   }
 
 }
