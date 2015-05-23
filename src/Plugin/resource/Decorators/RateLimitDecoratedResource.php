@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\restful\Plugin\resource\Decorators\RateLimitedResource
+ * Contains \Drupal\restful\Plugin\resource\Decorators\RateLimitDecoratedResource
  */
 
 namespace Drupal\restful\Plugin\resource\Decorators;
@@ -13,7 +13,7 @@ use Drupal\restful\Plugin\resource\Field\ResourceFieldCollection;
 use Drupal\restful\Plugin\resource\ResourceInterface;
 use Drupal\restful\RateLimit\RateLimitManager;
 
-class RateLimitedResource extends ResourceDecoratorBase implements ResourceDecoratorInterface {
+class RateLimitDecoratedResource extends ResourceDecoratorBase implements ResourceDecoratorInterface {
 
   /**
    * Authentication manager.

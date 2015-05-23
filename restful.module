@@ -12,8 +12,8 @@ use Drupal\restful\Exception\RestfulException;
 use Drupal\restful\Exception\ServiceUnavailableException;
 use Drupal\restful\Http\HttpHeader;
 use Drupal\restful\Http\RequestInterface;
-use Drupal\restful\Plugin\resource\Decorators\CachedResource;
-use Drupal\restful\Plugin\resource\Decorators\RateLimitedResource;
+use Drupal\restful\Plugin\resource\Decorators\CacheDecoratedResource;
+use Drupal\restful\Plugin\resource\Decorators\RateLimitDecoratedResource;
 use Drupal\restful\Plugin\resource\ResourceInterface;
 use Drupal\restful\RestfulManager;
 
@@ -587,11 +587,11 @@ function restful_restful_resource_alter(ResourceInterface &$resource) {
   $plugin_definition = $resource->getPluginDefinition();
   // Check for the rate limit configuration.
   if (!empty($plugin_definition['renderCache']['render'])) {
-    $resource = new CachedResource($resource);
+    $resource = new CacheDecoratedResource($resource);
   }
   // Check for the rate limit configuration.
   if (!empty($plugin_definition['rateLimit']) || variable_get('restful_global_rate_limit', 0)) {
-    $resource = new RateLimitedResource($resource);
+    $resource = new RateLimitDecoratedResource($resource);
   }
 
   // Disable the Files Upload resource based on the settings variable.
