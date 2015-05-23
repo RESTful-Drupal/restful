@@ -157,12 +157,16 @@ class Request implements RequestInterface {
     if (!$headers) {
       $headers = new HttpHeaderBag();
     }
+    debug((string) $headers);
+    var_dump((string) $headers);
     if (($overridden_method = strtoupper($headers->get('x-http-method-override')->getValueString())) && ($method == static::METHOD_POST)) {
       if (!static::isValidMethod($overridden_method)) {
         throw new BadRequestException(sprintf('Invalid overridden method: %s.', $overridden_method));
       }
       $method = $overridden_method;
     }
+    debug(array('OMethod' => $overridden_method, 'path' => $path));
+    var_dump(array('OMethod' => $overridden_method, 'path' => $path));
     return new static($path, $query, $method, $headers, $via_router, $csrf_token, $cookies, $files, $server);
   }
 

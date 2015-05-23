@@ -146,13 +146,6 @@ class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface 
   /**
    * {@inheritdoc}
    */
-  public function count() {
-    return $this->subject->count();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function create($object) {
     return $this->subject->create($object);
   }
@@ -176,11 +169,11 @@ class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface 
    * {@inheritdoc}
    */
   public function viewMultiple(array $identifiers) {
-    $context = $this->getContext($identifiers);
-    $cached_data = $this->getRenderedCache($context);
-    if (!empty($cached_data->data)) {
-      return $cached_data->data;
-    }
+//    $context = $this->getContext($identifiers);
+//    $cached_data = $this->getRenderedCache($context);
+//    if (!empty($cached_data->data)) {
+//      return $cached_data->data;
+//    }
     $output = array();
     // If no IDs were requested, we should not throw an exception in case an
     // entity is un-accessible by the user.
@@ -190,7 +183,7 @@ class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface 
       }
     }
 
-    $this->setRenderedCache($output, $context);
+//    $this->setRenderedCache($output, $context);
     return $output;
   }
 
