@@ -610,7 +610,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
         return;
       }
       if (!$property_name = $resource_field->getProperty()) {
-        throw new ServerConfigurationException('The current filter selection does not map to any entity property or Field API field.');
+        throw new ServerConfigurationException(sprintf('The current filter "%s" selection does not map to any entity property or Field API field.', $filter['public_field']));
       }
       if (field_info_field($property_name)) {
         if (in_array(strtoupper($filter['operator'][0]), array('IN', 'BETWEEN'))) {
