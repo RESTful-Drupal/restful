@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\restful\Plugin\resource\DataProvider\CachedDataProvider.
+ * Contains \Drupal\restful\Plugin\resource\DataProvider\CacheDecoratedDataProvider.
  */
 
 namespace Drupal\restful\Plugin\resource\DataProvider;
@@ -13,7 +13,7 @@ use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
 
-class CachedDataProvider implements CachedDataProviderInterface {
+class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface {
 
   /**
    * The decorated object.
@@ -30,7 +30,7 @@ class CachedDataProvider implements CachedDataProviderInterface {
   protected $cacheController;
 
   /**
-   * Constructs a CachedDataProvider object.
+   * Constructs a CacheDecoratedDataProvider object.
    *
    * @param DataProviderInterface $subject
    *   The data provider to add caching to.
