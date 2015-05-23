@@ -168,6 +168,26 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
   /**
    * {@inheritdoc}
    */
+  public function count() {
+    $query = $this->getEntityFieldQuery();
+
+    // If we are trying to filter on a computed field, just ignore it and log an
+    // exception.
+    try {
+      $this->queryForListFilter($query);
+    }
+    catch (BadRequestException $e) {
+      watchdog_exception('restful', $e);
+    }
+
+    $this->addExtraInfoToQuery($query);
+
+    return intval($query->count()->execute());
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function create($object) {
     $this->validateBody($object);
     $entity_info = $this->getEntityInfo();
@@ -416,7 +436,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     }
     $public_property_name = $input['loadByFieldName'];
     // We need to get the internal field/property from the public name.
-    if ((!$public_field_info = $this->fieldDefinitions[$public_property_name]) || $public_field_info->getProperty()) {
+    if ((!$public_field_info = $this->fieldDefinitions->get($public_property_name)) || !$public_field_info->getProperty()) {
       throw new BadRequestException(format_string('Cannot load an entity using the field "@name"', array(
         '@name' => $public_property_name,
       )));
@@ -424,11 +444,13 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     $query = $this->getEntityFieldQuery();
     $query->range(0, 1);
     // Find out if the provided ID is a Drupal field or an entity property.
-    if (ResourceFieldEntity::propertyIsField($public_field_info['property'])) {
-      $query->fieldCondition($public_field_info['property'], $public_field_info['column'], $id);
+    $property = $public_field_info->getProperty();
+    /** @var ResourceFieldEntity $public_field_info */
+    if (ResourceFieldEntity::propertyIsField($property)) {
+      $query->fieldCondition($property, $public_field_info->getColumn(), $id);
     }
     else {
-      $query->propertyCondition($public_field_info['property'], $id);
+      $query->propertyCondition($property, $id);
     }
 
     // Execute the query and gather the results.
@@ -764,7 +786,10 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
    *
    * @throws BadRequestException
    */
-  protected function setPropertyValues(\EntityDrupalWrapper $wrapper, array $object, $replace = FALSE) {
+  protected function setPropertyValues(\EntityDrupalWrapper $wrapper, $object, $replace = FALSE) {
+    if (!is_array($object)) {
+      throw new BadRequestException('Bad input data provided. Please, check your input and your Content-Type header.');
+    }
     $save = FALSE;
     $original_object = $object;
 

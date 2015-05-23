@@ -174,6 +174,9 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
   /**
    * Returns the value for the current single field.
    *
+   * This implementation will also add some metadata to the resource field
+   * object about the entity it is referencing.
+   *
    * @param \EntityMetadataWrapper $property_wrapper
    *   The property wrapper. Either \EntityDrupalWrapper or \EntityListWrapper.
    * @param \EntityDrupalWrapper $wrapper
@@ -198,6 +201,9 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
         // the embedded identifier.
         $embedded_identifier = $this->fieldValue($property_wrapper);
       }
+      if (empty($embedded_identifier)) {
+        return NULL;
+      }
       if (isset($resource['full_view']) && $resource['full_view'] === FALSE) {
         return $embedded_identifier;
       }
@@ -210,6 +216,10 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
         $resource['minorVersion'],
       ));
 
+      $metadata = $this->getMetadata($wrapper->getIdentifier());
+      $metadata ?: array();
+      $metadata[] = $this->buildResourceMetadataItem($property_wrapper);
+      $this->addMetadata($wrapper->getIdentifier(), $metadata);
       return $resource_data_provider->view($embedded_identifier);
     }
 
@@ -359,6 +369,20 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function addMetadata($key, $value) {
+    $this->decorated->addMetadata($key, $value);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getMetadata($key) {
+    return $this->decorated->getMetadata($key);
+  }
+
+  /**
    * Get value for a field based on another resource.
    *
    * @param DataInterpreterInterface $source
@@ -438,6 +462,19 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
    * {@inheritdoc}
    */
   public function getColumn() {
+    if (isset($this->column)) {
+      return $this->column;
+    }
+    if ($this->getProperty() && $field = field_info_field($this->getProperty())) {
+      if ($field['type'] == 'text_long') {
+        // Do not default to format.
+        $this->setColumn('value');
+      }
+      else {
+        // Set the column name.
+        $this->setColumn(key($field['columns']));
+      }
+    }
     return $this->column;
   }
 
@@ -501,7 +538,7 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
     // database field.
     $wrapper = entity_metadata_wrapper($entity_type);
     foreach ($wrapper->getPropertyInfo() as $wrapper_property => $property_info) {
-      if ($property_info['schema field'] == $property) {
+      if (!empty($property_info['schema field']) && $property_info['schema field'] == $property) {
         $property = $wrapper_property;
         break;
       }
@@ -539,14 +576,12 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
       // If it's an image check if we need to add image style processing.
       $image_styles = $this->getImageStyles();
       if ($field['type'] == 'image' && !empty($image_styles)) {
-        array_unshift($this->getProcessCallbacks(), array(
+        $process_callbacks = $this->getProcessCallbacks();
+        array_unshift($process_callbacks, array(
           array($this, 'getImageUris'),
           array($image_styles),
         ));
-      }
-      if (!$this->getColumn()) {
-        // Set the column name.
-        $this->setColumn(key($field['columns']));
+        $this->setProcessCallbacks($process_callbacks);
       }
     }
   }
@@ -761,6 +796,29 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
    */
   public static function isArrayNumeric(array $input) {
     return ResourceFieldBase::isArrayNumeric($input);
+  }
+
+  /**
+   * Builds a metadata item for a field value.
+   *
+   * It will add information about the referenced entity.
+   *
+   * @param \EntityDrupalWrapper $wrapper
+   *   The wrapper to the referenced entity.
+   *
+   * @return array
+   *   The metadata array item.
+   */
+  protected function buildResourceMetadataItem(\EntityDrupalWrapper $wrapper) {
+    $id = $wrapper->getIdentifier();
+    $bundle = $wrapper->getBundle();
+    $resource = $this->getResource();
+    return array(
+      'id' => $id,
+      'entity_type' => $wrapper->type(),
+      'bundle' => $bundle,
+      'resource_name' => $resource['name'],
+    );
   }
 
 }

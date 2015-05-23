@@ -100,6 +100,13 @@ abstract class ResourceFieldBase implements ResourceFieldInterface {
   protected $resource = array();
 
   /**
+   * A generic array storage.
+   *
+   * @var array
+   */
+  protected $metadata = array();
+
+  /**
    * The HTTP methods where this field applies.
    *
    * This replaces the create_or_update_passthrough feature. Defaults to all.
@@ -242,6 +249,52 @@ abstract class ResourceFieldBase implements ResourceFieldInterface {
       }
     }
     return TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function addMetadata($key, $value) {
+    $path = explode(':', $key);
+    $leave = array_pop($path);
+    $element = &$this->internalMetadataElement($key);
+
+    $element[$leave] = $value;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getMetadata($key) {
+    $path = explode(':', $key);
+    $leave = array_pop($path);
+    $element = $this->internalMetadataElement($key);
+
+    return isset($element[$leave]) ? $element[$leave] : NULL;
+  }
+
+  /**
+   * Returns the last array element from the nested namespace array.
+   *
+   * @param string $key
+   *   The namespaced key.
+   *
+   * @return array
+   *   The array element.
+   */
+  protected function &internalMetadataElement($key) {
+    // If there is a namespace, then use it to do nested arrays.
+    $path = explode(':', $key);
+    array_pop($path);
+    $element = &$this->metadata;
+    foreach ($path as $path_item) {
+      if (!isset($element[$path_item])) {
+        // Initialize an empty namespace.
+        $element[$path_item] = array();
+      }
+      $element = $element[$path_item];
+    }
+    return $element;
   }
 
 }

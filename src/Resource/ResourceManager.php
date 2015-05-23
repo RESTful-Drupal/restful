@@ -80,6 +80,13 @@ class ResourceManager implements ResourceManagerInterface {
   /**
    * {@inheritdoc}
    */
+  public function clearPluginCache($instance_id) {
+    $this->plugins->remove($instance_id);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getVersionFromRequest() {
     $version = &drupal_static(__METHOD__);
     if (isset($version)) {

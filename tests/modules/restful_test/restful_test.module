@@ -12,6 +12,7 @@ function restful_test_ctools_plugin_directory($module, $plugin) {
   if ($module == 'restful') {
     return 'plugins/' . $plugin;
   }
+  return NULL;
 }
 
 /**
@@ -36,15 +37,15 @@ function restful_test_clear_access_node() {
  */
 function restful_test_node_access($node, $op, $account) {
   if (!$nid = variable_get('restful_test_deny_access_node')) {
-    return;
+    return NULL;
   }
 
   if ($op != 'view') {
-    return;
+    return NULL;
   }
 
   if ($node->nid != $nid) {
-    return;
+    return NULL;
   }
 
   // Deny access.
@@ -74,12 +75,13 @@ function restful_test_clear_access_field() {
  */
 function restful_test_field_access($op, $field, $entity_type, $entity, $account) {
   if (!$field_name = variable_get('restful_test_deny_access_field')) {
-    return;
+    return NULL;
   }
 
   if ($field_name == $field['field_name']) {
     return FALSE;
   }
+  return NULL;
 }
 
 /**
@@ -440,8 +442,8 @@ function restful_test_entity_info() {
       'uri callback' => 'entity_class_uri',
       'bundles' => array(
         'restful_test_translatable_entity' => array(
-          'label' => 'Translatable Test Entity'
-        )
+          'label' => 'Translatable Test Entity',
+        ),
       ),
       'bundle keys' => array(
         'bundle' => 'name',

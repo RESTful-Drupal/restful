@@ -1,8 +1,11 @@
 <?php
 
 /**
- * Contains RestfulCurlBaseTestCase
+ * @file
+ * Contains \RestfulCurlBaseTestCase
  */
+
+use Drupal\restful\Http\RequestInterface;
 
 class RestfulCurlBaseTestCase extends DrupalWebTestCase {
 
@@ -26,11 +29,11 @@ class RestfulCurlBaseTestCase extends DrupalWebTestCase {
    * @return array
    *   Array keyed with the "code", "headers", and "body" of the response.
    */
-  protected function httpRequest($url, $method = \RestfulInterface::GET, $body = NULL, $headers = array(), $use_token = TRUE) {
+  protected function httpRequest($url, $method = RequestInterface::METHOD_GET, $body = NULL, $headers = array(), $use_token = TRUE) {
     $format = 'json';
 
     switch ($method) {
-      case \RestfulInterface::GET:
+      case RequestInterface::METHOD_GET:
         // Set query if there are addition GET parameters.
         $options = isset($body) ? array('absolute' => TRUE, 'query' => $body) : array('absolute' => TRUE);
         $curl_options = array(
@@ -40,18 +43,18 @@ class RestfulCurlBaseTestCase extends DrupalWebTestCase {
         );
         break;
 
-      case \RestfulInterface::HEAD:
+      case RequestInterface::METHOD_HEAD:
         // Set query if there are addition GET parameters.
         $options = isset($body) ? array('absolute' => TRUE, 'query' => $body) : array('absolute' => TRUE);
         $curl_options = array(
           CURLOPT_HTTPGET => FALSE,
-          CURLOPT_CUSTOMREQUEST => \RestfulInterface::HEAD,
+          CURLOPT_CUSTOMREQUEST => RequestInterface::METHOD_HEAD,
           CURLOPT_URL => url($url, $options),
           CURLOPT_NOBODY => FALSE,
         );
         break;
 
-      case \RestfulInterface::POST:
+      case RequestInterface::METHOD_POST:
         $curl_options = array(
           CURLOPT_HTTPGET => FALSE,
           CURLOPT_POST => TRUE,
@@ -65,8 +68,8 @@ class RestfulCurlBaseTestCase extends DrupalWebTestCase {
         }
         break;
 
-      case \RestfulInterface::PUT:
-      case \RestfulInterface::PATCH:
+      case RequestInterface::METHOD_PUT:
+      case RequestInterface::METHOD_PATCH:
         $curl_options = array(
           CURLOPT_HTTPGET => FALSE,
           CURLOPT_CUSTOMREQUEST => $method,
@@ -80,10 +83,10 @@ class RestfulCurlBaseTestCase extends DrupalWebTestCase {
         }
         break;
 
-      case \RestfulInterface::DELETE:
+      case RequestInterface::METHOD_DELETE:
         $curl_options = array(
           CURLOPT_HTTPGET => FALSE,
-          CURLOPT_CUSTOMREQUEST => \RestfulInterface::DELETE,
+          CURLOPT_CUSTOMREQUEST => RequestInterface::METHOD_DELETE,
           CURLOPT_URL => url($url, array('absolute' => TRUE)),
           CURLOPT_NOBODY => FALSE,
         );
@@ -92,7 +95,7 @@ class RestfulCurlBaseTestCase extends DrupalWebTestCase {
 
     $curl_options += array(CURLOPT_HTTPHEADER => array());
 
-    if ($this->loggedInUser && \RestfulBase::isWriteMethod($method, FALSE) && $use_token) {
+    if ($this->loggedInUser && \Drupal\restful\Http\Request::isWriteMethod($method, FALSE) && $use_token) {
       // Add CSRF token for write operations.
       if (empty($this->csrfToken)) {
         $response = $this->drupalGet('api/session/token');
