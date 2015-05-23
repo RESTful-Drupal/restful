@@ -276,11 +276,16 @@ abstract class ResourceFieldBase implements ResourceFieldInterface {
   /**
    * Returns the last array element from the nested namespace array.
    *
+   * Searches in the metadata nested array the element in the data tree pointed
+   * by the colon separated key. If the key goes through a non-existing path, it
+   * initalize an empty array. The reference to that element is returned for
+   * reading and writing purposes.
+   *
    * @param string $key
    *   The namespaced key.
    *
    * @return array
-   *   The array element.
+   *   The reference to the array element.
    */
   protected function &internalMetadataElement($key) {
     // If there is a namespace, then use it to do nested arrays.
