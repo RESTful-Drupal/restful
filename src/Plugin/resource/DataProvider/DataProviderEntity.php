@@ -171,12 +171,10 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
   public function count() {
     $query = $this->getEntityFieldQuery();
 
-    // If we are trying to filter on a computed field, just ignore it and log an
-    // exception.
     try {
       $this->queryForListFilter($query);
     }
-    catch (BadRequestException $e) {
+    catch (ServerConfigurationException $e) {
       watchdog_exception('restful', $e);
     }
 
@@ -562,7 +560,8 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
    * @param \EntityFieldQuery $query
    *   The query object.
    *
-   * @throws ServerConfigurationException
+   * @throws \Drupal\restful\Exception\BadRequestException
+   * @throws \EntityFieldQueryException
    *
    * @see \RestfulEntityBase::getQueryForList
    */
@@ -599,7 +598,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
    * @param \EntityFieldQuery $query
    *   The query object.
    *
-   * @throws ServerConfigurationException
+   * @throws \Drupal\restful\Exception\BadRequestException
    *
    * @see \RestfulEntityBase::getQueryForList
    */
@@ -612,7 +611,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
         return;
       }
       if (!$property_name = $resource_field->getProperty()) {
-        throw new ServerConfigurationException(sprintf('The current filter "%s" selection does not map to any entity property or Field API field.', $filter['public_field']));
+        throw new BadRequestException(sprintf('The current filter "%s" selection does not map to any entity property or Field API field.', $filter['public_field']));
       }
       if (field_info_field($property_name)) {
         if (in_array(strtoupper($filter['operator'][0]), array('IN', 'BETWEEN'))) {
