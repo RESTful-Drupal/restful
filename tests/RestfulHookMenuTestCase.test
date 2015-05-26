@@ -5,6 +5,7 @@
  * Contains \RestfulHookMenuTestCase.
  */
 
+use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
 
 class RestfulHookMenuTestCase extends RestfulCurlBaseTestCase {
@@ -73,8 +74,14 @@ class RestfulHookMenuTestCase extends RestfulCurlBaseTestCase {
       'Content-Type' => 'application/json',
       'Authorization' => 'Basic ' . base64_encode($user1->name . ':' . $user1->pass_raw),
     );
-    $body = '{"label": "new title"}';
-    $this->httpRequest('api/v1.0/articles/' . $node1->nid, RequestInterface::METHOD_POST, $body, $headers);
+    $body = array(
+      'label' => 'new title',
+    );
+    $handler = restful()->getResourceManager()->getPlugin('articles:1.1');
+    $header_bag = new \Drupal\restful\Http\HttpHeaderBag($headers);
+    $handler->setRequest(Request::create('api/v1.0/articles/' . $node1->nid, array(), RequestInterface::METHOD_POST, $header_bag, FALSE, NULL, array(), array(), array(), $body));
+    $handler->setPath($node1->nid);
+    $handler->process();
 
     $node1 = node_load($node1->nid);
     $this->assertEqual($node1->title, 'new title', 'HTTP method was overridden.');
@@ -113,7 +120,7 @@ class RestfulHookMenuTestCase extends RestfulCurlBaseTestCase {
 
       $body = drupal_json_decode($result['body']);
       $this->assertEqual($result['code'], '404', format_string('404 status code sent for @url url.', array('@url' => $url)));
-      $this->assertTrue(strpos($result['headers'], 'application/problem+json;'), '"application/problem+json" found in invalid request.');
+      $this->assertTrue(strpos($result['headers'], 'application/problem+json;') !== FALSE, '"application/problem+json" found in invalid request.');
       $this->assertEqual($body['title'], 'Invalid URL path.', 'Correct error message.');
     }
 
