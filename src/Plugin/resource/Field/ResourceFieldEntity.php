@@ -201,7 +201,8 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
         // the embedded identifier.
         $embedded_identifier = $this->fieldValue($property_wrapper);
       }
-      if (empty($embedded_identifier)) {
+      // Allow embedding entities with ID 0, like the anon user.
+      if (empty($embedded_identifier) && $embedded_identifier !== 0) {
         return NULL;
       }
       if (isset($resource['full_view']) && $resource['full_view'] === FALSE) {
