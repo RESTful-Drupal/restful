@@ -314,7 +314,6 @@ abstract class Resource extends PluginBase implements ResourceInterface {
     }
     $path = $path ?: $resource->getPath();
     $method = $resource->getRequest()->getMethod();
-
     $selected_controller = NULL;
     foreach ($resource->getControllers() as $pattern => $controllers) {
       // Find the controllers for the provided path.
