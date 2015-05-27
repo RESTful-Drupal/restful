@@ -116,15 +116,6 @@ class CacheDecoratedResource extends ResourceDecoratorBase implements CacheDecor
   }
 
   /**
-   * Proxy method to get the account from the rateLimitManager.
-   *
-   * {@inheritdoc}
-   */
-  public function getAccount($cache = TRUE) {
-    return $this->subject->getAccount();
-  }
-
-  /**
    * {@inheritdoc}
    */
   public function getRequest() {
@@ -161,6 +152,13 @@ class CacheDecoratedResource extends ResourceDecoratorBase implements CacheDecor
     }
     $this->dataProvider = $this->dataProviderFactory();
     return $this->dataProvider;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setDataProvider(DataProviderInterface $data_provider = NULL) {
+    $this->dataProvider = $data_provider;
   }
 
   /**

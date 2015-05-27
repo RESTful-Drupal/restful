@@ -10,6 +10,7 @@ namespace Drupal\restful\Plugin\resource\DataProvider;
 use Drupal\restful\Exception\NotImplementedException;
 use Drupal\restful\Exception\UnauthorizedException;
 use Drupal\restful\Http\Request;
+use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
 
 class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface {
@@ -51,6 +52,13 @@ class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface 
   /**
    * {@inheritdoc}
    */
+  public function setRange($range) {
+    return $this->subject->setRange($range);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getAccount() {
     return $this->subject->getAccount();
   }
@@ -58,8 +66,22 @@ class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface 
   /**
    * {@inheritdoc}
    */
+  public function setAccount($account) {
+    $this->subject->setAccount($account);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getRequest() {
     return $this->subject->getRequest();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setRequest(RequestInterface $request) {
+    $this->subject->setRequest($request);
   }
 
   /**
@@ -388,6 +410,13 @@ class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface 
     $options = $this->getOptions();
     $cache_info = $options['renderCache'];
     return isset($cache_info['render']);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setOptions(array $options) {
+    $this->subject->setOptions($options);
   }
 
 }

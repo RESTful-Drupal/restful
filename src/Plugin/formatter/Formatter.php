@@ -57,7 +57,8 @@ abstract class Formatter extends PluginBase implements FormatterInterface {
     if (empty($instance_configuration['resource'])) {
       return NULL;
     }
-    return $instance_configuration['resource'] instanceof ResourceInterface ? $instance_configuration['resource'] : NULL;
+    $this->resource = $instance_configuration['resource'] instanceof ResourceInterface ? $instance_configuration['resource'] : NULL;
+    return $this->resource;
   }
 
 }

@@ -135,7 +135,7 @@ class Request implements RequestInterface {
    *
    * Parses the URL and the query params. It also uses input:// to get the body.
    */
-  public function __construct($path, array $query, $method = 'GET', HttpHeaderBag $headers, $via_router = FALSE, $csrf_token = NULL, array $cookies = array(), array $files = array(), array $server = array()) {
+  public function __construct($path, array $query, $method = 'GET', HttpHeaderBag $headers, $via_router = FALSE, $csrf_token = NULL, array $cookies = array(), array $files = array(), array $server = array(), $parsed_body = NULL) {
     $this->path = $path;
     $this->query = empty($query) ? static::parseInput($method) : $query;
     $this->method = $method;
@@ -145,6 +145,7 @@ class Request implements RequestInterface {
     $this->cookies = $cookies;
     $this->files = $files;
     $this->server = $server;
+    $this->parsedBody = $parsed_body;
 
     // Allow implementing modules to alter the request.
     drupal_alter('restful_parse_request', $this);
@@ -153,14 +154,17 @@ class Request implements RequestInterface {
   /**
    * {@inheritdoc}
    */
-  public static function create($path, array $query = array(), $method = 'GET', HttpHeaderBag $headers = NULL, $via_router = FALSE, $csrf_token = NULL, array $cookies = array(), array $files = array(), array $server = array()) {
+  public static function create($path, array $query = array(), $method = 'GET', HttpHeaderBag $headers = NULL, $via_router = FALSE, $csrf_token = NULL, array $cookies = array(), array $files = array(), array $server = array(), $parsed_body = NULL) {
     if (!$headers) {
       $headers = new HttpHeaderBag();
     }
-    if ($method == static::METHOD_POST && $headers->get('x-http-method-override')->getValueString()) {
-      $method = $headers->get('x-http-method-override')->getValueString();
+    if (($overridden_method = strtoupper($headers->get('x-http-method-override')->getValueString())) && ($method == static::METHOD_POST)) {
+      if (!static::isValidMethod($overridden_method)) {
+        throw new BadRequestException(sprintf('Invalid overridden method: %s.', $overridden_method));
+      }
+      $method = $overridden_method;
     }
-    return new static($path, $query, $method, $headers, $via_router, $csrf_token, $cookies, $files, $server);
+    return new static($path, $query, $method, $headers, $via_router, $csrf_token, $cookies, $files, $server, $parsed_body);
   }
 
   /**
@@ -422,11 +426,6 @@ class Request implements RequestInterface {
    * {@inheritdoc}
    */
   public function getMethod() {
-    $method_override = $this->getHeaders()->get('X-HTTP-Method-Override')->getValueString();
-    // TODO: Add helper method to get header string from RequestInterface.
-    if ($this->method == static::METHOD_POST && $method_override) {
-      return strtoupper($method_override);
-    }
     return $this->method;
   }
 

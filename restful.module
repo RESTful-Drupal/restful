@@ -392,6 +392,9 @@ function restful_delivery($var = NULL, $method = 'format') {
     ->add(HttpHeader::create('Content-Type', 'application/problem+json; charset=utf-8'));
   if (is_int($var)) {
     _restful_get_data_from_menu_status($var);
+    if (!empty($var['status'])) {
+      $response->setStatusCode($var['status']);
+    }
 
     try {
       // Adhere to the API Problem draft proposal.

@@ -10,6 +10,7 @@ namespace Drupal\restful\Plugin\resource\Decorators;
 
 use Drupal\Component\Plugin\PluginBase;
 use Drupal\restful\Http\RequestInterface;
+use Drupal\restful\Plugin\resource\DataProvider\DataProviderInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
 use Drupal\restful\Plugin\resource\ResourceInterface;
 
@@ -53,7 +54,17 @@ abstract class ResourceDecoratorBase extends PluginBase implements ResourceDecor
    * {@inheritdoc}
    */
   public function getAccount($cache = TRUE) {
-    return $this->subject->getAccount();
+    return $this->subject->getAccount($cache);
+  }
+
+  /**
+   * Proxy method to get the account from the rateLimitManager.
+   *
+   * {@inheritdoc}
+   */
+  public function setAccount($account) {
+    $this->subject->setAccount($account);
+    $this->getDataProvider()->setAccount($account);
   }
 
   /**
@@ -89,6 +100,13 @@ abstract class ResourceDecoratorBase extends PluginBase implements ResourceDecor
    */
   public function getDataProvider() {
     return $this->subject->getDataProvider();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setDataProvider(DataProviderInterface $data_provider = NULL) {
+    $this->subject->setDataProvider($data_provider);
   }
 
   /**
@@ -208,6 +226,8 @@ abstract class ResourceDecoratorBase extends PluginBase implements ResourceDecor
    */
   public function setRequest(RequestInterface $request) {
     $this->subject->setRequest($request);
+    // Make sure that the request is updated in the data provider.
+    $this->getDataProvider()->setRequest($request);
   }
 
   /**
@@ -243,6 +263,19 @@ abstract class ResourceDecoratorBase extends PluginBase implements ResourceDecor
 
   /**
    * {@inheritdoc}
+   *
+   * This is a decorated resource, set proxy the request until you reach the
+   * annotated resource.
+   */
+  public function setPluginDefinition(array $plugin_definition) {
+    $this->subject->setPluginDefinition($plugin_definition);
+    if (!empty($plugin_definition['dataProvider'])) {
+      $this->getDataProvider()->addOptions($plugin_definition['dataProvider']);
+    }
+  }
+
+  /**
+   * {@inheritdoc}
    */
   public function enable() {
     $this->subject->enable();
@@ -267,6 +300,13 @@ abstract class ResourceDecoratorBase extends PluginBase implements ResourceDecor
    */
   public function setFieldDefinitions(ResourceFieldCollectionInterface $field_definitions) {
     return $this->subject->setFieldDefinitions($field_definitions);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getUrl(array $options = array(), $keep_query = TRUE, RequestInterface $request = NULL) {
+    return $this->subject->getUrl($options, $keep_query, $request);
   }
 
 }
