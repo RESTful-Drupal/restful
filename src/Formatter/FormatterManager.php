@@ -128,8 +128,13 @@ class FormatterManager implements FormatterManagerInterface {
    *   The processed output.
    */
   protected function processData($method, array $data, $formatter_name = NULL) {
-    $accept = restful()
-      ->getRequest()
+    if ($resource = $this->resource) {
+      $request = $resource->getRequest();
+    }
+    else {
+      $request = restful()->getRequest();
+    }
+    $accept = $request
       ->getHeaders()
       ->get('accept')
       ->getValueString();
