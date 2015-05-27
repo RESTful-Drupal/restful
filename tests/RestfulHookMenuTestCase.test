@@ -97,8 +97,7 @@ class RestfulHookMenuTestCase extends RestfulCurlBaseTestCase {
 
     // Invalid request.
     $result = $this->httpRequest('api/v1.0/articles/invalid_id', RequestInterface::METHOD_GET);
-    $this->assertTrue(strpos($result['headers'], 'application/problem+json;'), '"application/problem+json" found in valid request.');
-
+    $this->assertTrue(strpos($result['headers'], 'application/problem+json;') !== FALSE, '"application/problem+json" found in invalid request.');
     // Switch site to offline mode.
     variable_set('maintenance_mode', TRUE);
     $this->httpauth_credentials = NULL;
