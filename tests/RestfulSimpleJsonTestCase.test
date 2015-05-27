@@ -6,6 +6,7 @@
  */
 
 use Drupal\restful\Formatter\FormatterManager;
+use Drupal\restful\Http\Request;
 
 class RestfulSimpleJsonTestCase extends RestfulCurlBaseTestCase {
 
@@ -27,12 +28,18 @@ class RestfulSimpleJsonTestCase extends RestfulCurlBaseTestCase {
    * Test the Simple JSON formatter.
    */
   public function testSimpleJson() {
+    $resource_manager = restful()->getResourceManager();
     $node = restful_test_create_node_with_tags();
-    $handler = restful_get_restful_handler('articles', 1, 5);
+    $handler = $resource_manager->getPlugin('articles:1.5');
+    $resource_manager->clearPluginCache($handler->getPluginId());
     // Use the simple JSON formatter.
-    $handler->setPluginKey('formatter', 'json');
+    $plugin_definition = $handler->getPluginDefinition();
+    $plugin_definition['formatter'] = 'json';
+    $handler->setPluginDefinition($plugin_definition);
 
-    $response = $handler->get($node->nid);
+    $handler->setRequest(Request::create('api/v1.5/articles/' . $node->nid));
+    $handler->setPath($node->nid);
+    $response = $handler->process();
     $formatter_manager = new FormatterManager($handler);
     $accept = empty($GLOBALS['_SERVER']['HTTP_ACCEPT']) ? NULL : $GLOBALS['_SERVER']['HTTP_ACCEPT'];
     $formatter = $formatter_manager->negotiateFormatter($accept, 'json');
@@ -57,8 +64,10 @@ class RestfulSimpleJsonTestCase extends RestfulCurlBaseTestCase {
     // Assert the HATEOAS.
     // Create another node for pagination.
     restful_test_create_node_with_tags();
-    $handler->setRange(1);
-    $response = $handler->get();
+    $handler->getDataProvider()->setRange(1);
+    $handler->setRequest(Request::create(''));
+    $handler->setPath('');
+    $response = $handler->process();
     $result = $formatter->format($response);
     $decoded_json = drupal_json_decode($result);
 
