@@ -440,7 +440,14 @@ function restful_menu_access_callback($resource_name, $version = NULL) {
   $handler->setMethod($method);
   $handler->setRequest($request);
 
-  return $handler->access();
+  try {
+    $access = $handler->access();
+    return $access;
+  }
+  catch(Exception $e) {
+    return FALSE;
+  }
+
 }
 
 /**
