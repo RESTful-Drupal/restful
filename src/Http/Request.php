@@ -135,7 +135,7 @@ class Request implements RequestInterface {
    *
    * Parses the URL and the query params. It also uses input:// to get the body.
    */
-  public function __construct($path, array $query, $method = 'GET', HttpHeaderBag $headers, $via_router = FALSE, $csrf_token = NULL, array $cookies = array(), array $files = array(), array $server = array()) {
+  public function __construct($path, array $query, $method = 'GET', HttpHeaderBag $headers, $via_router = FALSE, $csrf_token = NULL, array $cookies = array(), array $files = array(), array $server = array(), $parsed_body = NULL) {
     $this->path = $path;
     $this->query = empty($query) ? static::parseInput($method) : $query;
     $this->method = $method;
@@ -145,6 +145,7 @@ class Request implements RequestInterface {
     $this->cookies = $cookies;
     $this->files = $files;
     $this->server = $server;
+    $this->parsedBody = $parsed_body;
 
     // Allow implementing modules to alter the request.
     drupal_alter('restful_parse_request', $this);
@@ -153,7 +154,7 @@ class Request implements RequestInterface {
   /**
    * {@inheritdoc}
    */
-  public static function create($path, array $query = array(), $method = 'GET', HttpHeaderBag $headers = NULL, $via_router = FALSE, $csrf_token = NULL, array $cookies = array(), array $files = array(), array $server = array()) {
+  public static function create($path, array $query = array(), $method = 'GET', HttpHeaderBag $headers = NULL, $via_router = FALSE, $csrf_token = NULL, array $cookies = array(), array $files = array(), array $server = array(), $parsed_body = NULL) {
     if (!$headers) {
       $headers = new HttpHeaderBag();
     }
@@ -163,7 +164,7 @@ class Request implements RequestInterface {
       }
       $method = $overridden_method;
     }
-    return new static($path, $query, $method, $headers, $via_router, $csrf_token, $cookies, $files, $server);
+    return new static($path, $query, $method, $headers, $via_router, $csrf_token, $cookies, $files, $server, $parsed_body);
   }
 
   /**
