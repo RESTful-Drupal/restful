@@ -527,6 +527,9 @@ function restful_menu_process_callback($resource_name, $version = NULL) {
     foreach ($e->getHeaders() as $header_name => $header_value) {
       drupal_add_http_header($header_name, $header_value);
     }
+
+    $severity = $e->getCode() < 500 ? WATCHDOG_NOTICE : WATCHDOG_ERROR;
+    watchdog('restful', $e->getMessage(), array(), $severity);
   }
   catch (Exception $e) {
     $result = array(
@@ -534,6 +537,8 @@ function restful_menu_process_callback($resource_name, $version = NULL) {
       'title' => $e->getMessage(),
       'status' => 500,
     );
+
+    watchdog('restful', $e->getMessage(), array(), WATCHDOG_ERROR);
   }
 
   // Adhere to the API Problem draft proposal.
