@@ -29,6 +29,9 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
    * Test the sorting of entities.
    */
   public function testSort() {
+    // Allow the anonymous users access to the author field.
+    user_role_change_permissions(DRUPAL_ANONYMOUS_RID, array('access user profiles' => TRUE));
+
     $user1 = $this->drupalCreateUser();
     $user2 = $this->drupalCreateUser();
 
@@ -284,25 +287,6 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
       $this->pass('Exception raised for disabled range parameter.');
     }
 
-    // Test the administrator's content listing.
-//    $role_name = 'administrator';
-//    $handler = restful_get_restful_handler_by_name('per_role_content__1_0:' . $role_name);
-//    // Force the user 1 to be identified.
-//    $handler->setAccount(user_load(1));
-//    $settings = array(
-//      'type' => 'article',
-//      'title' => $this->randomName(),
-//      'uid' => 1,
-//    );
-//    $this->drupalCreateNode($settings);
-//
-//    $request = array('fields' => 'roles');
-//    $response = $handler->get('', $request);
-//    foreach ($response as $item) {
-//      $roles = array_map('trim', explode(',', $item['roles']));
-//      $this->assertTrue(in_array($role_name, $roles), format_string('%role role found in content list.', array('%role' => $role_name)));
-//    }
-
     // Sort by an entity metadata wrapper property that is different from the
     // DB column name.
     $handler = $resource_manager->getPlugin('articles:1.5');
@@ -310,6 +294,7 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     $handler->setRequest(Request::create('', $query, RequestInterface::METHOD_GET));
     $handler->setPath('');
     $result = $handler->process();
+
     $this->assertEqual($result[0]['user']['id'], 3, 'List sorted by the "author" entity metadata wrapper property, which maps to the "uid" DB column name.');
 
     $query = array('sort' => 'static');
@@ -520,8 +505,14 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
 
     $handler->setRequest(Request::create('', $query, RequestInterface::METHOD_GET));
     $handler->setPath('');
-    $handler->process();
-    $this->assert(count($result[0]) > 0, 'Ignored filter on a non-entity or Field API property.');
+    try {
+      $handler->process();
+      $this->fail('Illegal filter property used.');
+    }
+    catch (BadRequestException $e) {
+      $this->pass('Exception thrown on illegal filter property.');
+    }
+
   }
 
   /**
