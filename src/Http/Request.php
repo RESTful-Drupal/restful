@@ -137,7 +137,7 @@ class Request implements RequestInterface {
    */
   public function __construct($path, array $query, $method = 'GET', HttpHeaderBag $headers, $via_router = FALSE, $csrf_token = NULL, array $cookies = array(), array $files = array(), array $server = array(), $parsed_body = NULL) {
     $this->path = $path;
-    $this->query = empty($query) ? static::parseInput($method) : $query;
+    $this->query = !isset($query) ? static::parseInput($method) : $query;
     $this->method = $method;
     $this->headers = $headers;
     $this->viaRouter = $via_router;

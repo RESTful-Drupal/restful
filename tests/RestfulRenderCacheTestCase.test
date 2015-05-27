@@ -5,7 +5,10 @@
  * Contains RestfulRenderCacheTestCase
  */
 
-class RestfulRenderCacheTestCase extends DrupalWebTestCase {
+use Drupal\restful\Http\Request;
+use Drupal\restful\Http\RequestInterface;
+
+class RestfulRenderCacheTestCase extends \RestfulCurlBaseTestCase {
 
   public static function getInfo() {
     return array(
@@ -20,9 +23,10 @@ class RestfulRenderCacheTestCase extends DrupalWebTestCase {
   }
 
   /**
-   * Test creating an entity (POST method).
+   * Test Render Cache
    */
-  function testCreateEntity() {
+  public function testRenderCache() {
+    $resource_manager = restful()->getResourceManager();
     $settings = array('type' => 'article');
     $account = $this->drupalCreateUser();
 
@@ -33,11 +37,14 @@ class RestfulRenderCacheTestCase extends DrupalWebTestCase {
       $nodes[$node->nid] = $node;
     }
 
-    $handler = restful_get_restful_handler('test_articles', 1, 1);
+    /** @var \Drupal\restful\Plugin\resource\Decorators\CacheDecoratedResourceInterface $handler */
+    $handler = $resource_manager->getPlugin('test_articles:1.1');
     $handler->setAccount($account);
     $cache = $handler->getCacheController();
     // Make sure the cache is activated.
-    $cache_info = $handler->getPluginKey('render_cache');
+    $data_provider = $handler->getDataProvider();
+    $options = $data_provider->getOptions();
+    $cache_info = $options['renderCache'];
     $this->assertTrue($cache_info['render'], 'Cache render is activated');
 
     // Empty the cache.
@@ -46,12 +53,16 @@ class RestfulRenderCacheTestCase extends DrupalWebTestCase {
 
     // Test that cache is being generated correctly.
     // Get the articles.
-    drupal_static_reset('RestfulBase::getVersionFromRequest');
-    $pre_cache_results = $handler->get();
+    drupal_static_reset('Drupal\restful\Resource\ResourceManager::getVersionFromRequest');
+    $handler->setRequest(Request::create(''));
+    $handler->setPath('');
+    $pre_cache_results = $handler->process();
     // Make sure some cache entries are generated.
     $this->assertFalse($cache->isEmpty(), 'Cache render is being populated.');
     // Get the cached results.
-    $post_cache_results = $handler->get();
+    $handler->setRequest(Request::create(''));
+    $handler->setPath('');
+    $post_cache_results = $handler->process();
     // Make sure the cached results are the same as the non-cached results.
     $this->assertEqual($pre_cache_results[0], $post_cache_results[0], 'Cached data is consistent.');
     // Get a cached result directly from the cache backend.
@@ -63,8 +74,10 @@ class RestfulRenderCacheTestCase extends DrupalWebTestCase {
     // Test that invalidation is clearing cache records.
     // 1. Update node and watch cache vanish.
     // Make sure the cache is activated.
-    $request = array('fields' => 'id,label');
-    $handler->get('', $request);
+    $input = array('fields' => 'id,label');
+    $handler->setRequest(Request::create('', $input));
+    $handler->setPath('');
+    $handler->process();
     $cid_w_request = $cid . '::fi:id,label';
     $this->assertTrue($cache_info['simple_invalidate'], 'Cache render simple invalidation is activated');
     $node->title .= ' updated';
@@ -75,8 +88,12 @@ class RestfulRenderCacheTestCase extends DrupalWebTestCase {
     $this->assertFalse($record, 'Cache record cleared correctly with request params.');
     $this->assertFalse($cache->isEmpty(), 'Remaining cache items are intact after updating entity.');
     // Regenerate cache for $node.
-    $handler->get($node->nid);
-    $handler->get($node->nid, $request);
+    $handler->setRequest(Request::create($node->nid));
+    $handler->setPath($node->nid);
+    $handler->process();
+    $handler->setRequest(Request::create('', $input));
+    $handler->setPath($node->nid);
+    $handler->process($node->nid);
     $record = $cache->get($cid);
     $this->assertNotNull($record->data, 'Cache is being generated for non-list requests.');
     $record = $cache->get($cid_w_request);
@@ -89,8 +106,13 @@ class RestfulRenderCacheTestCase extends DrupalWebTestCase {
     // Test cache segmentation with request params.
     // Rebuild caches.
     $cache->clear('*', TRUE);
-    $results_wo_request = $handler->get();
-    $results_w_request = $handler->get('', $request);
+    $handler->setRequest(Request::create(''));
+    $handler->setPath('');
+    $results_wo_request = $handler->process();;
+
+    $handler->setRequest(Request::create('', $input));
+    $handler->setPath('');
+    $results_w_request = $handler->process();
     // Check that the cached results for the entity without request array are
     // different than with the request array.
     $cid_wo_request = $cid;
@@ -105,18 +127,28 @@ class RestfulRenderCacheTestCase extends DrupalWebTestCase {
     // Test helper functions.
     foreach ($nodes as $nid => $entity) {
       // Populate the cache.
-      $handler->get($nid);
-      $handler->get($nid, $request);
+      $handler->setRequest(Request::create($nid));
+      $handler->setPath($nid);
+      $handler->process();
+      $handler->setRequest(Request::create($nid, $input));
+      $handler->setPath($nid);
+      $handler->process();
     }
-    // Testing clearResourceRenderedCacheEntity.
-    $handler->clearResourceRenderedCacheEntity($node->nid);
+    // Testing invalidateEntityCache.
+    /** @var Drupal\restful\Plugin\resource\DataProvider\CacheDecoratedDataProviderInterface $data_provider */
+    $data_provider = $handler->getDataProvider();
+    $cid = $data_provider->generateCacheId($data_provider->getContext($node->nid));
+    // Remove the version and uid variations from the cache id to clean all
+    // caches for the entity.
+    $string_context = preg_replace('/v.*::pa/', 'pa', $cid);
+    $data_provider->invalidateEntityCache($string_context, $handler->getRequest());
     $record = $cache->get($cid);
     $this->assertFalse($record, 'The entity cache for the current resource has been deleted.');
     $record = $cache->get($cid_w_request);
     $this->assertFalse($record, 'The entity cache for the current resource has been deleted.');
     $this->assertFalse($cache->isEmpty(), 'Other entities keep the cache.');
-    // Testing clearResourceRenderedCache
-    $handler->clearResourceRenderedCache();
+    // Testing invalidateResourceCache.
+    $handler->invalidateResourceCache();
     foreach ($nodes as $nid => $entity) {
       $cid = 'v1.1::test_articles::uu' . $account->uid . '::pa' . 'et:node::ei:' . $nid;
       $record = $cache->get($cid);
@@ -129,14 +161,91 @@ class RestfulRenderCacheTestCase extends DrupalWebTestCase {
     // Test PER_ROLE granularity.
     $cache->clear('*', TRUE);
 
-    $cache_info = $handler->getPluginKey('render_cache');
+    $resource_manager->clearPluginCache($handler->getPluginId());
+    // Re-instantiate the data provider.
+    $handler->setDataProvider(NULL);
     $cache_info['granularity'] = DRUPAL_CACHE_PER_ROLE;
-    $handler->setPluginKey('render_cache', $cache_info);
+    $plugin_definition = $handler->getPluginDefinition();
+    $plugin_definition['renderCache'] = $cache_info;
+    $handler->setPluginDefinition($plugin_definition);
 
-    $handler->get('');
+    $handler->setRequest(Request::create(''));
+    $handler->setPath('');
+    $handler->process();
     $role_cid = 'v1.1::test_articles::ur' . implode(',', array_keys($account->roles)) . '::pa' . 'et:node::ei:' . $node->nid;
     $record = $cache->get($role_cid);
     $this->assertTrue($record->data, 'Cache key contains role information.');
+  }
+
+  /**
+   * Tests for SA 154563.
+   */
+  public function testPageCache() {
+    // Enable page cache.
+    variable_set('cache', TRUE);
+    variable_set('restful_page_cache', TRUE);
+
+    // Make anonymous users not to be able to access content.
+    user_role_change_permissions(DRUPAL_ANONYMOUS_RID, array(
+      'access content' => FALSE,
+    ));
+
+    // Create a new article.
+    $settings = array('type' => 'article');
+    $settings['title'] = 'Node title';
+    $node = $this->drupalCreateNode($settings);
+    $path = 'api/v1.0/test_articles/' . $node->nid;
+    $url = url($path, array('absolute' => TRUE));
+    $cache = _cache_get_object('cache_page');
+
+    // Create a user that can access content.
+    $account = $this->drupalCreateUser(array('access content'));
+
+    // 1. Test the cookie authentication.
+    // Log in the user (creating the cookie).
+    $this->drupalLogin($account);
+    // Access the created article creating a page cache entry.
+    $response = $this->httpRequest($path);
+    $this->assertEqual($response['code'], 200, 'Access granted for logged in user.');
+    if (!drupal_is_cli()) {
+      // Make sure that there is not a page cache entry.
+      $this->assertFalse($cache->get($url), 'A page cache entry was not created for a authenticated user.');
+    }
+    // Log out the user.
+    $this->drupalLogout();
+    // Try to access the cached resource.
+    $response = $this->httpRequest($path);
+    // The user should get a 403.
+    $this->assertEqual($response['code'], 403, 'Access denied for anonymous user.');
+
+    // 2. Test the basic authentication.
+    $response = $this->httpRequest($path, RequestInterface::METHOD_GET, NULL, array(
+      'Authorization' => 'Basic ' . drupal_base64_encode($account->name . ':' . $account->pass_raw),
+    ));
+    $this->assertEqual($response['code'], 200, 'Access granted for logged in user.');
+    if (!drupal_is_cli()) {
+      // Make sure that there is a page cache entry.
+      $this->assertFalse($cache->get($url), 'A page cache entry was not created with basic auth.');
+    }
+
+    // Try to access the cached resource.
+    $response = $this->httpRequest($path);
+    // The user should get a 403.
+    $this->assertEqual($response['code'], 403, 'Access denied for anonymous user.');
+    if (!drupal_is_cli()) {
+      // Make sure that there is not a page cache entry.
+      $this->assertTrue($cache->get($url), 'A page cache entry was created for an anonymous user.');
+    }
+    // Remove the cache entry.
+    $cache->clear($url);
+
+    // 3. Test that when restful_page_cache is off there is no page cache.
+    variable_set('restful_page_cache', FALSE);
+    // Try to access the cached resource as anonymous users.
+    $this->httpRequest($path);
+    if (!drupal_is_cli()) {
+      $this->assertFalse($cache->get($url), 'A page cache entry was not created for an anonymous users when restful_page_cache is off.');
+    }
   }
 
 }
