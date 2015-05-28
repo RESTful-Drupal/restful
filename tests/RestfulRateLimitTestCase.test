@@ -6,6 +6,7 @@
  */
 
 use Drupal\restful\Exception\FloodException;
+use Drupal\restful\Http\Request;
 
 class RestfulRateLimitTestCase extends DrupalWebTestCase {
 
@@ -68,7 +69,7 @@ class RestfulRateLimitTestCase extends DrupalWebTestCase {
     $results = $query
       ->entityCondition('entity_type', 'rate_limit')
       ->entityCondition('bundle', 'request')
-      ->propertyCondition('identifier', 'articles::request::' . $account->uid)
+      ->propertyCondition('identifier', 'articles:1.4:request:' . $account->uid)
       ->execute();
     $rl = entity_load_single('rate_limit', key($results['rate_limit']));
     $rl->timestamp = REQUEST_TIME - 2;
@@ -80,21 +81,24 @@ class RestfulRateLimitTestCase extends DrupalWebTestCase {
   /**
    * Tests the total amount of allowed calls and the following fail.
    *
-   * @param $account
+   * @param object $account
    *   The user account object.
-   * @param $limit
+   * @param int $limit
    *   The number of calls allowed for a user with the same roles as $account.
-   * @param $resource_options
+   * @param array $resource_options
    *   Array of options as received in restful_get_restful_handler.
    */
-  protected function roleExecute($account, $limit, $resource_options) {
-    $handler = restful_get_restful_handler($resource_options[0], $resource_options[1], $resource_options[2]);
+  protected function roleExecute($account, $limit, array $resource_options) {
+    $resource_manager = restful()->getResourceManager();
+    $handler = $resource_manager->getPlugin($resource_options[0] . ':' . $resource_options[1] . '.' . $resource_options[2]);
     $handler->setAccount($account);
 
     // Test rate limits.
+    $handler->setRequest(Request::create(''));
+    $handler->setPath('');
     for ($count = 0; $count < $limit; $count++) {
       try {
-        $handler->get('');
+        $handler->process();
         $this->pass('The rate limit authorized the request.');
       }
       catch (FloodException $e) {
@@ -103,7 +107,7 @@ class RestfulRateLimitTestCase extends DrupalWebTestCase {
     }
 
     try {
-      $handler->get('');
+      $handler->process();
       $this->fail('The rate limit authorized the request.');
     }
     catch (FloodException $e) {
