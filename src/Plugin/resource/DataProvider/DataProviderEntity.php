@@ -186,24 +186,6 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
   /**
    * {@inheritdoc}
    */
-  public function count() {
-    $query = $this->getEntityFieldQuery();
-
-    try {
-      $this->queryForListFilter($query);
-    }
-    catch (ServerConfigurationException $e) {
-      watchdog_exception('restful', $e);
-    }
-
-    $this->addExtraInfoToQuery($query);
-
-    return intval($query->count()->execute());
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function create($object) {
     $this->validateBody($object);
     $entity_info = $this->getEntityInfo();

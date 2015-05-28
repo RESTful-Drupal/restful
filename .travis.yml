@@ -90,3 +90,4 @@ script:
   - drush --yes pm-enable restful restful_token_auth
   # Run the tests
   - drush test-run RESTful --uri=http://localhost
+  #- php ./scripts/run-tests.sh --verbose --color --php `which php` --url http://localhost --class RestfulHookMenuTestCase
