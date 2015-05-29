@@ -97,8 +97,6 @@ class RestfulRateLimitTestCase extends DrupalWebTestCase {
     $handler->setRequest(Request::create(''));
     $handler->setPath('');
     for ($count = 0; $count < $limit; $count++) {
-      $handler->setRequest(Request::create(''));
-      $handler->setPath('');
       try {
         $handler->process();
         $this->pass('The rate limit authorized the request.');
@@ -108,8 +106,6 @@ class RestfulRateLimitTestCase extends DrupalWebTestCase {
       }
     }
 
-    $handler->setRequest(Request::create(''));
-    $handler->setPath('');
     try {
       $handler->process();
       $this->fail('The rate limit authorized the request.');
