@@ -8,7 +8,7 @@ dependencies[] = ctools
 configure = admin/config/services/restful
 
 ; Tests
-; files[] = tests/RestfulAuthenticationTestCase.test
+files[] = tests/RestfulAuthenticationTestCase.test
 ; files[] = tests/RestfulAutoCompleteTestCase.test
 ; files[] = tests/RestfulCreateEntityTestCase.test
 ; files[] = tests/RestfulCreateNodeTestCase.test

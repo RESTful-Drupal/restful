@@ -280,7 +280,7 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
       return FALSE;
     }
 
-    $access = $property_wrapper->access($op, $account);
+    $access = $interpreter->getWrapper()->value() !== FALSE && $property_wrapper->access($op, $account);
     return $access !== FALSE;
   }
 

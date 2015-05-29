@@ -7,6 +7,7 @@
 
 use Drupal\restful\Plugin\AuthenticationPluginManager;
 use Drupal\Component\Plugin\PluginManagerInterface;
+use Drupal\restful\Http\Request;
 
 class RestfulAuthenticationTestCase extends RestfulCurlBaseTestCase {
 
@@ -58,12 +59,17 @@ class RestfulAuthenticationTestCase extends RestfulCurlBaseTestCase {
    * Test authenticating a user.
    */
   function testAuthentication() {
+    // Start a session just in case we're executing the code from CLI.
+    drupal_session_start();
     global $user;
-    $handler = restful_get_restful_handler('main', 1, 5);
+    $resource_manager = restful()->getResourceManager();
+    $request = Request::create('');
+    $handler = $resource_manager->getPlugin('main:1.5');
 
     // Case 1. Check that the handler has the expected authentication providers.
     $providers = array_keys($this->pluginManager->getDefinitions());
-    foreach ($handler->getPluginKey('authentication_types') as $provider_name) {
+    $plugin_definition = $handler->getPluginDefinition();
+    foreach ($plugin_definition['authenticationTypes'] as $provider_name) {
       $this->assertTrue(in_array($provider_name, $providers), format_string('The %name authorization type was found.', array(
         '%name' => $provider_name,
       )));
@@ -75,16 +81,18 @@ class RestfulAuthenticationTestCase extends RestfulCurlBaseTestCase {
     // We need to hijack the global user object in order to force it to be our
     // test account and make the cookie authentication provider to resolve it.
     $user = $this->account;
-    $this->assertEqual($this->account->uid, $handler->getAccount()->uid, 'The authentication manager resolved the currently logged in user.');
+    $handler->setRequest($request);
+    $handler->setAccount(NULL);
+    $this->assertEqual($this->account->uid, $handler->getAccount(FALSE)->uid, 'The authentication manager resolved the currently logged in user.');
 
     $cookie_provider = $this->pluginManager->createInstance('cookie');
 
     // Case 3. Test the 'cookie_auth' authentication provider.
-    $this->assertEqual($this->account->uid, $cookie_provider->authenticate()->uid, 'The cookie provider resolved the currently logged in user.');
+    $this->assertEqual($this->account->uid, $cookie_provider->authenticate($request)->uid, 'The cookie provider resolved the currently logged in user.');
 
     $user = drupal_anonymous_user();
     // Case 4. Test that the 'cookie_auth' resolves the anonymous user.
-    $this->assertEqual(0, $cookie_provider->authenticate()->uid, 'The cookie provider resolved the anonymous user.');
+    $this->assertEqual(0, $cookie_provider->authenticate($request)->uid, 'The cookie provider resolved the anonymous user.');
 
     $basic_auth_provider = $this->pluginManager->createInstance('basic_auth');
 
@@ -92,43 +100,53 @@ class RestfulAuthenticationTestCase extends RestfulCurlBaseTestCase {
     $_SERVER['PHP_AUTH_USER'] = $this->account->name;
     $_SERVER['PHP_AUTH_PW'] = $this->account->pass_raw;
     $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] = NULL;
-    $this->assertEqual($this->account->uid, $basic_auth_provider->authenticate()->uid, 'The basic auth provider resolved the currently logged in user.');
+    $this->assertEqual($this->account->uid, $basic_auth_provider->authenticate($request)->uid, 'The basic auth provider resolved the currently logged in user.');
 
     // Case 6. Valid login using REDIRECT_HTTP_AUTHORIZATION.
     $_SERVER['PHP_AUTH_USER'] = NULL;
     $_SERVER['PHP_AUTH_PW'] = NULL;
     $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] = 'Basic: ' . base64_encode($this->account->name . ':' . $this->account->pass_raw);
-    $this->assertEqual($this->account->uid, $basic_auth_provider->authenticate()->uid, 'The basic auth provider resolved the currently logged in user. Using REDIRECT_HTTP_AUTHORIZATION.');
+    $this->assertEqual($this->account->uid, $basic_auth_provider->authenticate($request)->uid, 'The basic auth provider resolved the currently logged in user. Using REDIRECT_HTTP_AUTHORIZATION.');
 
     // Case 7. Invalid pass for basic auth.
     $_SERVER['PHP_AUTH_USER'] = $this->account->name;
     $_SERVER['PHP_AUTH_PW'] = $this->randomName();
     $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] = NULL;
-    $this->assertNull($basic_auth_provider->authenticate(), 'The basic auth provider could not resolve a user with invalid password.');
+    $this->assertNull($basic_auth_provider->authenticate($request), 'The basic auth provider could not resolve a user with invalid password.');
 
     // Case 8. Invalid username for basic auth.
     $_SERVER['PHP_AUTH_USER'] = $this->randomName();
     $_SERVER['PHP_AUTH_PW'] = $this->account->pass_raw;
     $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] = NULL;
-    $this->assertNull($basic_auth_provider->authenticate(), 'The basic auth provider could not resolve a user with invalid username.');
+    $this->assertNull($basic_auth_provider->authenticate($request), 'The basic auth provider could not resolve a user with invalid username.');
 
     // Case 9. Valid login using REDIRECT_HTTP_AUTHORIZATION.
     $_SERVER['PHP_AUTH_USER'] = NULL;
     $_SERVER['PHP_AUTH_PW'] = NULL;
     $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] = 'Basic: ' . base64_encode($this->randomName() . ':' . $this->randomName());
-    $this->assertNull($basic_auth_provider->authenticate(), 'The basic auth provider could not resolve a user with invalid encoded username & password. Using REDIRECT_HTTP_AUTHORIZATION.');
+    $this->assertNull($basic_auth_provider->authenticate($request), 'The basic auth provider could not resolve a user with invalid encoded username & password. Using REDIRECT_HTTP_AUTHORIZATION.');
 
     // Case 11. Accessing a resource with optional authentication.
 
     // We are getting a 403 instead of 401, as the access is now based on the
     // permissions.
-    $result = $this->httpRequest('api/v1.0/users');
-    $this->assertEqual($result['code'], 403, 'Anonymous user got 403 when trying to access the "users" resource.');
+    user_role_change_permissions(DRUPAL_ANONYMOUS_RID, array('access user profiles' => FALSE));
+    $handler = $resource_manager->getPlugin('users:1.0');
+    $handler->setRequest(Request::create('api/v1.0/users'));
+    $handler->setPath('');
+    $handler->setAccount(NULL);
+    try {
+      $handler->process();
+      $this->fail('Anonymous user did not get 403 when trying to access the "users" resource.');
+    }
+    catch (\Drupal\restful\Exception\ForbiddenException $e) {
+      $this->pass('Anonymous user got 403 when trying to access the "users" resource.');
+    }
 
     // To assert permissions control access to the resource, we change the
     // permission for anonymous to access other user's profile.
     user_role_change_permissions(DRUPAL_ANONYMOUS_RID, array('access user profiles' => TRUE));
-    $result = $this->httpRequest('api/v1.0/users');
-    $this->assertEqual($result['code'], 200, 'Anonymous user got 200 when trying to access the "users" resource after permissions changed.');
+    // If the process function does not throw an exception, the test passes.
+    $handler->process();
   }
 }
