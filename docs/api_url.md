@@ -118,6 +118,21 @@ and another equal to 10.
 curl https://example.com/api/articles?filter[integer_multiple][value][0]=5&filter[integer_multiple][value][1]=10&filter[integer_multiple][operator][0]=">"&filter[integer_multiple][operator][0]="="
 ```
 
+## Applying a query sort
+RESTful allows specifying of a sort property to the database query used to generate the list.
+
+```php
+# Handler v1.0
+curl https://example.com/api/v1/articles?sort=label
+```
+
+The sort order will default to ascending, however it can be set to descending by prepending a minus (-) sign the sort parameter value.
+
+```shell
+# Handler v1.0
+curl https://example.com/api/v1/articles?sort=-label
+```
+
 ## Loading by an alternate ID.
 Some times you need to load an entity by an alternate ID that is not the regular
 entity ID, for example a unique ID title. All that you need to do is provide the
