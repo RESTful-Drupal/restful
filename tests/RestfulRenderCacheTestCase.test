@@ -217,6 +217,9 @@ class RestfulRenderCacheTestCase extends \RestfulCurlBaseTestCase {
     $response = $this->httpRequest($path);
     // The user should get a 403.
     $this->assertEqual($response['code'], 403, 'Access denied for anonymous user.');
+    // Clear the cache, since anonymous requests get cached. Requests with basic
+    // authentication will pick that cached version. This is a know issue and we
+    // accept it as a lesser evil.
     $cache->clear($url);
 
     // 2. Test the basic authentication.
