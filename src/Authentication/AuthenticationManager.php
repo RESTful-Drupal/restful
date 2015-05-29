@@ -97,9 +97,6 @@ class AuthenticationManager implements AuthenticationManagerInterface {
     foreach ($this->plugins as $provider) {
       /** @var \Drupal\restful\Plugin\authentication\AuthenticationInterface $provider */
       if ($provider->applies($request) && $account = $provider->authenticate($request)) {
-        // Allow caching pages for anonymous users.
-        drupal_page_is_cacheable(variable_get('restful_page_cache', FALSE));
-
         // The account has been loaded, we can stop looking.
         break;
       }
@@ -108,6 +105,9 @@ class AuthenticationManager implements AuthenticationManagerInterface {
     if (!$account) {
 
       if (RestfulManager::isRestfulPath($request) && $this->plugins->count() && !$this->getIsOptional()) {
+        // Allow caching pages for anonymous users.
+        drupal_page_is_cacheable(variable_get('restful_page_cache', FALSE));
+
         // User didn't authenticate against any provider, so we throw an error.
         throw new UnauthorizedException('Bad credentials');
       }
