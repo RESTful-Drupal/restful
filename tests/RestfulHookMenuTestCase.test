@@ -119,7 +119,7 @@ class RestfulHookMenuTestCase extends RestfulCurlBaseTestCase {
 
       $body = drupal_json_decode($result['body']);
       $this->assertEqual($result['code'], '404', format_string('404 status code sent for @url url.', array('@url' => $url)));
-      $this->assertTrue(strpos($result['headers'], 'application/problem+json;'), '"application/problem+json" found in invalid request.');
+      $this->assertTrue(strpos($result['headers'], 'application/problem+json;') !== FALSE, '"application/problem+json" found in invalid request.');
       $this->assertEqual($body['title'], 'Invalid URL path.', 'Correct error message.');
     }
 

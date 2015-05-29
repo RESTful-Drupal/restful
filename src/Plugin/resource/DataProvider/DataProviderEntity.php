@@ -151,7 +151,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
   /**
    * {@inheritdoc}
    */
-  public function index() {
+  public function getIndexIds() {
     $result = $this
       ->getQueryForList()
       ->execute();
@@ -160,9 +160,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
       return array();
     }
 
-    $ids = array_keys($result[$this->entityType]);
-
-    return $this->viewMultiple($ids);
+    return array_keys($result[$this->entityType]);
   }
 
   /**
@@ -171,10 +169,12 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
   public function count() {
     $query = $this->getEntityFieldQuery();
 
+    // If we are trying to filter on a computed field, just ignore it and log an
+    // exception.
     try {
       $this->queryForListFilter($query);
     }
-    catch (ServerConfigurationException $e) {
+    catch (BadRequestException $e) {
       watchdog_exception('restful', $e);
     }
 

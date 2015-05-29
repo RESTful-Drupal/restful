@@ -183,6 +183,17 @@ abstract class DataProvider implements DataProviderInterface {
   /**
    * {@inheritdoc}
    */
+  public function index() {
+    if (!$ids = $this->getIndexIds()) {
+      return array();
+    }
+
+    return $this->viewMultiple($ids);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function canonicalPath($path) {
     // Assume that there is no alias.
     return $path;

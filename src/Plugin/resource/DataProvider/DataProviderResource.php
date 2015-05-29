@@ -80,6 +80,13 @@ class DataProviderResource extends DataProvider implements DataProviderResourceI
   /**
    * {@inheritdoc}
    */
+  public function getIndexIds() {
+    return $this->referencedDataProvider->getIndexIds();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function create($object) {
     return $this->referencedDataProvider->create($object);
   }
