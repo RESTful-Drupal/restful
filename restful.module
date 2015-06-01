@@ -474,8 +474,7 @@ function restful_menu_process_callback($resource_name, $version = NULL) {
 
   // Vary the response with the presence of the X-API-Version or Accept headers.
   $headers = $handler->getHttpHeaders();
-  $vary = empty($headers['Vary']) ? '' : $headers['Vary'];
-  $additional_variations = array($vary, 'Accept');
+  $additional_variations = empty($headers['Vary']) ? array('Accept') : array($headers['Vary'], 'Accept');
   if (\RestfulManager::getRequestHttpHeader('X-API-Version')) {
     $additional_variations[] = 'X-API-Version';
   }
