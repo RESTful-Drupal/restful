@@ -35,18 +35,40 @@ function restful_entity_info() {
  * Implements hook_entity_update().
  */
 function restful_entity_update($entity, $type) {
-  list($entity_id) = entity_extract_ids($type, $entity);
-  $cid = 'paet:' . $type . '::ei:' . $entity_id;
-  \RestfulManager::invalidateEntityCache($cid);
+  if(restful_entity_good_for_invalidation($type)) {
+    list($entity_id) = entity_extract_ids($type, $entity);
+    $cid = 'paet:' . $type . '::ei:' . $entity_id;
+    \RestfulManager::invalidateEntityCache($cid);
+  }
 }
 
 /**
  * Implements hook_entity_delete().
  */
 function restful_entity_delete($entity, $type) {
-  list($entity_id) = entity_extract_ids($type, $entity);
-  $cid = 'paet:' . $type . '::ei:' . $entity_id;
-  \RestfulManager::invalidateEntityCache($cid);
+  if(restful_entity_good_for_invalidation($type)) {
+    list($entity_id) = entity_extract_ids($type, $entity);
+    $cid = 'paet:' . $type . '::ei:' . $entity_id;
+    \RestfulManager::invalidateEntityCache($cid);
+  }
+}
+
+/**
+ * Helper function, used in the entity hooks to determine whether entities are supposed to be cached or not.
+ * 
+ * @param $type entity type - string
+ * @return bool 
+ */
+
+function restful_entity_good_for_invalidation($type) {
+  $skip_types = array(
+    // Saves to the configuration entity dont necesarrily need to be cached & invalidated.   
+      'rate_limit',
+    // User is being delt with separately.
+    'user'
+  );
+  $skip_types = array_merge($skip_types, variable_get('restful_entities_to_skip',array()));
+  return ! in_array($type, $skip_types);
 }
 
 /**
