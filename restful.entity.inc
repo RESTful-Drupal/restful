@@ -35,7 +35,7 @@ function restful_entity_info() {
  * Implements hook_entity_update().
  */
 function restful_entity_update($entity, $type) {
-  if(restful_entity_good_for_invalidation($type)) {
+  if (restful_entity_determine_invalidation_by_type($type)) {
     list($entity_id) = entity_extract_ids($type, $entity);
     $cid = 'paet:' . $type . '::ei:' . $entity_id;
     \RestfulManager::invalidateEntityCache($cid);
@@ -46,7 +46,7 @@ function restful_entity_update($entity, $type) {
  * Implements hook_entity_delete().
  */
 function restful_entity_delete($entity, $type) {
-  if(restful_entity_good_for_invalidation($type)) {
+  if (restful_entity_determine_invalidation_by_type($type)) {
     list($entity_id) = entity_extract_ids($type, $entity);
     $cid = 'paet:' . $type . '::ei:' . $entity_id;
     \RestfulManager::invalidateEntityCache($cid);
@@ -54,21 +54,28 @@ function restful_entity_delete($entity, $type) {
 }
 
 /**
- * Helper function, used in the entity hooks to determine whether entities are supposed to be cached or not.
+ * Helper function, used in the entity hooks.
+ * 
+ * To determine whether entities are supposed to be cached or not.
  * 
  * @param $type entity type - string
+ * Entity type to be tested.
  * @return bool 
  */
 
-function restful_entity_good_for_invalidation($type) {
+function restful_entity_determine_invalidation_by_type($type) {
   $skip_types = array(
-    // Saves to the configuration entity dont necesarrily need to be cached & invalidated.   
-      'rate_limit',
-    // User is being delt with separately.
+    // Saves to the configuration entity don't necessarily need to be
+    // cached & invalidated.   
+    'rate_limit',
+    // User is being dealt with separately.
     'user'
   );
-  $skip_types = array_merge($skip_types, variable_get('restful_entities_to_skip',array()));
-  return ! in_array($type, $skip_types);
+  $skip_types = array_merge(
+    $skip_types, 
+    variable_get('restful_entities_to_skip', array())
+  );
+  return !in_array($type, $skip_types);
 }
 
 /**
