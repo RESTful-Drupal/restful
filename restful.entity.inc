@@ -59,7 +59,7 @@ function restful_entity_delete($entity, $type) {
  * To determine whether entities are supposed to be cached or not.
  * 
  * @param $type entity type - string
- * Entity type to be tested.
+ *   Entity type to be tested.
  * @return bool 
  */
 
