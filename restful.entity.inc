@@ -58,12 +58,12 @@ function restful_entity_delete($entity, $type) {
  * 
  * To determine whether entities are supposed to be cached or not.
  * 
- * @param $type entity type - string
+ * @param string $entity_type
  *   Entity type to be tested.
  * @return bool 
  */
 
-function restful_entity_determine_invalidation_by_type($type) {
+function restful_entity_determine_invalidation_by_type($entity_type) {
   $skip_types = array(
     // Saves to the configuration entity don't necessarily need to be
     // cached & invalidated.   
@@ -75,7 +75,7 @@ function restful_entity_determine_invalidation_by_type($type) {
     $skip_types, 
     variable_get('restful_entities_to_skip', array())
   );
-  return !in_array($type, $skip_types);
+  return !in_array($entity_type, $skip_types);
 }
 
 /**
