@@ -350,7 +350,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       $values[$public_field_name] = $value;
     }
 
-    $this->setRenderedCache($values, array($this->entityCacheTags());
+    $this->setRenderedCache($values, $this->entityCacheTags());
     return $values;
   }
   
