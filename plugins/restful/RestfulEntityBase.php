@@ -281,7 +281,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     $entity_id = $this->getEntityIdByFieldId($id);
     $request = $this->getRequest();
 
-    $cached_data = $this->getRenderedCache($this->entityCacheTags());
+    $cached_data = $this->getRenderedCache($this->entityCacheTags($entity_id));
     if (!empty($cached_data->data)) {
       return $cached_data->data;
     }
@@ -350,18 +350,21 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       $values[$public_field_name] = $value;
     }
 
-    $this->setRenderedCache($values, $this->entityCacheTags());
+    $this->setRenderedCache($values, $this->entityCacheTags($entity_id));
     return $values;
   }
   
   /**
    * The array of parameters by which entities should be cached.
    *
+   * @param mixed
+   *   The entity ID of the entity to be cached.
+   * 
    * @return array
    *   An array of parameter keys and values which should be added
    *   to the cache key for each entity.
    */
-  public function entityCacheTags() {
+  public function entityCacheTags($entity_id) {
     return array(
       'et' => $this->getEntityType(),
       'ei' => $entity_id,
