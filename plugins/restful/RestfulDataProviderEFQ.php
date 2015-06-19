@@ -112,6 +112,7 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
       }
     }
 
+    $this->queryForLanguage($query);
     $this->queryForListSort($query);
     $this->queryForListFilter($query);
     $this->queryForListPagination($query);
@@ -190,6 +191,18 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
   }
 
   /**
+   * Apply language conditions to the query.
+   *
+   * @param \EntityFieldQuery $query
+   *   The query object.
+   */
+  protected function queryForLanguage(\EntityFieldQuery $query) {
+    if (!empty($this->langcode)) {
+      $query->propertyCondition('language', array($this->langcode, 'und'), 'IN');
+    }
+  }
+
+  /**
    * Get the DB column name from a property.
    *
    * The "property" defined in the public field is actually the property
@@ -245,6 +258,8 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
 
   /**
    * {@inheritdoc}
+   *
+   * @todo Address duplication here with getQueryForList().
    */
   public function getQueryCount() {
     $query = $this->getEntityFieldQuery();
@@ -253,6 +268,7 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
       $query->entityCondition('entity_id', $ids, 'IN');
     }
 
+    $this->queryForLanguage($query);
     $this->queryForListFilter($query);
 
     $this->addExtraInfoToQuery($query);
