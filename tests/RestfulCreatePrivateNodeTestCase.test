@@ -27,6 +27,9 @@ class RestfulCreatePrivateNodeTestCase extends DrupalWebTestCase {
   /**
    * Test creating a node (POST method) with reference to existing private node.
    *
+   * In this test we make sure that entity_metadata_no_hook_node_access()
+   * returns TRUE, thus allows access to set the entity reference property.
+   *
    * @see restful_node_access_test_node_access_records()
    */
   function testCreateNodeWithReference() {
@@ -43,10 +46,10 @@ class RestfulCreatePrivateNodeTestCase extends DrupalWebTestCase {
     $node1 = $this->drupalCreateNode($settings);
 
     // Assert user has access to the node.
-    $this->assertTrue(node_access('view', $node1, $user1));
+    $this->assertTrue(node_access('view', $node1, $user1), 'Author has access to view node.');
 
     // Assert another user doesn't have access to the node.
-    $this->assertFalse(node_access('view', $node1, $user2));
+    $this->assertFalse(node_access('view', $node1, $user2), 'Authenticated user, but not author does not have access to view the node.');
 
     $handler = restful_get_restful_handler('test_articles', 1, 2);
     $handler->setAccount($user1);
@@ -56,6 +59,8 @@ class RestfulCreatePrivateNodeTestCase extends DrupalWebTestCase {
       'entity_reference_single' => $node1->nid,
     );
     $result = $handler->post('', $request);
-    debug($result);
+
+    $this->assertTrue($result, 'Private node with reference to another private node was created.');
+
   }
 }
