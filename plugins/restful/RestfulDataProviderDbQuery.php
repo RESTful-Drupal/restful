@@ -360,8 +360,8 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
   /**
    * {@inheritdoc}
    */
-  public function view($id) {
-    return $this->viewMultiple(array($id));
+  public function view($ids) {
+    return $this->viewMultiple(explode(',', $ids);
   }
 
   /**
