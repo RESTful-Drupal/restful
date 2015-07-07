@@ -361,7 +361,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
    * {@inheritdoc}
    */
   public function view($ids) {
-    return $this->viewMultiple(explode(',', $ids);
+    return $this->viewMultiple(explode(',', $ids));
   }
 
   /**
