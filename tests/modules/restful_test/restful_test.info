@@ -6,3 +6,6 @@ dependencies[] = restful_example
 dependencies[] = entity_feature
 dependencies[] = entityreference
 hidden = TRUE
+
+registry_autoload[] = PSR-0
+registry_autoload[] = PSR-4
