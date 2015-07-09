@@ -64,7 +64,7 @@ class RestfulManager {
    *   The request object.
    */
   public function getRequest() {
-    return $this->request;
+    return clone $this->request;
   }
 
   /**
@@ -84,7 +84,7 @@ class RestfulManager {
    *   The response object.
    */
   public function getResponse() {
-    return $this->response;
+    return clone $this->response;
   }
 
   /**
@@ -103,7 +103,7 @@ class RestfulManager {
    * @return ResourceManagerInterface
    */
   public function getResourceManager() {
-    return $this->resourceManager;
+    return clone $this->resourceManager;
   }
 
   /**
@@ -121,7 +121,7 @@ class RestfulManager {
    * @return FormatterManagerInterface
    */
   public function getFormatterManager() {
-    return $this->formatterManager;
+    return clone $this->formatterManager;
   }
 
   /**
