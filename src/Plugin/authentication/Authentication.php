@@ -7,10 +7,14 @@
 
 namespace Drupal\restful\Plugin\authentication;
 
+use Drupal\Component\Plugin\ConfigurablePluginInterface;
 use Drupal\Component\Plugin\PluginBase;
 use Drupal\restful\Http\RequestInterface;
+use Drupal\restful\Plugin\ConfigurablePluginTrait;
 
-abstract class Authentication extends PluginBase implements AuthenticationInterface {
+abstract class Authentication extends PluginBase implements ConfigurablePluginInterface, AuthenticationInterface {
+
+  use ConfigurablePluginTrait;
 
   /**
    * Token value for token generation functions.

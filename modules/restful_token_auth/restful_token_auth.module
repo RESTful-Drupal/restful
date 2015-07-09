@@ -59,6 +59,8 @@ function restful_token_auth_restful_parse_request_alter(RequestInterface &$reque
   // In this hook we cannot rely on the service to be ready.
   $authentication_manager = new AuthenticationManager();
   try {
+    // If the the authentication provider have not been added yet, add it.
+    $authentication_manager->addAuthenticationProvider('token');
     $plugin = $authentication_manager->getPlugin('token');
   }
   catch (PluginNotFoundException $e) {
