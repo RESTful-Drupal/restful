@@ -60,26 +60,15 @@ script:
   # Go to our Drupal main directory
   - cd $TRAVIS_BUILD_DIR/../drupal
 
-  # Download the composer pieces.
-  - drush --yes dl composer-8.x-1.x
-  - drush --yes dl composer_manager
-  - cd $TRAVIS_BUILD_DIR/../drupal/sites/all/modules/composer_manager
-  - cd $TRAVIS_BUILD_DIR/../drupal
-  - drush --yes pm-enable composer_manager
-  # Set variable to 0 to avoid automatic composer build
-  - drush --yes vset --exact composer_manager_autobuild_packages 0
-
   # Download and enable module and its dependencies
-  - drush --yes dl xautoload
+  - drush --yes dl registry_autoload
   - drush --yes dl entity_validator --dev
   - drush --yes dl plug
-  - drush --yes dl ctools
   - drush --yes dl entity
   - drush --yes dl entityreference
 
-  # Enable plug and run composer.
+  # Enable plug.
   - drush --yes pm-enable plug
-  - drush --yes composer-manager update --no-interaction --prefer-source
 
   # Patch Entity API.
   - curl -O https://www.drupal.org/files/issues/2086225-entity-access-check-node-create-3.patch
