@@ -50,36 +50,37 @@ name = RESTful custom
 description = Custom RESTful resource.
 core = 7.x
 dependencies[] = restful
+
+registry_autoload[] = PSR-4
 ```
 
-####restful\_custom/restful\_custom.module
+####restful\_custom/src/Plugin/resource/Custom__1_0.php
 ```php
+
+namespace Drupal\restful_custom\Plugin\resource;
+
 /**
- * Implements hook_ctools_plugin_directory().
+ * Class Custom__1_0
+ * @package Drupal\restful_custom\Plugin\resource
+ *
+ * @Resource(
+ *   name = "custom:1.0",
+ *   resource = "custom",
+ *   label = "Custom",
+ *   description = "My custom resource!",
+ *   authenticationTypes = TRUE,
+ *   authenticationOptional = TRUE,
+ *   dataProvider = {
+ *     "entityType": "node",
+ *     "bundles": {
+ *       "article"
+ *     },
+ *   },
+ *   majorVersion = 1,
+ *   minorVersion = 0
+ * )
  */
- function restful_custom_ctools_plugin_directory($module, $plugin) {
-   if ($module == 'restful') {
-     return 'plugins/' . $plugin;
-   }
- }
-```
-
-####restful\_custom/plugins/restful/myplugin.inc
-```php
-$plugin = array(
-  'label' => t('Articles'),
-  'resource' => 'articles',
-  'name' => 'articles',
-  'entity_type' => 'node',
-  'bundle' => 'article',
-  'description' => t('Export the article content type.'),
-  'class' => 'RestfulCustomResource',
-);
-```
-
-####restful\_custom/plugins/restful/RestfulCustomResource.class.php
-```php
-class RestfulCustomResource extends RestfulEntityBaseNode {
+class Custom__1_0 extends ResourceEntity implements ResourceInterface {
 
   /**
    * Overrides RestfulEntityBaseNode::publicFieldsInfo().
@@ -98,7 +99,7 @@ class RestfulCustomResource extends RestfulEntityBaseNode {
 ```
 
 After declaring this plugin, the resource could be accessed at its root URL,
-which would be `http://example.com/api/v1.0/articles`.
+which would be `http://example.com/api/v1.0/custom`.
 
 ### Security, caching, output, and customization
 
