@@ -73,16 +73,6 @@ function restful_token_auth_restful_parse_request_alter(RequestInterface &$reque
 }
 
 /**
- * Implements hook_ctools_plugin_directory().
- */
-function restful_token_auth_ctools_plugin_directory($module, $plugin) {
-  if ($module == 'restful') {
-    return 'plugins/' . $plugin;
-  }
-}
-
-
-/**
  * Implements hook_entity_info().
  */
 function restful_token_auth_entity_info() {
