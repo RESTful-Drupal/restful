@@ -189,23 +189,7 @@ function restful_help($path, $arg) {
  *   The manager.
  */
 function restful() {
-  static $manager;
-  if (isset($manager)) {
-    return $manager;
-  }
-  try {
-    $manager = xautoload()->restfulManager;
-  }
-  catch (\Exception $e) {
-    // During the menu access checks we get here before plug_xautoload has had
-    // the chance to include the composer manager classes. That means that we
-    // would not be able to get the resource manager that depends on composer
-    // classes.
-    composer_manager_register_autoloader();
-    $manager = RestfulManager::createFromGlobals();
-    xautoload()->getServiceContainer()->set('restfulManager', $manager);
-  }
-  return $manager;
+  return drupal_static('restful.manager', RestfulManager::createFromGlobals());
 }
 
 /**
