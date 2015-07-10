@@ -38,7 +38,7 @@ before_script:
 
   # reference and enable restful in build site
   - echo $TRAVIS_BUILD_DIR
-  - ls restful/drupal/sites/all/modules
+  - pwd
   - ln -s $TRAVIS_BUILD_DIR restful/drupal/sites/all/modules/restful
   - cd restful/drupal
   - drush dl registry_rebuild
