@@ -36,6 +36,7 @@ before_script:
   - ln -s $TRAVIS_BUILD_DIR $DRUPAL_ROOT_PATH/sites/all/modules/restful
   - cd $DRUPAL_ROOT_PATH
   - drush dl registry_rebuild
+  - drush dl registry_autoload --dev
   - drush --yes pm-enable plug
   - chmod u+w $DRUPAL_ROOT_PATH/sites/default/settings.php
   - echo "\$conf['registry_autoload_global_formats'] = array('PSR-0', 'PSR-4');" >> $DRUPAL_ROOT_PATH/sites/default/settings.php
