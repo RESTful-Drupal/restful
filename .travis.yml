@@ -71,6 +71,7 @@ before_script:
   # Patch Entity API.
   - curl -O https://www.drupal.org/files/issues/2086225-entity-access-check-node-create-3.patch
   - patch -p1 $DRUPAL_TI_DRUPAL_ROOT/sites/all/modules/entity/modules/callbacks.inc  < 2086225-entity-access-check-node-create-3.patch
+  - cat /home/travis/build/RESTful-Drupal/restful/../../drupal-7/drupal/sites/all/modules/entity/modules/callbacks.inc.rej
   - drush dl --yes --root=$DRUPAL_TI_DRUPAL_ROOT entityreference
   - drush dl --yes --root=$DRUPAL_TI_DRUPAL_ROOT registry_rebuild
   - drush dl --yes --dev --root=$DRUPAL_TI_DRUPAL_ROOT entity_valitator
