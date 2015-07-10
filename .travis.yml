@@ -66,11 +66,8 @@ before_install:
   - drupal-ti before_install
 
 install:
-  - pwd
   - drupal-ti install
-  - pwd
-  - echo $TRAVIS_BUILD_DIR
-  - cd $DRUPAL_TI_DRUPAL_ROOT
+  - find . -d
   - drush dl --yes --root=$DRUPAL_TI_DRUPAL_ROOT entity
   # Patch Entity API.
   - curl -O https://www.drupal.org/files/issues/2086225-entity-access-check-node-create-3.patch
