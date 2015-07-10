@@ -35,7 +35,7 @@ env:
     # Note: Do not add a trailing slash here.
     - DRUPAL_TI_WEBSERVER_URL="http://127.0.0.1"
     - DRUPAL_TI_WEBSERVER_PORT="8080"
-    - DRUPAL_TI_DRUPAL_ROOT=/home/travis/build/RESTful-Drupal/restful/drupal-7
+    - DRUPAL_TI_DRUPAL_ROOT=/home/travis/build/drupal-7
 
     # Simpletest specific commandline arguments.
     - DRUPAL_TI_SIMPLETEST_ARGS="--verbose --color --concurrency 4 --url $DRUPAL_TI_WEBSERVER_URL:$DRUPAL_TI_WEBSERVER_PORT $DRUPAL_TI_SIMPLETEST_GROUP"
@@ -67,6 +67,10 @@ before_install:
 
 install:
   - drupal-ti install
+
+before_script:
+  - cd $TRAVIS_BUILD_DIR/../..
+  - drupal-ti before_script
   - find . -d
   - drush dl --yes --root=$DRUPAL_TI_DRUPAL_ROOT entity
   # Patch Entity API.
@@ -82,9 +86,6 @@ install:
 
   - drush pm-enable --yes --root=$DRUPAL_TI_DRUPAL_ROOT restful_token_auth
   - drush rr --yes --root=$DRUPAL_TI_DRUPAL_ROOT
-
-before_script:
-  - drupal-ti before_script
 
 script:
   - drupal-ti script
