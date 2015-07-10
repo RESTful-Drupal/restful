@@ -33,13 +33,12 @@ before_script:
   - php -d sendmail_path=`which true` $HOME/.composer/vendor/drush/drush/drush.php --yes core-quick-drupal --profile=testing --no-server --db-url=mysql://root:@127.0.0.1/restful --root=$DRUPAL_ROOT_PATH --enable=simpletest
 
   # reference and enable restful in build site
-  - ln -s $(readlink -e $(cd -)) $DRUPAL_ROOT_PATH/sites/all/modules/restful
-  - ls $DRUPAL_ROOT_PATH/sites/all/modules/restful
+  - ln -s $TRAVIS_BUILD_DIR $DRUPAL_ROOT_PATH/sites/all/modules/restful
   - cd $DRUPAL_ROOT_PATH
   - drush dl registry_rebuild
   - drush --yes pm-enable plug
   - drush rr
-  - drush --yes pm-enable restful restful_token_auth restful_test
+  - drush --yes pm-enable restful restful_token_auth
 
   # Download entity validator.
   - drush dl entity_validator --dev --yes
