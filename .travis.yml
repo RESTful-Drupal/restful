@@ -28,9 +28,6 @@ before_script:
   - composer self-update
   - composer global require --no-interaction "drush/drush:7.*"
   - PATH="$PATH:$HOME/.composer/vendor/bin"
-  - pear channel-discover pear.drush.org
-  - pear install drush/drush-5.8.0
-  - phpenv rehash
 
   # create new site, stubbing sendmail path with true to prevent delivery errors and manually resolving drush path
   - mysql -e 'create database restful'
