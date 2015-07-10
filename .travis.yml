@@ -66,9 +66,8 @@ before_install:
   - drupal-ti before_install
 
 install:
+  - pwd
   - drupal-ti install
-
-before_script:
   - pwd
   - echo $TRAVIS_BUILD_DIR
   - cd $DRUPAL_TI_DRUPAL_ROOT
@@ -84,9 +83,11 @@ before_script:
   - drush en --yes --root=$DRUPAL_TI_DRUPAL_ROOT entityreference
   - drush en --yes --root=$DRUPAL_TI_DRUPAL_ROOT entity
 
-  - drupal-ti before_script
   - drush pm-enable --yes --root=$DRUPAL_TI_DRUPAL_ROOT restful_token_auth
   - drush rr --yes --root=$DRUPAL_TI_DRUPAL_ROOT
+
+before_script:
+  - drupal-ti before_script
 
 script:
   - drupal-ti script
