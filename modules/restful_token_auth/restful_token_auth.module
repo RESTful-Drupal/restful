@@ -68,7 +68,7 @@ function restful_token_auth_restful_parse_request_alter(RequestInterface &$reque
     return;
   }
   $plugin_definition = $plugin->getPluginDefinition();
-  $param_name = $plugin_definition['options']['param_name'];
+  $param_name = $plugin_definition['options']['paramName'];
 
   $header = $request->getHeaders()->get($param_name);
   $request->setApplicationData($param_name, $header->getValueString());
