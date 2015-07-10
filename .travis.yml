@@ -38,7 +38,7 @@ before_script:
   - drush dl registry_rebuild
   - drush --yes pm-enable plug
   - chmod u+w $DRUPAL_ROOT_PATH/sites/default/settings.php
-  - echo "\n$conf['registry_autoload_global_formats'] = array('PSR-0', 'PSR-4');" >> $DRUPAL_ROOT_PATH/sites/default/settings.php
+  - echo "\n\$conf\['registry_autoload_global_formats'\] = array('PSR-0', 'PSR-4');" >> $DRUPAL_ROOT_PATH/sites/default/settings.php
   - chmod u-w $DRUPAL_ROOT_PATH/sites/default/settings.php
   - cat $DRUPAL_ROOT_PATH/sites/default/settings.php
   - drush rr
