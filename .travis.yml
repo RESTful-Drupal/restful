@@ -22,7 +22,6 @@ before_script:
   # navigate out of module directory to prevent blown stack by recursive module lookup
   - export DRUPAL_ROOT_PATH=$TRAVIS_BUILD_DIR/../../drupal-7
   - cd ../..
-  - pwd
 
   # install drush
   - composer self-update
@@ -34,10 +33,8 @@ before_script:
   - php -d sendmail_path=`which true` $HOME/.composer/vendor/drush/drush/drush.php --yes core-quick-drupal --profile=testing --no-server --db-url=mysql://root:@127.0.0.1/restful --root=$DRUPAL_ROOT_PATH --enable=simpletest
 
   # reference and enable restful in build site
-  - echo $TRAVIS_BUILD_DIR
-  - ls
-  - find . -d
   - ln -s $TRAVIS_BUILD_DIR $DRUPAL_ROOT_PATH/sites/all/modules/restful
+  - ls $DRUPAL_ROOT_PATH/sites/all/modules/restful
   - cd $DRUPAL_ROOT_PATH
   - drush dl registry_rebuild
   - drush --yes pm-enable plug
