@@ -20,7 +20,9 @@ mysql:
 
 before_script:
   # navigate out of module directory to prevent blown stack by recursive module lookup
+  - pwd
   - cd ../..
+  - pwd
 
   # install drush
   - pear channel-discover pear.drush.org
@@ -32,7 +34,7 @@ before_script:
   - php -d sendmail_path=`which true` `pear config-get php_dir`/drush/drush.php --yes core-quick-drupal --profile=testing --no-server --db-url=mysql://root:@127.0.0.1/restful --enable=simpletest
 
   # reference and enable restful in build site
-  - ln -s $(readlink -e $(cd -)) restful/drupal/sites/all/modules/restful
+  - ln -s $TRAVIS_BUILD_DIR restful/drupal/sites/all/modules/restful
   - cd restful/drupal
   - drush dl registry_rebuild
   - drush --yes pm-enable plug
