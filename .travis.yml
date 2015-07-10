@@ -1,93 +1,55 @@
-# @file
-# .travis.yml - Drupal for Travis CI Integration
-#
-# Template provided by https://github.com/LionsAd/drupal_ti.
-#
-# Based for simpletest upon:
-#   https://github.com/sonnym/travis-ci-drupal-module-example
-
 language: php
 
 sudo: false
+
+addons:
+  apt:
+    packages:
+    - php5-cgi
+    - php5-mysql
 
 php:
   - 5.4
   - 5.5
   - 5.6
-  - hhvm
-
-matrix:
-  fast_finish: true
-  allow_failures:
-    - php: hhvm
-
-env:
-  global:
-    # add composer's global bin directory to the path
-    # see: https://github.com/drush-ops/drush#install---composer
-    - PATH="$PATH:$HOME/.composer/vendor/bin"
-
-    # Drupal specific vars.
-    - DRUPAL_TI_MODULE_NAME="restful"
-    - DRUPAL_TI_SIMPLETEST_GROUP="RESTful"
-    - DRUPAL_TI_DB="drupal_travis_db"
-    - DRUPAL_TI_DB_URL="mysql://root:@127.0.0.1/drupal_travis_db"
-    # Note: Do not add a trailing slash here.
-    - DRUPAL_TI_WEBSERVER_URL="http://127.0.0.1"
-    - DRUPAL_TI_WEBSERVER_PORT="8080"
-    - DRUPAL_TI_DRUPAL_ROOT=/home/travis/build/RESTful-Drupal/drupal-7/drupal
-
-    # Simpletest specific commandline arguments.
-    - DRUPAL_TI_SIMPLETEST_ARGS="--verbose --color --concurrency 4 --url $DRUPAL_TI_WEBSERVER_URL:$DRUPAL_TI_WEBSERVER_PORT $DRUPAL_TI_SIMPLETEST_GROUP"
-
-    # PHPUnit specific commandline arguments.
-    - DRUPAL_TI_PHPUNIT_ARGS=""
-
-    # Code coverage via coveralls.io
-    # - DRUPAL_TI_COVERAGE="satooshi/php-coveralls:0.6.*"
-    # This needs to match your .coveralls.yml file.
-    # - DRUPAL_TI_COVERAGE_FILE="build/logs/clover.xml"
-
-    # Debug options
-    #- DRUPAL_TI_DEBUG="-x -v"
-
-  matrix:
-    # - DRUPAL_TI_RUNNERS="phpunit"
-    - DRUPAL_TI_RUNNERS="simpletest"
 
 mysql:
-  database: drupal_travis_db
+  database: restful
   username: root
   encoding: utf8
 
-before_install:
-  - composer self-update
-  - composer global require "lionsad/drupal_ti:dev-master"
-  - drupal-ti before_install
-
-install:
-  - drupal-ti install
-
 before_script:
-  - cd $TRAVIS_BUILD_DIR/../..
-  - drupal-ti before_script
-  - drush dl --yes --root=$DRUPAL_TI_DRUPAL_ROOT entity
+  # navigate out of module directory to prevent blown stack by recursive module lookup
+  - cd ../..
+
+  # install drush
+  - pear channel-discover pear.drush.org
+  - pear install drush/drush-5.8.0
+  - phpenv rehash
+
+  # create new site, stubbing sendmail path with true to prevent delivery errors and manually resolving drush path
+  - mysql -e 'create database restful'
+  - php -d sendmail_path=`which true` `pear config-get php_dir`/drush/drush.php --yes core-quick-drupal --profile=testing --no-server --db-url=mysql://root:@127.0.0.1/restful --enable=simpletest
+
+  # reference and enable restful in build site
+  - ln -s $(readlink -e $(cd -)) restful/drupal/sites/all/modules/restful
+  - cd restful/drupal
+  - drush dl registry_rebuild
+  - drush --yes pm-enable plug
+  - drush rr
+  - drush --yes pm-enable restful restful_token_auth restful_test
+
+  # Download entity validator.
+  - drush dl entity_validator --dev --yes
+
   # Patch Entity API.
-  - curl -O https://www.drupal.org/files/issues/2086225-entity-access-check-node-create-3.patch
-  - ls $DRUPAL_TI_DRUPAL_ROOT/sites/all/modules/entity/modules/callbacks.inc
-  - patch -p1 $DRUPAL_TI_DRUPAL_ROOT/sites/all/modules/entity/modules/callbacks.inc  < 2086225-entity-access-check-node-create-3.patch
-  - cat $DRUPAL_TI_DRUPAL_ROOT/sites/all/modules/entity/modules/callbacks.inc.rej
-  - drush dl --yes --root=$DRUPAL_TI_DRUPAL_ROOT entityreference
-  - drush dl --yes --root=$DRUPAL_TI_DRUPAL_ROOT registry_rebuild
-  - drush dl --yes --dev --root=$DRUPAL_TI_DRUPAL_ROOT entity_valitator
-  - drush en --yes --root=$DRUPAL_TI_DRUPAL_ROOT entityreference
-  - drush en --yes --root=$DRUPAL_TI_DRUPAL_ROOT entity
+  - cd sites/all/modules/entity
+  - curl -O https://www.drupal.org/files/issues/2086225-entity-access-check-18.patch
+  - patch -p1 < 2086225-entity-access-check-18.patch
+  - cd -
 
-  - drush pm-enable --yes --root=$DRUPAL_TI_DRUPAL_ROOT restful_token_auth
-  - drush rr --yes --root=$DRUPAL_TI_DRUPAL_ROOT
+  # start a web server on port 8080, run in the background; wait for initialization
+  - drush runserver 127.0.0.1:8080 &
+  - until netstat -an 2>/dev/null | grep '8080.*LISTEN'; do true; done
 
-script:
-  - drupal-ti script
-
-after_script:
-  - drupal-ti after_script
+script: drush test-run RESTful --uri=http://127.0.0.1:8080
