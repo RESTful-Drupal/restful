@@ -280,6 +280,11 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
       return FALSE;
     }
 
+    // If $interpreter->getWrapper()->value() === FALSE it means that the entity
+    // could not be loaded, thus checking properties on it will result in
+    // errors.
+    // Ex: this happens when the embedded author is the anonymous user. Doing
+    // user_load(0) returns FALSE.
     $access = $interpreter->getWrapper()->value() !== FALSE && $property_wrapper->access($op, $account);
     return $access !== FALSE;
   }
