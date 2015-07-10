@@ -25,6 +25,9 @@ before_script:
   - pwd
 
   # install drush
+  - composer self-update
+  - composer global require --no-interaction "drush/drush:7.*"
+  - PATH="$PATH:$HOME/.composer/vendor/bin"
   - pear channel-discover pear.drush.org
   - pear install drush/drush-5.8.0
   - phpenv rehash
