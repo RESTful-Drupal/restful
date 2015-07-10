@@ -34,6 +34,8 @@ before_script:
   - php -d sendmail_path=`which true` `pear config-get php_dir`/drush/drush.php --yes core-quick-drupal --profile=testing --no-server --db-url=mysql://root:@127.0.0.1/restful --enable=simpletest
 
   # reference and enable restful in build site
+  - echo $TRAVIS_BUILD_DIR
+  - ls restful/drupal/sites/all/modules/restful
   - ln -s $TRAVIS_BUILD_DIR restful/drupal/sites/all/modules/restful
   - cd restful/drupal
   - drush dl registry_rebuild
