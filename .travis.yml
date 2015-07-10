@@ -35,7 +35,7 @@ env:
     # Note: Do not add a trailing slash here.
     - DRUPAL_TI_WEBSERVER_URL="http://127.0.0.1"
     - DRUPAL_TI_WEBSERVER_PORT="8080"
-    - DRUPAL_TI_DRUPAL_ROOT=/home/travis/build/RESTful-Drupal/restful/drupal
+    - DRUPAL_TI_DRUPAL_ROOT=/home/travis/build/RESTful-Drupal/restful/drupal-7
 
     # Simpletest specific commandline arguments.
     - DRUPAL_TI_SIMPLETEST_ARGS="--verbose --color --concurrency 4 --url $DRUPAL_TI_WEBSERVER_URL:$DRUPAL_TI_WEBSERVER_PORT $DRUPAL_TI_SIMPLETEST_GROUP"
