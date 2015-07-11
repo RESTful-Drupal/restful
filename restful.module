@@ -189,7 +189,6 @@ function restful_help($path, $arg) {
  *   The manager.
  */
 function restful() {
-  registry_rebuild();
   return drupal_static('restful.manager', RestfulManager::createFromGlobals());
 }
 
