@@ -41,6 +41,7 @@ before_script:
   - drush dl entity_validator --dev --yes
 
   # Patch Entity API.
+  - drush --yes dl entity
   - cd sites/all/modules/entity
   - curl -O https://www.drupal.org/files/issues/2086225-entity-access-check-18.patch
   - patch -p1 < 2086225-entity-access-check-18.patch
