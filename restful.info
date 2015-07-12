@@ -4,11 +4,13 @@ core = 7.x
 php = 5.4
 dependencies[] = entity
 dependencies[] = plug
-dependencies[] = ctools
 configure = admin/config/services/restful
 
+registry_autoload[] = PSR-0
+registry_autoload[] = PSR-4
+
 ; Tests
-; files[] = tests/RestfulAuthenticationTestCase.test
+files[] = tests/RestfulAuthenticationTestCase.test
 ; files[] = tests/RestfulAutoCompleteTestCase.test
 ; files[] = tests/RestfulCreateEntityTestCase.test
 ; files[] = tests/RestfulCreateNodeTestCase.test

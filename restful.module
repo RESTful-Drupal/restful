@@ -18,16 +18,6 @@ use Drupal\restful\Plugin\resource\ResourceInterface;
 use Drupal\restful\RestfulManager;
 
 /**
- * Implements hook_ctools_plugin_directory().
- */
-function restful_ctools_plugin_directory($module, $plugin) {
-  if ($module == 'restful') {
-    return 'plugins/' . $plugin;
-  }
-  return NULL;
-}
-
-/**
  * Add defaults values to the restful related plugins.
  */
 function restful_plugin_process(&$plugin, $info) {
@@ -42,19 +32,6 @@ function restful_plugin_process(&$plugin, $info) {
     $plugin = call_user_func_array($function, array($plugin, $info));
   }
 }
-
-/**
- * Implements hook_ctools_plugin_type().
- */
-function restful_ctools_plugin_type() {
-  $plugins['authentication'] = $plugins['restful'] = $plugins['rate_limit'] = $plugins['formatter'] = array(
-    'classes' => array('class'),
-    'process' => 'restful_plugin_process',
-  );
-  $plugins['restful']['child plugins'] = TRUE;
-  return $plugins;
-}
-
 
 /**
  * Include CTools plugins and get all restful plugins.
@@ -212,23 +189,7 @@ function restful_help($path, $arg) {
  *   The manager.
  */
 function restful() {
-  static $manager;
-  if (isset($manager)) {
-    return $manager;
-  }
-  try {
-    $manager = xautoload()->restfulManager;
-  }
-  catch (\Exception $e) {
-    // During the menu access checks we get here before plug_xautoload has had
-    // the chance to include the composer manager classes. That means that we
-    // would not be able to get the resource manager that depends on composer
-    // classes.
-    composer_manager_register_autoloader();
-    $manager = RestfulManager::createFromGlobals();
-    xautoload()->getServiceContainer()->set('restfulManager', $manager);
-  }
-  return $manager;
+  return drupal_static('restful.manager', RestfulManager::createFromGlobals());
 }
 
 /**

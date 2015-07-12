@@ -2,6 +2,8 @@ language: php
 
 php:
   - 5.4
+  - 5.5
+  - 5.6
 
 env:
   - PATH=$PATH:/home/travis/.composer/vendor/bin
@@ -14,8 +16,7 @@ mysql:
 
 install:
   # Grab Drush
-  - pear channel-discover pear.drush.org
-  - pear install drush/drush-5.8.0
+  - composer global require "drush/drush:7.*"
   - phpenv rehash
   # Make sure we don't fail when checking out projects
   - echo -e "Host github.com\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
@@ -60,33 +61,23 @@ script:
   # Go to our Drupal main directory
   - cd $TRAVIS_BUILD_DIR/../drupal
 
-  # Download the composer pieces.
-  - drush --yes dl composer-8.x-1.x
-  - drush --yes dl composer_manager
-  - cd $TRAVIS_BUILD_DIR/../drupal/sites/all/modules/composer_manager
-  - cd $TRAVIS_BUILD_DIR/../drupal
-  - drush --yes pm-enable composer_manager
-  # Set variable to 0 to avoid automatic composer build
-  - drush --yes vset --exact composer_manager_autobuild_packages 0
-
   # Download and enable module and its dependencies
-  - drush --yes dl xautoload
+  - drush --yes dl registry_autoload
   - drush --yes dl entity_validator --dev
   - drush --yes dl plug
   - drush --yes dl ctools
   - drush --yes dl entity
   - drush --yes dl entityreference
-
-  # Enable plug and run composer.
   - drush --yes pm-enable plug
-  - drush --yes composer-manager update --no-interaction --prefer-source
 
   # Patch Entity API.
   - curl -O https://www.drupal.org/files/issues/2086225-entity-access-check-node-create-3.patch
   - patch -p1 $TRAVIS_BUILD_DIR/../drupal/sites/all/modules/entity/modules/callbacks.inc  < 2086225-entity-access-check-node-create-3.patch
 
   # Enable the RESTful modules
-  - drush en --yes simpletest
-  - drush --yes pm-enable restful restful_token_auth
+  - drush --yes pm-enable simpletest restful restful_token_auth
   # Run the tests
-  - drush test-run RESTful --uri=http://localhost
+  - cd $TRAVIS_BUILD_DIR/../drupal
+  - php ./scripts/run-tests.sh --php $(which php) --verbose --color --concurrency 4 --url http://localhost RESTful | tee /tmp/simpletest-result.txt
+  - egrep -i "([1-9]+ fail)|(Fatal error)|([1-9]+ exception)" /tmp/simpletest-result.txt && exit 1
+  - exit 0

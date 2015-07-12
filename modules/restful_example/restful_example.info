@@ -2,3 +2,6 @@ name = RESTful example
 description = Example module for the RESTful module.
 core = 7.x
 dependencies[] = restful
+
+registry_autoload[] = PSR-0
+registry_autoload[] = PSR-4

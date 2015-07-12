@@ -32,11 +32,4 @@ class ResourcePluginCollection extends DefaultLazyPluginCollection {
     return $resource;
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  public function getIterator() {
-    return new EnabledArrayIterator(parent::getIterator());
-  }
-
 }

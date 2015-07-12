@@ -59,6 +59,8 @@ function restful_token_auth_restful_parse_request_alter(RequestInterface &$reque
   // In this hook we cannot rely on the service to be ready.
   $authentication_manager = new AuthenticationManager();
   try {
+    // If the the authentication provider have not been added yet, add it.
+    $authentication_manager->addAuthenticationProvider('token');
     $plugin = $authentication_manager->getPlugin('token');
   }
   catch (PluginNotFoundException $e) {
@@ -66,21 +68,11 @@ function restful_token_auth_restful_parse_request_alter(RequestInterface &$reque
     return;
   }
   $plugin_definition = $plugin->getPluginDefinition();
-  $param_name = $plugin_definition['options']['param_name'];
+  $param_name = $plugin_definition['options']['paramName'];
 
   $header = $request->getHeaders()->get($param_name);
   $request->setApplicationData($param_name, $header->getValueString());
 }
-
-/**
- * Implements hook_ctools_plugin_directory().
- */
-function restful_token_auth_ctools_plugin_directory($module, $plugin) {
-  if ($module == 'restful') {
-    return 'plugins/' . $plugin;
-  }
-}
-
 
 /**
  * Implements hook_entity_info().

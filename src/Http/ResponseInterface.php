@@ -30,7 +30,7 @@ interface ResponseInterface {
    */
   public static function create($content = '', $status = 200, $headers = array());
 
-    /**
+  /**
    * Prepares the Response before it is sent to the client.
    *
    * This method tweaks the Response to ensure that it is
