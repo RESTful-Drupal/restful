@@ -231,6 +231,8 @@ class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
    * Uploads a file issuing a POST HTTP request.
    */
   protected function uploadFile() {
+    $resource_manager = restful()->getResourceManager();
+    $resource_manager->clearPluginCache('files_upload:1.0');;
     $value = '@' . $this->imagePath;
 
     // PHP 5.5 introduced a CurlFile object that deprecates the old @filename
@@ -239,7 +241,7 @@ class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
       $value = curl_file_create($this->imagePath);
     }
 
-    return $this->httpRequest('api/file-upload', \RestfulInterface::POST, array(
+    return $this->httpRequest('api/file-upload', RequestInterface::METHOD_POST, array(
       'filename' => $value,
     ), array(
       'Content-Type' => 'multipart/form-data',
