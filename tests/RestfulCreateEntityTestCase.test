@@ -6,6 +6,9 @@
  */
 
 use Drupal\restful\Exception\BadRequestException;
+use Drupal\restful\Http\HttpHeaderBag;
+use Drupal\restful\Http\Request;
+use Drupal\restful\Http\RequestInterface;
 
 class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
 
@@ -47,14 +50,14 @@ class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
    * Test creating an entity (POST method).
    */
   function testCreateEntity() {
+    $resource_manager = restful()->getResourceManager();
     // Create test entities to be referenced.
     $ids = array();
-    foreach (array(1, 2) as $id) {
+    for ($i = 0; $i < 2; $i++) {
       $entity = entity_create('entity_test', array('name' => 'main'));
       $entity->save();
       $ids[] = $entity->pid;
     }
-
 
     $images =  array();
     foreach ($this->drupalGetTestFiles('image') as $file) {
@@ -62,7 +65,7 @@ class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
       $images[] = $file->fid;
     }
 
-    $handler = restful_get_restful_handler('main', 1, 1);
+    $handler = $resource_manager->getPlugin('main:1.1');
 
     $query = new EntityFieldQuery();
     $result = $query
@@ -94,7 +97,9 @@ class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
       'image_multiple' => array($images[0], $images[1]),
     );
 
-    $response = $handler->post('', $request);
+    $handler->setRequest(Request::create('', array(), RequestInterface::METHOD_POST, NULL, FALSE, NULL, array(), array(), array(), $request));
+    $handler->setPath('');
+    $response = $handler->process();
     $result = $response[0];
 
     $text_single = trim(strip_tags($result['text_single']));
@@ -128,7 +133,8 @@ class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
 
     // Create an entity with empty request.
     try {
-      $handler->post();
+      $handler->setRequest(Request::create('', array(), RequestInterface::METHOD_POST));
+      $handler->setPath('');
       $this->fail('User can create an entity with empty request.');
     }
     catch (BadRequestException $e) {
@@ -141,7 +147,9 @@ class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
     // Create an entity with invalid property name.
     $request['invalid'] = 'wrong';
     try {
-      $handler->post('', $request);
+      $handler->setRequest(Request::create('', array(), RequestInterface::METHOD_POST, NULL, FALSE, NULL, array(), array(), array(), $request));
+      $handler->setPath('');
+      $handler->process();
       $this->fail('User can create an entity with invalid property name.');
     }
     catch (BadRequestException $e) {
@@ -153,28 +161,36 @@ class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
 
     // Create entity with comma separated multiple entity reference.
     $request = array('entity_reference_multiple' => implode(',', $ids));
-    $response = $handler->post('', $request);
+    $handler->setRequest(Request::create('', array(), RequestInterface::METHOD_POST, NULL, FALSE, NULL, array(), array(), array(), $request));
+    $handler->setPath('');
+    $response = $handler->process();
     $result = $response[0];
     $this->assertEqual($result['entity_reference_multiple'], $ids, 'Created entity with comma separated multiple entity reference.');
 
     // Create entity with comma separated multiple taxonomy term reference.
     $ids = array($tids[0], $tids[1]);
     $request = array('term_multiple' => implode(',', $ids));
-    $response = $handler->post('', $request);
+    $handler->setRequest(Request::create('', array(), RequestInterface::METHOD_POST, NULL, FALSE, NULL, array(), array(), array(), $request));
+    $handler->setPath('');
+    $response = $handler->process();
     $result = $response[0];
     $this->assertEqual($result['term_multiple'], $ids, 'Created entity with comma separated multiple taxonomy term reference.');
 
     // Create entity with comma separated multiple file reference.
     $ids = array($images[0], $images[1]);
     $request = array('file_multiple' => implode(',', $ids));
-    $response = $handler->post('', $request);
+    $handler->setRequest(Request::create('', array(), RequestInterface::METHOD_POST, NULL, FALSE, NULL, array(), array(), array(), $request));
+    $handler->setPath('');
+    $response = $handler->process();
     $result = $response[0];
     $this->assertEqual($result['file_multiple'], $ids, 'Created entity with comma separated multiple file reference.');
 
     // Create entity with comma separated multiple image reference.
     $ids = array($images[0], $images[1]);
     $request = array('image_multiple' => implode(',', $ids));
-    $response = $handler->post('', $request);
+    $handler->setRequest(Request::create('', array(), RequestInterface::METHOD_POST, NULL, FALSE, NULL, array(), array(), array(), $request));
+    $handler->setPath('');
+    $response = $handler->process();
     $result = $response[0];
     $this->assertEqual($result['image_multiple'], $ids, 'Created entity with comma separated multiple image reference.');
 
