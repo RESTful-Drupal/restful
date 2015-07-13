@@ -12,6 +12,7 @@ use Drupal\restful\Exception\UnauthorizedException;
 use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
+use Drupal\restful\Plugin\resource\ResourceInterface;
 
 class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface {
 
@@ -281,7 +282,9 @@ class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface 
       ->getPlugins();
     $request = $request ?: restful()->getRequest();
     foreach ($plugins->getIterator() as $instance_id => $plugin) {
-      /** @var \Drupal\restful\Plugin\resource\Resource $plugin */
+      if (!$plugin instanceof ResourceInterface) {
+        continue;
+      }
       $plugin->setRequest($request);
       try {
         $data_provider = $plugin->getDataProvider();

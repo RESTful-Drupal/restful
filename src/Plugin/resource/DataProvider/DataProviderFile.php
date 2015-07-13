@@ -51,11 +51,9 @@ class DataProviderFile extends DataProviderEntity implements DataProviderInterfa
         $files['files'][$key][$name] = $value;
       }
 
-      $file = $this->fileSaveUpload($name, $files);
-
-      // Change the file status from temporary to permanent.
-      $file->status = FILE_STATUS_PERMANENT;
-      file_save($file);
+      if (!$file = $this->fileSaveUpload($name, $files)) {
+        throw new BadRequestException('Unacceptable file sent with the request.');
+      }
 
       // Required to be able to reference this file.
       file_usage_add($file, 'restful', 'files', $file->fid);
@@ -238,6 +236,9 @@ class DataProviderFile extends DataProviderEntity implements DataProviderInterfa
         $file->fid = $existing->fid;
       }
     }
+
+    // Change the file status from temporary to permanent.
+    $file->status = FILE_STATUS_PERMANENT;
 
     // If we made it this far it's safe to record this file in the database.
     if ($file = file_save($file)) {
