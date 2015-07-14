@@ -30,7 +30,9 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
     $output = array();
 
     foreach ($data as &$row) {
-      $row = $this->prepareRow($row, $output);
+      if (is_array($row)) {
+        $row = $this->prepareRow($row, $output);
+      }
     }
 
     $output[$curies_resource] = $data;

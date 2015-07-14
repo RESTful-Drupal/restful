@@ -63,6 +63,7 @@ files[] = tests/RestfulAutoCompleteTestCase.test
 files[] = tests/RestfulCreateEntityTestCase.test
 files[] = tests/RestfulCreateNodeTestCase.test
 files[] = tests/RestfulCRUDTaxonomyTermTestCase.test
+files[] = tests/RestfulCreatePrivateNodeTestCase.test
 files[] = tests/RestfulCsrfTokenTestCase.test
 files[] = tests/RestfulCurlBaseTestCase.test
 files[] = tests/RestfulDataProviderCToolsPluginsTestCase.test
