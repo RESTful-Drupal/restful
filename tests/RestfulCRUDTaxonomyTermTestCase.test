@@ -90,5 +90,16 @@ class RestfulCRUDTaxonomyTermTestCase extends DrupalWebTestCase {
     catch (RestfulForbiddenException $e) {
       $this->pass('user2 cannot delete taxonomy term.');
     }
+
+    // Testing sub-requests.
+    $handler = restful_get_restful_handler('articles', 1, 5);
+    $tags = array(
+      'label' => 'foo',
+    );
+    $data = array(
+      'label' => 'bar',
+      'tags' => array($tags),
+    );
+    $handler->post('', $data);
   }
 }
