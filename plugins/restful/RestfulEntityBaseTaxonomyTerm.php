@@ -68,6 +68,5 @@ class RestfulEntityBaseTaxonomyTerm extends RestfulEntityBase {
     }
 
     return user_access($permission, $this->getAccount());
-
   }
 }
