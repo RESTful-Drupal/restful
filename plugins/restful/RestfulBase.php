@@ -1055,8 +1055,11 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
       '<=',
       '<>',
       '!=',
-      'IN',
       'BETWEEN',
+      'CONTAINS',
+      'IN',
+      'NOT IN',
+      'STARTS_WITH',
     );
 
     foreach ($operators as $operator) {
