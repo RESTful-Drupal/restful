@@ -30,8 +30,9 @@ class RestfulCRUDTaxonomyTermTestCase extends DrupalWebTestCase {
       'administer taxonomy',
       'edit terms in ' . $vid,
       'delete terms in ' . $vid,
+      'create article content'
     ));
-    $user2 = $this->drupalCreateUser(array('access content'));
+    $user2 = $this->drupalCreateUser(array('access content', 'create article content'));
 
     $handler = restful_get_restful_handler('test_tags');
     $handler->setAccount($user1);
@@ -91,8 +92,29 @@ class RestfulCRUDTaxonomyTermTestCase extends DrupalWebTestCase {
       $this->pass('user2 cannot delete taxonomy term.');
     }
 
+    drupal_static_reset();
+
     // Testing sub-requests.
     $handler = restful_get_restful_handler('articles', 1, 5);
+    $handler->setAccount($user2);
+    $tags = array(
+      'label' => 'foo',
+    );
+    $data = array(
+      'label' => 'bar',
+      'tags' => array($tags),
+    );
+    try {
+      $handler->post('', $data);
+      $this->fail('User 2 managed to create a new tag resource');
+    } catch (RestfulForbiddenException $e) {
+      $this->pass('User 2 cannot create a new tag resource');
+    }
+
+    // Verify user 1 can create new tag resource via sub request.
+    drupal_static_reset();
+    $handler = restful_get_restful_handler('articles', 1, 5);
+    $handler->setAccount($user1);
     $tags = array(
       'label' => 'foo',
     );
@@ -101,5 +123,6 @@ class RestfulCRUDTaxonomyTermTestCase extends DrupalWebTestCase {
       'tags' => array($tags),
     );
     $handler->post('', $data);
+    $this->pass('User 1 managed to create a new tag resource');
   }
 }
