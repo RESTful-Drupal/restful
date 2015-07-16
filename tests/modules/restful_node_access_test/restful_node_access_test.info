@@ -1,0 +1,6 @@
+name = RESTful node access Test
+description = Helper module for testing the RESTful module with node access.
+core = 7.x
+dependencies[] = restful
+dependencies[] = restful_test
+hidden = TRUE
