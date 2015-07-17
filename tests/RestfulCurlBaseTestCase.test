@@ -101,7 +101,7 @@ class RestfulCurlBaseTestCase extends DrupalWebTestCase {
       if (empty($this->csrfToken)) {
         $response = $this->drupalGet('api/session/token');
         $result = drupal_json_decode($response);
-        if ($result['status'] == 200) {
+        if (!empty($result['X-CSRF-Token'])) {
           $this->csrfToken = $result['X-CSRF-Token'];
           $headers['X-CSRF-Token'] = $result['X-CSRF-Token'];
         }
