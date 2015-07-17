@@ -94,7 +94,7 @@ class CsrfToken extends Resource implements ResourceInterface {
         $value = ResourceManager::executeCallback($info['callback']);
       }
 
-      if ($value && $info['process_callbacks']) {
+      if ($value && !empty($info['process_callbacks'])) {
         foreach ($info['process_callbacks'] as $process_callback) {
           $value = ResourceManager::executeCallback($process_callback, array($value));
         }
