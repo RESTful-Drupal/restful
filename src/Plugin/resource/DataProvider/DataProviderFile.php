@@ -96,9 +96,9 @@ class DataProviderFile extends DataProviderEntity implements DataProviderInterfa
     $provider_options = $this->getOptions();
     $options = $provider_options['options'];
 
-    $validators = $options['validators'];
+    $validators = empty($options['validators']) ? NULL : $options['validators'];
     $destination = $options['scheme'] . "://";
-    $replace = $options['replace'];
+    $replace = empty($options['replace']) ? NULL : $options['replace'];
 
     // Return cached objects without processing since the file will have
     // already been processed and the paths in _FILES will be invalid.
@@ -219,7 +219,7 @@ class DataProviderFile extends DataProviderEntity implements DataProviderInterfa
     // directory. This overcomes open_basedir restrictions for future file
     // operations.
     $file->uri = $file->destination;
-    if (!drupal_move_uploaded_file($files['files']['tmp_name'][$source], $file->uri)) {
+    if (!$this::moveUploadedFile($files['files']['tmp_name'][$source], $file->uri)) {
       watchdog('file', 'Upload error. Could not move uploaded file %file to destination %destination.', array('%file' => $file->filename, '%destination' => $file->uri));
       $message = 'File upload error. Could not move uploaded file.';
       throw new ServiceUnavailableException($message);
@@ -283,7 +283,7 @@ class DataProviderFile extends DataProviderEntity implements DataProviderInterfa
       case UPLOAD_ERR_OK:
         // Final check that this is a valid upload, if it isn't, use the
         // default error handler.
-        if (is_uploaded_file($files['files']['tmp_name'][$source])) {
+        if ($this::isUploadedFile($files['files']['tmp_name'][$source])) {
           break;
         }
 
@@ -294,4 +294,33 @@ class DataProviderFile extends DataProviderEntity implements DataProviderInterfa
     }
   }
 
+  /**
+   * Helper function that checks if a file was uploaded via a POST request.
+   *
+   * @param string $filename
+   *   The name of the file.
+   *
+   * @return bool
+   *   TRUE if the file is uploaded. FALSE otherwise.
+   */
+  protected static function isUploadedFile($filename) {
+    return variable_get('restful_insecure_uploaded_flag', FALSE) || is_uploaded_file($filename);
+  }
+
+  /**
+   * Helper function that moves an uploaded file.
+   *
+   * @param string $filename
+   *   The path of the file to move.
+   * @param string $uri
+   *   The path where to move the file.
+   *
+   * @return bool
+   */
+  protected static function moveUploadedFile($filename, $uri) {
+    if (drupal_move_uploaded_file($filename, $uri)) {
+      return TRUE;
+    }
+    return variable_get('restful_insecure_uploaded_flag', FALSE) && (bool) file_unmanaged_move($filename, $uri);
+  }
 }
