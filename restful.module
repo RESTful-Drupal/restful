@@ -456,8 +456,13 @@ function _restful_get_data_from_menu_status(&$var) {
       $class_name = '\Drupal\restful\Exception\ServiceUnavailableException';
       $message = 'Site is offline.';
       break;
+
+    default:
+      $class_name = '\Drupal\restful\Exception\RestfulException';
+      $message = 'Unknown exception';
   }
 
+  /* @var RestfulException $e */
   $e = new $class_name($message);
 
   $var = array(
