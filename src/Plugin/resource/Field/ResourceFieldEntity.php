@@ -172,6 +172,19 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function set($value, DataInterpreterInterface $interpreter) {
+    try {
+      $property_wrapper = $interpreter->getWrapper()->{$this->getProperty()};
+      $property_wrapper->set($value);
+    }
+    catch (\Exception $e) {
+      $this->decorated->set($value, $interpreter);
+    }
+  }
+
+  /**
    * Returns the value for the current single field.
    *
    * This implementation will also add some metadata to the resource field
@@ -235,6 +248,7 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
 
     return $value;
   }
+
   /**
    * {@inheritdoc}
    *
@@ -397,9 +411,7 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
    * @return mixed
    *   A single or multiple values.
    */
-  protected function resourceValue(DataInterpreterInterface $source) {
-
-  }
+  protected function resourceValue(DataInterpreterInterface $source) {}
 
   /**
    * {@inheritdoc}

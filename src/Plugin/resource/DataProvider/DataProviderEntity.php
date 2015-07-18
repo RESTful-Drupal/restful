@@ -809,7 +809,8 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
         continue;
       }
 
-      $entity_property_access = $resource_field->access('edit', new DataInterpreterEMW($this->getAccount(), $wrapper));
+      $interpreter = new DataInterpreterEMW($this->getAccount(), $wrapper);
+      $entity_property_access = $resource_field->access('edit', $interpreter);
       if (!isset($object[$public_field_name])) {
         // No property to set in the request.
         if ($replace && $entity_property_access) {
@@ -825,7 +826,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
       // Delegate modifications on the value of the field.
       $field_value = $resource_field->preprocess($object[$public_field_name]);
 
-      $wrapper->{$property_name}->set($field_value);
+      $resource_field->set($field_value, $interpreter);
       unset($original_object[$public_field_name]);
       $save = TRUE;
     }
@@ -837,7 +838,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
 
     if ($original_object) {
       // Request had illegal values.
-      $error_message = format_plural(count($original_object), 'Property @names is invalid.', 'Property @names are invalid.', array('@names' => implode(', ', array_keys($original_object))));
+      $error_message = format_plural(count($original_object), 'Property @names is invalid.', 'Properties @names are invalid.', array('@names' => implode(', ', array_keys($original_object))));
       throw new BadRequestException($error_message);
     }
 

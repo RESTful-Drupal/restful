@@ -38,7 +38,7 @@ class ResourceFieldEntityReference extends ResourceFieldEntity implements Resour
 
     $value = static::subRequestId($this->mergeEntityFromReference($value));
 
-    return $value;
+    return ($field_info['cardinality'] == 1 && is_array($value)) ? reset($value) : $value;
   }
 
   /**

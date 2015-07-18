@@ -6,13 +6,14 @@
  */
 
 use Drupal\restful\Exception\BadRequestException;
+use Drupal\restful\Http\Request;
 
 class RestfulSubResourcesCreateEntityTestCase extends DrupalWebTestCase {
 
   /**
    * Hold the RESTful handler.
    *
-   * @var RestfulInterface
+   * @var \Drupal\restful\Plugin\resource\ResourceInterface
    */
   protected $handler = NULL;
 
