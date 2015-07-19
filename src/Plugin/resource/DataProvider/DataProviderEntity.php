@@ -790,6 +790,9 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
       throw new BadRequestException('Bad input data provided. Please, check your input and your Content-Type header.');
     }
     $save = FALSE;
+    // We cannot set the 'id' property of the $object, it's only needed to know
+    // which entity to update. Remove it from the properties to set.
+    unset($object['id']);
     $original_object = $object;
 
     foreach ($this->fieldDefinitions as $public_field_name => $resource_field) {

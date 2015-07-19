@@ -52,6 +52,9 @@ class ResourceFieldEntityReference extends ResourceFieldEntity implements Resour
    */
   protected function mergeEntityFromReference($value) {
     // TODO: Move this to the docs. The payload for the resource has changed.
+    // The sub-request applies to all of the values for a given field. It is not
+    // possible to have a different request for the different values of a multi
+    // value field.
     // The structure of the payload send for a public field declared as a
     // resource is now like:
     // 1. array(
@@ -106,6 +109,12 @@ class ResourceFieldEntityReference extends ResourceFieldEntity implements Resour
     // Multiple values.
     $return = array();
     foreach ($value['values'] as $value_item) {
+      // If there is only the 'id' public property, then only assign the new
+      // reference.
+      if (array_keys($value_item) == array('id')) {
+        $return[] = $value_item;
+        continue;
+      }
       $merged = $resource_data_provider->merge(static::subRequestId($value_item), $value_item);
       $return[] = reset($merged);
     }
