@@ -7,6 +7,7 @@
 
 use Drupal\restful\Exception\BadRequestException;
 use Drupal\restful\Http\Request;
+use Drupal\restful\Http\RequestInterface;
 
 class RestfulSubResourcesCreateEntityTestCase extends DrupalWebTestCase {
 
@@ -144,34 +145,41 @@ class RestfulSubResourcesCreateEntityTestCase extends DrupalWebTestCase {
     // PATCH existing one, and PUT existing one.
     $request = $base_request;
     $request['entity_reference_single'] = $node2->nid;
-    $request['entity_reference_multiple'] = array(
-      $node3->nid,
+    $request['entity_reference_multiple']['request'] = array(
+      'method' => RequestInterface::METHOD_PATCH,
+    );
+    $request['entity_reference_multiple']['values'] = array(
       array(
+        // Set the $node3.
+        'id' => $node3->nid,
+      ),
+      array(
+        // Create a new node. Even if the request method is set to PATCH, since
+        // there is no id to rely upon, this is a POST.
         'label' => 'POST new one',
         'body' => 'Drupal',
       ),
       array(
+        // Set $node4 and update some of the fields.
         'id' => $node4->nid,
         'label' => 'PATCH existing one',
         'body' => 'Drupal',
       ),
       array(
-        // Explicitly set the method.
-        '__application' => array(
-          'method' => 'put',
-        ),
+        // Set $node5 and update some of the fields.
         'id' => $node5->nid,
-        'label' => 'PUT existing one',
+        'label' => 'PATCH existing one',
         'body' => 'Drupal',
       ),
     );
 
-    $this->processRequests('post', $node1->nid, $request);
+    $this->processRequests('post', '', $request);
 
     // Test the version of the sub-resource.
     $public_fields = $this->handler->getFieldDefinitions();
-    $this->assertEqual($public_fields['entity_reference_multiple']['resource']['article']['major_version'], 1, 'Sub resource major version is correct.');
-    $this->assertEqual($public_fields['entity_reference_multiple']['resource']['article']['minor_version'], 2, 'Sub resource minor version is correct.');
+    $erm_resource = $public_fields->get('entity_reference_multiple')->getResource();
+    $this->assertEqual($erm_resource['majorVersion'], 1, 'Sub resource major version is correct.');
+    $this->assertEqual($erm_resource['minorVersion'], 2, 'Sub resource minor version is correct.');
   }
 
   /**
