@@ -65,6 +65,7 @@ class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
       $images[] = $file->fid;
     }
 
+    $resource_manager->clearPluginCache('main:1.1');
     $handler = $resource_manager->getPlugin('main:1.1');
 
     $query = new EntityFieldQuery();
