@@ -61,6 +61,9 @@ abstract class ResourceEntity extends Resource {
       $field_definitions = ResourceFieldCollection::factory($field_definitions_array);
     }
     $class_name = $this->dataProviderClassName();
+    if (!class_exists($class_name)) {
+      throw new ServerConfigurationException(sprintf('The DataProvider could be found for this resource: %s.', $this->getResourceMachineName()));
+    }
     return new $class_name($this->getRequest(), $field_definitions, $this->getAccount(), $this->getPath(), $plugin_definition['dataProvider']);
   }
 
@@ -71,6 +74,8 @@ abstract class ResourceEntity extends Resource {
    *   The name of the class of the provider factory.
    */
   protected function dataProviderClassName() {
+    // This helper function allows to map a resource to a different data
+    // provider class.
     if ($this->getEntityType() == 'node') {
       return '\Drupal\restful\Plugin\resource\DataProvider\DataProviderNode';
     }

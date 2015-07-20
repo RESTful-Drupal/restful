@@ -57,13 +57,6 @@ class CsrfToken extends Resource implements ResourceInterface {
   }
 
   /**
-   * {@inheritdoc}
-   */
-  public function dataProviderFactory() {
-    return new DataProvider\DataProviderNull($this->getRequest(), $this->getFieldDefinitions(), $this->getAccount(), array());
-  }
-
-  /**
    * Value callback; Return the CSRF token.
    *
    * @return array
