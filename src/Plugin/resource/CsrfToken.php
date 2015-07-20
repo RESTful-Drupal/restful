@@ -16,7 +16,7 @@ use Drupal\restful\Resource\ResourceManager;
  *   name = "csrf_token:1.0",
  *   resource = "csrf_token",
  *   label = "CSRF Token",
- *   description = "Resource that provides CSRF Tokens.",
+ *   description = "Resource that provides CSRF Tokens when using cookie authentication.",
  *   authenticationTypes = TRUE,
  *   authenticationOptional = TRUE,
  *   majorVersion = 1,
