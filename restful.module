@@ -94,6 +94,8 @@ function restful_menu() {
     ->getPlugins();
   foreach ($plugins->getIterator() as $plugin) {
     if (!$plugin instanceof ResourceInterface) {
+      // If the plugin is disabled $plugin gets set to NULL. If that is the case
+      // do not set any menu values based on it.
       continue;
     }
     $plugin_definition = $plugin->getPluginDefinition();
