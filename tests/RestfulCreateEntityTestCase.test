@@ -136,13 +136,11 @@ class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
     try {
       $handler->setRequest(Request::create('', array(), RequestInterface::METHOD_POST));
       $handler->setPath('');
+      $handler->process();
       $this->fail('User can create an entity with empty request.');
     }
     catch (BadRequestException $e) {
       $this->pass('User cannot create an entity with empty request.');
-    }
-    catch (\Exception $e) {
-      $this->fail('Wrong exception thrown when creating an entity with empty request.');
     }
 
     // Create an entity with invalid property name.
@@ -155,9 +153,6 @@ class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
     }
     catch (BadRequestException $e) {
       $this->pass('User cannot create an entity with invalid property name.');
-    }
-    catch (\Exception $e) {
-      $this->fail('Wrong exception thrown when creating an entity with invalid property name.');
     }
 
     // Create entity with comma separated multiple entity reference.

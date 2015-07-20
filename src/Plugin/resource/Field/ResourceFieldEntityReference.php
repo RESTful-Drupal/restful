@@ -23,17 +23,17 @@ class ResourceFieldEntityReference extends ResourceFieldEntity implements Resour
       return NULL;
     }
 
-    // If the provided value is the ID to the referenced entity, then do not do
-    // a sub-request.
-    if (!is_array($value) || empty($value['values'])) {
-      return $value;
-    }
-
     $field_info = field_info_field($this->getProperty());
     if ($field_info['cardinality'] != 1 && !is_array($value)) {
       // If the field is entity reference type and its cardinality larger than
       // 1 set value to an array.
       $value = explode(',', $value);
+    }
+
+    // If the provided value is the ID to the referenced entity, then do not do
+    // a sub-request.
+    if (!is_array($value) || empty($value['values'])) {
+      return $value;
     }
 
     $value = static::subRequestId($this->mergeEntityFromReference($value));
