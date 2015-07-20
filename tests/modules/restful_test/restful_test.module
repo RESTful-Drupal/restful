@@ -445,3 +445,16 @@ function restful_test_entity_info() {
     ),
   );
 }
+
+/**
+ * Implements hook_restful_resource_alter().
+ *
+ * Decorate an existing resource with other services (e.g. rate limit and render
+ * cache).
+ */
+function restful_test_restful_resource_alter(\Drupal\restful\Plugin\resource\ResourceInterface &$resource) {
+  // Disable the Files Upload resource based on the settings variable.
+  if ($resource->getResourceMachineName() == 'files_upload_test') {
+    variable_get('restful_file_upload', FALSE) ? $resource->enable() : $resource->disable();
+  }
+}
