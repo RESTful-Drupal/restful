@@ -80,7 +80,7 @@ abstract class DataProvider implements DataProviderInterface {
    * @param string $langcode
    *   (Optional) The entity language code.
    */
-  public function __construct(RequestInterface $request, ResourceFieldCollectionInterface $field_definitions, $account, $resource_path, array $options, $langcode = NULL) {
+  public function __construct(RequestInterface $request, ResourceFieldCollectionInterface $field_definitions, $account, $resource_path = NULL, array $options = array(), $langcode = NULL) {
     $this->request = $request;
     $this->fieldDefinitions = $field_definitions;
     $this->account = $account;

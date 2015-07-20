@@ -794,6 +794,9 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     // which entity to update. Remove it from the properties to set.
     unset($object['id']);
     $original_object = $object;
+    $interpreter = new DataInterpreterEMW($this->getAccount(), $wrapper);
+    // Keeps a list of the fields that have been set.
+    $processed_fields = array();
 
     foreach ($this->fieldDefinitions as $public_field_name => $resource_field) {
       /** @var ResourceFieldEntityInterface $resource_field */
@@ -812,13 +815,15 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
         continue;
       }
 
-      $interpreter = new DataInterpreterEMW($this->getAccount(), $wrapper);
       $entity_property_access = $resource_field->access('edit', $interpreter);
       if (!isset($object[$public_field_name])) {
         // No property to set in the request.
-        if ($replace && $entity_property_access) {
+        // Only set this to NULL if this property has not been set to a specific
+        // value by another public field (since 2 public fields can reference
+        // the same property).
+        if ($replace && $entity_property_access && !in_array($property_name, $processed_fields)) {
           // We need to set the value to NULL.
-          $wrapper->{$property_name}->set(NULL);
+          $resource_field->set(NULL, $interpreter);
         }
         continue;
       }
@@ -830,6 +835,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
       $field_value = $resource_field->preprocess($object[$public_field_name]);
 
       $resource_field->set($field_value, $interpreter);
+      $processed_fields[] = $property_name;
       unset($original_object[$public_field_name]);
       $save = TRUE;
     }
@@ -847,9 +853,9 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
 
     // Allow changing the entity just before it's saved. For example, setting
     // the author of the node entity.
-    $this->entityPreSave($wrapper);
+    $this->entityPreSave($interpreter->getWrapper());
 
-    $this->entityValidate($wrapper);
+    $this->entityValidate($interpreter->getWrapper());
 
     $wrapper->save();
   }
