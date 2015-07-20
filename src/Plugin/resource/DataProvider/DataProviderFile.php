@@ -304,7 +304,7 @@ class DataProviderFile extends DataProviderEntity implements DataProviderInterfa
    *   TRUE if the file is uploaded. FALSE otherwise.
    */
   protected static function isUploadedFile($filename) {
-    return variable_get('restful_insecure_uploaded_flag', FALSE) || is_uploaded_file($filename);
+    return is_uploaded_file($filename);
   }
 
   /**
@@ -316,11 +316,10 @@ class DataProviderFile extends DataProviderEntity implements DataProviderInterfa
    *   The path where to move the file.
    *
    * @return bool
+   *   TRUE if the file was moved. FALSE otherwise.
    */
   protected static function moveUploadedFile($filename, $uri) {
-    if (drupal_move_uploaded_file($filename, $uri)) {
-      return TRUE;
-    }
-    return variable_get('restful_insecure_uploaded_flag', FALSE) && (bool) file_unmanaged_move($filename, $uri);
+    return (bool) drupal_move_uploaded_file($filename, $uri);
   }
+
 }
