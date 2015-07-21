@@ -6,6 +6,7 @@
  */
 
 use Drupal\restful\Http\RequestInterface;
+use Drupal\restful\Http\Request;
 
 class RestfulCurlBaseTestCase extends DrupalWebTestCase {
 
@@ -94,7 +95,7 @@ class RestfulCurlBaseTestCase extends DrupalWebTestCase {
 
     $curl_options += array(CURLOPT_HTTPHEADER => array());
 
-    if (\Drupal\restful\Http\Request::isWriteMethod($method) && $use_token) {
+    if (Request::isWriteMethod($method) && $use_token) {
       // Add CSRF token for write operations.
       if (empty($this->csrfToken)) {
         $response = $this->drupalGet('api/session/token');

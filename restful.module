@@ -451,7 +451,7 @@ function _restful_get_data_from_menu_status(&$var) {
 
     case MENU_ACCESS_DENIED:
       $class_name = '\Drupal\restful\Exception\ForbiddenException';
-      $message = 'Access denied.';
+      $message = 'Access denied while checking menu access.';
       break;
 
     case MENU_SITE_OFFLINE:
