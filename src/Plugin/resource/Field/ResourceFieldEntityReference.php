@@ -201,12 +201,12 @@ class ResourceFieldEntityReference extends ResourceFieldEntity implements Resour
     if ($property_wrapper instanceof \EntityListWrapper) {
       $values = array();
       foreach ($property_wrapper->getIterator() as $item_wrapper) {
-        /** @var $item_wrapper \EntityDrupalWrapper */
+        /* @var $item_wrapper \EntityDrupalWrapper */
         $values[] = $item_wrapper->getIdentifier();
       }
       return $values;
     }
-    /** @var $property_wrapper \EntityDrupalWrapper */
+    /* @var $property_wrapper \EntityDrupalWrapper */
     return $property_wrapper->getIdentifier();
   }
 

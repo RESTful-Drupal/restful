@@ -22,7 +22,7 @@ class ResourcePluginCollection extends DefaultLazyPluginCollection {
    * Overwrites LazyPluginCollection::get().
    */
   public function &get($instance_id) {
-    /** @var \Drupal\restful\Plugin\resource\ResourceInterface $resource */
+    /* @var \Drupal\restful\Plugin\resource\ResourceInterface $resource */
     $resource = parent::get($instance_id);
 
     // Allow altering the resource, this way we can read the resource's

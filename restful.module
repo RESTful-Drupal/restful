@@ -93,7 +93,7 @@ function restful_menu() {
     ->getResourceManager()
     ->getPlugins();
   foreach ($plugins->getIterator() as $plugin) {
-    /** @var ResourceInterface $plugin */
+    /* @var ResourceInterface $plugin */
     $plugin_definition = $plugin->getPluginDefinition();
     if (!$plugin_definition['hookMenu']) {
       // Plugin explicitly declared no hook menu should be created automatically

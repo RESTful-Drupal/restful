@@ -95,7 +95,7 @@ class AuthenticationManager implements AuthenticationManagerInterface {
     // Resolve the user based on the providers in the manager.
     $account = NULL;
     foreach ($this->plugins as $provider) {
-      /** @var \Drupal\restful\Plugin\authentication\AuthenticationInterface $provider */
+      /* @var \Drupal\restful\Plugin\authentication\AuthenticationInterface $provider */
       if ($provider->applies($request) && $account = $provider->authenticate($request)) {
         // The account has been loaded, we can stop looking.
         break;

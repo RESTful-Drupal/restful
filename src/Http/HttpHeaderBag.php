@@ -38,7 +38,7 @@ class HttpHeaderBag implements HttpHeaderBagInterface, \Iterator {
   public function __toString() {
     $headers = array();
     foreach ($this->values as $key => $header) {
-      /** @var HttpHeader $header */
+      /* @var HttpHeader $header */
       $headers[] = $header->__toString();
     }
     return implode("\r\n", $headers);

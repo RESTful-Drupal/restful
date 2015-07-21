@@ -109,7 +109,7 @@ class RateLimitManager implements RateLimitManagerInterface {
     // Check all rate limits configured for this handler.
     foreach ($this->plugins as $instance_id => $plugin) {
       // If the limit is unlimited then skip everything.
-      /** @var RateLimit $plugin */
+      /* @var RateLimit $plugin */
       $limit = $plugin->getLimit($this->account);
       $period = $plugin->getPeriod();
       if ($limit == static::UNLIMITED_RATE_LIMIT) {

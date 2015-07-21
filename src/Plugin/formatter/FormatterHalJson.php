@@ -186,7 +186,7 @@ class FormatterHalJson extends Formatter implements FormatterInterface {
 
     $field_definitions = clone $this->getResource()->getFieldDefinitions();
     foreach ($field_definitions as $pubilc_field_name => $resource_field) {
-      /** @var \Drupal\restful\Plugin\resource\Field\ResourceFieldInterface $resource_field */
+      /* @var \Drupal\restful\Plugin\resource\Field\ResourceFieldInterface $resource_field */
       if (!$resource_field->getResource()) {
         // Not a resource.
         continue;

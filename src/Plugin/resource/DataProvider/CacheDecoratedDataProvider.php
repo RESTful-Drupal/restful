@@ -281,7 +281,7 @@ class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface 
       ->getPlugins();
     $request = $request ?: restful()->getRequest();
     foreach ($plugins->getIterator() as $instance_id => $plugin) {
-      /** @var \Drupal\restful\Plugin\resource\Resource $plugin */
+      /* @var \Drupal\restful\Plugin\resource\Resource $plugin */
       $plugin->setRequest($request);
       try {
         $data_provider = $plugin->getDataProvider();

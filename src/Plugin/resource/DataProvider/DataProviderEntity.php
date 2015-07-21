@@ -96,7 +96,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
       if (!($value instanceof ResourceFieldEntityInterface)) {
         continue;
       }
-      /** @var ResourceFieldEntityInterface $value */
+      /* @var ResourceFieldEntityInterface $value */
       $value->setEntityType($this->entityType);
       if (!$value->getBundles()) {
         // If the field definition does not contain an array of bundles for that
@@ -202,7 +202,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
       throw new ForbiddenException('You do not have access to create a new resource.');
     }
 
-    /** @var \EntityDrupalWrapper $wrapper */
+    /* @var \EntityDrupalWrapper $wrapper */
     $wrapper = entity_metadata_wrapper($this->entityType, $entity);
 
     $this->setPropertyValues($wrapper, $object, TRUE);
@@ -228,7 +228,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
       return NULL;
     }
 
-    /** @var \EntityDrupalWrapper $wrapper */
+    /* @var \EntityDrupalWrapper $wrapper */
     $wrapper = entity_metadata_wrapper($this->entityType, $entity_id);
     $wrapper->language($this->getLangCode());
     $values = array();
@@ -237,7 +237,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     $limit_fields = !empty($input['fields']) ? explode(',', $input['fields']) : array();
 
     foreach ($this->fieldDefinitions as $resource_field_name => $resource_field) {
-      /** @var ResourceFieldEntityInterface $resource_field */
+      /* @var ResourceFieldEntityInterface $resource_field */
       if ($limit_fields && !in_array($resource_field_name, $limit_fields)) {
         // Limit fields doesn't include this property.
         continue;
@@ -285,7 +285,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     $entity_id = $this->getEntityIdByFieldId($identifier);
     $this->isValidEntity('update', $entity_id);
 
-    /** @var \EntityDrupalWrapper $wrapper */
+    /* @var \EntityDrupalWrapper $wrapper */
     $wrapper = entity_metadata_wrapper($this->entityType, $entity_id);
 
     $this->setPropertyValues($wrapper, $object, $replace);
@@ -306,7 +306,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
   public function remove($identifier) {
     $this->isValidEntity('update', $identifier);
 
-    /** @var \EntityDrupalWrapper $wrapper */
+    /* @var \EntityDrupalWrapper $wrapper */
     $wrapper = entity_metadata_wrapper($this->entityType, $identifier);
     $wrapper->delete();
 
@@ -443,7 +443,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     $query->range(0, 1);
     // Find out if the provided ID is a Drupal field or an entity property.
     $property = $public_field_info->getProperty();
-    /** @var ResourceFieldEntity $public_field_info */
+    /* @var ResourceFieldEntity $public_field_info */
     if (ResourceFieldEntity::propertyIsField($property)) {
       $query->fieldCondition($property, $public_field_info->getColumn(), $id);
     }
@@ -575,7 +575,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
 
     foreach ($sorts as $public_field_name => $direction) {
       // Determine if sorting is by field or property.
-      /** @var ResourceFieldEntityInterface $resource_field */
+      /* @var ResourceFieldEntityInterface $resource_field */
       if (!$resource_field = $resource_fields->get($public_field_name)) {
         return;
       }
@@ -606,7 +606,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     $resource_fields = $this->fieldDefinitions;
     foreach ($this->parseRequestForListFilter() as $filter) {
       // Determine if filtering is by field or property.
-      /** @var ResourceFieldEntityInterface $resource_field */
+      /* @var ResourceFieldEntityInterface $resource_field */
       if (!$resource_field = $resource_fields->get($filter['public_field'])) {
         return;
       }
@@ -793,7 +793,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     $original_object = $object;
 
     foreach ($this->fieldDefinitions as $public_field_name => $resource_field) {
-      /** @var ResourceFieldEntityInterface $resource_field */
+      /* @var ResourceFieldEntityInterface $resource_field */
       if (!$this->methodAccess($resource_field)) {
         // Allow passing the value in the request.
         unset($original_object[$public_field_name]);
