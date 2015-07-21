@@ -33,7 +33,7 @@ interface ResourceFieldEntityInterface extends ResourceFieldInterface {
   public function getFormatter();
 
   /**
-   * @param string $formatter
+   * @param array $formatter
    */
   public function setFormatter($formatter);
 

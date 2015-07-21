@@ -74,8 +74,9 @@ class RestfulViewModeAndFormatterTestCase extends DrupalWebTestCase {
         'trim_length' => 10,
       ),
     );
+    /* @var \Drupal\restful\Plugin\resource\Field\ResourceFieldEntityText $body */
     $body = $field_definitions->get('body');
-    $body['formatter'] = $display;
+    $body->setFormatter($display);
     $field_definitions->set('body', $body);
     $handler->setFieldDefinitions($field_definitions);
     $resource_manager->clearPluginCache('articles:1.5');

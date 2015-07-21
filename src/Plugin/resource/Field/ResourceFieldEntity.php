@@ -37,7 +37,7 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
    * API's formatter. The value is the $display value that is passed to
    * field_view_field().
    *
-   * @var string
+   * @var array
    */
   protected $formatter;
 
