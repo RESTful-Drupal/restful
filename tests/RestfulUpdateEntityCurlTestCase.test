@@ -59,7 +59,9 @@ class RestfulUpdateEntityCurlTestCase extends RestfulCurlBaseTestCase {
 
     $request = array('label' => $new_label);
 
-    $result = $this->httpRequest('api/v1.0/test_articles/' . $id, RequestInterface::METHOD_PUT, $request);
+    $result = $this->httpRequest('api/v1.0/test_articles/' . $id, RequestInterface::METHOD_PUT, $request, array(
+      'Content-Type' => 'application/x-www-form-urlencoded',
+    ));
 
     $expected_result = array(
       'data' => array(array(

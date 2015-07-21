@@ -109,7 +109,7 @@ class AuthenticationManager implements AuthenticationManagerInterface {
         drupal_page_is_cacheable(variable_get('restful_page_cache', FALSE));
 
         // User didn't authenticate against any provider, so we throw an error.
-        throw new UnauthorizedException('Bad credentials');
+        throw new UnauthorizedException('Anonymous user resolved for a resource that requires authentication.');
       }
 
       // If the account could not be authenticated default to the global user.
