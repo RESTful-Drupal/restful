@@ -65,7 +65,6 @@ class RestfulCurlBaseTestCase extends DrupalWebTestCase {
         );
         if (empty($headers['Content-Type'])) {
           $headers['Content-Type'] = 'application/' . $format;
-          $curl_options[CURLOPT_POSTFIELDS] = http_build_query($body);
         }
         break;
 
@@ -80,7 +79,6 @@ class RestfulCurlBaseTestCase extends DrupalWebTestCase {
         );
         if (empty($headers['Content-Type'])) {
           $headers['Content-Type'] = 'application/' . $format;
-          $curl_options[CURLOPT_POSTFIELDS] = http_build_query($body);
         }
         break;
 
