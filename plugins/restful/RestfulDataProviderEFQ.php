@@ -220,9 +220,11 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
       '<=',
       '<>',
       '!=',
-      'IN',
       'BETWEEN',
+      'CONTAINS',
+      'IN',
       'LIKE',
+      'NOT IN',
       'STARTS_WITH',
     );
 
