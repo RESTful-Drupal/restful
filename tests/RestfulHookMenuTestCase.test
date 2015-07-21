@@ -143,12 +143,12 @@ class RestfulHookMenuTestCase extends RestfulCurlBaseTestCase {
       array(
         'path' => 'api/v1/articles',
         'version_header' => NULL,
-        'expected_version' => array(1, 6),
+        'expected_version' => array(1, 7),
       ),
       array(
         'path' => 'api/articles',
         'version_header' => 'v1',
-        'expected_version' => array(1, 6),
+        'expected_version' => array(1, 7),
       ),
       array(
         'path' => 'api/articles',
