@@ -281,12 +281,12 @@ class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface 
       ->getResourceManager()
       ->getPlugins();
     $request = $request ?: restful()->getRequest();
-    foreach ($plugins->getIterator() as $instance_id => $plugin) {
-      if (!$plugin instanceof ResourceInterface) {
-        continue;
-      }
-      $plugin->setRequest($request);
+    foreach ($plugins->getInstanceIds() as $instance_id) {
       try {
+        $plugin = $plugins->get($instance_id);
+        if (!$plugin instanceof ResourceInterface) {
+          continue;
+        }
         $data_provider = $plugin->getDataProvider();
       }
       catch (UnauthorizedException $e) {
@@ -294,6 +294,7 @@ class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface 
         // invalidating cache entries, since they won't be there.
         continue;
       }
+      $plugin->setRequest($request);
       if (method_exists($data_provider, 'cacheInvalidate')) {
         $version = $plugin->getVersion();
         // Get the uid for the invalidation.

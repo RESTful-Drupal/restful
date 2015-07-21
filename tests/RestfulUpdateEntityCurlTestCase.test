@@ -59,28 +59,28 @@ class RestfulUpdateEntityCurlTestCase extends RestfulCurlBaseTestCase {
 
     $request = array('label' => $new_label);
 
-    $result = $this->httpRequest('api/v1.0/test_articles/' . $id, RequestInterface::METHOD_PUT, $request, array(
+    $result = $this->httpRequest('api/v1.2/test_articles/' . $id, RequestInterface::METHOD_PUT, $request, array(
       'Content-Type' => 'application/x-www-form-urlencoded',
     ));
 
     $expected_result = array(
       'data' => array(array(
-        'id' => $id,
         'label' => $new_label,
-        'self' => url('api/v1.0/test_articles/' . $id, array('absolute' => TRUE)),
+        'self' => url('api/v1.2/test_articles/' . $id, array('absolute' => TRUE)),
         'body' => NULL,
       )),
       'self' => array(
+        'href' => url('api/v1.2/test_articles/' . $id, array('absolute' => TRUE)),
         'title' => 'Self',
-        'href' => url('api/v1.0/test_articles/' . $id, array('absolute' => TRUE)),
       ),
     );
 
-    $this->assertEqual($result['body'], drupal_json_encode($expected_result));
+    $result = drupal_json_decode($result['body']);
+    $this->assertEqual($expected_result, $result);
 
     // Update an entity with invalid property name.
     $request['invalid'] = 'wrong';
-    $result = $this->httpRequest('api/v1.0/test_articles/' . $id, RequestInterface::METHOD_PUT, $request);
+    $result = $this->httpRequest('api/v1.2/test_articles/' . $id, RequestInterface::METHOD_PUT, $request);
     $this->assertEqual($result['code'], 400, 'User cannot update using PUT method an entity with invalid property name.');
 
     // Test update an entity (PATCH method).
@@ -99,17 +99,18 @@ class RestfulUpdateEntityCurlTestCase extends RestfulCurlBaseTestCase {
     $id = $node->nid;
 
     $request = array('label' => $new_label);
-    $result = $this->httpRequest("api/v1.0/test_articles/$id", RequestInterface::METHOD_PATCH, $request);
+    $result = $this->httpRequest("api/v1.2/test_articles/$id", RequestInterface::METHOD_PATCH, $request, array(
+      'Content-Type' => 'application/x-www-form-urlencoded',
+    ));
     $expected_result = array(
       'data' => array(array(
-        'id' => $id,
         'label' => $new_label,
-        'self' => url('api/v1.0/test_articles/' . $id, array('absolute' => TRUE)),
+        'self' => url('api/v1.2/test_articles/' . $id, array('absolute' => TRUE)),
         'body' => $text,
       )),
       'self' => array(
         'title' => 'Self',
-        'href' => url('api/v1.0/test_articles/' . $id, array('absolute' => TRUE)),
+        'href' => url('api/v1.2/test_articles/' . $id, array('absolute' => TRUE)),
       ),
     );
 
@@ -122,7 +123,7 @@ class RestfulUpdateEntityCurlTestCase extends RestfulCurlBaseTestCase {
 
     // Update an entity with invalid property name.
     $request['invalid'] = 'wrong';
-    $result = $this->httpRequest("api/v1.0/test_articles/$id", RequestInterface::METHOD_PATCH, $request);
+    $result = $this->httpRequest("api/v1.2/test_articles/$id", RequestInterface::METHOD_PATCH, $request);
     $this->assertEqual($result['code'], 400, 'User cannot update using PATCH method an entity with invalid property name.');
   }
 }
