@@ -10,6 +10,13 @@ use Drupal\restful\Http\RequestInterface;
 
 class RestfulUpdateEntityTestCase extends DrupalWebTestCase {
 
+  /**
+   * Holds the user account that owns the content.
+   *
+   * @var object
+   */
+  protected $account;
+
   public static function getInfo() {
     return array(
       'name' => 'Update entity',
@@ -20,6 +27,10 @@ class RestfulUpdateEntityTestCase extends DrupalWebTestCase {
 
   public function setUp() {
     parent::setUp('restful_test');
+    $this->account = $this->drupalCreateUser(array(
+      'create article content',
+      'edit own article content',
+    ));
   }
 
   /**
@@ -35,16 +46,18 @@ class RestfulUpdateEntityTestCase extends DrupalWebTestCase {
     $settings = array(
       'type' => 'article',
       'title' => $label,
+      'uid' => $this->account->uid,
     );
     $settings['body'][LANGUAGE_NONE][0]['value'] = $text;
 
     $node = $this->drupalCreateNode($settings);
     $id = $node->nid;
 
-    $handler = $resource_manager->getPlugin('test_articles:1.0');
+    $handler = $resource_manager->getPlugin('test_articles:1.2');
+    $handler->setAccount($this->account);
     $request = array('label' => $new_label);
 
-    $handler->setRequest(Request::create('api/test_articles/v1.0/' . $id, array(), RequestInterface::METHOD_PUT, NULL, FALSE, NULL, array(), array(), array(), $request));
+    $handler->setRequest(Request::create('api/test_articles/v1.2/' . $id, array(), RequestInterface::METHOD_PUT, NULL, FALSE, NULL, array(), array(), array(), $request));
     $handler->setPath($id);
     $result = $handler->process();
     $expected_result = array(array(
@@ -59,7 +72,7 @@ class RestfulUpdateEntityTestCase extends DrupalWebTestCase {
     // Update an entity with invalid property name.
     $request['invalid'] = 'wrong';
     try {
-      $handler->setRequest(Request::create('api/test_articles/v1.0/' . $id, array(), RequestInterface::METHOD_PUT, NULL, FALSE, NULL, array(), array(), array(), $request));
+      $handler->setRequest(Request::create('api/test_articles/v1.2/' . $id, array(), RequestInterface::METHOD_PUT, NULL, FALSE, NULL, array(), array(), array(), $request));
       $handler->setPath($id);
       $handler->process();
       $this->fail('User can update using PUT method an entity with invalid property name.');
@@ -82,16 +95,18 @@ class RestfulUpdateEntityTestCase extends DrupalWebTestCase {
     $settings = array(
       'type' => 'article',
       'title' => $label,
+      'uid' => $this->account->uid,
     );
     $settings['body'][LANGUAGE_NONE][0]['value'] = $text;
 
     $node = $this->drupalCreateNode($settings);
     $id = $node->nid;
 
-    $handler = $resource_manager->getPlugin('test_articles:1.0');
+    $handler = $resource_manager->getPlugin('test_articles:1.2');
+    $handler->setAccount($this->account);
     $request = array('label' => $new_label);
 
-    $handler->setRequest(Request::create('api/test_articles/v1.0/' . $id, array(), RequestInterface::METHOD_PATCH, NULL, FALSE, NULL, array(), array(), array(), $request));
+    $handler->setRequest(Request::create('api/test_articles/v1.2/' . $id, array(), RequestInterface::METHOD_PATCH, NULL, FALSE, NULL, array(), array(), array(), $request));
     $handler->setPath($id);
     $result = $handler->process();
     $expected_result = array(array(
@@ -107,7 +122,7 @@ class RestfulUpdateEntityTestCase extends DrupalWebTestCase {
     // Update an entity with invalid property name.
     $request['invalid'] = 'wrong';
     try {
-      $handler->setRequest(Request::create('api/test_articles/v1.0/' . $id, array(), RequestInterface::METHOD_PATCH, NULL, FALSE, NULL, array(), array(), array(), $request));
+      $handler->setRequest(Request::create('api/test_articles/v1.2/' . $id, array(), RequestInterface::METHOD_PATCH, NULL, FALSE, NULL, array(), array(), array(), $request));
       $handler->setPath($id);
       $handler->process();
       $this->fail('User can update using PATCH method an entity with invalid property name.');
