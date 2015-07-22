@@ -5,6 +5,8 @@
  * Contains RestfulReferenceTestCase.
  */
 
+use Drupal\restful\Http\Request;
+
 class RestfulReferenceTestCase extends RestfulCurlBaseTestCase {
 
   public static function getInfo() {
@@ -15,14 +17,15 @@ class RestfulReferenceTestCase extends RestfulCurlBaseTestCase {
     );
   }
 
-  function setUp() {
+  public function setUp() {
     parent::setUp('restful_test');
   }
 
   /**
    * Test property reference.
    */
-  function testPropertyReference() {
+  public function testPropertyReference() {
+    $resource_manager = restful()->getResourceManager();
     $user1 = $this->drupalCreateUser();
 
     $settings = array(
@@ -32,17 +35,22 @@ class RestfulReferenceTestCase extends RestfulCurlBaseTestCase {
     $node1 = $this->drupalCreateNode($settings);
     $node2 = $this->drupalCreateNode($settings);
 
-    $handler = restful_get_restful_handler('test_articles', 1, 2);
     variable_set('restful_test_reference_simple', TRUE);
+    $resource_manager->clearPluginCache('test_articles:1.2');
+    $handler = $resource_manager->getPlugin('test_articles:1.2');
 
-    $result = $handler->get($node1->nid);
+    $handler->setRequest(Request::create('api/test_articles/v1.2/' . $node1->nid));
+    $handler->setPath($node1->nid);
+    $result = $handler->process();
     $this->assertEqual($result[0]['user']->uid, $user1->uid, 'Property is not defined as resource, thus the referenced entity appears as the entity.');
 
     variable_set('restful_test_reference_resource', TRUE);
-    // Clear public fields cache.
-    $handler->setPublicFields(array());
+    $resource_manager->clearPluginCache('test_articles:1.2');
+    $handler = $resource_manager->getPlugin('test_articles:1.2');
 
-    $result = $handler->get($node2->nid);
+    $handler->setRequest(Request::create('api/test_articles/v1.2/' . $node2->nid));
+    $handler->setPath($node2->nid);
+    $result = $handler->process();
     $this->assertEqual($result[0]['user']['id'], $user1->uid, 'Property is defined as resource, thus the referenced entity appears as the rendered resource.');
   }
 

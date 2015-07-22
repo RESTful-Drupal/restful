@@ -88,7 +88,11 @@ class TestArticles__1_2 extends ResourceNode implements ResourceInterface {
       );
 
       if (variable_get('restful_test_reference_resource')) {
-        $public_fields['user']['resource'] = array('user' => 'users');
+        $public_fields['user']['resource'] = array(
+          'name' => 'users',
+          'majorVersion' => 1,
+          'minorVersion' => 0,
+        );
       }
     }
 
