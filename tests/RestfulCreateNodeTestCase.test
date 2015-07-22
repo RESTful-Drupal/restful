@@ -45,5 +45,6 @@ class RestfulCreateNodeTestCase extends DrupalWebTestCase {
 
     $node = node_load($result[0]['id']);
     $this->assertEqual($node->uid, $user2->uid, 'Correct user was set to be the author of the node.');
+    $this->assertEqual($node->title, $text1, 'Correct title set.');
   }
 }
