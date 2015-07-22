@@ -675,13 +675,15 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
         continue;
       }
 
+      $field_value = $this->propertyValuesPreprocess($property_name, $request[$public_field_name], $public_field_name);
+      $wrapper->{$property_name}->set($field_value);
+
+      // We check the property access only after setting the values, as the
+      // access callback's response might change according to the field value.
       if (!$this->checkPropertyAccess('edit', $public_field_name, $wrapper->{$property_name}, $wrapper)) {
         throw new \RestfulBadRequestException(format_string('Property @name cannot be set.', array('@name' => $public_field_name)));
       }
 
-      $field_value = $this->propertyValuesPreprocess($property_name, $request[$public_field_name], $public_field_name);
-
-      $wrapper->{$property_name}->set($field_value);
       unset($original_request[$public_field_name]);
       $save = TRUE;
     }

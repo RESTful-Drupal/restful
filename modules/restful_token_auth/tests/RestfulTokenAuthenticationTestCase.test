@@ -58,9 +58,6 @@ class RestfulTokenAuthenticationTestCase extends DrupalWebTestCase {
     catch (\RestfulUnauthorizedException $e) {
       $this->pass('"Unauthorized" exception was thrown.');
     }
-    catch (\Exception $e) {
-      $this->fail('Exception different from "Unauthorized" exception was thrown.');
-    }
 
     // Get a "protected" resource with invalid access token.
     try {
@@ -70,44 +67,72 @@ class RestfulTokenAuthenticationTestCase extends DrupalWebTestCase {
     catch (\RestfulUnauthorizedException $e) {
       $this->pass('"Unauthorized" exception was thrown.');
     }
-    catch (\Exception $e) {
-      $this->fail('Exception different from "Unauthorized" exception was thrown.');
+
+    // Get a "protected" resource with refresh token as access token.
+    try {
+      $handler->get($id, array('access_token' => $refresh_token));
+      $this->fail('"Unauthorized" exception not thrown.');
+    }
+    catch (\RestfulUnauthorizedException $e) {
+      $this->pass('"Unauthorized" exception was thrown.');
+    }
+
+    // Get a "protected" resource with refresh token.
+    try {
+      $handler->get($id, array('refresh_token' => $refresh_token));
+      $this->fail('"Unauthorized" exception not thrown.');
+    }
+    catch (\RestfulUnauthorizedException $e) {
+      $this->pass('"Unauthorized" exception was thrown.');
     }
 
     // Get a "protected" resource with the access token.
-    $response = $handler->get(1, array('access_token' => $access_token));
+    $response = $handler->get($id, array('access_token' => $access_token));
     $result = $response[0];
     $this->assertEqual($result['label'], $title1, 'Article resource can be accessed with valid access token.');
 
     // Set the expiration token to the past.
     $query = new \EntityFieldQuery();
-    $results = $query
+    $result = $query
       ->entityCondition('entity_type', 'restful_token_auth')
-      ->entityCondition('bundle', 'refresh_token')
-      ->propertyCondition('token', $refresh_token)
+      ->entityCondition('bundle', 'access_token')
+      ->propertyCondition('token', $access_token)
       ->execute();
 
-    if (empty($results['restful_token_auth'])) {
+    if (empty($result['restful_token_auth'])) {
       $this->fail('No token was found.');
     }
 
     // Load the token.
-    $token = entity_load_single('restful_token_auth', key($results['restful_token_auth']));
-    $token->expire = time() - 1;
+    $access_id = key($result['restful_token_auth']);
+    $token = entity_load_single('restful_token_auth', $access_id);
+    $token->expire = REQUEST_TIME - 60 * 24;
     $token->save();
 
+    // Clear the restful handler, to make sure the user set by RESTful is
+    // cleared.
+    drupal_static_reset('restful_get_restful_handler');
     // Make a GET request to trigger a deletion of the token.
-    $handler->get($id, array('access_token' => $access_token));
+    $handler = restful_get_restful_handler('articles', 1, 3);
+
+    try {
+      $handler->get($id, array('access_token' => $access_token));
+      $this->fail('"Unauthorized" exception not thrown for expired token.');
+    }
+    catch (\RestfulUnauthorizedException $e) {
+      $this->pass('"Unauthorized" exception was thrown for expired token.');
+    }
 
     // Make sure the token was deleted.
     $query = new \EntityFieldQuery();
-    $result = $query
+    $count = $query
       ->entityCondition('entity_type', 'restful_token_auth')
-      ->entityCondition('bundle', 'refresh_token')
+      ->entityCondition('bundle', 'access_token')
       ->propertyCondition('token', $access_token)
+      ->count()
       ->execute();
 
-    $this->assertTrue(empty($result['restful_token_auth']), 'The token was deleted.');
+    $this->assertFalse($count, 'The token was deleted.');
 
     // Test the refresh capabilities.
     $handler = restful_get_restful_handler('refresh_token');
@@ -124,9 +149,5 @@ class RestfulTokenAuthenticationTestCase extends DrupalWebTestCase {
     catch (\RestfulBadRequestException $e) {
       $this->pass('"Bad Request" exception was thrown.');
     }
-    catch (\Exception $e) {
-      $this->fail('Exception different from "Bad Request" exception was thrown.');
-    }
   }
-
 }

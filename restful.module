@@ -440,7 +440,14 @@ function restful_menu_access_callback($resource_name, $version = NULL) {
   $handler->setMethod($method);
   $handler->setRequest($request);
 
-  return $handler->access();
+  try {
+    $access = $handler->access();
+    return $access;
+  }
+  catch(Exception $e) {
+    return FALSE;
+  }
+
 }
 
 /**
@@ -467,8 +474,7 @@ function restful_menu_process_callback($resource_name, $version = NULL) {
 
   // Vary the response with the presence of the X-API-Version or Accept headers.
   $headers = $handler->getHttpHeaders();
-  $vary = empty($headers['Vary']) ? '' : $headers['Vary'];
-  $additional_variations = array($vary, 'Accept');
+  $additional_variations = empty($headers['Vary']) ? array('Accept') : array($headers['Vary'], 'Accept');
   if (\RestfulManager::getRequestHttpHeader('X-API-Version')) {
     $additional_variations[] = 'X-API-Version';
   }
@@ -520,6 +526,17 @@ function restful_menu_process_callback($resource_name, $version = NULL) {
     foreach ($e->getHeaders() as $header_name => $header_value) {
       drupal_add_http_header($header_name, $header_value);
     }
+
+    if ($e->getCode() < 500) {
+      // Even though it's an exception, it's in fact not a server error - it
+      // might be just access denied, or a bad request, so we just want to log
+      // it, but without marking it as an actual exception.
+      watchdog('restful', $e->getMessage());
+    }
+    else {
+      // This one should really be considered as an error.
+      watchdog_exception('restful', $e);
+    }
   }
   catch (Exception $e) {
     $result = array(
@@ -527,6 +544,8 @@ function restful_menu_process_callback($resource_name, $version = NULL) {
       'title' => $e->getMessage(),
       'status' => 500,
     );
+
+    watchdog_exception('restful', $e);
   }
 
   // Adhere to the API Problem draft proposal.
