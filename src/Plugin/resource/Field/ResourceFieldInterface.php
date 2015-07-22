@@ -190,4 +190,16 @@ interface ResourceFieldInterface {
    */
   public function getMetadata($key);
 
+  /**
+   * Gets the value for the field given a data source.
+   *
+   * @param mixed $value
+   *   The value for the field.
+   * @param DataInterpreterInterface $interpreter
+   *   The data source object. Interacts with the data storage.
+   *
+   * @throws IncompatibleFieldDefinitionException
+   */
+  public function set($value, DataInterpreterInterface $interpreter);
+
 }

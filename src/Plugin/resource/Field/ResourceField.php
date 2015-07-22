@@ -7,6 +7,7 @@
 
 namespace Drupal\restful\Plugin\resource\Field;
 
+use Drupal\restful\Exception\IncompatibleFieldDefinitionException;
 use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
 use Drupal\restful\Resource\ResourceManager;
@@ -57,6 +58,13 @@ class ResourceField extends ResourceFieldBase implements ResourceFieldInterface 
       return ResourceManager::executeCallback($callback, array($interpreter));
     }
     return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function set($value, DataInterpreterInterface $interpreter) {
+    // ResourceField only supports callbacks, so no set is possible.
   }
 
   /**

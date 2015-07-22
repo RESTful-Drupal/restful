@@ -73,16 +73,19 @@ abstract class DataProvider implements DataProviderInterface {
    *   The field definitions.
    * @param object $account
    *   The authenticated account.
+   * @param string $resource_path
+   *   The resource path.
    * @param array $options
    *   The plugin options for the data provider.
    * @param string $langcode
    *   (Optional) The entity language code.
    */
-  public function __construct(RequestInterface $request, ResourceFieldCollectionInterface $field_definitions, $account, array $options, $langcode = NULL) {
+  public function __construct(RequestInterface $request, ResourceFieldCollectionInterface $field_definitions, $account, $resource_path = NULL, array $options = array(), $langcode = NULL) {
     $this->request = $request;
     $this->fieldDefinitions = $field_definitions;
     $this->account = $account;
     $this->options = $options;
+    $this->resourcePath = $resource_path;
     if (!empty($options['range'])) {
       // TODO: Document that the range is now overridable in the annotation.
       $this->range = $options['range'];

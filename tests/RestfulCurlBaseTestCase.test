@@ -31,6 +31,7 @@ class RestfulCurlBaseTestCase extends DrupalWebTestCase {
    */
   protected function httpRequest($url, $method = RequestInterface::METHOD_GET, $body = NULL, $headers = array(), $use_token = TRUE) {
     $format = 'json';
+    $curl_options = array();
 
     switch ($method) {
       case RequestInterface::METHOD_GET:
@@ -95,14 +96,19 @@ class RestfulCurlBaseTestCase extends DrupalWebTestCase {
 
     $curl_options += array(CURLOPT_HTTPHEADER => array());
 
-    if ($this->loggedInUser && \Drupal\restful\Http\Request::isWriteMethod($method, FALSE) && $use_token) {
+    if (\Drupal\restful\Http\Request::isWriteMethod($method) && $use_token) {
       // Add CSRF token for write operations.
       if (empty($this->csrfToken)) {
         $response = $this->drupalGet('api/session/token');
         $result = drupal_json_decode($response);
-        $this->csrfToken = $result['X-CSRF-Token'];
+        if (!empty($result['X-CSRF-Token'])) {
+          $this->csrfToken = $result['X-CSRF-Token'];
+          $headers['X-CSRF-Token'] = $result['X-CSRF-Token'];
+        }
       }
-      $headers['X-CSRF-Token'] = $this->csrfToken;
+      else {
+        $headers['X-CSRF-Token'] = $this->csrfToken;
+      }
     }
 
     foreach ($headers as $key => $value) {

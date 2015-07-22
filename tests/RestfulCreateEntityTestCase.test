@@ -6,6 +6,8 @@
  */
 
 use Drupal\restful\Exception\BadRequestException;
+use Drupal\restful\Http\Request;
+use Drupal\restful\Http\RequestInterface;
 
 class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
 
@@ -47,14 +49,15 @@ class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
    * Test creating an entity (POST method).
    */
   function testCreateEntity() {
+    $resource_manager = restful()->getResourceManager();
     // Create test entities to be referenced.
     $ids = array();
-    foreach (array(1, 2) as $id) {
+    for ($i = 0; $i < 2; $i++) {
+      /* @var \Entity $entity */
       $entity = entity_create('entity_test', array('name' => 'main'));
       $entity->save();
       $ids[] = $entity->pid;
     }
-
 
     $images =  array();
     foreach ($this->drupalGetTestFiles('image') as $file) {
@@ -62,7 +65,8 @@ class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
       $images[] = $file->fid;
     }
 
-    $handler = restful_get_restful_handler('main', 1, 1);
+    $resource_manager->clearPluginCache('main:1.1');
+    $handler = $resource_manager->getPlugin('main:1.1');
 
     $query = new EntityFieldQuery();
     $result = $query
@@ -94,7 +98,9 @@ class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
       'image_multiple' => array($images[0], $images[1]),
     );
 
-    $response = $handler->post('', $request);
+    $handler->setRequest(Request::create('', array(), RequestInterface::METHOD_POST, NULL, FALSE, NULL, array(), array(), array(), $request));
+    $handler->setPath('');
+    $response = $handler->process();
     $result = $response[0];
 
     $text_single = trim(strip_tags($result['text_single']));
@@ -128,53 +134,59 @@ class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
 
     // Create an entity with empty request.
     try {
-      $handler->post();
+      $handler->setRequest(Request::create('', array(), RequestInterface::METHOD_POST));
+      $handler->setPath('');
+      $handler->process();
       $this->fail('User can create an entity with empty request.');
     }
     catch (BadRequestException $e) {
       $this->pass('User cannot create an entity with empty request.');
     }
-    catch (\Exception $e) {
-      $this->fail('Wrong exception thrown when creating an entity with empty request.');
-    }
 
     // Create an entity with invalid property name.
     $request['invalid'] = 'wrong';
     try {
-      $handler->post('', $request);
+      $handler->setRequest(Request::create('', array(), RequestInterface::METHOD_POST, NULL, FALSE, NULL, array(), array(), array(), $request));
+      $handler->setPath('');
+      $handler->process();
       $this->fail('User can create an entity with invalid property name.');
     }
     catch (BadRequestException $e) {
       $this->pass('User cannot create an entity with invalid property name.');
     }
-    catch (\Exception $e) {
-      $this->fail('Wrong exception thrown when creating an entity with invalid property name.');
-    }
 
     // Create entity with comma separated multiple entity reference.
     $request = array('entity_reference_multiple' => implode(',', $ids));
-    $response = $handler->post('', $request);
+    $handler->setRequest(Request::create('', array(), RequestInterface::METHOD_POST, NULL, FALSE, NULL, array(), array(), array(), $request));
+    $handler->setPath('');
+    $response = $handler->process();
     $result = $response[0];
     $this->assertEqual($result['entity_reference_multiple'], $ids, 'Created entity with comma separated multiple entity reference.');
 
     // Create entity with comma separated multiple taxonomy term reference.
     $ids = array($tids[0], $tids[1]);
     $request = array('term_multiple' => implode(',', $ids));
-    $response = $handler->post('', $request);
+    $handler->setRequest(Request::create('', array(), RequestInterface::METHOD_POST, NULL, FALSE, NULL, array(), array(), array(), $request));
+    $handler->setPath('');
+    $response = $handler->process();
     $result = $response[0];
     $this->assertEqual($result['term_multiple'], $ids, 'Created entity with comma separated multiple taxonomy term reference.');
 
     // Create entity with comma separated multiple file reference.
     $ids = array($images[0], $images[1]);
     $request = array('file_multiple' => implode(',', $ids));
-    $response = $handler->post('', $request);
+    $handler->setRequest(Request::create('', array(), RequestInterface::METHOD_POST, NULL, FALSE, NULL, array(), array(), array(), $request));
+    $handler->setPath('');
+    $response = $handler->process();
     $result = $response[0];
     $this->assertEqual($result['file_multiple'], $ids, 'Created entity with comma separated multiple file reference.');
 
     // Create entity with comma separated multiple image reference.
     $ids = array($images[0], $images[1]);
     $request = array('image_multiple' => implode(',', $ids));
-    $response = $handler->post('', $request);
+    $handler->setRequest(Request::create('', array(), RequestInterface::METHOD_POST, NULL, FALSE, NULL, array(), array(), array(), $request));
+    $handler->setPath('');
+    $response = $handler->process();
     $result = $response[0];
     $this->assertEqual($result['image_multiple'], $ids, 'Created entity with comma separated multiple image reference.');
 
@@ -186,35 +198,70 @@ class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
   public function testFileUploadAccess() {
     variable_set('restful_file_upload', TRUE);
     variable_set('restful_file_upload_allow_anonymous_user', TRUE);
+    // Make sure the user is logged out even when using the UI tests.
+    $this->drupalLogout();
+
     // Test access for anonymous user (allowed).
-    $return = $this->uploadFile();
-    $this->assertEqual($return['code'], 200, 'File upload is allowed to anonymous users.');
+    $handler = $this->fileResource();
+    $this->assertTrue($handler->access(), 'File upload is allowed to anonymous users.');
     variable_set('restful_file_upload_allow_anonymous_user', FALSE);
     // Now that we have a successfully uploaded file, make sure it's the same
     // file that was uploaded.
+    $return = $handler->process();
     $original = hash_file('md5', $this->imagePath);
-    $return_array = drupal_json_decode($return['body']);
-    $file = file_load($return_array['data'][0]['id']);
+    $file = file_load($return[0][0]['id']);
     $uploaded = hash_file('md5', file_create_url($file->uri));
     $this->assertEqual($original, $uploaded, 'Original and uploaded file are identical.');
     // Test access for anonymous user (denied).
-    $return = $this->uploadFile();
-    $this->assertEqual($return['code'], 403, 'File upload is denied to anonymous users.');
+    $handler = $this->fileResource();
+    $this->assertFalse($handler->access(), 'File upload is denied to anonymous users.');
 
     $this->drupalLogin($this->account);
     // Test access for authenticated users (allowed).
-    $return = $this->uploadFile();
-    $this->assertEqual($return['code'], 200, 'File upload is allowed to authenticated users.');
+    $handler = $this->fileResource();
+    $this->assertTrue($handler->access(), 'File upload is allowed to authenticated users.');
     // Test access for authenticated users (denied).
     variable_set('restful_file_upload', FALSE);
-    $return = $this->uploadFile();
-    $this->assertEqual($return['code'], 403, 'File upload is denied to authenticated users.');
+    try {
+      $this->fileResource();
+      $this->fail('The file upload endpoint is not disalbed.');
+    }
+    catch (\Drupal\restful\Exception\ServiceUnavailableException $e) {
+      $this->pass('The file upload endpoint is disalbed.');
+    }
   }
 
   /**
    * Uploads a file issuing a POST HTTP request.
+   *
+   * @return \Drupal\restful\Plugin\resource\ResourceInterface
+   *   The file resource.
    */
-  protected function uploadFile() {
+  protected function fileResource() {
+    // We are setting the $_FILES array directly on tests, so we need to
+    // override the is_uploaded_file PHP method by setting a custom variable.
+    // Otherwise the manually set file will not be detected.
+    variable_set('restful_insecure_uploaded_flag', TRUE);
+
+    // Clear the plugin definition cache to regenerate authenticationOptional
+    // based on the variable value.
+    $resource_manager = restful()->getResourceManager();
+    $resource_manager->clearPluginCache('files_upload_test:1.0');
+    if (!$handler = $resource_manager->getPlugin('files_upload_test:1.0')) {
+      throw new \Drupal\restful\Exception\ServiceUnavailableException();
+    }
+    $plugin_definition = $handler->getPluginDefinition();
+    $plugin_definition['authenticationOptional'] = variable_get('restful_file_upload_allow_anonymous_user', FALSE);
+    $handler->setPluginDefinition($plugin_definition);
+    $account = $this->account;
+    if (!$this->loggedInUser) {
+      $account = drupal_anonymous_user();
+    }
+    $handler->setAccount($account);
+    // Due to entity_metadata_file_access we need to set the global user to the
+    // user for the test.
+    $GLOBALS['user'] = $account;
+
     $value = '@' . $this->imagePath;
 
     // PHP 5.5 introduced a CurlFile object that deprecates the old @filename
@@ -223,11 +270,22 @@ class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
       $value = curl_file_create($this->imagePath);
     }
 
-    return $this->httpRequest('api/file-upload', \RestfulInterface::POST, array(
-      'filename' => $value,
-    ), array(
-      'Content-Type' => 'multipart/form-data',
-    ), TRUE);
+    $tmp_name = drupal_tempnam('/tmp', 'restful_test_');
+    file_put_contents($tmp_name, file_get_contents($this->imagePath));
+    $headers = new \Drupal\restful\Http\HttpHeaderBag(array('Content-Type' => 'multipart/form-data'));
+    // Mock the $_FILES global variable.
+    $files = array(
+      'my-filename' => array(
+        'error' => 0,
+        'name' => basename($this->imagePath),
+        'size' => filesize($this->imagePath),
+        'tmp_name' => $tmp_name,
+        'type' => 'image/png',
+      ),
+    );
+    $handler->setRequest(Request::create('api/file-upload', array(), RequestInterface::METHOD_POST, $headers, FALSE, NULL, array(), $files, array(), array('filename' => $value)));
+    $handler->setPath('');
+    return $handler;
   }
 
 }
