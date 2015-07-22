@@ -5,6 +5,9 @@
  * Contains RestfulUpdateEntityTestCase
  */
 
+use Drupal\restful\Http\Request;
+use Drupal\restful\Http\RequestInterface;
+
 class RestfulUpdateEntityTestCase extends DrupalWebTestCase {
 
   public static function getInfo() {
@@ -15,14 +18,15 @@ class RestfulUpdateEntityTestCase extends DrupalWebTestCase {
     );
   }
 
-  function setUp() {
+  public function setUp() {
     parent::setUp('restful_test');
   }
 
   /**
    * Test update an entity (PUT method).
    */
-  function testUpdateEntityAsPut() {
+  public function testUpdateEntityAsPut() {
+    $resource_manager = restful()->getResourceManager();
     $label = $this->randomName();
     $new_label = $this->randomName();
 
@@ -37,10 +41,12 @@ class RestfulUpdateEntityTestCase extends DrupalWebTestCase {
     $node = $this->drupalCreateNode($settings);
     $id = $node->nid;
 
-    $handler = restful_get_restful_handler('test_articles');
+    $handler = $resource_manager->getPlugin('test_articles:1.0');
     $request = array('label' => $new_label);
 
-    $result = $handler->put($id, $request);
+    $handler->setRequest(Request::create('api/test_articles/v1.0/' . $id, array(), RequestInterface::METHOD_PUT, NULL, FALSE, NULL, array(), array(), array(), $request));
+    $handler->setPath($id);
+    $result = $handler->process();
     $expected_result = array(array(
       'id' => $id,
       'label' => $new_label,
@@ -53,7 +59,9 @@ class RestfulUpdateEntityTestCase extends DrupalWebTestCase {
     // Update an entity with invalid property name.
     $request['invalid'] = 'wrong';
     try {
-      $handler->put($id, $request);
+      $handler->setRequest(Request::create('api/test_articles/v1.0/' . $id, array(), RequestInterface::METHOD_PUT, NULL, FALSE, NULL, array(), array(), array(), $request));
+      $handler->setPath($id);
+      $handler->process();
       $this->fail('User can update using PUT method an entity with invalid property name.');
     }
     catch (Exception $e) {
@@ -65,6 +73,7 @@ class RestfulUpdateEntityTestCase extends DrupalWebTestCase {
    * Test update an entity (PATCH method).
    */
   function testUpdateEntityAsPatch() {
+    $resource_manager = restful()->getResourceManager();
     $label = $this->randomName();
     $new_label = $this->randomName();
 
@@ -79,10 +88,12 @@ class RestfulUpdateEntityTestCase extends DrupalWebTestCase {
     $node = $this->drupalCreateNode($settings);
     $id = $node->nid;
 
-    $handler = restful_get_restful_handler('test_articles');
+    $handler = $resource_manager->getPlugin('test_articles:1.0');
     $request = array('label' => $new_label);
 
-    $result = $handler->patch($id, $request);
+    $handler->setRequest(Request::create('api/test_articles/v1.0/' . $id, array(), RequestInterface::METHOD_PATCH, NULL, FALSE, NULL, array(), array(), array(), $request));
+    $handler->setPath($id);
+    $result = $handler->process();
     $expected_result = array(array(
       'id' => $id,
       'label' => $new_label,
@@ -96,7 +107,9 @@ class RestfulUpdateEntityTestCase extends DrupalWebTestCase {
     // Update an entity with invalid property name.
     $request['invalid'] = 'wrong';
     try {
-      $handler->patch($id, $request);
+      $handler->setRequest(Request::create('api/test_articles/v1.0/' . $id, array(), RequestInterface::METHOD_PATCH, NULL, FALSE, NULL, array(), array(), array(), $request));
+      $handler->setPath($id);
+      $handler->process();
       $this->fail('User can update using PATCH method an entity with invalid property name.');
     }
     catch (Exception $e) {
