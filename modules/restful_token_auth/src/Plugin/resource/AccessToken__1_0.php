@@ -78,7 +78,7 @@ class AccessToken__1_0 extends TokenAuthenticationBase implements ResourceInterf
     $account = $this->getAccount();
     // Check if there is a token that did not expire yet.
 
-    /** @var DataProviderEntityInterface $data_provider */
+    /* @var DataProviderEntityInterface $data_provider */
     $data_provider = $this->getDataProvider();
     $query = $data_provider->EFQObject();
     $result = $query
@@ -106,7 +106,7 @@ class AccessToken__1_0 extends TokenAuthenticationBase implements ResourceInterf
     }
 
     if (!$token_exists) {
-      /** @var \Drupal\restful_token_auth\Entity\RestfulTokenAuthController $controller */
+      /* @var \Drupal\restful_token_auth\Entity\RestfulTokenAuthController $controller */
       $controller = entity_get_controller($this->getEntityType());
       $access_token = $controller->generateAccessToken($account->uid);
       $id = $access_token->id;

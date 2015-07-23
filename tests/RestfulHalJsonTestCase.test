@@ -30,16 +30,16 @@ class RestfulHalJsonTestCase extends RestfulCurlBaseTestCase {
    */
   public function testHalEmbeddedResources() {
     $user1 = $this->drupalCreateUser();
-    /** @var \Entity $entity1 */
+    /* @var \Entity $entity1 */
     $entity1 = entity_create('entity_test', array('name' => 'main', 'uid' => $user1->uid));
     $entity1->save();
 
-    /** @var \Entity $entity2 */
+    /* @var \Entity $entity2 */
     $entity2 = entity_create('entity_test', array('name' => 'main', 'uid' => $user1->uid));
     $entity2->save();
 
     $entity3 = entity_create('entity_test', array('name' => 'main', 'uid' => $user1->uid));
-    /** @var \EntityDrupalWrapper $wrapper */
+    /* @var \EntityDrupalWrapper $wrapper */
     $wrapper = entity_metadata_wrapper('entity_test', $entity3);
 
     $text1 = $this->randomName();

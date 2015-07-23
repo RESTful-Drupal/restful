@@ -37,7 +37,7 @@ class RestfulRenderCacheTestCase extends \RestfulCurlBaseTestCase {
       $nodes[$node->nid] = $node;
     }
 
-    /** @var \Drupal\restful\Plugin\resource\Decorators\CacheDecoratedResourceInterface $handler */
+    /* @var \Drupal\restful\Plugin\resource\Decorators\CacheDecoratedResourceInterface $handler */
     $handler = $resource_manager->getPlugin('test_articles:1.1');
     $handler->setAccount($account);
     $cache = $handler->getCacheController();
@@ -135,7 +135,7 @@ class RestfulRenderCacheTestCase extends \RestfulCurlBaseTestCase {
       $handler->process();
     }
     // Testing invalidateEntityCache.
-    /** @var Drupal\restful\Plugin\resource\DataProvider\CacheDecoratedDataProviderInterface $data_provider */
+    /* @var Drupal\restful\Plugin\resource\DataProvider\CacheDecoratedDataProviderInterface $data_provider */
     $data_provider = $handler->getDataProvider();
     $cid = $data_provider->generateCacheId($data_provider->getContext($node->nid));
     // Remove the version and uid variations from the cache id to clean all

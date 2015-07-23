@@ -61,7 +61,7 @@ class ResourcePluginManager extends DefaultPluginManager {
    * object is instantiated.
    */
   public function createInstance($plugin_id, array $configuration = array()) {
-    /** @var ResourceInterface $resource */
+    /* @var ResourceInterface $resource */
     $resource = parent::createInstance($plugin_id, $configuration);
     $resource->setRequest($this->request);
     return $resource;

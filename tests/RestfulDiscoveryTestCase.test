@@ -41,7 +41,7 @@ class RestfulDiscoveryTestCase extends RestfulCurlBaseTestCase {
     $accepted_formats = array();
     $formatters = $handler->getFormatterManager()->getPlugins();
     foreach ($formatters as $formatter) {
-      /** @var \Drupal\restful\Plugin\formatter\FormatterInterface $formatter */
+      /* @var \Drupal\restful\Plugin\formatter\FormatterInterface $formatter */
       $accepted_formats[] = $formatter->getContentTypeHeader();
     }
     $headers = $handler->getHttpHeaders();

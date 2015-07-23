@@ -67,7 +67,7 @@ class ResourceManager implements ResourceManagerInterface {
    * {@inheritdoc}
    */
   public function getPlugin($instance_id, RequestInterface $request = NULL) {
-    /** @var ResourceInterface $plugin */
+    /* @var ResourceInterface $plugin */
     if (!$plugin = $this->plugins->get($instance_id)) {
       return NULL;
     }

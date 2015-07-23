@@ -36,7 +36,7 @@ function restful_token_auth_menu_alter(&$items) {
     ->getResourceManager()
     ->getPlugins();
   foreach ($plugins as $plugin) {
-    /** @var ResourceInterface $plugin */
+    /* @var ResourceInterface $plugin */
     $plugin_definition = $plugin->getPluginDefinition();
     if (!empty($plugin_definition['dataProvider']['entityType']) && $plugin_definition['dataProvider']['entityType'] == 'restful_token_auth') {
       $access_token_plugin_definitions[] = $plugin_definition;

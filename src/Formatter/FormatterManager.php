@@ -96,7 +96,7 @@ class FormatterManager implements FormatterManagerInterface {
           return $this->getPluginByName($default_formatter_name);
         }
         foreach ($this->plugins as $formatter_name => $formatter) {
-          /** @var FormatterInterface $formatter */
+          /* @var FormatterInterface $formatter */
           if (static::matchContentType($formatter->getContentTypeHeader(), $accepted_content_type)) {
             $formatter->setConfiguration(array(
               'resource' => $this->resource,
@@ -210,7 +210,7 @@ class FormatterManager implements FormatterManagerInterface {
    *   The plugin.
    */
   protected function getPluginByName($name) {
-    /** @var FormatterInterface $formatter */
+    /* @var FormatterInterface $formatter */
     $formatter = $this->plugins->get($name);
     $formatter->setConfiguration(array(
       'resource' => $this->resource,

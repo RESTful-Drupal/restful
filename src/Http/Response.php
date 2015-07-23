@@ -298,7 +298,7 @@ class Response implements ResponseInterface {
    */
   protected function sendHeaders() {
     foreach ($this->headers as $key => $header) {
-      /** @var HttpHeader $header */
+      /* @var HttpHeader $header */
       drupal_add_http_header($header->getName(), $header->getValueString());
     }
     drupal_add_http_header('Status', $this->getStatusCode());
