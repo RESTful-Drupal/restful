@@ -591,9 +591,11 @@ function restful_parse_request() {
         $request = drupal_json_decode(_restful_get_query_string_from_php_input());
         break;
       case 'application/x-www-form-encoded':
-        watchdog('debug', 'raw request : ' . _restful_get_query_string_from_php_input());
         parse_str(_restful_get_query_string_from_php_input(), $request);
-        watchdog('debug', 'parsed request : ' . print_r($request, 1));
+        if ($methods == \RestfulInterface::POST) {
+          watchdog('debug', 'raw request : ' . _restful_get_query_string_from_php_input());
+          watchdog('debug', 'parsed request : ' . print_r($request, 1));
+        }
         break;
       case 'multipart/form-data':
         // php://input is an empty string when the content-type is multipart/form-data
