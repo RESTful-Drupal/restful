@@ -105,10 +105,10 @@ class RestfulDataProviderPlugPluginsTestCase extends DrupalWebTestCase {
     $handler->setPath('articles:1.0');
     try {
       $handler->process();
-      $this->fail('Un-privileged user can disable endpoints.');
+      $this->fail('Un-privileged user can enable endpoints.');
     }
     catch (ForbiddenException $e) {
-      $this->pass('Un-privileged user cannot disable endpoints.');
+      $this->pass('Un-privileged user cannot enable endpoints.');
     }
 
     // Make sure that unauthorized users can enable/disable resources via the
