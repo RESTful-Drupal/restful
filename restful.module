@@ -114,7 +114,7 @@ function restful_menu() {
       'type' => MENU_CALLBACK,
     );
     // If there is no specific menu item allow the different version variations.
-    if ($plugin_definition['hookMenu'] && empty($plugin_definition['menuItem'])) {
+    if (empty($plugin_definition['menuItem'])) {
       // Add the version string to the arguments.
       $item['access arguments'][] = 1;
       $item['page arguments'][] = 1;
@@ -232,8 +232,11 @@ function restful_menu_access_callback($resource_name, $version_string = NULL) {
   catch (RestfulException $e) {
     // We can get here if the request method is not valid or if no resource can
     // be negotiated.
-    return FALSE;
   }
+  catch (\Drupal\Component\Plugin\Exception\PluginNotFoundException $e) {
+    drupal_not_found();
+  }
+  return FALSE;
 }
 
 /**
@@ -567,5 +570,20 @@ function restful_restful_resource_alter(ResourceInterface &$resource) {
   // Disable the Files Upload resource based on the settings variable.
   if ($resource->getResourceMachineName() == 'files_upload') {
     variable_get('restful_file_upload', FALSE) ? $resource->enable() : $resource->disable();
+  }
+
+  // Disable any plugin in the disabled plugins variable.
+  $disabled_plugins = variable_get('restful_disabled_plugins', array());
+  if ($resource->isEnabled() && in_array($resource->getResourceName(), $disabled_plugins)) {
+    $resource->disable();
+  }
+
+  // Disable the discovery endpoint if it's disabled.
+  if (
+    $resource->getResourceMachineName() == 'discovery' &&
+    !variable_get('restful_enable_discovery_resource', TRUE) &&
+    $resource->isEnabled()
+  ) {
+    $resource->disable();
   }
 }

@@ -143,6 +143,9 @@ class ResourceField extends ResourceFieldBase implements ResourceFieldInterface 
     ) {
       $class_name = '\Drupal\restful\Plugin\resource\Field\ResourceFieldEntity';
     }
+    elseif (!empty($field_definition['property'])) {
+      $class_name = '\Drupal\restful\Plugin\resource\Field\ResourceFieldKeyValue';
+    }
 
     if (
       !empty($class_name) &&
