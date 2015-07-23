@@ -587,6 +587,7 @@ function restful_parse_request() {
     switch ($contentType) {
       case 'application/json':
         $request = drupal_json_decode(_restful_get_query_string_from_php_input());
+        watchdog('debug', 'request is : ' . print_r($request, 1));
         break;
       case 'application/x-www-form-encoded':
         parse_str(_restful_get_query_string_from_php_input(), $request);
