@@ -7,6 +7,8 @@
 
 namespace Drupal\restful\Plugin\resource\DataProvider;
 
+use Drupal\Component\Plugin\Exception\PluginNotFoundException;
+use Drupal\restful\Exception\NotFoundException;
 use Drupal\restful\Exception\NotImplementedException;
 use Drupal\restful\Exception\UnauthorizedException;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterPlug;
@@ -49,6 +51,9 @@ class DataProviderPlug extends DataProvider implements DataProviderInterface {
       }
       catch (UnauthorizedException $e) {
         continue;
+      }
+      catch (PluginNotFoundException $e) {
+        throw new NotFoundException('Invalid URL path.');
       }
       $interpreter = new DataInterpreterPlug($this->getAccount(), new PluginWrapper($plugin));
 

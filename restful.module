@@ -114,7 +114,7 @@ function restful_menu() {
       'type' => MENU_CALLBACK,
     );
     // If there is no specific menu item allow the different version variations.
-    if ($plugin_definition['hookMenu'] && empty($plugin_definition['menuItem'])) {
+    if (empty($plugin_definition['menuItem'])) {
       // Add the version string to the arguments.
       $item['access arguments'][] = 1;
       $item['page arguments'][] = 1;
@@ -232,8 +232,11 @@ function restful_menu_access_callback($resource_name, $version_string = NULL) {
   catch (RestfulException $e) {
     // We can get here if the request method is not valid or if no resource can
     // be negotiated.
-    return FALSE;
   }
+  catch (\Drupal\Component\Plugin\Exception\PluginNotFoundException $e) {
+    drupal_not_found();
+  }
+  return FALSE;
 }
 
 /**
