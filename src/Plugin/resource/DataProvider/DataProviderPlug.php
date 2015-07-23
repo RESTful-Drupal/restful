@@ -110,6 +110,7 @@ class DataProviderPlug extends DataProvider implements DataProviderInterface {
    * {@inheritdoc}
    */
   public function update($identifier, $object, $replace = FALSE) {
+    // TODO: Document how to enable/disable resources using the API.
     $disabled_plugins = variable_get('restful_disabled_plugins', array());
     if ($object['enable']) {
       $disabled_plugins[$identifier] = FALSE;
@@ -121,6 +122,7 @@ class DataProviderPlug extends DataProvider implements DataProviderInterface {
    * {@inheritdoc}
    */
   public function remove($identifier) {
+    // TODO: Document how to enable/disable resources using the API.
     $disabled_plugins = variable_get('restful_disabled_plugins', array());
     $disabled_plugins[$identifier] = TRUE;
     variable_set('restful_disabled_plugins', $disabled_plugins);
