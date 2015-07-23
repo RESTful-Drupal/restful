@@ -592,7 +592,7 @@ function restful_parse_request() {
         break;
       case 'application/x-www-form-encoded':
         parse_str(_restful_get_query_string_from_php_input(), $request);
-        if ($methods == \RestfulInterface::POST) {
+        if ($method == \RestfulInterface::POST) {
           watchdog('debug', 'raw request : ' . _restful_get_query_string_from_php_input());
           watchdog('debug', 'parsed request : ' . print_r($request, 1));
         }
