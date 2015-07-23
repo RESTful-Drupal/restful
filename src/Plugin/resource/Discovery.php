@@ -20,9 +20,6 @@ use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
  *   description = "Discovery plugin.",
  *   authenticationTypes = TRUE,
  *   authenticationOptional = TRUE,
- *   dataProvider = {
- *     "pluginType": "resource",
- *   },
  *   discoverable = FALSE,
  *   majorVersion = 1,
  *   minorVersion = 0
