@@ -582,7 +582,7 @@ function restful_parse_request() {
   }
 
   // if we get this far, then we need to do special processing on php://input to get the data
-  if ($request) {
+  if ($request && !empty($_SERVER['CONTENT_TYPE'])) {
     $temp = explode(';', $_SERVER['CONTENT_TYPE']);
     $contentType = $temp[0];
     // CHARSET=<Something> will be in $temp[1], if it's ever needed
