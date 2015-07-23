@@ -583,7 +583,7 @@ function restful_parse_request() {
     $temp = explode(';', $_SERVER['CONTENT_TYPE']);
     $contentType = $temp[0];
     // CHARSET=<Something> will be in $temp[1], if it's ever needed
-
+    watchdog('debug', 'ContentType header is : ' . $contentType);
     switch ($contentType) {
       case 'application/json':
         $request = drupal_json_decode(_restful_get_query_string_from_php_input());
