@@ -577,13 +577,15 @@ function restful_parse_request() {
   elseif ($method == \RestfulInterface::HEAD) {
     $request = array();
   }
+  elseif ($method == \RestfulInterface::DELETE) {
+    $request = array();
+  }
 
   // if we get this far, then we need to do special processing on php://input to get the data
   if (is_null($request)) {
     $temp = explode(';', $_SERVER['CONTENT_TYPE']);
     $contentType = $temp[0];
     // CHARSET=<Something> will be in $temp[1], if it's ever needed
-
     switch ($contentType) {
       case 'application/json':
         $request = drupal_json_decode(_restful_get_query_string_from_php_input());
