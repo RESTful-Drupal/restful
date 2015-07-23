@@ -1,4 +1,6 @@
-[![Build Status](https://travis-ci.org/RESTful-Drupal/restful.svg?branch=7.x-1.x)](https://travis-ci.org/RESTful-Drupal/restful)
+**7.x-1.x** [![Build Status](https://travis-ci.org/RESTful-Drupal/restful.svg?branch=7.x-1.x)](https://travis-ci.org/RESTful-Drupal/restful)
+
+**7.x-2.x** [![Build Status](https://travis-ci.org/RESTful-Drupal/restful.svg?branch=7.x-2.x)](https://travis-ci.org/RESTful-Drupal/restful)
 
 # RESTful best practices for Drupal
 
@@ -75,6 +77,9 @@ $plugin = array(
   'class' => 'RestfulCustomResource',
 );
 ```
+The `resource` key determines the root URL of the resource.  The `name` key must match
+the filename of the plugin: in this case, the name is `articles`, and therefore, the
+filename is `articles.inc`.
 
 ####restful\_custom/plugins/restful/RestfulCustomResource.class.php
 ```php

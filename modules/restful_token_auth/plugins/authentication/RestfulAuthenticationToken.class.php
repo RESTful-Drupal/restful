@@ -30,6 +30,7 @@ class RestfulAuthenticationToken extends \RestfulAuthenticationBase {
     $query = new EntityFieldQuery();
     $result = $query
       ->entityCondition('entity_type', 'restful_token_auth')
+      ->entityCondition('bundle', 'access_token')
       ->propertyCondition('token', $token)
       ->range(0, 1)
       ->execute();
