@@ -573,6 +573,7 @@ function restful_parse_request() {
   }
   elseif ($method == \RestfulInterface::POST) {
     $request = $_POST;
+    watchdog('debug', 'parsed request : ' . print_r($request, 1));
   }
   elseif ($method == \RestfulInterface::HEAD) {
     $request = array();
