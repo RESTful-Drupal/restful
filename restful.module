@@ -568,4 +568,19 @@ function restful_restful_resource_alter(ResourceInterface &$resource) {
   if ($resource->getResourceMachineName() == 'files_upload') {
     variable_get('restful_file_upload', FALSE) ? $resource->enable() : $resource->disable();
   }
+
+  // Disable any plugin in the disabled plugins variable.
+  $disabled_plugins = variable_get('restful_disabled_plugins', array());
+  if ($resource->isEnabled() && in_array($resource->getResourceName(), $disabled_plugins)) {
+    $resource->disable();
+  }
+
+  // Disable the discovery endpoint if it's disabled.
+  if (
+    $resource->getResourceMachineName() == 'discovery' &&
+    !variable_get('restful_enable_discovery_resource', TRUE) &&
+    $resource->isEnabled()
+  ) {
+    $resource->disable();
+  }
 }

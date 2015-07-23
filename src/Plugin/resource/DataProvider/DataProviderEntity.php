@@ -27,16 +27,6 @@ use Drupal\restful\Resource\ResourceManager;
 class DataProviderEntity extends DataProvider implements DataProviderEntityInterface {
 
   /**
-   * Field definitions.
-   *
-   * A collection of
-   * \Drupal\restful\Plugin\resource\Field\ResourceFieldEntityInterface[].
-   *
-   * @var ResourceFieldCollectionInterface
-   */
-  protected $fieldDefinitions;
-
-  /**
    * The entity type.
    *
    * @var string
@@ -232,6 +222,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     /* @var \EntityDrupalWrapper $wrapper */
     $wrapper = entity_metadata_wrapper($this->entityType, $entity_id);
     $wrapper->language($this->getLangCode());
+    $interpreter = new DataInterpreterEMW($this->getAccount(), $wrapper);
     $values = array();
 
     $input = $this->getRequest()->getParsedInput();
@@ -246,7 +237,6 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
 
       $value = NULL;
 
-      $interpreter = new DataInterpreterEMW($this->getAccount(), $wrapper);
       if (!$this->methodAccess($resource_field) || !$resource_field->access('view', $interpreter)) {
         // The field does not apply to the current method or has denied access.
         continue;
@@ -746,30 +736,6 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
   protected function checkEntityAccess($op, $entity_type, $entity) {
     $account = $this->getAccount();
     return entity_access($op, $entity_type, $entity, $account);
-  }
-
-  /**
-   * Applies the process callbacks.
-   *
-   * @param mixed $value
-   *   The value for the field.
-   * @param ResourceFieldInterface $resource_field
-   *   The resource field.
-   *
-   * @return mixed
-   *   The value after applying all the process callbacks.
-   *
-   * @throws \Drupal\restful\Exception\ServerConfigurationException
-   */
-  protected function processCallbacks($value, ResourceFieldInterface $resource_field) {
-    $process_callbacks = $resource_field->getProcessCallbacks();
-    if (!$value || empty($process_callbacks)) {
-      return $value;
-    }
-    foreach ($process_callbacks as $process_callback) {
-      $value = ResourceManager::executeCallback($process_callback, array($value));
-    }
-    return $value;
   }
 
   /**
