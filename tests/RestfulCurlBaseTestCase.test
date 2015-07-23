@@ -6,6 +6,7 @@
  */
 
 use Drupal\restful\Http\RequestInterface;
+use Drupal\restful\Http\Request;
 
 class RestfulCurlBaseTestCase extends DrupalWebTestCase {
 
@@ -31,6 +32,7 @@ class RestfulCurlBaseTestCase extends DrupalWebTestCase {
    */
   protected function httpRequest($url, $method = RequestInterface::METHOD_GET, $body = NULL, $headers = array(), $use_token = TRUE) {
     $format = 'json';
+    $curl_options = array();
 
     switch ($method) {
       case RequestInterface::METHOD_GET:
@@ -58,13 +60,12 @@ class RestfulCurlBaseTestCase extends DrupalWebTestCase {
         $curl_options = array(
           CURLOPT_HTTPGET => FALSE,
           CURLOPT_POST => TRUE,
-          CURLOPT_POSTFIELDS => $body,
+          CURLOPT_POSTFIELDS => is_array($body) ? http_build_query($body) : $body,
           CURLOPT_URL => url($url, array('absolute' => TRUE)),
           CURLOPT_NOBODY => FALSE,
         );
         if (empty($headers['Content-Type'])) {
           $headers['Content-Type'] = 'application/' . $format;
-          $curl_options[CURLOPT_POSTFIELDS] = http_build_query($body);
         }
         break;
 
@@ -73,13 +74,12 @@ class RestfulCurlBaseTestCase extends DrupalWebTestCase {
         $curl_options = array(
           CURLOPT_HTTPGET => FALSE,
           CURLOPT_CUSTOMREQUEST => $method,
-          CURLOPT_POSTFIELDS => $body,
+          CURLOPT_POSTFIELDS => is_array($body) ? http_build_query($body) : $body,
           CURLOPT_URL => url($url, array('absolute' => TRUE)),
           CURLOPT_NOBODY => FALSE,
         );
         if (empty($headers['Content-Type'])) {
           $headers['Content-Type'] = 'application/' . $format;
-          $curl_options[CURLOPT_POSTFIELDS] = http_build_query($body);
         }
         break;
 
@@ -95,14 +95,19 @@ class RestfulCurlBaseTestCase extends DrupalWebTestCase {
 
     $curl_options += array(CURLOPT_HTTPHEADER => array());
 
-    if ($this->loggedInUser && \Drupal\restful\Http\Request::isWriteMethod($method, FALSE) && $use_token) {
+    if (Request::isWriteMethod($method) && $use_token) {
       // Add CSRF token for write operations.
       if (empty($this->csrfToken)) {
         $response = $this->drupalGet('api/session/token');
         $result = drupal_json_decode($response);
-        $this->csrfToken = $result['X-CSRF-Token'];
+        if (!empty($result['X-CSRF-Token'])) {
+          $this->csrfToken = $result['X-CSRF-Token'];
+          $headers['X-CSRF-Token'] = $result['X-CSRF-Token'];
+        }
       }
-      $headers['X-CSRF-Token'] = $this->csrfToken;
+      else {
+        $headers['X-CSRF-Token'] = $this->csrfToken;
+      }
     }
 
     foreach ($headers as $key => $value) {

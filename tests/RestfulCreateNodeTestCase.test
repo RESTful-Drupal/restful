@@ -5,6 +5,9 @@
  * Contains RestfulCreateNodeTestCase
  */
 
+use Drupal\restful\Http\Request;
+use Drupal\restful\Http\RequestInterface;
+
 class RestfulCreateNodeTestCase extends DrupalWebTestCase {
 
   public static function getInfo() {
@@ -15,18 +18,19 @@ class RestfulCreateNodeTestCase extends DrupalWebTestCase {
     );
   }
 
-  function setUp() {
+  public function setUp() {
     parent::setUp('restful_example');
   }
 
   /**
    * Test creating a node (POST method).
    */
-  function testCreateNode() {
+  public function testCreateNode() {
+    $resource_manager = restful()->getResourceManager();
     $user1 = $this->drupalCreateUser();
     $this->drupalLogin($user1);
 
-    $handler = restful_get_restful_handler('articles');
+    $handler = $resource_manager->getPlugin('articles:1.1');
 
     // Set a different user from the logged in user, to assert the node's author
     // is set correctly.
@@ -35,9 +39,12 @@ class RestfulCreateNodeTestCase extends DrupalWebTestCase {
 
     $text1 = $this->randomName();
     $request = array('label' => $text1);
-    $result = $handler->post('', $request);
+    $handler->setRequest(Request::create('', array(), RequestInterface::METHOD_POST, NULL, FALSE, NULL, array(), array(), array(), $request));
+    $handler->setPath('');
+    $result = $handler->process();
 
     $node = node_load($result[0]['id']);
     $this->assertEqual($node->uid, $user2->uid, 'Correct user was set to be the author of the node.');
+    $this->assertEqual($node->title, $text1, 'Correct title set.');
   }
 }

@@ -21,4 +21,17 @@ class DataProviderNode extends DataProviderEntity implements DataProviderInterfa
     return $query;
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function entityPreSave(\EntityDrupalWrapper $wrapper) {
+    $node = $wrapper->value();
+    if (!empty($node->nid)) {
+      // Node is already saved.
+      return;
+    }
+    node_object_prepare($node);
+    $node->uid = $this->getAccount()->uid;
+  }
+
 }

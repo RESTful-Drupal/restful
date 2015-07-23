@@ -23,12 +23,6 @@ class ResourceFieldEntityReference extends ResourceFieldEntity implements Resour
       return NULL;
     }
 
-    // If the provided value is the ID to the referenced entity, then do not do
-    // a sub-request.
-    if (!is_array($value) || empty($value['values'])) {
-      return $value;
-    }
-
     $field_info = field_info_field($this->getProperty());
     if ($field_info['cardinality'] != 1 && !is_array($value)) {
       // If the field is entity reference type and its cardinality larger than
@@ -36,9 +30,15 @@ class ResourceFieldEntityReference extends ResourceFieldEntity implements Resour
       $value = explode(',', $value);
     }
 
+    // If the provided value is the ID to the referenced entity, then do not do
+    // a sub-request.
+    if (!is_array($value) || empty($value['values'])) {
+      return $value;
+    }
+
     $value = static::subRequestId($this->mergeEntityFromReference($value));
 
-    return $value;
+    return ($field_info['cardinality'] == 1 && is_array($value)) ? reset($value) : $value;
   }
 
   /**
@@ -52,6 +52,9 @@ class ResourceFieldEntityReference extends ResourceFieldEntity implements Resour
    */
   protected function mergeEntityFromReference($value) {
     // TODO: Move this to the docs. The payload for the resource has changed.
+    // The sub-request applies to all of the values for a given field. It is not
+    // possible to have a different request for the different values of a multi
+    // value field.
     // The structure of the payload send for a public field declared as a
     // resource is now like:
     // 1. array(
@@ -106,6 +109,12 @@ class ResourceFieldEntityReference extends ResourceFieldEntity implements Resour
     // Multiple values.
     $return = array();
     foreach ($value['values'] as $value_item) {
+      // If there is only the 'id' public property, then only assign the new
+      // reference.
+      if (array_keys($value_item) == array('id')) {
+        $return[] = $value_item;
+        continue;
+      }
       $merged = $resource_data_provider->merge(static::subRequestId($value_item), $value_item);
       $return[] = reset($merged);
     }

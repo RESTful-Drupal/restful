@@ -155,7 +155,7 @@ class Main__1_1 extends Main__1_0 implements ResourceInterface {
    * @return int
    *   Array with file IDs.
    */
-  protected function getFilesId(array $value) {
+  public function getFilesId(array $value) {
     if (ResourceFieldBase::isArrayNumeric($value)) {
       $return = array();
       foreach ($value as $file_array) {

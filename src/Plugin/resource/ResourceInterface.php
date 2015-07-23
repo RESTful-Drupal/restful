@@ -32,6 +32,7 @@ interface ResourceInterface extends PluginInspectionInterface, ConfigurablePlugi
    *   The data provider for this resource.
    *
    * @throws NotImplementedException
+   * @throws ServerConfigurationException
    */
   public function dataProviderFactory();
 

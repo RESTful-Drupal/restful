@@ -90,6 +90,31 @@ abstract class Resource extends PluginBase implements ResourceInterface {
   /**
    * {@inheritdoc}
    */
+  public function dataProviderFactory() {
+    $plugin_definition = $this->getPluginDefinition();
+    $field_definitions = $this->getFieldDefinitions();
+    $class_name = $this->dataProviderClassName();
+    if (!class_exists($class_name)) {
+      throw new ServerConfigurationException(sprintf('The DataProvider could be found for this resource: %s.', $this->getResourceMachineName()));
+    }
+    return new $class_name($this->getRequest(), $field_definitions, $this->getAccount(), $this->getPath(), $plugin_definition['dataProvider']);
+  }
+
+  /**
+   * Data provider class.
+   *
+   * @return string
+   *   The name of the class of the provider factory.
+   */
+  protected function dataProviderClassName() {
+    // Fallback to the null data provider, this means that we can only get data
+    // from basic callbacks.
+    return '\Drupal\restful\Plugin\resource\DataProvider\DataProviderNull';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getAccount($cache = TRUE) {
     return $this->authenticationManager->getAccount($this->getRequest(), $cache);
   }

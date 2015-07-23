@@ -278,7 +278,9 @@ class Request implements RequestInterface {
     $content_type = $this
       ->getHeaders()
       ->get('Content-Type')
-      ->getValueString();
+      ->get();
+
+    $content_type = reset($content_type);
     $content_type = $content_type ?: 'application/x-www-form-urlencoded';
     return static::parseBodyContentType($content_type);
   }
@@ -295,11 +297,11 @@ class Request implements RequestInterface {
    * @throws \Drupal\restful\Exception\BadRequestException
    */
   protected static function parseBodyContentType($content_type) {
-    $body = NULL;
     if (!$input_string = file_get_contents('php://input')) {
       return NULL;
     }
     if ($content_type == 'application/x-www-form-urlencoded') {
+      $body = NULL;
       parse_str($input_string, $body);
       return $body;
     }

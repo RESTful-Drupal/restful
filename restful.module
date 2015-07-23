@@ -93,7 +93,11 @@ function restful_menu() {
     ->getResourceManager()
     ->getPlugins();
   foreach ($plugins->getIterator() as $plugin) {
-    /* @var ResourceInterface $plugin */
+    if (!$plugin instanceof ResourceInterface) {
+      // If the plugin is disabled $plugin gets set to NULL. If that is the case
+      // do not set any menu values based on it.
+      continue;
+    }
     $plugin_definition = $plugin->getPluginDefinition();
     if (!$plugin_definition['hookMenu']) {
       // Plugin explicitly declared no hook menu should be created automatically
@@ -454,8 +458,13 @@ function _restful_get_data_from_menu_status(&$var) {
       $class_name = '\Drupal\restful\Exception\ServiceUnavailableException';
       $message = 'Site is offline.';
       break;
+
+    default:
+      $class_name = '\Drupal\restful\Exception\RestfulException';
+      $message = 'Unknown exception';
   }
 
+  /* @var RestfulException $e */
   $e = new $class_name($message);
 
   $var = array(
@@ -556,7 +565,7 @@ function restful_restful_resource_alter(ResourceInterface &$resource) {
   }
 
   // Disable the Files Upload resource based on the settings variable.
-  if ($resource->getResourceMachineName() == 'files_upload' && variable_get('restful_file_upload', FALSE)) {
-    $resource->disable();
+  if ($resource->getResourceMachineName() == 'files_upload') {
+    variable_get('restful_file_upload', FALSE) ? $resource->enable() : $resource->disable();
   }
 }

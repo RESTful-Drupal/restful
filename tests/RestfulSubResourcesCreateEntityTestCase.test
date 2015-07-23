@@ -6,13 +6,15 @@
  */
 
 use Drupal\restful\Exception\BadRequestException;
+use Drupal\restful\Http\Request;
+use Drupal\restful\Http\RequestInterface;
 
 class RestfulSubResourcesCreateEntityTestCase extends DrupalWebTestCase {
 
   /**
    * Hold the RESTful handler.
    *
-   * @var RestfulInterface
+   * @var \Drupal\restful\Plugin\resource\ResourceInterface
    */
   protected $handler = NULL;
 
@@ -73,7 +75,12 @@ class RestfulSubResourcesCreateEntityTestCase extends DrupalWebTestCase {
 
     field_create_instance($instance);
 
-    $this->handler = restful_get_restful_handler('test_articles', 1, 2);
+    $resource_manager = restful()->getResourceManager();
+    $resource_manager->clearPluginCache('test_articles:1.2');
+    $this->handler = $resource_manager->getPlugin('test_articles:1.2');
+    user_role_change_permissions(DRUPAL_ANONYMOUS_RID, array(
+      'create article content' => TRUE,
+    ));
   }
 
   /**
@@ -84,22 +91,26 @@ class RestfulSubResourcesCreateEntityTestCase extends DrupalWebTestCase {
       'label' => 'parent',
       'body' => 'Drupal',
       'entity_reference_single' => array(
-        'label' => 'child1',
-        'body' => 'Drupal1',
+        'values' => array(array(
+          'label' => 'child1',
+          'body' => 'Drupal1',
+        )),
       ),
       'entity_reference_multiple' => array(
-        array(
-          'label' => 'child2',
-          'body' => 'Drupal2',
-        ),
-        array(
-          'label' => 'child3',
-          'body' => 'Drupal3',
+        'values' => array(
+          array(
+            'label' => 'child2',
+            'body' => 'Drupal2',
+          ),
+          array(
+            'label' => 'child3',
+            'body' => 'Drupal3',
+          ),
         ),
       ),
     );
 
-    // POST parent
+    // POST parent.
     $this->processRequests('post', '', $request);
 
     // PUT/ PATCH parent.
@@ -111,7 +122,7 @@ class RestfulSubResourcesCreateEntityTestCase extends DrupalWebTestCase {
     $request = $base_request;
 
     foreach (array('put', 'patch') as $method) {
-       $this->processRequests($method, $node1->nid, $request);
+      $this->processRequests($method, $node1->nid, $request);
     }
 
     // POST parent, reference existing on single reference, multiple reference
@@ -134,34 +145,41 @@ class RestfulSubResourcesCreateEntityTestCase extends DrupalWebTestCase {
     // PATCH existing one, and PUT existing one.
     $request = $base_request;
     $request['entity_reference_single'] = $node2->nid;
-    $request['entity_reference_multiple'] = array(
-      $node3->nid,
+    $request['entity_reference_multiple']['request'] = array(
+      'method' => RequestInterface::METHOD_PATCH,
+    );
+    $request['entity_reference_multiple']['values'] = array(
       array(
+        // Set the $node3.
+        'id' => $node3->nid,
+      ),
+      array(
+        // Create a new node. Even if the request method is set to PATCH, since
+        // there is no id to rely upon, this is a POST.
         'label' => 'POST new one',
         'body' => 'Drupal',
       ),
       array(
+        // Set $node4 and update some of the fields.
         'id' => $node4->nid,
         'label' => 'PATCH existing one',
         'body' => 'Drupal',
       ),
       array(
-        // Explicitly set the method.
-        '__application' => array(
-          'method' => 'put',
-        ),
+        // Set $node5 and update some of the fields.
         'id' => $node5->nid,
-        'label' => 'PUT existing one',
+        'label' => 'PATCH existing one',
         'body' => 'Drupal',
       ),
     );
 
-    $this->processRequests($method, $node1->nid, $request);
+    $this->processRequests('post', '', $request);
 
     // Test the version of the sub-resource.
-    $public_fields = $this->handler->getPublicFields();
-    $this->assertEqual($public_fields['entity_reference_multiple']['resource']['article']['major_version'], 1, 'Sub resource major version is correct.');
-    $this->assertEqual($public_fields['entity_reference_multiple']['resource']['article']['minor_version'], 2, 'Sub resource minor version is correct.');
+    $public_fields = $this->handler->getFieldDefinitions();
+    $erm_resource = $public_fields->get('entity_reference_multiple')->getResource();
+    $this->assertEqual($erm_resource['majorVersion'], 1, 'Sub resource major version is correct.');
+    $this->assertEqual($erm_resource['minorVersion'], 2, 'Sub resource minor version is correct.');
   }
 
   /**
@@ -175,8 +193,18 @@ class RestfulSubResourcesCreateEntityTestCase extends DrupalWebTestCase {
    *   The request array.
    */
   protected function processRequests($method = 'post', $path = '', array $request = array()) {
-    $handler = $this->handler;
-    $response = $handler->{$method}($path, $request);
+    $method = strtoupper($method);
+    $query = $parsed_body = array();
+    if (Request::isWriteMethod($method)) {
+      $parsed_body = $request;
+    }
+    else {
+      $query = $request;
+    }
+    $this->handler->setRequest(Request::create($path, $query, $method, NULL, FALSE, NULL, array(), array(), array(), $parsed_body));
+    $this->handler->setPath($path);
+    $response = $this->handler->process();
+
     $result = $response[0];
     $this->assertTrue($result['id'], 'Parent entity created.');
     $this->assertTrue($result['entity_reference_single']['id'], 'Single sub-resource created or updated.');
@@ -218,10 +246,18 @@ class RestfulSubResourcesCreateEntityTestCase extends DrupalWebTestCase {
    *   The request array.
    */
   protected function assertInvalidRequest($method = 'post', $path = '', array $request = array()) {
-
-    $handler = $this->handler;
+    $method = strtoupper($method);
+    $query = $parsed_body = array();
+    if (Request::isWriteMethod($method)) {
+      $query = $request;
+    }
+    else {
+      $parsed_body = $request;
+    }
     try {
-      $handler->{$method}($path, $request);
+      $this->handler->setRequest(Request::create($path, $query, $method, NULL, FALSE, NULL, array(), array(), array(), $parsed_body));
+      $this->handler->setPath($path);
+      $this->handler->process();
       $this->fail('No exception thrown on validation fail on the parent.');
     }
     catch (BadRequestException $e) {

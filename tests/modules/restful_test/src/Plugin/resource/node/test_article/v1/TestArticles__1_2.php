@@ -52,11 +52,9 @@ class TestArticles__1_2 extends ResourceNode implements ResourceInterface {
       $public_fields['entity_reference_single'] = array(
         'property' => 'entity_reference_single',
         'resource' => array(
-          'article' => array(
-            'name' => 'test_articles',
-            'major_version' => 1,
-            'minor_version' => 2,
-          ),
+          'name' => 'test_articles',
+          'majorVersion' => 1,
+          'minorVersion' => 2,
         ),
       );
     }
@@ -65,11 +63,9 @@ class TestArticles__1_2 extends ResourceNode implements ResourceInterface {
       $public_fields['entity_reference_multiple'] = array(
         'property' => 'entity_reference_multiple',
         'resource' => array(
-          'article' => array(
-            'name' => 'test_articles',
-            'major_version' => 1,
-            'minor_version' => 2,
-          ),
+          'name' => 'test_articles',
+          'majorVersion' => 1,
+          'minorVersion' => 2,
         ),
       );
     }
@@ -92,7 +88,11 @@ class TestArticles__1_2 extends ResourceNode implements ResourceInterface {
       );
 
       if (variable_get('restful_test_reference_resource')) {
-        $public_fields['user']['resource'] = array('user' => 'users');
+        $public_fields['user']['resource'] = array(
+          'name' => 'users',
+          'majorVersion' => 1,
+          'minorVersion' => 0,
+        );
       }
     }
 
