@@ -612,9 +612,18 @@ function restful_parse_request() {
           }
         }
 
-        // this file never exists on the server already, as it is temporary
-        // save processing time by not checking if it already exists
-        $request['file'] = file_uri_to_object($uri, FALSE);
+        // construct a file object based on the file we just received.
+        $uri = file_stream_wrapper_uri_normalize($uri);
+        $file = new stdClass();
+        $file->uid = $GLOBALS['user']->uid;
+        $file->filename = basename($uri);
+        $file->uri = $uri;
+        $file->filemime = file_get_mimetype($uri);
+        // This is gagged because some uris will not support it.
+        $file->filesize = @filesize($uri);
+        $file->timestamp = REQUEST_TIME;
+
+        $request['file'] = $file;
         $request['file']->filemime = $contentType;
         $request['file']->type = file_get_type($request['file']);
         fclose($input);
