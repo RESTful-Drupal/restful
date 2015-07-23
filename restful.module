@@ -625,13 +625,12 @@ function restful_parse_request() {
         $file->uid = $GLOBALS['user']->uid;
         $file->filename = basename($uri);
         $file->uri = $uri;
-        $file->filemime = file_get_mimetype($uri);
+        $file->filemime = $contentType;
         // This is gagged because some uris will not support it.
         $file->filesize = @filesize($uri);
         $file->timestamp = REQUEST_TIME;
 
         $request['file'] = $file;
-        $request['file']->filemime = $contentType;
         fclose($input);
         fclose($dest);
         break;
