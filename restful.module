@@ -166,6 +166,10 @@ function restful_permission() {
       'title' => t('Administer the RESTful module'),
       'description' => t('Access the administration pages for the RESTful module.'),
     ),
+    'administer resources' => array(
+      'title' => t('Administer the resources'),
+      'description' => t('Perform operations on the resources.'),
+    ),
   );
 }
 

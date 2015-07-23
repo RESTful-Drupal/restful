@@ -8,6 +8,7 @@
 namespace Drupal\restful\Plugin\resource\DataProvider;
 
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
+use Drupal\restful\Exception\ForbiddenException;
 use Drupal\restful\Exception\NotFoundException;
 use Drupal\restful\Exception\NotImplementedException;
 use Drupal\restful\Exception\UnauthorizedException;
@@ -91,13 +92,23 @@ class DataProviderPlug extends DataProvider implements DataProviderInterface {
    * {@inheritdoc}
    */
   public function update($identifier, $object, $replace = FALSE) {
-    throw new NotImplementedException('You cannot create plugins through the API.');
+    if (!user_access('administer resources', $this->getAccount())) {
+      throw new ForbiddenException('Access denied.');
+    }
+    $disabled_plugins = variable_get('restful_disabled_plugins', array());
+    if ($object['enable']) {
+      unset($disabled_plugins[$identifier]);
+    }
+    variable_set($disabled_plugins, 'restful_disabled_plugins');
   }
 
   /**
    * {@inheritdoc}
    */
   public function remove($identifier) {
+    if (!user_access('administer resources', $this->getAccount())) {
+      throw new ForbiddenException('Access denied.');
+    }
     $disabled_plugins = variable_get('restful_disabled_plugins', array());
     $disabled_plugins[] = $identifier;
     variable_set($disabled_plugins, 'restful_disabled_plugins');
@@ -114,6 +125,19 @@ class DataProviderPlug extends DataProvider implements DataProviderInterface {
       ->getInstanceIds());
     sort($ids);
     return $ids;
+  }
+
+  /**
+   * Helper callback to check authorization for write operations.
+   *
+   * @param string $path
+   *   The resource path.
+   *
+   * @return bool
+   *   TRUE to grant access. FALSE otherwise.
+   */
+  public function resourceManipulationAccess($path) {
+    return user_access('administer resources', $this->getAccount());
   }
 
 }
