@@ -625,7 +625,6 @@ function restful_parse_request() {
 
         $request['file'] = $file;
         $request['file']->filemime = $contentType;
-        $request['file']->type = file_get_type($request['file']);
         fclose($input);
         fclose($dest);
         break;
