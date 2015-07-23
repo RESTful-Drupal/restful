@@ -166,7 +166,7 @@ function restful_permission() {
       'title' => t('Administer the RESTful module'),
       'description' => t('Access the administration pages for the RESTful module.'),
     ),
-    'administer resources' => array(
+    'administer restful resources' => array(
       'title' => t('Administer the resources'),
       'description' => t('Perform operations on the resources.'),
     ),
@@ -561,6 +561,19 @@ function restful_date_time_format_element_validate($element, &$form_state) {
  * cache).
  */
 function restful_restful_resource_alter(ResourceInterface &$resource) {
+  // Disable any plugin in the disabled plugins variable.
+  $disabled_plugins = variable_get('restful_disabled_plugins', array());
+  if (!empty($disabled_plugins[$resource->getResourceName()])) {
+    $resource->disable();
+  }
+  elseif (
+    isset($disabled_plugins[$resource->getResourceName()]) &&
+    $disabled_plugins[$resource->getResourceName()] === FALSE &&
+    !$resource->isEnabled()
+  ) {
+    $resource->enable();
+  }
+
   $plugin_definition = $resource->getPluginDefinition();
   // Check for the rate limit configuration.
   if (!empty($plugin_definition['renderCache']['render'])) {
@@ -574,12 +587,6 @@ function restful_restful_resource_alter(ResourceInterface &$resource) {
   // Disable the Files Upload resource based on the settings variable.
   if ($resource->getResourceMachineName() == 'files_upload') {
     variable_get('restful_file_upload', FALSE) ? $resource->enable() : $resource->disable();
-  }
-
-  // Disable any plugin in the disabled plugins variable.
-  $disabled_plugins = variable_get('restful_disabled_plugins', array());
-  if ($resource->isEnabled() && in_array($resource->getResourceName(), $disabled_plugins)) {
-    $resource->disable();
   }
 
   // Disable the discovery endpoint if it's disabled.

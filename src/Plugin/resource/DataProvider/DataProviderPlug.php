@@ -8,7 +8,6 @@
 namespace Drupal\restful\Plugin\resource\DataProvider;
 
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
-use Drupal\restful\Exception\ForbiddenException;
 use Drupal\restful\Exception\BadRequestException;
 use Drupal\restful\Exception\NotFoundException;
 use Drupal\restful\Exception\NotImplementedException;
@@ -111,26 +110,20 @@ class DataProviderPlug extends DataProvider implements DataProviderInterface {
    * {@inheritdoc}
    */
   public function update($identifier, $object, $replace = FALSE) {
-    if (!user_access('administer resources', $this->getAccount())) {
-      throw new ForbiddenException('Access denied.');
-    }
     $disabled_plugins = variable_get('restful_disabled_plugins', array());
     if ($object['enable']) {
-      unset($disabled_plugins[$identifier]);
+      $disabled_plugins[$identifier] = FALSE;
     }
-    variable_set($disabled_plugins, 'restful_disabled_plugins');
+    variable_set('restful_disabled_plugins', $disabled_plugins);
   }
 
   /**
    * {@inheritdoc}
    */
   public function remove($identifier) {
-    if (!user_access('administer resources', $this->getAccount())) {
-      throw new ForbiddenException('Access denied.');
-    }
     $disabled_plugins = variable_get('restful_disabled_plugins', array());
-    $disabled_plugins[] = $identifier;
-    variable_set($disabled_plugins, 'restful_disabled_plugins');
+    $disabled_plugins[$identifier] = TRUE;
+    variable_set('restful_disabled_plugins', $disabled_plugins);
   }
 
   /**
@@ -295,19 +288,6 @@ class DataProviderPlug extends DataProvider implements DataProviderInterface {
         return $value1 >= $value2[0] && $value1 >= $value2[1];
     }
     return FALSE;
-  }
-
-  /**
-   * Helper callback to check authorization for write operations.
-   *
-   * @param string $path
-   *   The resource path.
-   *
-   * @return bool
-   *   TRUE to grant access. FALSE otherwise.
-   */
-  public function resourceManipulationAccess($path) {
-    return user_access('administer resources', $this->getAccount());
   }
 
 }

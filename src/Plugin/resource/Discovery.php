@@ -7,6 +7,7 @@
 
 namespace Drupal\restful\Plugin\resource;
 
+use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
 
 /**
@@ -99,6 +100,43 @@ class Discovery extends Resource {
 
     $base_path = variable_get('restful_hook_menu_base_path', 'api');
     return url($base_path . '/v' . $data_interpreter->getWrapper()->get('majorVersion') . '.' . $data_interpreter->getWrapper()->get('minorVersion') . '/' . $data_interpreter->getWrapper()->get('resource'), array('absolute' => TRUE));
+  }
+
+  /**
+   * @inheritDoc
+   */
+  public function controllersInfo() {
+    return array(
+      '' => array(
+        // GET returns a list of entities.
+        RequestInterface::METHOD_GET => 'index',
+        RequestInterface::METHOD_HEAD => 'index',
+      ),
+      // We don't know what the ID looks like, assume that everything is the ID.
+      '^.*$' => array(
+        RequestInterface::METHOD_PUT => array(
+          'callback' => 'replace',
+          'access callback' => 'resourceManipulationAccess',
+        ),
+        RequestInterface::METHOD_DELETE => array(
+          'callback' => 'remove',
+          'access callback' => 'resourceManipulationAccess',
+        ),
+      ),
+    );
+  }
+
+  /**
+   * Helper callback to check authorization for write operations.
+   *
+   * @param string $path
+   *   The resource path.
+   *
+   * @return bool
+   *   TRUE to grant access. FALSE otherwise.
+   */
+  public function resourceManipulationAccess($path) {
+    return user_access('administer restful resources', $this->getAccount());
   }
 
 }

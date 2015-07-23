@@ -5,7 +5,9 @@
  * Contains \RestfulDataProviderCToolsPluginsTestCase.
  */
 
+use Drupal\restful\Exception\ForbiddenException;
 use Drupal\restful\Http\Request;
+use Drupal\restful\Http\RequestInterface;
 
 class RestfulDataProviderPlugPluginsTestCase extends DrupalWebTestCase {
 
@@ -86,5 +88,42 @@ class RestfulDataProviderPlugPluginsTestCase extends DrupalWebTestCase {
     $handler->setRequest(Request::create('', $request));
     $result = $handler->process();
     $this->assertEqual(count($result), 0, 'Resources without discovery are ignored.');
+
+    // Make sure that unauthorized users cannot enable/disable resources via the
+    // API.
+    $handler->setAccount(drupal_anonymous_user());
+    $handler->setRequest(Request::create('api/v1.0/discovery/articles:1.0', array(), RequestInterface::METHOD_DELETE));
+    $handler->setPath('articles:1.0');
+    try {
+      $handler->process();
+      $this->fail('Un-privileged user can disable endpoints.');
+    }
+    catch (ForbiddenException $e) {
+      $this->pass('Un-privileged user cannot disable endpoints.');
+    }
+    $handler->setRequest(Request::create('api/v1.0/discovery/articles:1.0', array(), RequestInterface::METHOD_PUT, NULL, FALSE, NULL, array(), array(), array(), array('enable' => 1)));
+    $handler->setPath('articles:1.0');
+    try {
+      $handler->process();
+      $this->fail('Un-privileged user can disable endpoints.');
+    }
+    catch (ForbiddenException $e) {
+      $this->pass('Un-privileged user cannot disable endpoints.');
+    }
+
+    // Make sure that unauthorized users can enable/disable resources via the
+    // API.
+    $account = $this->drupalCreateUser(array('administer restful resources'));
+    $handler->setAccount($account);
+    $handler->setRequest(Request::create('api/v1.0/discovery/articles:1.0', array(), RequestInterface::METHOD_DELETE));
+    $handler->setPath('articles:1.0');
+    $handler->process();
+    $resource = $resource_manager->getPlugin('articles:1.0');
+    $this->assertNull($resource, 'Plugin disabled via the API.');
+    $handler->setRequest(Request::create('api/v1.0/discovery/articles:1.0', array(), RequestInterface::METHOD_PUT, NULL, FALSE, NULL, array(), array(), array(), array('enable' => 1)));
+    $handler->setPath('articles:1.0');
+    $handler->process();
+    $resource = $resource_manager->getPlugin('articles:1.0');
+    $this->assertTrue($resource->isEnabled(), 'Plugin enabled via the API.');
   }
 }
