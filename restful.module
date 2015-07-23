@@ -574,6 +574,9 @@ function restful_parse_request() {
   elseif ($method == \RestfulInterface::POST) {
     $request = $_POST;
   }
+  elseif ($method == \RestfulInterface::HEAD) {
+    $request = array();
+  }
   else {
     $temp = explode(';', $_SERVER['CONTENT_TYPE']);
     $contentType = $temp[0];
