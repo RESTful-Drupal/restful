@@ -62,5 +62,19 @@ class RestfulDataProviderPlugPluginsTestCase extends DrupalWebTestCase {
     $handler->setRequest(Request::create('', $request));
     $result = $handler->process();
     $this->assertTrue(count($result) > 1, 'All resources shown by passing the "all" query string.');
+
+    // Assert sorting and filtering works as expected.
+    $request = array(
+      // Get all resources.
+      'filter' => array(
+        'resource' => array(
+          'value' => 'discovery',
+          'operator' => '=',
+        ),
+      ),
+    );
+    $handler->setRequest(Request::create('', $request));
+    $result = $handler->process();
+    $this->assertEqual(count($result), 0, 'Resources without discovery are ignored.');
   }
 }

@@ -149,9 +149,32 @@ class DataProviderPlug extends DataProvider implements DataProviderInterface {
    *   The same array minus the filtered plugins.
    */
   protected function applyFilters(array $plugins) {
-    foreach ($this->parseRequestForListFilter() as $filter) {
-      // Apply the filter to the list of plugins.
-      foreach ($plugins as $instance_id => $plugin) {
+    $resource_manager = restful()->getResourceManager();
+    $filters = $this->parseRequestForListFilter();
+    // If the 'all' option is not present, then add a filters to retrieve only
+    // the last resource.
+    $input = $this->getRequest()->getParsedInput();
+    $all = !empty($input['all']);
+    // Apply the filter to the list of plugins.
+    foreach ($plugins as $instance_id => $plugin) {
+      if (!$all) {
+        // Remove the plugin if it's not the latest version.
+        $version = $plugin->getVersion();
+        list($last_major, $last_minor) = $resource_manager->getResourceLastVersion($plugin->getResourceMachineName());
+        if ($version['major'] != $last_major || $version['minor'] != $last_minor) {
+          // We don't add the major and minor versions to filters because we
+          // cannot depend on the presence of the versions as public fields.
+          unset($plugins[$instance_id]);
+          continue;
+        }
+      }
+      // If the discovery is turned off for the resource, unset it.
+      $definition = $plugin->getPluginDefinition();
+      if (!$definition['discoverable']) {
+        unset($plugins[$instance_id]);
+        continue;
+      }
+      foreach ($filters as $filter) {
         $interpreter = new DataInterpreterPlug($this->getAccount(), new PluginWrapper($plugin));
         // Initialize to TRUE for AND and FALSE for OR (neutral value).
         $match = $filter['conjunction'] == 'AND';
@@ -162,6 +185,7 @@ class DataProviderPlug extends DataProvider implements DataProviderInterface {
           if (is_null($plugin_value)) {
             // Property doesn't exist on the plugin, so filter it out.
             unset($plugins[$instance_id]);
+            continue;
           }
 
           if ($filter['conjunction'] == 'OR') {
