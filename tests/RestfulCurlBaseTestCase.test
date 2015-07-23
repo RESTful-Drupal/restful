@@ -27,7 +27,7 @@ class RestfulCurlBaseTestCase extends DrupalWebTestCase {
    *   Array keyed with the "code", "headers", and "body" of the response.
    */
   protected function httpRequest($url, $method = \RestfulInterface::GET, $body = NULL, $headers = array(), $use_token = TRUE) {
-    $format = 'json';
+    $format = 'x-www-form-encoded';
 
     switch ($method) {
       case \RestfulInterface::GET:
