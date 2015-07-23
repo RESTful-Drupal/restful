@@ -15,15 +15,15 @@ class RestfulGetHandlersTestCase extends DrupalWebTestCase {
     );
   }
 
-  function setUp() {
+  public function setUp() {
     parent::setUp('restful_example');
   }
 
   /**
    * Test getting handlers via API.
    */
-  function testGetHandlers() {
-
+  public function testGetHandlers() {
+    $resource_manager = restful()->getResourceManager();
     $title = $this->randomName();
     $settings = array(
       'type' => 'article',
@@ -31,16 +31,11 @@ class RestfulGetHandlersTestCase extends DrupalWebTestCase {
     );
     $node1 = $this->drupalCreateNode($settings);
 
-    $handler = restful_get_restful_handler('articles');
-    $this->assertEqual(get_class($handler), 'RestfulExampleArticlesResource');
-    $response = $handler->get($node1->nid);
-    $result = $response[0];
-    $this->assertTrue(!empty($result['self']), '"self" property appears in minor version 0.');
-
-
-    $handler = restful_get_restful_handler('articles', 1, 1);
-    $this->assertEqual(get_class($handler), 'RestfulExampleArticlesResource__1_1');
-    $response = $handler->get($node1->nid);
+    $handler = $resource_manager->getPlugin('articles:1.1');
+    $this->assertTrue($handler instanceof \Drupal\restful_example\Plugin\resource\node\article\v1\Articles__1_0);
+    $handler->setRequest(\Drupal\restful\Http\Request::create('articles/v1.1/' . $node1->nid));
+    $handler->setPath($node1->nid);
+    $response = $handler->process();
     $result = $response[0];
     $this->assertTrue(empty($result['self']), '"self" property does not appear in minor version 1.');
   }

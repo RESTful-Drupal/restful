@@ -7,6 +7,7 @@
 
 namespace Drupal\restful\Plugin\authentication;
 use Drupal\restful\Exception\BadRequestException;
+use Drupal\restful\Exception\ForbiddenException;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\RestfulManager;
 

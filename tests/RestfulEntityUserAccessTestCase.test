@@ -6,6 +6,7 @@
  */
 
 use Drupal\restful\Exception\ForbiddenException;
+use Drupal\restful\Http\Request;
 
 class RestfulEntityUserAccessTestCase extends DrupalWebTestCase {
 
@@ -17,23 +18,26 @@ class RestfulEntityUserAccessTestCase extends DrupalWebTestCase {
     );
   }
 
-  function setUp() {
+  public function setUp() {
     parent::setUp('restful');
   }
 
   /**
    * Test access control for viewing the "users" resource.
    */
-  function testViewAccess() {
+  public function testViewAccess() {
+    $resource_manager = restful()->getResourceManager();
     $user1 = $this->drupalCreateUser();
     $user2 = $this->drupalCreateUser(array('access user profiles'));
 
     // Non-privileged user.
-    $handler = restful_get_restful_handler('users');
+    $handler = $resource_manager->getPlugin('users:1.0');
     $handler->setAccount($user1);
 
     try {
-      $handler->get($user2->uid);
+      $handler->setRequest(Request::create('api/v1.0/users/' . $user2->uid));
+      $handler->setPath($user2->uid);
+      $handler->process();
       $this->fail('Non-privileged user can view another user.');
     }
     catch (ForbiddenException $e) {
@@ -45,7 +49,9 @@ class RestfulEntityUserAccessTestCase extends DrupalWebTestCase {
 
     // Listing of users.
     try {
-      $handler->get();
+      $handler->setRequest(Request::create('api/v1.0/users'));
+      $handler->setPath('');
+      $handler->process();
       $this->fail('Non-privileged user can view listing of users.');
     }
     catch (ForbiddenException $e) {
@@ -56,13 +62,15 @@ class RestfulEntityUserAccessTestCase extends DrupalWebTestCase {
     }
 
     // View own user account.
-    $response = $handler->get($user1->uid);
+    $handler->setRequest(Request::create('api/v1.0/users/' . $user1->uid));
+    $handler->setPath($user1->uid);
+    $response = $handler->process();
     $result = $response[0];
     $this->assertEqual($result['mail'], $user1->mail, 'User can see own mail.');
 
     // Privileged user, watching another user's profile.
     $handler->setAccount($user2);
-    $response = $handler->get($user1->uid);
+    $response = $handler->process();
     $result = $response[0];
     $expected_result = array(
       'id' => $user1->uid,
@@ -73,9 +81,11 @@ class RestfulEntityUserAccessTestCase extends DrupalWebTestCase {
     $this->assertEqual($result, $expected_result, "Privileged user can access another user's resource.");
 
     // Listing of users.
-    $result = $handler->get();
+    $handler->setRequest(Request::create('api/v1.0/users'));
+    $handler->setPath('');
+    $result = $handler->process();
     // Check we have all the expected users count (user ID 1 and our declared
-    // users).
-    $this->assertTrue(count($result[0]) == 3, 'Privileged user can access listing of users.');
+    // users plus the anon user).
+    $this->assertTrue(count($result) == 4, 'Privileged user can access listing of users.');
   }
 }

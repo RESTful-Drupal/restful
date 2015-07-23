@@ -5,6 +5,9 @@
  * Contains RestfulReferenceTestCase.
  */
 
+use Drupal\restful\Http\Request;
+use Drupal\restful\Plugin\resource\DataProvider\CacheDecoratedDataProvider;
+
 class RestfulReferenceTestCase extends RestfulCurlBaseTestCase {
 
   public static function getInfo() {
@@ -15,14 +18,15 @@ class RestfulReferenceTestCase extends RestfulCurlBaseTestCase {
     );
   }
 
-  function setUp() {
+  public function setUp() {
     parent::setUp('restful_test');
   }
 
   /**
    * Test property reference.
    */
-  function testPropertyReference() {
+  public function testPropertyReference() {
+    $resource_manager = restful()->getResourceManager();
     $user1 = $this->drupalCreateUser();
 
     $settings = array(
@@ -32,17 +36,22 @@ class RestfulReferenceTestCase extends RestfulCurlBaseTestCase {
     $node1 = $this->drupalCreateNode($settings);
     $node2 = $this->drupalCreateNode($settings);
 
-    $handler = restful_get_restful_handler('test_articles', 1, 2);
     variable_set('restful_test_reference_simple', TRUE);
+    $resource_manager->clearPluginCache('test_articles:1.2');
+    $handler = $resource_manager->getPlugin('test_articles:1.2');
 
-    $result = $handler->get($node1->nid);
+    $handler->setRequest(Request::create('api/test_articles/v1.2/' . $node1->nid));
+    $handler->setPath($node1->nid);
+    $result = $handler->process();
     $this->assertEqual($result[0]['user']->uid, $user1->uid, 'Property is not defined as resource, thus the referenced entity appears as the entity.');
 
     variable_set('restful_test_reference_resource', TRUE);
-    // Clear public fields cache.
-    $handler->setPublicFields(array());
+    $resource_manager->clearPluginCache('test_articles:1.2');
+    $handler = $resource_manager->getPlugin('test_articles:1.2');
 
-    $result = $handler->get($node2->nid);
+    $handler->setRequest(Request::create('api/test_articles/v1.2/' . $node2->nid));
+    $handler->setPath($node2->nid);
+    $result = $handler->process();
     $this->assertEqual($result[0]['user']['id'], $user1->uid, 'Property is defined as resource, thus the referenced entity appears as the rendered resource.');
   }
 
@@ -50,6 +59,7 @@ class RestfulReferenceTestCase extends RestfulCurlBaseTestCase {
    * Test field reference.
    */
   function testEntityReference() {
+    $resource_manager = restful()->getResourceManager();
     restful_test_add_fields();
 
     foreach (array('entity_reference_single', 'entity_reference_multiple') as $field_name) {
@@ -58,19 +68,10 @@ class RestfulReferenceTestCase extends RestfulCurlBaseTestCase {
       field_update_field($field);
     }
 
-    $handler = restful_get_restful_handler('main', 1, 1);
-    $node_handler = restful_get_restful_handler('test_articles', 1, 1);
-
-    $public_fields = $handler->getPublicFields();
-    $public_fields['entity_reference_single_resource']['resource']['article'] = $public_fields['entity_reference_single_resource']['resource']['main'];
-    $public_fields['entity_reference_single_resource']['resource']['article']['name'] = 'test_articles';
-
-    $public_fields['entity_reference_multiple_resource']['resource']['article'] = $public_fields['entity_reference_single_resource']['resource']['article'];
-
-    unset($public_fields['entity_reference_single_resource']['main']);
-    unset($public_fields['entity_reference_multiple_resource']['main']);
-
-    $handler->setPublicFields($public_fields);
+    $resource_manager->clearPluginCache('main:1.6');
+    $resource_manager->clearPluginCache('test_articles:1.1');
+    $handler = $resource_manager->getPlugin('main:1.6');
+    $node_handler = $resource_manager->getPlugin('test_articles:1.1');
 
     $user1 = $this->drupalCreateUser();
     $settings = array(
@@ -89,9 +90,15 @@ class RestfulReferenceTestCase extends RestfulCurlBaseTestCase {
     $wrapper->entity_reference_multiple->set(array($node1, $node2));
     $wrapper->save();
 
-    $result = $handler->get($entity1->pid);
-    $response1 = $node_handler->get($node1->nid);
-    $response2 = $node_handler->get($node2->nid);
+    $handler->setRequest(Request::create('api/v1.6/main/' . $entity1->pid));
+    $handler->setPath($entity1->pid);
+    $result = $handler->process();
+    $node_handler->setRequest(Request::create('api/v1.1/test_articles' . $node1->nid));
+    $node_handler->setPath($node1->nid);
+    $response1 = $node_handler->process();
+    $node_handler->setRequest(Request::create('api/v1.1/test_articles' . $node2->nid));
+    $node_handler->setPath($node2->nid);
+    $response2 = $node_handler->process();
     $expected_result = $response1[0];
     $this->assertEqual($result[0]['entity_reference_single_resource'], $expected_result, 'Single reference with resource of another entity has correct response.');
 
@@ -105,12 +112,17 @@ class RestfulReferenceTestCase extends RestfulCurlBaseTestCase {
     // Test the "full_view" property on a referenced entity.
     // We change the definition via the handler instead of creating another
     // plugin.
-    $public_fields['entity_reference_single_resource']['resource']['article']['full_view'] = FALSE;
-    $handler->setPublicFields($public_fields);
+    $resource_field = $handler->getFieldDefinitions()->get('entity_reference_single_resource');
+    $resource_info = $resource_field->getResource();
+    $resource_info['full_view'] = FALSE;
+    $resource_field->setResource($resource_info);
+    $handler->getFieldDefinitions()->set('entity_reference_single_resource', $resource_field);
 
     // Clear cache.
-    \RestfulManager::invalidateEntityCache('*');
-    $result = $handler->get($entity1->pid);
+    CacheDecoratedDataProvider::invalidateEntityCache('*');
+    $handler->setRequest(Request::create('api/v1.6/main/' . $entity1->pid));
+    $handler->setPath($entity1->pid);
+    $result = $handler->process();
     $this->assertEqual($result[0]['entity_reference_single_resource'], $node1->nid, '"full_view" disabled is showing only the entity ID.');
   }
 }
