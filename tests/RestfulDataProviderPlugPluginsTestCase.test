@@ -59,6 +59,16 @@ class RestfulDataProviderPlugPluginsTestCase extends DrupalWebTestCase {
     $result = $handler->process();
     $this->assertEqual(count($result), 1, 'Latest resources shown by default.');
 
+    $request = array(
+      // Get all resources.
+      'filter' => array(
+        'resource' => array(
+          'value' => 'articles',
+          'operator' => '=',
+        ),
+      ),
+      'all' => 1,
+    );
     $handler->setRequest(Request::create('', $request));
     $result = $handler->process();
     $this->assertTrue(count($result) > 1, 'All resources shown by passing the "all" query string.');
