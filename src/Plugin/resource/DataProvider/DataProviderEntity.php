@@ -13,6 +13,7 @@ use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Http\HttpHeader;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterEMW;
+use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldEntity;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldEntityInterface;
@@ -815,7 +816,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
         continue;
       }
 
-      $entity_property_access = $resource_field->access('edit', $interpreter);
+      $entity_property_access = $this::checkPropertyAccess($resource_field, 'edit', $interpreter);
       if (!isset($object[$public_field_name])) {
         // No property to set in the request.
         // Only set this to NULL if this property has not been set to a specific
@@ -875,4 +876,20 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     }
   }
 
+  /**
+   * Checks if the data provider user has access to the property.
+   *
+   * @param \Drupal\restful\Plugin\resource\Field\ResourceFieldInterface $resource_field
+   *   The field to check access on.
+   * @param string $op
+   *   The operation to be performed on the field.
+   * @param \Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface $interpreter
+   *   The data interpreter.
+   *
+   * @return bool
+   *   TRUE if the user has access to the property.
+   */
+  protected static function checkPropertyAccess(ResourceFieldInterface $resource_field, $op, DataInterpreterInterface $interpreter) {
+    return $resource_field->access($op, $interpreter);
+  }
 }
