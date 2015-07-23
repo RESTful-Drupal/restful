@@ -10,6 +10,7 @@ namespace Drupal\restful\Resource;
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\Component\Plugin\PluginBase;
 use Drupal\restful\Exception\ServerConfigurationException;
+use Drupal\restful\Exception\UnauthorizedException;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\ResourceInterface;
 use Drupal\restful\Plugin\ResourcePluginManager;
@@ -59,8 +60,24 @@ class ResourceManager implements ResourceManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function getPlugins() {
-    return $this->plugins;
+  public function getPlugins($only_enabled = FALSE) {
+    if (!$only_enabled) {
+      return $this->plugins;
+    }
+    $cloned_plugins = clone $this->plugins;
+    $instance_ids = $cloned_plugins->getInstanceIds();
+    foreach ($instance_ids as $instance_id) {
+      $plugin = NULL;
+      try {
+        $plugin = $cloned_plugins->get($instance_id);
+      }
+      catch (UnauthorizedException $e) {}
+      if (!$plugin instanceof ResourceInterface) {
+        $cloned_plugins->remove($instance_id);
+        $cloned_plugins->removeInstanceId($instance_id);
+      }
+    }
+    return $cloned_plugins;
   }
 
   /**
