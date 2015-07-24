@@ -44,7 +44,6 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
       throw new ServerConfigurationException('Resource unavailable for JSON API formatter.');
     }
 
-    $curies_resource = $this->withCurie($resource->getResourceMachineName());
     $output = array();
 
     foreach ($data as &$row) {
@@ -53,7 +52,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
       }
     }
 
-    $output[$curies_resource] = $data;
+    $output['data'] = $data;
 
     if (!empty($resource)) {
       $data_provider = $resource->getDataProvider();
@@ -144,11 +143,6 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
   public function prepareRow(array $row, array &$output) {
     $this->addHateoasRow($row);
 
-    if (!$curie = $this->getCurie()) {
-      // Skip if there is no curie defined.
-      return $row;
-    }
-
     $embedded = array();
     $nested_embed = $this
       ->getResource()
@@ -212,32 +206,6 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
   }
 
   /**
-   * Prefix a property name with the curie, if present.
-   *
-   * @param string $property_name
-   *   The input string.
-   *
-   * @return string
-   *   The property name prefixed with the curie.
-   */
-  protected function withCurie($property_name) {
-    if ($curie = $this->getCurie()) {
-      return $property_name ? $curie['name'] . static::CURIE_SEPARATOR . $property_name : $curie['name'];
-    }
-    return $property_name;
-  }
-
-  /**
-   * Checks if the current plugin has a defined curie.
-   *
-   * @return array
-   *   Associative array with the curie information.
-   */
-  protected function getCurie() {
-    return $this->configuration['curie'];
-  }
-
-  /**
    * Move the fields referencing other resources to the _embed key.
    *
    * Note that for multiple value entityreference
@@ -280,13 +248,12 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
         $resource_info = $resource_field->getResource();
         $resource_name = $resource_info['name'];
 
-        $curies_resource = $this->withCurie($resource_name);
         $prepared_row = $this->prepareRow($subrow, $output);
         if ($is_list_request) {
-          $embedded[$curies_resource][] = $prepared_row;
+          $embedded[$resource_name][] = $prepared_row;
         }
         else {
-          $output['_embedded'][$curies_resource][] = $prepared_row;
+          $output['included'][$resource_name][] = $prepared_row;
         }
       }
     }
