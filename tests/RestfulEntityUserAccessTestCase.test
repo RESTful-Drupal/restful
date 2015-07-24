@@ -89,7 +89,10 @@ class RestfulEntityUserAccessTestCase extends DrupalWebTestCase {
     // Listing of users.
     $handler->setRequest(Request::create('api/v1.0/users'));
     $handler->setPath('');
-    $result = $handler->process();
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $result = $result['data'];
     // Check we have all the expected users count (user ID 1 and our declared
     // users plus the anon user).
     $this->assertTrue(count($result) == 4, 'Privileged user can access listing of users.');

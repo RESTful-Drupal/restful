@@ -13,8 +13,8 @@ class RestfulDataProviderPlugPluginsTestCase extends DrupalWebTestCase {
 
   public static function getInfo() {
     return array(
-      'name' => 'CTools plugins',
-      'description' => 'Test the CTools plugins data provider.',
+      'name' => 'Plug plugins',
+      'description' => 'Test the Plug plugins data provider.',
       'group' => 'RESTful',
     );
   }
@@ -43,7 +43,10 @@ class RestfulDataProviderPlugPluginsTestCase extends DrupalWebTestCase {
       ),
     );
     $handler->setRequest(Request::create('', $request));
-    $result = $handler->process();
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $result = $result['data'];
     $this->assertEqual(count($result), 4, 'Discovery filtered resources correctly.');
     $this->assertTrue($result[0]['name'] = 'articles_1_7' && $result[1]['name'] = 'articles_1_6' && $result[2]['name'] = 'articles_1_5' && $result[2]['name'] = 'articles_1_4', 'Discovery sorted resources correctly.');
 
@@ -58,7 +61,10 @@ class RestfulDataProviderPlugPluginsTestCase extends DrupalWebTestCase {
       ),
     );
     $handler->setRequest(Request::create('', $request));
-    $result = $handler->process();
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $result = $result['data'];
     $this->assertEqual(count($result), 1, 'Latest resources shown by default.');
 
     $request = array(
@@ -72,7 +78,10 @@ class RestfulDataProviderPlugPluginsTestCase extends DrupalWebTestCase {
       'all' => 1,
     );
     $handler->setRequest(Request::create('', $request));
-    $result = $handler->process();
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $result = $result['data'];
     $this->assertTrue(count($result) > 1, 'All resources shown by passing the "all" query string.');
 
     // Assert sorting and filtering works as expected.
@@ -86,7 +95,10 @@ class RestfulDataProviderPlugPluginsTestCase extends DrupalWebTestCase {
       ),
     );
     $handler->setRequest(Request::create('', $request));
-    $result = $handler->process();
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $result = $result['data'];
     $this->assertEqual(count($result), 0, 'Resources without discovery are ignored.');
 
     // Make sure that unauthorized users cannot enable/disable resources via the

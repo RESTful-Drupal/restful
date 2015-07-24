@@ -174,7 +174,10 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
     $request = Request::create('api/main/v1.1/' . $id);
     $handler->setRequest($request);
     $handler->setPath($id);
-    $result = $handler->process();
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $result = $result['data'];
     $this->assertEqual($result[0]['entity_reference_single_resource'], $entity1->pid, '"full_view" property is working properly.');
 
     // Empty the text and entity reference fields.
@@ -219,7 +222,10 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
     $request = Request::create('api/main/v1.1/' . $text, array('loadByFieldName' => 'text_single'));
     $handler->setRequest($request);
     $handler->setPath($text);
-    $result = $handler->process();
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $result = $result['data'];
     $this->assertNotNull($result[0]);
 
     // Make sure canonical header is added.
@@ -337,7 +343,10 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
     $request = Request::create('api/v1.5/articles/' . $article->nid);
     $handler->setRequest($request);
     $handler->setPath($article->nid);
-    $result = $handler->process();
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $result = $result['data'];
     $this->assertEqual(array_keys($result[0]['image']['styles']) == array(
         'thumbnail',
         'medium',

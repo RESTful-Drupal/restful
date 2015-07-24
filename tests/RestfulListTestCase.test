@@ -61,7 +61,10 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     $handler->setPath('');
 
     // No sorting (default sorting).
-    $result = $handler->process();
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $result = $result['data'];
     $expected_result = array(
       array(
         'id' => $nodes['abc'],
@@ -81,7 +84,10 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     // Sort by ID descending.
     $query['sort'] = '-id';
     $handler->setRequest(Request::create('', $query, RequestInterface::METHOD_GET));
-    $result = $handler->process();
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $result = $result['data'];
     $expected_result = array(
       array(
         'id' => $nodes['efg'],
@@ -101,7 +107,10 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     // Sort by label ascending.
     $query['sort'] = 'label';
     $handler->setRequest(Request::create('', $query, RequestInterface::METHOD_GET));
-    $result = $handler->process();
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $result = $result['data'];
     $expected_result = array(
       array(
         'id' => $nodes['abc'],
@@ -127,7 +136,10 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
 
     $query['sort'] = 'label,id';
     $handler->setRequest(Request::create('', $query, RequestInterface::METHOD_GET));
-    $result = $handler->process();
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $result = $result['data'];
     $expected_result = array(
       array(
         'id' => $nodes['abc'],
@@ -153,7 +165,10 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     $handler = $resource_manager->getPlugin('test_articles:1.1');
     unset($query['sort']);
     $handler->setRequest(Request::create('', $query, RequestInterface::METHOD_GET));
-    $result = $handler->process();
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $result = $result['data'];
     $expected_result = array(
       array(
         'id' => $node->nid,
@@ -178,7 +193,10 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     $query['sort'] = 'id';
     $handler->setRequest(Request::create('', $query, RequestInterface::METHOD_GET));
     $handler->setPath('');
-    $result = $handler->process();
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $result = $result['data'];
     $expected_result = array(
       array(
         'id' => $nodes['abc'],
@@ -250,7 +268,10 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     $query['range'] = 2;
     $handler->setRequest(Request::create('', $query, RequestInterface::METHOD_GET));
     $handler->setPath('');
-    $result = $handler->process();
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $result = $result['data'];
     $this->assertEqual(count($result), $query['range'], 'Range parameter overridden correctly');
 
     // Test invalid range.
@@ -293,7 +314,10 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     $query = array('sort' => '-user');
     $handler->setRequest(Request::create('', $query, RequestInterface::METHOD_GET));
     $handler->setPath('');
-    $result = $handler->process();
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $result = $result['data'];
 
     $this->assertEqual($result[0]['user']['id'], 3, 'List sorted by the "author" entity metadata wrapper property, which maps to the "uid" DB column name.');
 
@@ -375,11 +399,16 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     $query['filter'] = array('label' => 'abc');
     $handler->setRequest(Request::create('', $query, RequestInterface::METHOD_GET));
     $handler->setPath('');
-    $result = $handler->process();
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $result = $result['data'];
     $this->assertEqual($result[0]['id'], $nodes['abc'], 'Filter list by single value property.');
 
     // Assert count is correct.
-    $formatter_handler = restful()->getFormatterManager()->getPlugin('hal_json');
+    $formatter_handler = restful()
+      ->getFormatterManager()
+      ->getPlugin('hal_json');
     $instance_configuration = $formatter_handler->getConfiguration();
     $formatter_handler->setConfiguration(array_merge($instance_configuration ?: array(), array(
       'resource' => $handler,
@@ -394,7 +423,10 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     $query['filter'] = array('integer_single' => '1');
     $handler->setRequest(Request::create('', $query, RequestInterface::METHOD_GET));
     $handler->setPath('');
-    $result = $handler->process();
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $result = $result['data'];
     $this->assertEqual($result[0]['id'], $nodes['abc'], 'Filter list by Single value field.');
 
     // Multiple value field.
@@ -406,7 +438,10 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     );
     $handler->setRequest(Request::create('', $query, RequestInterface::METHOD_GET));
     $handler->setPath('');
-    $result = $handler->process();
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $result = $result['data'];
     $this->assertEqual($result[0]['id'], $nodes['another abc'], 'Filter list by multiple value field.');
 
     // Invalid key.
@@ -433,30 +468,51 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     $this->assertEqual($result['code'], '200', 'Invalid filter key was ignored on non-list query.');
 
     // Test multiple filters on the same field.
-    $query = array('filter' => array('integer_single' => array(
-      'value' => array(1, 4),
-      'operator' => array('>', '<>'),
-    )));
+    $query = array(
+      'filter' => array(
+        'integer_single' => array(
+          'value' => array(1, 4),
+          'operator' => array('>', '<>'),
+        )
+      )
+    );
     $handler->setRequest(Request::create('', $query, RequestInterface::METHOD_GET));
     $handler->setPath('');
-    $result = $handler->process();
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $result = $result['data'];
     $this->assertEqual($nodes['another abc'], $result[0]['id']);
 
-    $query = array('filter' => array('integer_single' => array(
-      'value' => array(1, 5),
-      'operator' => array('>', '<>'),
-    )));
+    $query = array(
+      'filter' => array(
+        'integer_single' => array(
+          'value' => array(1, 5),
+          'operator' => array('>', '<>'),
+        )
+      )
+    );
     $handler->setRequest(Request::create('', $query, RequestInterface::METHOD_GET));
     $handler->setPath('');
-    $result = $handler->process();
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $result = $result['data'];
     $this->assertEqual($result, array());
 
-    $query = array('filter' => array('integer_multiple' => array(
-      'value' => array(3, 4),
-    )));
+    $query = array(
+      'filter' => array(
+        'integer_multiple' => array(
+          'value' => array(3, 4),
+        )
+      )
+    );
     $handler->setRequest(Request::create('', $query, RequestInterface::METHOD_GET));
     $handler->setPath('');
-    $result = $handler->process();
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $result = $result['data'];
     $this->assertEqual($nodes['another abc'], $result[0]['id']);
 
     // Test valid filter with filter params disabled.
@@ -494,14 +550,19 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
 
     $handler->setRequest(Request::create('', $query, RequestInterface::METHOD_GET));
     $handler->setPath('');
-    $result = $handler->process();
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $result = $result['data'];
     $this->assertEqual(count($result), 2, 'List filtered by the "author" entity metadata wrapper property, which maps to the "uid" DB column name.');
 
-    $query = array('filter' => array(
-      'static' => array(
-        'value' => 0,
-      ),
-    ));
+    $query = array(
+      'filter' => array(
+        'static' => array(
+          'value' => 0,
+        ),
+      )
+    );
 
     $handler->setRequest(Request::create('', $query, RequestInterface::METHOD_GET));
     $handler->setPath('');
@@ -520,7 +581,7 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
    */
   public function testPagination() {
     $resource_manager = restful()->getResourceManager();
-    foreach(range(1, 9) as $key) {
+    foreach (range(1, 9) as $key) {
       $settings = array(
         'type' => 'article',
         'title' => $key,
@@ -529,7 +590,9 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     }
 
     $handler = $resource_manager->getPlugin('articles:1.0');
-    $formatter_handler = restful()->getFormatterManager()->negotiateFormatter('');
+    $formatter_handler = restful()
+      ->getFormatterManager()
+      ->negotiateFormatter('');
     $instance_configuration = $formatter_handler->getConfiguration();
     $formatter_handler->setConfiguration(array_merge($instance_configuration ?: array(), array(
       'resource' => $handler,
@@ -541,7 +604,10 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     // Check pagination of first page.
     $handler->setRequest(Request::create('', array('page' => 1), RequestInterface::METHOD_GET));
     $handler->setPath('');
-    $result = $handler->process();
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $result = $result['data'];
     $output = drupal_json_decode($formatter_handler->format($result));
     $this->assertEqual(count($result), 3);
     $this->assertTrue($output['next'], '"Next" link exists on the first page.');
@@ -549,7 +615,10 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
 
     // Check pagination of middle pages
     $handler->setRequest(Request::create('', array('page' => 2), RequestInterface::METHOD_GET));
-    $result = $handler->process();
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $result = $result['data'];
     $output = drupal_json_decode($formatter_handler->format($result));
     $this->assertTrue($output['next'], '"Next" link exists on the middle page.');
     $this->assertEqual($output['next']['href'], $handler->versionedUrl('', array(
@@ -562,14 +631,23 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
 
     // Check pagination of last page.
     $handler->setRequest(Request::create('', array('page' => 3), RequestInterface::METHOD_GET));
-    $result = $handler->process();
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $result = $result['data'];
     $output = drupal_json_decode($formatter_handler->format($result));
     $this->assertTrue(empty($output['next']), '"Next" link does not exist on the last page.');
     $this->assertTrue($output['previous'], '"Previous" link exists on the last page.');
 
     // Check other query strings are retained in the _links.
-    $handler->setRequest(Request::create('', array('page' => 3, 'sort' => '-id'), RequestInterface::METHOD_GET));
-    $result = $handler->process();
+    $handler->setRequest(Request::create('', array(
+      'page' => 3,
+      'sort' => '-id'
+    ), RequestInterface::METHOD_GET));
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $result = $result['data'];
     $output = drupal_json_decode($formatter_handler->format($result));
     $this->assertTrue(strpos($output['previous']['href'], 'sort=-id'), 'Query strings are retained in the _links.');
 
@@ -603,12 +681,18 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     // Check pagination with high number, where there are not items, yielded no
     // results, but is a valid call.
     $handler->setRequest(Request::create('', array('page' => 100), RequestInterface::METHOD_GET));
-    $result = $handler->process();
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $result = $result['data'];
     $this->assertEqual($result, array(), 'pagination with high number, where there are not items yielded no results.');
 
     // Check total number of results.
     $handler->setRequest(Request::create('', array('page' => 3), RequestInterface::METHOD_GET));
-    $result = $handler->process();
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $result = $result['data'];
     $output = drupal_json_decode($formatter_handler->format($result));
     $this->assertEqual($output['count'], 9, 'Total count exists and is correct.');
   }
@@ -674,7 +758,10 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     $handler->setAccount($user1);
 
     $handler->setRequest(Request::create(''));
-    $result = $handler->process();
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $result = $result['data'];
 
     $this->assertEqual(count($result), 2, 'List returned and ignored un-accessible entity.');
 
