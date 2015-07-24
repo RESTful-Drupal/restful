@@ -65,7 +65,6 @@ script:
   - drush --yes dl registry_autoload
   - drush --yes dl entity_validator --dev
   - drush --yes dl plug
-  - drush --yes dl ctools
   - drush --yes dl entity
   - drush --yes dl entityreference
   - drush --yes pm-enable plug
