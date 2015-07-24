@@ -576,7 +576,7 @@ function restful_parse_request() {
     if ($_FILES) {
       $request['file_upload'] = true;
     }
-    watchdog('debug', 'files : ' . print_r($_FILES));
+    watchdog('debug', 'files : ' . print_r($_FILES, 1));
   }
   elseif ($method == \RestfulInterface::HEAD) {
     $request = array('method' => $method);
