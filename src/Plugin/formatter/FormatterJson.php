@@ -82,7 +82,7 @@ class FormatterJson extends Formatter implements FormatterInterface {
       }
       $value = $resource_field->value();
       $value = $resource_field->executeProcessCallbacks($value);
-      if ($resource_field instanceof ResourceFieldResourceInterface) {
+      if ($value && $resource_field instanceof ResourceFieldResourceInterface) {
         $value = $this->prepareRows($value);
       }
       $output[$public_field_name] = $value;
