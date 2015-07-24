@@ -40,29 +40,7 @@ class FormatterJson extends Formatter implements FormatterInterface {
       return $data;
     }
 
-    $output = array('data' => array());
-    foreach ($data as $row) {
-      foreach ($row as $public_field_name => $resource_field) {
-        /* @var ResourceFieldInterface $resource_field */
-        $value = $resource_field->value();
-        $value = $resource_field->executeProcessCallbacks($value);
-        if ($resource_field instanceof ResourceFieldResourceInterface) {
-          $single_value = !ResourceFieldBase::isArrayNumeric($value);
-          $value = $single_value ? array($value) : $value;
-          foreach ($value as &$value_item) {
-            // Every value item is an array of ResourceFieldInterface keyed by
-            // public ID.
-            foreach ($value_item as $nested_public_field_name => $nested_resource_field) {
-              /* @var ResourceFieldInterface $nested_resource_field */
-              $value_item[$nested_public_field_name] = $nested_resource_field->value();
-              $value_item[$nested_public_field_name] = $nested_resource_field->executeProcessCallbacks($value_item[$nested_public_field_name]);
-            }
-          }
-          $value = $single_value ? reset($value) : $value;
-        }
-        $output['data'][$public_field_name] = $value;
-      }
-    }
+    $output = array('data' => $this->prepareRows($data));
 
     if ($resource = $this->getResource()) {
       $request = $resource->getRequest();
@@ -80,6 +58,36 @@ class FormatterJson extends Formatter implements FormatterInterface {
       $this->addHateoas($output);
     }
 
+    return $output;
+  }
+
+  /**
+   * Prepare an array of rows.
+   *
+   * @param array[] $rows
+   *   The array of rows.
+   *
+   * @return array[]
+   *   The array of prepared data.
+   */
+  protected function prepareRows(array $rows) {
+    $output = array();
+    foreach ($rows as $row) {
+      $row_output = array();
+      foreach ($row as $public_field_name => $resource_field) {
+        /* @var ResourceFieldInterface $resource_field */
+        $value = $resource_field->value();
+        $value = $resource_field->executeProcessCallbacks($value);
+        if ($resource_field instanceof ResourceFieldResourceInterface) {
+          $single_value = !ResourceFieldBase::isArrayNumeric($value);
+          $value = $single_value ? array($value) : $value;
+          $value = $this->prepareRows($value);
+          $value = $single_value ? reset($value) : $value;
+        }
+        $row_output[$public_field_name] = $value;
+      }
+      $output[] = $row_output;
+    }
     return $output;
   }
 
