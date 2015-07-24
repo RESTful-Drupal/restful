@@ -83,7 +83,7 @@ class RestfulRenderCacheTestCase extends \RestfulCurlBaseTestCase {
     $input = array('fields' => 'id,label');
     $handler->setRequest(Request::create('', $input));
     $handler->setPath('');
-    $handler->process();
+    restful()->getFormatterManager()->format($handler->process(), 'json');
     $cid_w_request = $cid . '::fi:id,label';
     $this->assertTrue($cache_info['simple_invalidate'], 'Cache render simple invalidation is activated');
     $node->title .= ' updated';
@@ -96,10 +96,10 @@ class RestfulRenderCacheTestCase extends \RestfulCurlBaseTestCase {
     // Regenerate cache for $node.
     $handler->setRequest(Request::create($node->nid));
     $handler->setPath($node->nid);
-    $handler->process();
+    restful()->getFormatterManager()->format($handler->process(), 'json');
     $handler->setRequest(Request::create('', $input));
     $handler->setPath($node->nid);
-    $handler->process();
+    restful()->getFormatterManager()->format($handler->process(), 'json');
     $record = $cache->get($cid);
     $this->assertNotNull($record->data, 'Cache is being generated for non-list requests.');
     $record = $cache->get($cid_w_request);
@@ -142,10 +142,10 @@ class RestfulRenderCacheTestCase extends \RestfulCurlBaseTestCase {
       // Populate the cache.
       $handler->setRequest(Request::create($nid));
       $handler->setPath($nid);
-      $handler->process();
+      restful()->getFormatterManager()->format($handler->process(), 'json');
       $handler->setRequest(Request::create($nid, $input));
       $handler->setPath($nid);
-      $handler->process();
+      restful()->getFormatterManager()->format($handler->process(), 'json');
     }
     // Testing invalidateEntityCache.
     /* @var Drupal\restful\Plugin\resource\DataProvider\CacheDecoratedDataProviderInterface $data_provider */
@@ -184,7 +184,7 @@ class RestfulRenderCacheTestCase extends \RestfulCurlBaseTestCase {
 
     $handler->setRequest(Request::create(''));
     $handler->setPath('');
-    $handler->process();
+    restful()->getFormatterManager()->format($handler->process(), 'json');
     $role_cid = 'v1.1::test_articles::ur' . implode(',', array_keys($account->roles)) . '::pa' . 'et:node::ei:' . $node->nid;
     $record = $cache->get($role_cid);
     $this->assertTrue($record->data, 'Cache key contains role information.');

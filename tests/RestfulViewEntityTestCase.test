@@ -263,7 +263,7 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
     $handler->setRequest($request);
     try {
       $handler->setPath($id);
-      $handler->process();
+      restful()->getFormatterManager()->format($handler->process(), 'json');
       $this->fail('Non-existing "callback" property did not trigger an exception.');
     }
     catch (Exception $e) {
@@ -276,7 +276,7 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
     $handler->setRequest($request);
     try {
       $handler->setPath($id);
-      $handler->process();
+      restful()->getFormatterManager()->format($handler->process(), 'json');
       $this->fail('Non-existing "process callback" property did not trigger an exception.');
     }
     catch (Exception $e) {

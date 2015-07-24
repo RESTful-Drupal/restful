@@ -81,7 +81,7 @@ class RestfulHookMenuTestCase extends RestfulCurlBaseTestCase {
     $header_bag = new \Drupal\restful\Http\HttpHeaderBag($headers);
     $handler->setRequest(Request::create('api/v1.0/articles/' . $node1->nid, array(), RequestInterface::METHOD_POST, $header_bag, FALSE, NULL, array(), array(), array(), $body));
     $handler->setPath($node1->nid);
-    $handler->process();
+    restful()->getFormatterManager()->format($handler->process(), 'json');
 
     $node1 = node_load($node1->nid);
     $this->assertEqual($node1->title, 'new title', 'HTTP method was overridden.');

@@ -222,7 +222,7 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     $handler->setRequest(Request::create('', $query, RequestInterface::METHOD_GET));
     $handler->setPath('');
     try {
-      $handler->process();
+      restful()->getFormatterManager()->format($handler->process(), 'json');
       $this->fail('Illegal sort property used.');
     }
     catch (BadRequestException $e) {
@@ -234,7 +234,7 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     $handler->setRequest(Request::create('', $query, RequestInterface::METHOD_GET));
     $handler->setPath('');
     try {
-      $handler->process();
+      restful()->getFormatterManager()->format($handler->process(), 'json');
       $this->fail('Illegal sort property, descending, used.');
     }
     catch (BadRequestException $e) {
@@ -256,7 +256,7 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     $handler->setRequest(Request::create('', $query, RequestInterface::METHOD_GET));
     $handler->setPath('');
     try {
-      $handler->process();
+      restful()->getFormatterManager()->format($handler->process(), 'json');
       $this->fail('Exception not raised for disabled sort parameter.');
     }
     catch (ServiceUnavailableException $e) {
@@ -279,7 +279,7 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     $handler->setRequest(Request::create('', $query, RequestInterface::METHOD_GET));
     $handler->setPath('');
     try {
-      $handler->process();
+      restful()->getFormatterManager()->format($handler->process(), 'json');
       $this->fail('Exception not raised on invalid range parameter.');
     }
     catch (BadRequestException $e) {
@@ -301,7 +301,7 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     $handler->setRequest(Request::create('', $query, RequestInterface::METHOD_GET));
     $handler->setPath('');
     try {
-      $handler->process();
+      restful()->getFormatterManager()->format($handler->process(), 'json');
       $this->fail('Exception not raised for disabled range parameter.');
     }
     catch (ServiceUnavailableException $e) {
@@ -325,7 +325,7 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     $handler->setRequest(Request::create('', $query, RequestInterface::METHOD_GET));
     $handler->setPath('');
     try {
-      $handler->process();
+      restful()->getFormatterManager()->format($handler->process(), 'json');
       $this->fail('Exception not thrown for invalid sort.');
     }
     catch (BadRequestException $e) {
@@ -450,7 +450,7 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     $handler->setRequest(Request::create('', $query, RequestInterface::METHOD_GET));
     $handler->setPath('');
     try {
-      $handler->process();
+      restful()->getFormatterManager()->format($handler->process(), 'json');
       $this->fail('No exception was thrown on invalid key for filter.');
     }
     catch (BadRequestException $e) {
@@ -530,7 +530,7 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     $handler->setRequest(Request::create('', $query, RequestInterface::METHOD_GET));
     $handler->setPath('');
     try {
-      $handler->process();
+      restful()->getFormatterManager()->format($handler->process(), 'json');
       $this->fail('Exception not raised for disabled filter parameter.');
     }
     catch (ServiceUnavailableException $e) {
@@ -567,7 +567,7 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     $handler->setRequest(Request::create('', $query, RequestInterface::METHOD_GET));
     $handler->setPath('');
     try {
-      $handler->process();
+      restful()->getFormatterManager()->format($handler->process(), 'json');
       $this->fail('Illegal filter property used.');
     }
     catch (BadRequestException $e) {
@@ -654,7 +654,7 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     // Check pagination with non-numeric value.
     $handler->setRequest(Request::create('', array('page' => 'string'), RequestInterface::METHOD_GET));
     try {
-      $handler->process();
+      restful()->getFormatterManager()->format($handler->process(), 'json');
       $this->fail('No exception thrown for pagination with non-numeric value.');
     }
     catch (BadRequestException $e) {
@@ -668,7 +668,7 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     // Check pagination with 0 value.
     $handler->setRequest(Request::create('', array('page' => 0), RequestInterface::METHOD_GET));
     try {
-      $handler->process();
+      restful()->getFormatterManager()->format($handler->process(), 'json');
       $this->fail('No exception thrown for pagination with 0 value.');
     }
     catch (BadRequestException $e) {
@@ -773,7 +773,7 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     );
     $handler->setRequest(Request::create(implode(',', $ids)));
     try {
-      $handler->process();
+      restful()->getFormatterManager()->format($handler->process(), 'json');
       $this->fail('Exception was not thrown for un-accessible node for specific IDs list.');
     }
     catch (ForbiddenException $e) {

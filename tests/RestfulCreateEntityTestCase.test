@@ -134,7 +134,7 @@ class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
     try {
       $handler->setRequest(Request::create('', array(), RequestInterface::METHOD_POST));
       $handler->setPath('');
-      $handler->process();
+      restful()->getFormatterManager()->format($handler->process(), 'json');
       $this->fail('User can create an entity with empty request.');
     }
     catch (BadRequestException $e) {
@@ -146,7 +146,7 @@ class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
     try {
       $handler->setRequest(Request::create('', array(), RequestInterface::METHOD_POST, NULL, FALSE, NULL, array(), array(), array(), $request));
       $handler->setPath('');
-      $handler->process();
+      restful()->getFormatterManager()->format($handler->process(), 'json');
       $this->fail('User can create an entity with invalid property name.');
     }
     catch (BadRequestException $e) {
