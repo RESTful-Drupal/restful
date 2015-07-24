@@ -149,7 +149,10 @@ class RestfulViewEntityMultiLingualTestCase extends RestfulCurlBaseTestCase {
     $handler->getDataProvider()->setLangCode($langcode);
     $handler->setRequest(Request::create('api/restful_test_translatable_entity/' . $id));
     $handler->setPath($id);
-    $response = $handler->process();
+    $response = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $response = $response['data'];
     $result = $response[0];
 
     $this->assertEqual(trim(strip_tags($result['text_single'])), $text1, 'Entity view has correct result for "text_single" in language "' . $langcode . '".');

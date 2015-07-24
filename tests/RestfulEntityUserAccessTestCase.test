@@ -64,13 +64,19 @@ class RestfulEntityUserAccessTestCase extends DrupalWebTestCase {
     // View own user account.
     $handler->setRequest(Request::create('api/v1.0/users/' . $user1->uid));
     $handler->setPath($user1->uid);
-    $response = $handler->process();
+    $response = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $response = $response['data'];
     $result = $response[0];
     $this->assertEqual($result['mail'], $user1->mail, 'User can see own mail.');
 
     // Privileged user, watching another user's profile.
     $handler->setAccount($user2);
-    $response = $handler->process();
+    $response = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $response = $response['data'];
     $result = $response[0];
     $expected_result = array(
       'id' => $user1->uid,

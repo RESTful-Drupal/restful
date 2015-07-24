@@ -31,14 +31,23 @@ class RestfulHalJsonTestCase extends RestfulCurlBaseTestCase {
   public function testHalEmbeddedResources() {
     $user1 = $this->drupalCreateUser();
     /* @var \Entity $entity1 */
-    $entity1 = entity_create('entity_test', array('name' => 'main', 'uid' => $user1->uid));
+    $entity1 = entity_create('entity_test', array(
+      'name' => 'main',
+      'uid' => $user1->uid
+    ));
     $entity1->save();
 
     /* @var \Entity $entity2 */
-    $entity2 = entity_create('entity_test', array('name' => 'main', 'uid' => $user1->uid));
+    $entity2 = entity_create('entity_test', array(
+      'name' => 'main',
+      'uid' => $user1->uid
+    ));
     $entity2->save();
 
-    $entity3 = entity_create('entity_test', array('name' => 'main', 'uid' => $user1->uid));
+    $entity3 = entity_create('entity_test', array(
+      'name' => 'main',
+      'uid' => $user1->uid
+    ));
     /* @var \EntityDrupalWrapper $wrapper */
     $wrapper = entity_metadata_wrapper('entity_test', $entity3);
 
@@ -62,7 +71,10 @@ class RestfulHalJsonTestCase extends RestfulCurlBaseTestCase {
     ));
     $handler->setRequest(Request::create('api/main/' . $wrapper->getIdentifier(), array(), RequestInterface::METHOD_GET, $headers));
     $handler->setPath($wrapper->getIdentifier());
-    $response = $handler->process();
+    $response = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $response = $response['data'];
     $formatter_manager = restful()->getFormatterManager();
     $formatter_manager->setResource($handler);
     $formatter_result = $formatter_manager->format($response);
