@@ -584,8 +584,8 @@ function restful_parse_request() {
   }
 
   // if we get this far, then we need to do special processing on php://input to get the data
-  if ($request && !empty($_SERVER['CONTENT_TYPE'])) {
-    $temp = explode(';', $_SERVER['CONTENT_TYPE']);
+  if (!$request) {
+    $temp = explode(';', isset($_SERVER['CONTENT_TYPE']) ? $_SERVER['CONTENT_TYPE'] : 'unknown');
     $contentType = $temp[0];
     // CHARSET=<Something> will be in $temp[1], if it's ever needed
     switch ($contentType) {
@@ -604,6 +604,13 @@ function restful_parse_request() {
         // There's nothing we can do to get this data
         throw new RestfulBadRequestException('Cannot use multipart/form-data with HTTP Method ' . $method . '.');
         break;
+      case 'unknown':
+        // if content type is undefined, we try a couple things and if they don't work, oh well
+        $request = drupal_json_decode(_restful_get_query_string_from_php_input());
+        if (!$request) {
+          parse_str(_restful_get_query_string_from_php_input(), $request);
+        }
+
       default:
         // this is some kind of file, a direct upload
         // copy it into the temporary directory then pass the URI to the handler for it to deal with
