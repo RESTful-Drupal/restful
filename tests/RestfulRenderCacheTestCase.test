@@ -18,7 +18,7 @@ class RestfulRenderCacheTestCase extends \RestfulCurlBaseTestCase {
     );
   }
 
-  function setUp() {
+  public function setUp() {
     parent::setUp('restful_test');
   }
 
@@ -56,13 +56,19 @@ class RestfulRenderCacheTestCase extends \RestfulCurlBaseTestCase {
     drupal_static_reset('Drupal\restful\Resource\ResourceManager::getVersionFromRequest');
     $handler->setRequest(Request::create(''));
     $handler->setPath('');
-    $pre_cache_results = $handler->process();
+    $pre_cache_results = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process()));
+    $pre_cache_results = $pre_cache_results['data'];
     // Make sure some cache entries are generated.
     $this->assertFalse($cache->isEmpty(), 'Cache render is being populated.');
     // Get the cached results.
     $handler->setRequest(Request::create(''));
     $handler->setPath('');
-    $post_cache_results = $handler->process();
+    $post_cache_results = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process()));
+    $post_cache_results = $post_cache_results['data'];
     // Make sure the cached results are the same as the non-cached results.
     $this->assertEqual($pre_cache_results[0], $post_cache_results[0], 'Cached data is consistent.');
     // Get a cached result directly from the cache backend.
@@ -93,7 +99,7 @@ class RestfulRenderCacheTestCase extends \RestfulCurlBaseTestCase {
     $handler->process();
     $handler->setRequest(Request::create('', $input));
     $handler->setPath($node->nid);
-    $handler->process($node->nid);
+    $handler->process();
     $record = $cache->get($cid);
     $this->assertNotNull($record->data, 'Cache is being generated for non-list requests.');
     $record = $cache->get($cid_w_request);
@@ -108,11 +114,18 @@ class RestfulRenderCacheTestCase extends \RestfulCurlBaseTestCase {
     $cache->clear('*', TRUE);
     $handler->setRequest(Request::create(''));
     $handler->setPath('');
-    $results_wo_request = $handler->process();;
+    $results_wo_request = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process()));
+    $results_wo_request = $results_wo_request['data'];
+
 
     $handler->setRequest(Request::create('', $input));
     $handler->setPath('');
-    $results_w_request = $handler->process();
+    $results_w_request = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process()));
+    $results_w_request = $results_w_request['data'];
     // Check that the cached results for the entity without request array are
     // different than with the request array.
     $cid_wo_request = $cid;
