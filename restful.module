@@ -610,7 +610,7 @@ function restful_parse_request() {
         if (!$request) {
           parse_str(_restful_get_query_string_from_php_input(), $request);
         }
-
+        break;
       default:
         // this is some kind of file, a direct upload
         // copy it into the temporary directory then pass the URI to the handler for it to deal with
