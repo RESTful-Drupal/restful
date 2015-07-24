@@ -43,48 +43,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
     if (!$resource = $this->getResource()) {
       throw new ServerConfigurationException('Resource unavailable for JSON API formatter.');
     }
-
-    $output = array();
-
-    foreach ($data as &$row) {
-      if (is_array($row)) {
-        $row = $this->prepareRow($row, $output);
-      }
-    }
-
-    $output['data'] = $data;
-
-    if (!empty($resource)) {
-      $data_provider = $resource->getDataProvider();
-      if (
-        $data_provider &&
-        method_exists($data_provider, 'count') &&
-        $resource->getRequest()->isListRequest($resource->getPath())
-      ) {
-        // Get the total number of items for the current request without
-        // pagination.
-        $output['count'] = $data_provider->count();
-      }
-      if (method_exists($resource, 'additionalHateoas')) {
-        $output = array_merge($output, $resource->additionalHateoas());
-      }
-
-      // Add HATEOAS to the output.
-      $this->addHateoas($output);
-    }
-
-    // Cosmetic sorting to send the hateoas properties to the end of the output.
-    uksort($output, function ($a, $b) {
-      if (
-        ($a[0] == '_' && $b[0] == '_') ||
-        ($a[0] != '_' && $b[0] != '_')
-      ) {
-        return strcmp($a, $b);
-      }
-      return $a[0] == '_' ? 1 : -1;
-    });
-
-    return $output;
+    return $data;
   }
 
   /**
@@ -115,14 +74,12 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
       $data['links']['previous'] = $resource->getUrl();
     }
 
-    $curies_resource = $this->withCurie($resource->getResourceMachineName());
-
     // We know that there are more pages if the total count is bigger than the
     // number of items of the current request plus the number of items in
     // previous pages.
     $items_per_page = $data_provider->getRange();
     $previous_items = ($page - 1) * $items_per_page;
-    if (isset($data['count']) && $data['count'] > count($data[$curies_resource]) + $previous_items) {
+    if (isset($data['count']) && $data['count'] > count($data[$resource->getResourceMachineName()]) + $previous_items) {
       $input['page'] = $page + 1;
       $data['links']['next'] = $resource->getUrl();
     }
@@ -163,7 +120,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
       }
 
       if ($nested_embed) {
-        $output += array('_embedded' => array());
+        $output += array('includes' => array());
       }
 
       $this->moveReferencesToEmbeds($output, $row, $resource_field, $embedded);
@@ -260,6 +217,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
 
     // Remove the original reference.
     unset($row[$public_field_name]);
+    $row['relationships'][$public_field_name] = $row[$public_field_name];
   }
 
 }
