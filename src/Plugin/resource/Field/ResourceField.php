@@ -162,4 +162,12 @@ class ResourceField extends ResourceFieldBase implements ResourceFieldInterface 
     return NULL;
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function compoundDocumentId() {
+    // Since this kind of field can be anything, just return the value.
+    return $this->value();
+  }
+
 }

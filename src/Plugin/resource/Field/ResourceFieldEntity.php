@@ -176,6 +176,46 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
   /**
    * {@inheritdoc}
    */
+  public function compoundDocumentId() {
+    $property_wrapper = $this->propertyWrapper($this->getInterpreter());
+
+    if ($property_wrapper instanceof \EntityListWrapper) {
+      $values = array();
+      // Multiple values.
+      foreach ($property_wrapper->getIterator() as $item_wrapper) {
+        $values[] = $this->propertyIdentifier($item_wrapper);
+      }
+      return $values;
+    }
+    return $this->propertyIdentifier($property_wrapper);
+  }
+
+  /**
+   * Helper function to get the identifier from a property wrapper.
+   *
+   * @param \EntityMetadataWrapper $property_wrapper
+   *   The property wrapper to get the ID from.
+   *
+   * @return string
+   *   An identifier.
+   */
+  protected function propertyIdentifier(\EntityMetadataWrapper $property_wrapper) {
+    if ($property_wrapper instanceof \EntityDrupalWrapper) {
+      // The property wrapper is a reference to another entity get the entity
+      // ID.
+      $embedded_identifier = $property_wrapper->getIdentifier();
+    }
+    else {
+      // The property is a regular one, get the value out of it and use it as
+      // the embedded identifier.
+      $embedded_identifier = $this->fieldValue($property_wrapper);
+    }
+    return $embedded_identifier;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function set($value, DataInterpreterInterface $interpreter) {
     try {
       $property_wrapper = $interpreter->getWrapper()->{$this->getProperty()};
@@ -206,16 +246,7 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
       // Now it does not need to be keyed by bundle since you don't even need
       // an entity to use the resource based field.
 
-      if ($property_wrapper instanceof \EntityDrupalWrapper) {
-        // The property wrapper is a reference to another entity get the entity
-        // ID.
-        $embedded_identifier = $property_wrapper->getIdentifier();
-      }
-      else {
-        // The property is a regular one, get the value out of it and use it as
-        // the embedded identifier.
-        $embedded_identifier = $this->fieldValue($property_wrapper);
-      }
+      $embedded_identifier = $this->propertyIdentifier($property_wrapper);
       // Allow embedding entities with ID 0, like the anon user.
       if (empty($embedded_identifier) && $embedded_identifier !== 0) {
         return NULL;

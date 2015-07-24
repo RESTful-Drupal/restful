@@ -230,4 +230,13 @@ interface ResourceFieldInterface {
    */
   public function executeProcessCallbacks($value);
 
+  /**
+   * Fetches the embedded identifier(s) for the current resource field, if any.
+   *
+   * @return string|string[]
+   *   An identifier or an array of identifiers for cardinality > 1. NULL if
+   *   there is no identifier to be found.
+   */
+  public function compoundDocumentId();
+
 }

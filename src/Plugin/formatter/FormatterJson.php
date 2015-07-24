@@ -7,6 +7,7 @@
 
 namespace Drupal\restful\Plugin\formatter;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
+use Drupal\restful\Plugin\resource\Field\ResourceFieldResourceInterface;
 
 /**
  * Class FormatterHalJson
