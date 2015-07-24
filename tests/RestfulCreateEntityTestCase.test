@@ -221,7 +221,7 @@ class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
       ->getFormatterManager()
       ->format($handler->process()));
     $original = hash_file('md5', $this->imagePath);
-    $file = file_load($response[0][0]['id']);
+    $file = file_load($response['data'][0][0]['id']);
     $uploaded = hash_file('md5', file_create_url($file->uri));
     $this->assertEqual($original, $uploaded, 'Original and uploaded file are identical.');
     // Test access for anonymous user (denied).

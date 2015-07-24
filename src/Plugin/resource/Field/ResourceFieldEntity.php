@@ -12,7 +12,6 @@ use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataProvider\DataProviderResource;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
-use Drupal\restful\Resource\ResourceManager;
 use Drupal\restful\Util\String;
 
 class ResourceFieldEntity implements ResourceFieldEntityInterface {

@@ -7,8 +7,6 @@
 
 namespace Drupal\restful\Plugin\resource\Field;
 
-use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
-
 class ResourceFieldEntityFile extends ResourceFieldEntity implements ResourceFieldEntityInterface {
 
   /**

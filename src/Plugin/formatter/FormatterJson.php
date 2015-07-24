@@ -72,21 +72,20 @@ class FormatterJson extends Formatter implements FormatterInterface {
    */
   protected function prepareRows(array $rows) {
     $output = array();
-    foreach ($rows as $row) {
-      $row_output = array();
-      foreach ($row as $public_field_name => $resource_field) {
-        /* @var ResourceFieldInterface $resource_field */
-        $value = $resource_field->value();
-        $value = $resource_field->executeProcessCallbacks($value);
-        if ($resource_field instanceof ResourceFieldResourceInterface) {
-          $single_value = !ResourceFieldBase::isArrayNumeric($value);
-          $value = $single_value ? array($value) : $value;
-          $value = $this->prepareRows($value);
-          $value = $single_value ? reset($value) : $value;
-        }
-        $row_output[$public_field_name] = $value;
+    foreach ($rows as $public_field_name => $resource_field) {
+      if (!$resource_field instanceof ResourceFieldInterface) {
+        // If $resource_field is not a ResourceFieldInterface it means that we
+        // are dealing with a nested structure of some sort. If it is an array
+        // we process it as a set of rows, if not then use the value directly.
+        $output[$public_field_name] = is_array($resource_field) ? $this->prepareRows($resource_field) : $resource_field;
+        continue;
       }
-      $output[] = $row_output;
+      $value = $resource_field->value();
+      $value = $resource_field->executeProcessCallbacks($value);
+      if ($resource_field instanceof ResourceFieldResourceInterface) {
+        $value = $this->prepareRows($value);
+      }
+      $output[$public_field_name] = $value;
     }
     return $output;
   }
