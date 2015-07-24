@@ -19,10 +19,13 @@ interface ResourceManagerInterface {
   /**
    * Gets the plugin collection for this plugin manager.
    *
+   * @param bool $only_enabled
+   *   Only get the enabled resources.
+   *
    * @return ResourcePluginCollection
    *   The plugin collection.
    */
-  public function getPlugins();
+  public function getPlugins($only_enabled = FALSE);
 
   /**
    * Get a resource plugin instance by instance ID.

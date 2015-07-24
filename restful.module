@@ -48,7 +48,7 @@ function restful_menu() {
       'type' => MENU_CALLBACK,
     );
     // If there is no specific menu item allow the different version variations.
-    if ($plugin_definition['hookMenu'] && empty($plugin_definition['menuItem'])) {
+    if (empty($plugin_definition['menuItem'])) {
       // Add the version string to the arguments.
       $item['access arguments'][] = 1;
       $item['page arguments'][] = 1;
@@ -99,6 +99,10 @@ function restful_permission() {
     'administer restful' => array(
       'title' => t('Administer the RESTful module'),
       'description' => t('Access the administration pages for the RESTful module.'),
+    ),
+    'administer restful resources' => array(
+      'title' => t('Administer the resources'),
+      'description' => t('Perform operations on the resources.'),
     ),
   );
 }
@@ -166,8 +170,11 @@ function restful_menu_access_callback($resource_name, $version_string = NULL) {
   catch (RestfulException $e) {
     // We can get here if the request method is not valid or if no resource can
     // be negotiated.
-    return FALSE;
   }
+  catch (\Drupal\Component\Plugin\Exception\PluginNotFoundException $e) {
+    drupal_not_found();
+  }
+  return FALSE;
 }
 
 /**
@@ -488,6 +495,19 @@ function restful_date_time_format_element_validate($element, &$form_state) {
  * cache).
  */
 function restful_restful_resource_alter(ResourceInterface &$resource) {
+  // Disable any plugin in the disabled plugins variable.
+  $disabled_plugins = variable_get('restful_disabled_plugins', array());
+  if (!empty($disabled_plugins[$resource->getResourceName()])) {
+    $resource->disable();
+  }
+  elseif (
+    isset($disabled_plugins[$resource->getResourceName()]) &&
+    $disabled_plugins[$resource->getResourceName()] === FALSE &&
+    !$resource->isEnabled()
+  ) {
+    $resource->enable();
+  }
+
   $plugin_definition = $resource->getPluginDefinition();
   // Check for the rate limit configuration.
   if (!empty($plugin_definition['renderCache']['render'])) {
@@ -501,5 +521,14 @@ function restful_restful_resource_alter(ResourceInterface &$resource) {
   // Disable the Files Upload resource based on the settings variable.
   if ($resource->getResourceMachineName() == 'files_upload') {
     variable_get('restful_file_upload', FALSE) ? $resource->enable() : $resource->disable();
+  }
+
+  // Disable the discovery endpoint if it's disabled.
+  if (
+    $resource->getResourceMachineName() == 'discovery' &&
+    !variable_get('restful_enable_discovery_resource', TRUE) &&
+    $resource->isEnabled()
+  ) {
+    $resource->disable();
   }
 }

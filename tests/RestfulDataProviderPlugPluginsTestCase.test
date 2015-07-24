@@ -1,0 +1,128 @@
+<?php
+
+/**
+ * @file
+ * Contains \RestfulDataProviderCToolsPluginsTestCase.
+ */
+
+use Drupal\restful\Exception\ForbiddenException;
+use Drupal\restful\Http\Request;
+use Drupal\restful\Http\RequestInterface;
+
+class RestfulDataProviderPlugPluginsTestCase extends DrupalWebTestCase {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'CTools plugins',
+      'description' => 'Test the CTools plugins data provider.',
+      'group' => 'RESTful',
+    );
+  }
+
+  public function setUp() {
+    parent::setUp('restful_example');
+  }
+
+  /**
+   * Test the data provider.
+   */
+  public function testDataProvider() {
+    $resource_manager = restful()->getResourceManager();
+    $handler = $resource_manager->getPlugin('discovery:1.0');
+
+    // Assert sorting and filtering works as expected.
+    $request = array(
+      // Get all resources.
+      'all' => TRUE,
+      'sort' => '-name',
+      'filter' => array(
+        'minorVersion' => array(
+          'value' => '4',
+          'operator' => '>=',
+        ),
+      ),
+    );
+    $handler->setRequest(Request::create('', $request));
+    $result = $handler->process();
+    $this->assertEqual(count($result), 4, 'Discovery filtered resources correctly.');
+    $this->assertTrue($result[0]['name'] = 'articles_1_7' && $result[1]['name'] = 'articles_1_6' && $result[2]['name'] = 'articles_1_5' && $result[2]['name'] = 'articles_1_4', 'Discovery sorted resources correctly.');
+
+    // Assert sorting and filtering works as expected.
+    $request = array(
+      // Get all resources.
+      'filter' => array(
+        'resource' => array(
+          'value' => 'articles',
+          'operator' => '=',
+        ),
+      ),
+    );
+    $handler->setRequest(Request::create('', $request));
+    $result = $handler->process();
+    $this->assertEqual(count($result), 1, 'Latest resources shown by default.');
+
+    $request = array(
+      // Get all resources.
+      'filter' => array(
+        'resource' => array(
+          'value' => 'articles',
+          'operator' => '=',
+        ),
+      ),
+      'all' => 1,
+    );
+    $handler->setRequest(Request::create('', $request));
+    $result = $handler->process();
+    $this->assertTrue(count($result) > 1, 'All resources shown by passing the "all" query string.');
+
+    // Assert sorting and filtering works as expected.
+    $request = array(
+      // Get all resources.
+      'filter' => array(
+        'resource' => array(
+          'value' => 'discovery',
+          'operator' => '=',
+        ),
+      ),
+    );
+    $handler->setRequest(Request::create('', $request));
+    $result = $handler->process();
+    $this->assertEqual(count($result), 0, 'Resources without discovery are ignored.');
+
+    // Make sure that unauthorized users cannot enable/disable resources via the
+    // API.
+    $handler->setAccount(drupal_anonymous_user());
+    $handler->setRequest(Request::create('api/v1.0/discovery/articles:1.0', array(), RequestInterface::METHOD_DELETE));
+    $handler->setPath('articles:1.0');
+    try {
+      $handler->process();
+      $this->fail('Un-privileged user can disable endpoints.');
+    }
+    catch (ForbiddenException $e) {
+      $this->pass('Un-privileged user cannot disable endpoints.');
+    }
+    $handler->setRequest(Request::create('api/v1.0/discovery/articles:1.0', array(), RequestInterface::METHOD_PUT, NULL, FALSE, NULL, array(), array(), array(), array('enable' => 1)));
+    $handler->setPath('articles:1.0');
+    try {
+      $handler->process();
+      $this->fail('Un-privileged user can enable endpoints.');
+    }
+    catch (ForbiddenException $e) {
+      $this->pass('Un-privileged user cannot enable endpoints.');
+    }
+
+    // Make sure that authorized users can enable/disable resources via the API.
+    $account = $this->drupalCreateUser(array('administer restful resources'));
+    $handler->setAccount($account);
+    $handler->setRequest(Request::create('api/v1.0/discovery/articles:1.0', array(), RequestInterface::METHOD_DELETE));
+    $handler->setPath('articles:1.0');
+    $handler->process();
+    $resource = $resource_manager->getPlugin('articles:1.0');
+    $this->assertNull($resource, 'Plugin disabled via the API.');
+    $handler->setRequest(Request::create('api/v1.0/discovery/articles:1.0', array(), RequestInterface::METHOD_PUT, NULL, FALSE, NULL, array(), array(), array(), array('enable' => 1)));
+    $handler->setPath('articles:1.0');
+    $handler->process();
+    $resource = $resource_manager->getPlugin('articles:1.0');
+    $this->assertTrue($resource->isEnabled(), 'Plugin enabled via the API.');
+  }
+}

@@ -132,7 +132,7 @@ class Resource extends Plugin {
    *
    * @var bool
    */
-  public $discoverable = FALSE;
+  public $discoverable = TRUE;
 
   /**
    * URL parameters.
