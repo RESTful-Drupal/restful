@@ -455,6 +455,13 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function render() {
+    return $this->executeProcessCallbacks($this->value());
+  }
+
+  /**
    * Get value for a field based on another resource.
    *
    * @param DataInterpreterInterface $source

@@ -239,4 +239,9 @@ interface ResourceFieldInterface {
    */
   public function compoundDocumentId();
 
+  /**
+   * {@inheritdoc}
+   */
+  public function render();
+
 }

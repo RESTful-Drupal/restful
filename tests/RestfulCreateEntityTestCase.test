@@ -59,7 +59,7 @@ class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
       $ids[] = $entity->pid;
     }
 
-    $images =  array();
+    $images = array();
     foreach ($this->drupalGetTestFiles('image') as $file) {
       $file = file_save($file);
       $images[] = $file->fid;

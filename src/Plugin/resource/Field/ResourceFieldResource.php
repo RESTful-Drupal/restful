@@ -267,5 +267,11 @@ class ResourceFieldResource implements ResourceFieldResourceInterface {
     return $this->decorated->compoundDocumentId();
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function render() {
+    return $this->executeProcessCallbacks($this->value());
+  }
 
 }

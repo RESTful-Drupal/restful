@@ -170,4 +170,10 @@ class ResourceField extends ResourceFieldBase implements ResourceFieldInterface 
     return $this->value();
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function render() {
+    return $this->executeProcessCallbacks($this->value());
+  }
 }
