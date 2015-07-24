@@ -573,6 +573,9 @@ function restful_parse_request() {
   }
   elseif ($method == \RestfulInterface::POST) {
     $request = $_POST;
+    if ($_FILES) {
+      $request['file_upload'] = true;
+    }
     watchdog('debug', 'parsed request : ' . print_r($request, 1));
     watchdog('debug', 'php://input is : ' . _restful_get_query_string_from_php_input());
   }
