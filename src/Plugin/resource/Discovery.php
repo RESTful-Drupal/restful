@@ -114,6 +114,8 @@ class Discovery extends Resource {
       ),
       // We don't know what the ID looks like, assume that everything is the ID.
       '^.*$' => array(
+        RequestInterface::METHOD_GET => 'view',
+        RequestInterface::METHOD_HEAD => 'view',
         RequestInterface::METHOD_PUT => array(
           'callback' => 'replace',
           'access callback' => 'resourceManipulationAccess',
