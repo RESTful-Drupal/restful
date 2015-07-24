@@ -43,7 +43,7 @@ class FormatterJson extends Formatter implements FormatterInterface {
       foreach ($row as $public_field_name => $resource_field) {
         /* @var ResourceFieldInterface $resource_field */
         $value = $resource_field->value();
-        $resource_field->executeProcessCallbacks($value);
+        $value = $resource_field->executeProcessCallbacks($value);
         $output['data'][$public_field_name] = $value;
       }
     }
