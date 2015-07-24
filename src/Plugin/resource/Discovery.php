@@ -87,19 +87,19 @@ class Discovery extends Resource {
   /**
    * Returns the URL to the endpoint result.
    *
-   * @param DataInterpreterInterface $data_interpreter
+   * @param DataInterpreterInterface $interpreter
    *   The plugin's data interpreter.
    *
    * @return string
    *   The RESTful endpoint URL.
    */
-  public function getSelf(DataInterpreterInterface $data_interpreter) {
-    if ($menu_item = $data_interpreter->getWrapper()->get('menuItem')) {
+  public function getSelf(DataInterpreterInterface $interpreter) {
+    if ($menu_item = $interpreter->getWrapper()->get('menuItem')) {
       return url($menu_item, array('absolute' => TRUE));
     }
 
     $base_path = variable_get('restful_hook_menu_base_path', 'api');
-    return url($base_path . '/v' . $data_interpreter->getWrapper()->get('majorVersion') . '.' . $data_interpreter->getWrapper()->get('minorVersion') . '/' . $data_interpreter->getWrapper()->get('resource'), array('absolute' => TRUE));
+    return url($base_path . '/v' . $interpreter->getWrapper()->get('majorVersion') . '.' . $interpreter->getWrapper()->get('minorVersion') . '/' . $interpreter->getWrapper()->get('resource'), array('absolute' => TRUE));
   }
 
   /**

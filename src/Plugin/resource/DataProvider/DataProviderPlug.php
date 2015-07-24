@@ -71,6 +71,8 @@ class DataProviderPlug extends DataProvider implements DataProviderInterface {
 
     foreach ($this->fieldDefinitions as $resource_field_name => $resource_field) {
       /* @var ResourceFieldEntityInterface $resource_field */
+      $resource_field->setInterpreter($interpreter);
+
       if ($limit_fields && !in_array($resource_field_name, $limit_fields)) {
         // Limit fields doesn't include this property.
         continue;
@@ -84,11 +86,7 @@ class DataProviderPlug extends DataProvider implements DataProviderInterface {
         continue;
       }
 
-      $value = $resource_field->value($interpreter);
-
-      $value = $this->processCallbacks($value, $resource_field);
-
-      $values[$resource_field_name] = $value;
+      $values[$resource_field_name] = $resource_field;
     }
     return $values;
   }

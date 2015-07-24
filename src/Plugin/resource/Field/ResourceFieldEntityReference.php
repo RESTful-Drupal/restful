@@ -177,7 +177,8 @@ class ResourceFieldEntityReference extends ResourceFieldEntity implements Resour
   /**
    * {@inheritdoc}
    */
-  public function value(DataInterpreterInterface $interpreter) {
+  public function value(DataInterpreterInterface $interpreter = NULL) {
+    $interpreter = $interpreter ?: $this->getInterpreter();
     $value = $this->decorated->value($interpreter);
     if (isset($value)) {
       // Let the decorated resolve callbacks.

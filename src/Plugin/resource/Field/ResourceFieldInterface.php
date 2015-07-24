@@ -10,6 +10,7 @@ namespace Drupal\restful\Plugin\resource\Field;
 use Drupal\restful\Exception\IncompatibleFieldDefinitionException;
 use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
+use Drupal\restful\Resource\ResourceManager;
 
 interface ResourceFieldInterface {
 
@@ -128,7 +129,7 @@ interface ResourceFieldInterface {
    *
    * @throws IncompatibleFieldDefinitionException
    */
-  public function value(DataInterpreterInterface $interpreter);
+  public function value(DataInterpreterInterface $interpreter = NULL);
 
   /**
    * Check access on property by the defined access callbacks.
@@ -201,5 +202,32 @@ interface ResourceFieldInterface {
    * @throws IncompatibleFieldDefinitionException
    */
   public function set($value, DataInterpreterInterface $interpreter);
+
+  /**
+   * Set the data interpreter value for later use.
+   *
+   * @param DataInterpreterInterface $interpreter
+   *   The interpreter to use.
+   */
+  public function setInterpreter($interpreter);
+
+  /**
+   * Gets the data interpreter.
+   *
+   * @return DataInterpreterInterface
+   *   The stored interpreter.
+   */
+  public function getInterpreter();
+
+  /**
+   * Executes the process callbacks.
+   *
+   * @param mixed $value
+   *   The initial value.
+   *
+   * @return mixed
+   *   The processed value.
+   */
+  public function executeProcessCallbacks($value);
 
 }

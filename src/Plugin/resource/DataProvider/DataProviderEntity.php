@@ -230,6 +230,8 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
 
     foreach ($this->fieldDefinitions as $resource_field_name => $resource_field) {
       /* @var ResourceFieldEntityInterface $resource_field */
+      $resource_field->setInterpreter($interpreter);
+
       if ($limit_fields && !in_array($resource_field_name, $limit_fields)) {
         // Limit fields doesn't include this property.
         continue;
@@ -242,11 +244,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
         continue;
       }
 
-      $value = $resource_field->value($interpreter);
-
-      $value = $this->processCallbacks($value, $resource_field);
-
-      $values[$resource_field_name] = $value;
+      $values[$resource_field_name] = $resource_field;
     }
 
     return $values;
@@ -343,8 +341,8 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
 
     $map = array();
     foreach ($this->fieldDefinitions as $resource_field_name => $resource_field) {
-      $property = $resource_field['property'];
-      if (empty($property)) {
+      /* @var ResourceFieldInterface */
+      if ($property = $resource_field->getProperty()) {
         continue;
       }
 
@@ -767,6 +765,8 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
 
     foreach ($this->fieldDefinitions as $public_field_name => $resource_field) {
       /* @var ResourceFieldEntityInterface $resource_field */
+      $resource_field->setInterpreter($interpreter);
+
       if (!$this->methodAccess($resource_field)) {
         // Allow passing the value in the request.
         unset($original_object[$public_field_name]);

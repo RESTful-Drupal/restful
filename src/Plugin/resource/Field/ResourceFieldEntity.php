@@ -12,6 +12,7 @@ use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataProvider\DataProviderResource;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
+use Drupal\restful\Resource\ResourceManager;
 use Drupal\restful\Util\String;
 
 class ResourceFieldEntity implements ResourceFieldEntityInterface {
@@ -145,7 +146,8 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
   /**
    * {@inheritdoc}
    */
-  public function value(DataInterpreterInterface $interpreter) {
+  public function value(DataInterpreterInterface $interpreter = NULL) {
+    $interpreter = $interpreter ?: $this->getInterpreter();
     $value = $this->decorated->value($interpreter);
     if (isset($value)) {
       // Let the decorated resolve callbacks.
@@ -400,6 +402,27 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
    */
   public function getMetadata($key) {
     return $this->decorated->getMetadata($key);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getInterpreter() {
+    return $this->decorated->getInterpreter();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setInterpreter($interpreter) {
+    $this->decorated->setInterpreter($interpreter);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function executeProcessCallbacks($value) {
+    return $this->decorated->executeProcessCallbacks($value);
   }
 
   /**

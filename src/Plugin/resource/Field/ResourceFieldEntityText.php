@@ -7,6 +7,8 @@
 
 namespace Drupal\restful\Plugin\resource\Field;
 
+use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
+
 class ResourceFieldEntityText extends ResourceFieldEntity implements ResourceFieldEntityInterface {
 
   /**
@@ -62,6 +64,27 @@ class ResourceFieldEntityText extends ResourceFieldEntity implements ResourceFie
       }
     }
     return $return;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setInterpreter($interpreter) {
+    $this->decorated->setInterpreter($interpreter);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getInterpreter() {
+    return $this->decorated->getInterpreter();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function executeProcessCallbacks($value) {
+    return $this->decorated->executeProcessCallbacks($value);
   }
 
 }

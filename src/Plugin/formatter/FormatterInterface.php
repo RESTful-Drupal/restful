@@ -9,6 +9,7 @@ namespace Drupal\restful\Plugin\formatter;
 
 use Drupal\Component\Plugin\ConfigurablePluginInterface;
 use Drupal\Component\Plugin\PluginInspectionInterface;
+use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
 use Drupal\restful\Plugin\resource\ResourceInterface;
 
 interface FormatterInterface extends PluginInspectionInterface, ConfigurablePluginInterface {
@@ -17,7 +18,7 @@ interface FormatterInterface extends PluginInspectionInterface, ConfigurablePlug
   /**
    * Massages the raw data to create a structured array to pass to the renderer.
    *
-   * @param array $data
+   * @param ResourceFieldInterface[] $data
    *   The raw data to return.
    *
    * @return array

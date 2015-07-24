@@ -6,6 +6,7 @@
  */
 
 namespace Drupal\restful\Plugin\formatter;
+use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
 
 /**
  * Class FormatterHalJson
@@ -37,7 +38,15 @@ class FormatterJson extends Formatter implements FormatterInterface {
       return $data;
     }
 
-    $output = array('data' => $data);
+    $output = array('data' => array());
+    foreach ($data as $row) {
+      foreach ($row as $public_field_name => $resource_field) {
+        /* @var ResourceFieldInterface $resource_field */
+        $value = $resource_field->value();
+        $resource_field->executeProcessCallbacks($value);
+        $output['data'][$public_field_name] = $value;
+      }
+    }
 
     if ($resource = $this->getResource()) {
       $request = $resource->getRequest();

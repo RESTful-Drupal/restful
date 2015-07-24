@@ -24,7 +24,8 @@ class ResourceFieldKeyValue extends ResourceField implements ResourceFieldInterf
   /**
    * {@inheritdoc}
    */
-  public function value(DataInterpreterInterface $interpreter) {
+  public function value(DataInterpreterInterface $interpreter = NULL) {
+    $interpreter = $interpreter ?: $this->getInterpreter();
     if ($value = parent::value($interpreter)) {
       return $value;
     }
