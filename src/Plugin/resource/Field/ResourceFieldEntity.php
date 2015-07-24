@@ -373,9 +373,7 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
     }
 
     // Wrapper method.
-    $value = $property_wrapper->{$this->getWrapperMethod()}();
-
-    return $value;
+    return $property_wrapper->{$this->getWrapperMethod()}();
   }
 
   /**

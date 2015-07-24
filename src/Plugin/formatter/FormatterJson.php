@@ -6,6 +6,7 @@
  */
 
 namespace Drupal\restful\Plugin\formatter;
+use Drupal\restful\Plugin\resource\Field\ResourceFieldBase;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldResourceInterface;
 
@@ -45,6 +46,20 @@ class FormatterJson extends Formatter implements FormatterInterface {
         /* @var ResourceFieldInterface $resource_field */
         $value = $resource_field->value();
         $value = $resource_field->executeProcessCallbacks($value);
+        if ($resource_field instanceof ResourceFieldResourceInterface) {
+          $single_value = !ResourceFieldBase::isArrayNumeric($value);
+          $value = $single_value ? array($value) : $value;
+          foreach ($value as &$value_item) {
+            // Every value item is an array of ResourceFieldInterface keyed by
+            // public ID.
+            foreach ($value_item as $nested_public_field_name => $nested_resource_field) {
+              /* @var ResourceFieldInterface $nested_resource_field */
+              $value_item[$nested_public_field_name] = $nested_resource_field->value();
+              $value_item[$nested_public_field_name] = $nested_resource_field->executeProcessCallbacks($value_item[$nested_public_field_name]);
+            }
+          }
+          $value = $single_value ? reset($value) : $value;
+        }
         $output['data'][$public_field_name] = $value;
       }
     }
