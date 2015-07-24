@@ -40,7 +40,7 @@ class FormatterJson extends Formatter implements FormatterInterface {
       return $data;
     }
 
-    $output = array('data' => $this->prepareRows($data));
+    $output = array('data' => $this->extractFieldValues($data));
 
     if ($resource = $this->getResource()) {
       $request = $resource->getRequest();
@@ -62,7 +62,7 @@ class FormatterJson extends Formatter implements FormatterInterface {
   }
 
   /**
-   * Prepare an array of rows.
+   * Extracts the actual values from the resource fields.
    *
    * @param array[] $rows
    *   The array of rows.
@@ -70,14 +70,14 @@ class FormatterJson extends Formatter implements FormatterInterface {
    * @return array[]
    *   The array of prepared data.
    */
-  protected function prepareRows(array $rows) {
+  protected function extractFieldValues(array $rows) {
     $output = array();
     foreach ($rows as $public_field_name => $resource_field) {
       if (!$resource_field instanceof ResourceFieldInterface) {
         // If $resource_field is not a ResourceFieldInterface it means that we
         // are dealing with a nested structure of some sort. If it is an array
         // we process it as a set of rows, if not then use the value directly.
-        $output[$public_field_name] = is_array($resource_field) ? $this->prepareRows($resource_field) : $resource_field;
+        $output[$public_field_name] = is_array($resource_field) ? $this->extractFieldValues($resource_field) : $resource_field;
         continue;
       }
       $value = $resource_field->value();
@@ -85,7 +85,7 @@ class FormatterJson extends Formatter implements FormatterInterface {
       // If the field points to a resource that can be included, include it
       // right away.
       if (is_array($value) && $resource_field instanceof ResourceFieldResourceInterface) {
-        $value = $this->prepareRows($value);
+        $value = $this->extractFieldValues($value);
       }
       $output[$public_field_name] = $value;
     }

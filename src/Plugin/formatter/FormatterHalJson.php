@@ -9,6 +9,7 @@ namespace Drupal\restful\Plugin\formatter;
 use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldBase;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
+use Drupal\restful\Plugin\resource\Field\ResourceFieldResourceInterface;
 
 /**
  * Class FormatterHalJson
@@ -50,36 +51,36 @@ class FormatterHalJson extends Formatter implements FormatterInterface {
     if (!$resource = $this->getResource()) {
       throw new ServerConfigurationException('Resource unavailable for HAL formatter.');
     }
+    $is_list_request = $resource->getRequest()->isListRequest($resource->getPath());
 
-    $curies_resource = $this->withCurie($resource->getResourceMachineName());
-    $output = array();
-
-    foreach ($data as &$row) {
-      if (is_array($row)) {
-        $row = $this->prepareRow($row, $output);
-      }
+    $values = $this->extractFieldValues($data);
+    if ($is_list_request) {
+      // If this is a listing, move everything into the _embedded.
+      $curies_resource = $this->withCurie($resource->getResourceMachineName());
+      $output = array(
+        '_embedded' => array($curies_resource => $values),
+      );
+    }
+    else {
+      $output = reset($values);
     }
 
-    $output[$curies_resource] = $data;
-
-    if (!empty($resource)) {
-      $data_provider = $resource->getDataProvider();
-      if (
-        $data_provider &&
-        method_exists($data_provider, 'count') &&
-        $resource->getRequest()->isListRequest($resource->getPath())
-      ) {
-        // Get the total number of items for the current request without
-        // pagination.
-        $output['count'] = $data_provider->count();
-      }
-      if (method_exists($resource, 'additionalHateoas')) {
-        $output = array_merge($output, $resource->additionalHateoas());
-      }
-
-      // Add HATEOAS to the output.
-      $this->addHateoas($output);
+    $data_provider = $resource->getDataProvider();
+    if (
+      $data_provider &&
+      method_exists($data_provider, 'count') &&
+      $is_list_request
+    ) {
+      // Get the total number of items for the current request without
+      // pagination.
+      $output['count'] = $data_provider->count();
     }
+    if (method_exists($resource, 'additionalHateoas')) {
+      $output = array_merge($output, $resource->additionalHateoas());
+    }
+
+    // Add HATEOAS to the output.
+    $this->addHateoas($output);
 
     // Cosmetic sorting to send the hateoas properties to the end of the output.
     uksort($output, function ($a, $b) {
@@ -160,70 +161,36 @@ class FormatterHalJson extends Formatter implements FormatterInterface {
   }
 
   /**
-   * Massage the data of a single row.
+   * Extracts the actual values from the resource fields.
    *
-   * @param array $row
-   *   A single row array.
-   * @param array $output
-   *   The output array, passed by reference.
+   * @param array[] $rows
+   *   The array of rows.
    *
-   * @return array
-   *   The massaged data of a single row.
+   * @return array[]
+   *   The array of prepared data.
    */
-  public function prepareRow(array $row, array &$output) {
-    $this->addHateoasRow($row);
-
-    if (!$curie = $this->getCurie()) {
-      // Skip if there is no curie defined.
-      return $row;
-    }
-
-    $embedded = array();
-    $nested_embed = $this
-      ->getResource()
-      ->getRequest()
-      ->isListRequest($this->getResource()->getPath());
-
-    $field_definitions = clone $this->getResource()->getFieldDefinitions();
-    foreach ($field_definitions as $pubilc_field_name => $resource_field) {
-      /* @var \Drupal\restful\Plugin\resource\Field\ResourceFieldInterface $resource_field */
-      if (!$resource_field->getResource()) {
-        // Not a resource.
+  protected function extractFieldValues(array $rows) {
+    $output = array();
+    foreach ($rows as $public_field_name => $resource_field) {
+      if (!$resource_field instanceof ResourceFieldInterface) {
+        // If $resource_field is not a ResourceFieldInterface it means that we
+        // are dealing with a nested structure of some sort. If it is an array
+        // we process it as a set of rows, if not then use the value directly.
+        $output[$public_field_name] = is_array($resource_field) ? $this->extractFieldValues($resource_field) : $resource_field;
         continue;
       }
-
-      if (empty($row[$pubilc_field_name])) {
-        // No value.
-        continue;
-      }
-
-      if ($nested_embed) {
+      $value = $resource_field->value();
+      $value = $resource_field->executeProcessCallbacks($value);
+      // If the field points to a resource that can be included, include it
+      // right away.
+      if (is_array($value) && $resource_field instanceof ResourceFieldResourceInterface) {
         $output += array('_embedded' => array());
+        $output['_embedded'][$this->withCurie($public_field_name)] = $this->extractFieldValues($value);
+        continue;
       }
-
-      $this->moveReferencesToEmbeds($output, $row, $resource_field, $embedded);
+      $output[$public_field_name] = $value;
     }
-
-    if (!empty($embedded) && $nested_embed) {
-      $row['_embedded'] = $embedded;
-    }
-
-    return $row;
-  }
-
-  /**
-   * Add Hateoas to a single row.
-   *
-   * @param array $row
-   *   A single row array, passed by reference.
-   */
-  protected function addHateoasRow(array &$row) {
-    if (!empty($row['self'])) {
-      $row += array('_links' => array());
-      $row['_links']['self']['href'] = $row['self'];
-      unset($row['self']);
-    }
-
+    return $output;
   }
 
   /**
@@ -264,64 +231,6 @@ class FormatterHalJson extends Formatter implements FormatterInterface {
    */
   protected function getCurie() {
     return $this->configuration['curie'];
-  }
-
-  /**
-   * Move the fields referencing other resources to the _embed key.
-   *
-   * Note that for multiple value entityreference
-   * fields $row[$public_field_name] will be an array of values rather than a
-   * single value.
-   *
-   * @param array $output
-   *   Output array to be modified.
-   * @param array $row
-   *   The row being processed.
-   * @param ResourceFieldInterface  $resource_field
-   *   The public field configuration array.
-   * @param array $embedded
-   *   Embedded array to be modified.
-   */
-  protected function moveReferencesToEmbeds(array &$output, array &$row, ResourceFieldInterface $resource_field, array &$embedded) {
-    $resource = $this->getResource();
-    $public_field_name = $resource_field->getPublicName();
-    $is_list_request = $resource
-      ->getRequest()
-      ->isListRequest($resource->getPath());
-    $values_metadata = $resource_field->getMetadata($row['id']);
-
-    // Wrap the row in an array if it isn't.
-    if (!is_array($row[$public_field_name])) {
-      $row[$public_field_name] = array();
-    }
-    $rows = ResourceFieldBase::isArrayNumeric($row[$public_field_name]) ? $row[$public_field_name] : array($row[$public_field_name]);
-
-    foreach ($rows as $subindex => $subrow) {
-      $metadata = $values_metadata[$subindex];
-
-      // Loop through each value for the field.
-      foreach ($subrow as $index => $resource_row) {
-        if (empty($metadata[$index])) {
-          // No metadata.
-          continue;
-        }
-
-        $resource_info = $resource_field->getResource();
-        $resource_name = $resource_info['name'];
-
-        $curies_resource = $this->withCurie($resource_name);
-        $prepared_row = $this->prepareRow($subrow, $output);
-        if ($is_list_request) {
-          $embedded[$curies_resource][] = $prepared_row;
-        }
-        else {
-          $output['_embedded'][$curies_resource][] = $prepared_row;
-        }
-      }
-    }
-
-    // Remove the original reference.
-    unset($row[$public_field_name]);
   }
 
 }
