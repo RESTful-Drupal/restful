@@ -91,6 +91,13 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
   protected $bundles;
 
   /**
+   * Interpreter to use to interact with the field.
+   *
+   * @var DataInterpreterInterface
+   */
+  protected $interpreter;
+
+  /**
    * Constructor.
    *
    * @param array $field
@@ -436,14 +443,16 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
    * {@inheritdoc}
    */
   public function getInterpreter() {
-    return $this->decorated->getInterpreter();
+    return $this->interpreter;
   }
 
   /**
    * {@inheritdoc}
    */
   public function setInterpreter($interpreter) {
-    $this->decorated->setInterpreter($interpreter);
+    // Don't use a decorator for this, it leads to the same interpreter being
+    // assigned to the same memory object all of the results in a list call.
+    $this->interpreter = $interpreter;
   }
 
   /**
