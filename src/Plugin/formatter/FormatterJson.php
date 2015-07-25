@@ -6,6 +6,7 @@
  */
 
 namespace Drupal\restful\Plugin\formatter;
+
 use Drupal\restful\Exception\InternalServerErrorException;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldBase;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
@@ -66,7 +67,7 @@ class FormatterJson extends Formatter implements FormatterInterface {
   /**
    * Extracts the actual values from the resource fields.
    *
-   * @param array[]|ResourceFieldCollectionInterface $rows
+   * @param array[]|ResourceFieldCollectionInterface $data
    *   The array of rows or a ResourceFieldCollection.
    *
    * @return array[]
@@ -74,9 +75,9 @@ class FormatterJson extends Formatter implements FormatterInterface {
    *
    * @throws InternalServerErrorException
    */
-  protected function extractFieldValues($rows) {
+  protected function extractFieldValues($data) {
     $output = array();
-    foreach ($rows as $public_field_name => $resource_field) {
+    foreach ($data as $public_field_name => $resource_field) {
       if (!$resource_field instanceof ResourceFieldInterface) {
         // If $resource_field is not a ResourceFieldInterface it means that we
         // are dealing with a nested structure of some sort. If it is an array
@@ -84,14 +85,17 @@ class FormatterJson extends Formatter implements FormatterInterface {
         $output[$public_field_name] = $resource_field instanceof ResourceFieldCollectionInterface ? $this->extractFieldValues($resource_field) : $resource_field;
         continue;
       }
-      if (!$rows instanceof ResourceFieldCollectionInterface) {
+      if (!$data instanceof ResourceFieldCollectionInterface) {
         throw new InternalServerErrorException('Inconsistent output.');
       }
-      $value = $resource_field->value($rows->getInterpreter());
+      $value = $resource_field->value($data->getInterpreter());
       $value = $resource_field->executeProcessCallbacks($value);
       // If the field points to a resource that can be included, include it
       // right away.
-      if ($value instanceof ResourceFieldCollectionInterface && $resource_field instanceof ResourceFieldResourceInterface) {
+      if (
+        ($value instanceof ResourceFieldCollectionInterface || is_array($value))
+        && $resource_field instanceof ResourceFieldResourceInterface
+      ) {
         $value = $this->extractFieldValues($value);
       }
       $output[$public_field_name] = $value;
@@ -122,8 +126,8 @@ class FormatterJson extends Formatter implements FormatterInterface {
 
     if ($page > 1) {
       $query = array(
-        'page' => $page - 1,
-      ) + $input;
+          'page' => $page - 1,
+        ) + $input;
       $data['previous'] = array(
         'title' => 'Previous',
         'href' => $resource->versionedUrl('', array('query' => $query), TRUE),
@@ -137,8 +141,8 @@ class FormatterJson extends Formatter implements FormatterInterface {
     $previous_items = ($page - 1) * $items_per_page;
     if (isset($data['count']) && $data['count'] > count($data['data']) + $previous_items) {
       $query = array(
-        'page' => $page + 1,
-      ) + $input;
+          'page' => $page + 1,
+        ) + $input;
       $data['next'] = array(
         'title' => 'Next',
         'href' => $resource->versionedUrl('', array('query' => $query), TRUE),
