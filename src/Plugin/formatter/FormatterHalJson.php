@@ -189,7 +189,10 @@ class FormatterHalJson extends Formatter implements FormatterInterface {
       $value = $resource_field->executeProcessCallbacks($value);
       // If the field points to a resource that can be included, include it
       // right away.
-      if ($value instanceof ResourceFieldCollectionInterface && $resource_field instanceof ResourceFieldResourceInterface) {
+      if (
+        ($value instanceof ResourceFieldCollectionInterface || is_array($value))
+        && $resource_field instanceof ResourceFieldResourceInterface
+      ) {
         $output += array('_embedded' => array());
         $output['_embedded'][$this->withCurie($public_field_name)] = $this->extractFieldValues($value);
         continue;
