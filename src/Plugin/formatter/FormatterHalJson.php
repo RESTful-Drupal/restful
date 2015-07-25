@@ -6,8 +6,10 @@
  */
 
 namespace Drupal\restful\Plugin\formatter;
+use Drupal\restful\Exception\InternalServerErrorException;
 use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldBase;
+use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldResourceInterface;
 
@@ -176,14 +178,17 @@ class FormatterHalJson extends Formatter implements FormatterInterface {
         // If $resource_field is not a ResourceFieldInterface it means that we
         // are dealing with a nested structure of some sort. If it is an array
         // we process it as a set of rows, if not then use the value directly.
-        $output[$public_field_name] = is_array($resource_field) ? $this->extractFieldValues($resource_field) : $resource_field;
+        $output[$public_field_name] = $resource_field instanceof ResourceFieldCollectionInterface ? $this->extractFieldValues($resource_field) : $resource_field;
         continue;
       }
-      $value = $resource_field->value();
+      if (!$rows instanceof ResourceFieldCollectionInterface) {
+        throw new InternalServerErrorException('Inconsistent output.');
+      }
+      $value = $resource_field->value($rows->getInterpreter());
       $value = $resource_field->executeProcessCallbacks($value);
       // If the field points to a resource that can be included, include it
       // right away.
-      if (is_array($value) && $resource_field instanceof ResourceFieldResourceInterface) {
+      if ($value instanceof ResourceFieldCollectionInterface && $resource_field instanceof ResourceFieldResourceInterface) {
         $output += array('_embedded' => array());
         $output['_embedded'][$this->withCurie($public_field_name)] = $this->extractFieldValues($value);
         continue;

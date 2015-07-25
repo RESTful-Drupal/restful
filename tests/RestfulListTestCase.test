@@ -42,6 +42,7 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
       'xyz' => $user1->uid,
       'efg' => $user2->uid,
     );
+    $nodes = array();
     foreach ($info as $title => $uid) {
       $settings['title'] = $title;
       $settings['uid'] = $uid;

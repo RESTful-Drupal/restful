@@ -33,13 +33,6 @@ class ResourceFieldResource implements ResourceFieldResourceInterface {
   protected $resourceMachineName;
 
   /**
-   * Interpreter to use to interact with the field.
-   *
-   * @var DataInterpreterInterface
-   */
-  protected $interpreter;
-
-  /**
    * Constructor.
    *
    * @param array $field
@@ -87,7 +80,7 @@ class ResourceFieldResource implements ResourceFieldResourceInterface {
   /**
    * {@inheritdoc}
    */
-  public function value(DataInterpreterInterface $interpreter = NULL) {
+  public function value(DataInterpreterInterface $interpreter) {
     return $this->decorated->value($interpreter);
   }
 
@@ -132,22 +125,6 @@ class ResourceFieldResource implements ResourceFieldResourceInterface {
    */
   public function getMetadata($key) {
     return $this->decorated->getMetadata($key);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getInterpreter() {
-    return $this->interpreter;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setInterpreter($interpreter) {
-    // Don't use a decorator for this, it leads to the same interpreter being
-    // assigned to the same memory object all of the results in a list call.
-    $this->interpreter = $interpreter;
   }
 
   /**

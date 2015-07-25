@@ -125,13 +125,6 @@ abstract class ResourceFieldBase implements ResourceFieldInterface {
   );
 
   /**
-   * Interpreter to use to interact with the field.
-   *
-   * @var DataInterpreterInterface
-   */
-  protected $interpreter;
-
-  /**
    * {@inheritdoc}
    */
   public function getPublicName() {
@@ -220,20 +213,6 @@ abstract class ResourceFieldBase implements ResourceFieldInterface {
    */
   public function getMethods() {
     return $this->methods;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getInterpreter() {
-    return $this->interpreter;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setInterpreter($interpreter) {
-    $this->interpreter = $interpreter;
   }
 
   /**

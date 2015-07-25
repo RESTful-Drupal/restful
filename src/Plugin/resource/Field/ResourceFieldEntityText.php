@@ -12,13 +12,6 @@ use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
 class ResourceFieldEntityText extends ResourceFieldEntity implements ResourceFieldEntityInterface {
 
   /**
-   * Interpreter to use to interact with the field.
-   *
-   * @var DataInterpreterInterface
-   */
-  protected $interpreter;
-
-  /**
    * {@inheritdoc}
    */
   public function preprocess($value) {
@@ -71,22 +64,6 @@ class ResourceFieldEntityText extends ResourceFieldEntity implements ResourceFie
       }
     }
     return $return;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setInterpreter($interpreter) {
-    // Don't use a decorator for this, it leads to the same interpreter being
-    // assigned to the same memory object all of the results in a list call.
-    $this->interpreter = $interpreter;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getInterpreter() {
-    return $this->interpreter;
   }
 
   /**
