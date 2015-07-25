@@ -260,4 +260,11 @@ class ResourceFieldResource implements ResourceFieldResourceInterface {
     return $this->executeProcessCallbacks($this->value());
   }
 
+  /**
+   * If any method not declared, then defer it to the decorated field.
+   */
+  function __call($name, $arguments) {
+    return call_user_func_array(array($this->decorated, $name), $arguments);
+  }
+
 }

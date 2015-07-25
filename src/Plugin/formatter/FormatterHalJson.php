@@ -133,13 +133,14 @@ class FormatterHalJson extends Formatter implements FormatterInterface {
     }
 
     $curies_resource = $this->withCurie($resource->getResourceMachineName());
+    $listed_items = empty($data['_embedded'][$curies_resource]) ? 1 : count($data['_embedded'][$curies_resource]);
 
     // We know that there are more pages if the total count is bigger than the
     // number of items of the current request plus the number of items in
     // previous pages.
     $items_per_page = $data_provider->getRange();
     $previous_items = ($page - 1) * $items_per_page;
-    if (isset($data['count']) && $data['count'] > count($data[$curies_resource]) + $previous_items) {
+    if (isset($data['count']) && $data['count'] > $listed_items + $previous_items) {
       $input['page'] = $page + 1;
       $data['_links']['next'] = array(
         'title' => 'Next',
