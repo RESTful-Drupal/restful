@@ -36,7 +36,8 @@ class ResourceFieldEntityReference extends ResourceFieldEntity implements Resour
       return $value;
     }
 
-    $value = static::subRequestId($this->mergeEntityFromReference($value));
+    $merged_value = $this->mergeEntityFromReference($value);
+    $value = static::subRequestId($merged_value);
 
     return ($field_info['cardinality'] == 1 && is_array($value)) ? reset($value) : $value;
   }
@@ -157,15 +158,19 @@ class ResourceFieldEntityReference extends ResourceFieldEntity implements Resour
   /**
    * Get the ID of the resource this write sub-request is for.
    *
-   * @param array $value
+   * @param array|\Traversable $value
    *   The array of values provided for this sub-request.
    *
    * @return int
    *   The ID.
    */
-  protected static function subRequestId(array $value) {
-    if (!static::isArrayNumeric($value)) {
-      return empty($value['id']) ? NULL : $value['id'];
+  protected static function subRequestId($value) {
+    if ($value instanceof ResourceFieldCollectionInterface) {
+      // Return the ID for the referenced entity.
+      return $value->getInterpreter()->getWrapper()->getIdentifier();
+    }
+    if (!is_array($value)) {
+      return NULL;
     }
     $output = array();
     foreach ($value as $item) {
