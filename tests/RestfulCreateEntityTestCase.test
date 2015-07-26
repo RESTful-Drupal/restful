@@ -248,6 +248,9 @@ class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
    *
    * @return \Drupal\restful\Plugin\resource\ResourceInterface
    *   The file resource.
+   *
+   * @throws \Drupal\restful\Exception\BadRequestException
+   * @throws \Drupal\restful\Exception\ServiceUnavailableException
    */
   protected function fileResource() {
     // We are setting the $_FILES array directly on tests, so we need to
