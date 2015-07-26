@@ -165,13 +165,15 @@ class FormatterHalJson extends Formatter implements FormatterInterface {
   /**
    * Extracts the actual values from the resource fields.
    *
-   * @param array[] $rows
+   * @param array|\Traversable|\stdClass $rows
    *   The array of rows.
    *
    * @return array[]
    *   The array of prepared data.
+   *
+   * @throws \Drupal\restful\Exception\InternalServerErrorException
    */
-  protected function extractFieldValues(array $rows) {
+  protected function extractFieldValues($rows) {
     $output = array();
     foreach ($rows as $public_field_name => $resource_field) {
       if (!$resource_field instanceof ResourceFieldInterface) {
