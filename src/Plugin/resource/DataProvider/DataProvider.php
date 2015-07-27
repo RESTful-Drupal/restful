@@ -336,12 +336,12 @@ abstract class DataProvider implements DataProviderInterface {
   protected function parseRequestForListPagination() {
     $input = $this->getRequest()->getParsedInput();
 
-    $page = isset($input['page']) ? $input['page'] : 1;
+    $page = isset($input['page']) ? (int) $input['page'] : 1;
     if (!ctype_digit((string) $page) || $page < 1) {
       throw new BadRequestException('"Page" property should be numeric and equal or higher than 1.');
     }
 
-    $range = isset($input['range']) ? $input['range'] : $this->getRange();
+    $range = isset($input['range']) ? (int) $input['range'] : $this->getRange();
     if (!ctype_digit((string) $range) || $range < 1) {
       throw new BadRequestException('"Range" property should be numeric and equal or higher than 1.');
     }
