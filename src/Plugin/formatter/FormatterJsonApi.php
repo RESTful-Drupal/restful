@@ -132,7 +132,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
             $basic_info['links']['related'] = url($resource->versionedUrl(), array(
               'absolute' => TRUE,
               'query' => array(
-                'filters' => array($resource_field->getPublicName() => $id),
+                'filter' => array($resource_field->getPublicName() => $id),
               ),
             ));
           }
