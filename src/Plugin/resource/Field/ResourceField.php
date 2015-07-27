@@ -176,4 +176,12 @@ class ResourceField extends ResourceFieldBase implements ResourceFieldInterface 
   public function render(DataInterpreterInterface $interpreter) {
     return $this->executeProcessCallbacks($this->value($interpreter));
   }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function cardinality() {
+    // Default to cardinality of 1.
+    return 1;
+  }
 }

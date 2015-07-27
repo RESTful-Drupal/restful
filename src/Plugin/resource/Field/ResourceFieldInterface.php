@@ -237,4 +237,13 @@ interface ResourceFieldInterface {
    */
   public function render(DataInterpreterInterface $interpreter);
 
+  /**
+   * Gets the cardinality of the wrapped field.
+   *
+   * @return int
+   *   The number of potentially returned fields. Reuses field cardinality
+   *   constants.
+   */
+  public function cardinality();
+
 }
