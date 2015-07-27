@@ -120,7 +120,7 @@ function restful_admin_settings($form_state) {
 
   $form['advanced']['restful_global_rate_limit'] = array(
     '#type' => 'textfield',
-    '#title' => t('Rate limit'),
+    '#title' => t('Rate limit - hits'),
     '#description' => t('The number of allowed hits. This is global for all roles. 0 means no global rate limit should be applied.'),
     '#default_value' => variable_get('restful_global_rate_limit', 0),
     '#element_validate' => array('element_validate_integer'),
@@ -128,8 +128,8 @@ function restful_admin_settings($form_state) {
 
   $form['advanced']['restful_global_rate_period'] = array(
     '#type' => 'textfield',
-    '#title' => t('Rate limit'),
-    '#description' => t('The period string compatible with <a href="@url">\DateInterval</a>.', array('@url' => 'http://php.net/manual/en/class.dateinterval.php')),
+    '#title' => t('Rate limit - period'),
+    '#description' => t('The period string compatible with <a href="@url">\DateInterval</a>. After this period the module will restart counting hits.', array('@url' => 'http://php.net/manual/en/dateinterval.createfromdatestring.php')),
     '#default_value' => variable_get('restful_global_rate_period', 'P1D'),
     '#element_validate' => array('restful_date_time_format_element_validate'),
   );
