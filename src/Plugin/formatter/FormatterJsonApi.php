@@ -120,7 +120,8 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
           $value = array($value);
           $ids = array($ids);
         }
-        foreach (array_combine($ids, $value) as $id => $value_item) {
+        $combined = array_combine($ids, array_pad($value, count($ids), NULL));
+        foreach ($combined as $id => $value_item) {
           $basic_info = array(
             'type' => $resource_field->getResourceMachineName(),
             'id' => $id,
@@ -194,7 +195,8 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
     // previous pages.
     $items_per_page = $data_provider->getRange();
     $previous_items = ($page - 1) * $items_per_page;
-    if (isset($data['count']) && $data['count'] > count($data[$resource->getResourceMachineName()]) + $previous_items) {
+    $count = empty($data[$resource->getResourceMachineName()]) ? 0 : count($data[$resource->getResourceMachineName()]);
+    if (isset($data['count']) && $data['count'] > $count + $previous_items) {
       $input['page'] = $page + 1;
       $data['links']['next'] = $resource->getUrl();
     }
