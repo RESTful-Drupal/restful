@@ -43,7 +43,12 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
       return $data;
     }
 
-    $output = array('data' => $this->extractFieldValues($data));
+    $included = array();
+    $output = array('data' => $this->extractFieldValues($data, $included));
+    // Loop through the included resource entities and add them to the output.
+    foreach ($included as $included_item) {
+      $output['included'][] = $included_item;
+    }
 
     if ($resource = $this->getResource()) {
       $request = $resource->getRequest();
@@ -69,20 +74,22 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
    *
    * @param array[]|ResourceFieldCollectionInterface $data
    *   The array of rows or a ResourceFieldCollection.
+   * @param array $included
+   *   An array to hold the external references to have them in the top-level.
    *
    * @return array[]
    *   The array of prepared data.
    *
    * @throws InternalServerErrorException
    */
-  protected function extractFieldValues($data) {
+  protected function extractFieldValues($data, &$included) {
     $output = array();
     foreach ($data as $public_field_name => $resource_field) {
       if (!$resource_field instanceof ResourceFieldInterface) {
         // If $resource_field is not a ResourceFieldInterface it means that we
         // are dealing with a nested structure of some sort. If it is an array
         // we process it as a set of rows, if not then use the value directly.
-        $output[$public_field_name] = static::isIterable($resource_field) ? $this->extractFieldValues($resource_field) : $resource_field;
+        $output[$public_field_name] = static::isIterable($resource_field) ? $this->extractFieldValues($resource_field, $included) : $resource_field;
         continue;
       }
       if (!$data instanceof ResourceFieldCollectionInterface) {
@@ -96,7 +103,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
         static::isIterable($value) &&
         $resource_field instanceof ResourceFieldResourceInterface
       ) {
-        $value = $this->extractFieldValues($value);
+        $value = $this->extractFieldValues($value, $included);
         $ids = $resource_field->getResourceId($interpreter);
         $cardinality = $resource_field->cardinality();
         if ($cardinality == 1) {
@@ -127,7 +134,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
           $resource_plugin->setPath($id);
           $this->addHateoas($included_item, $resource_plugin);
 
-          $output['included'][] = $included_item;
+          $included[md5($included_item['type'] . $included_item['id'])] = $included_item;
         }
         if ($cardinality == 1) {
           // Make them single items.
