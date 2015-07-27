@@ -101,6 +101,10 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
       if (!$data instanceof ResourceFieldCollectionInterface) {
         throw new InternalServerErrorException('Inconsistent output.');
       }
+      if ($resource = $this->getResource()) {
+        $output['type'] = $resource->getResourceMachineName();
+        $output['id'] = $data->getInterpreter()->getWrapper()->getIdentifier();
+      }
       $interpreter = $data->getInterpreter();
       $value = $resource_field->render($interpreter);
       // If the field points to a resource that can be included, include it
@@ -123,7 +127,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
           );
           // If there is a resource plugin for the parent, set the related
           // links.
-          if ($resource = $this->getResource()) {
+          if ($resource) {
             $basic_info['links']['related'] = url($resource->versionedUrl(), array(
               'absolute' => TRUE,
               'query' => array(
