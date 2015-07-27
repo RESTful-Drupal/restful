@@ -32,14 +32,6 @@ interface ResourceFieldResourceInterface extends ResourceFieldInterface {
   public function getResourceMachineName();
 
   /**
-   * Gets the resource plugin for more complex interactions in render time.
-   *
-   * @param ResourceInterface $resource_plugin
-   *   The plugin to set.
-   */
-  public function setResourcePlugin($resource_plugin);
-
-  /**
    * Gets the destination resource plugin.
    *
    * @return ResourceInterface

@@ -74,14 +74,29 @@ class ResourceFieldResource implements ResourceFieldResourceInterface {
    * {@inheritdoc}
    */
   public function getResourcePlugin() {
+    if (isset($this->resourcePlugin)) {
+      return $this->resourcePlugin;
+    }
+    $resource_info = $this->getResource();
+    $this->resourcePlugin = restful()
+      ->getResourceManager()
+      ->getPlugin(sprintf('%s:%d.%d', $resource_info['name'], $resource_info['majorVersion'], $resource_info['minorVersion']));
     return $this->resourcePlugin;
   }
 
   /**
-   * {@inheritdoc}
+   * Gets the cardinality of the field.
+   *
+   * @return int
+   *   The number of potentially returned fields. Reuses field cardinality
+   *   constants.
    */
-  public function setResourcePlugin($resource_plugin) {
-    $this->resourcePlugin = $resource_plugin;
+  public function cardinality() {
+    if ($this->decorated instanceof ResourceFieldEntityInterface) {
+      return $this->decorated->cardinality();
+    }
+    // Default to single cardinality.
+    return 1;
   }
 
   /**

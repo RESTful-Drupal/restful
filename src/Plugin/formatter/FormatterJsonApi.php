@@ -97,18 +97,46 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
         $resource_field instanceof ResourceFieldResourceInterface
       ) {
         $value = $this->extractFieldValues($value);
-        $output['relationships'][$public_field_name] = array(
-          'type' => $resource_field->getResourceMachineName(),
-          'id' => $resource_field->getResourceId($interpreter),
-        );
-        $relationship = array(
-          'attributes' => $value,
-        );
-        $relationship = $output['relationships'][$public_field_name] + $relationship;
-        $this->addHateoas($relationship, $resource_field->getResourcePlugin());
-        $output['included'][] = $relationship;
+        $ids = $resource_field->getResourceId($interpreter);
+        $cardinality = $resource_field->cardinality();
+        if ($cardinality == 1) {
+          $value = array($value);
+          $ids = array($ids);
+        }
+        foreach (array_combine($ids, $value) as $id => $value_item) {
+          $basic_info = array(
+            'type' => $resource_field->getResourceMachineName(),
+            'id' => $id,
+          );
+          // If there is a resource plugin for the parent, set the related
+          // links.
+          if ($resource = $this->getResource()) {
+            $basic_info['links']['related'] = url($resource->versionedUrl(), array(
+              'absolute' => TRUE,
+              'query' => array(
+                'filters' => array($resource_field->getPublicName() => $id),
+              ),
+            ));
+          }
+          $output['relationships'][$public_field_name][] = $basic_info;
+          $included_item = $basic_info + array(
+            'attributes' => $value_item,
+          );
+          // Set the resource for the reference to get HATEOAS from them.
+          $resource_plugin = $resource_field->getResourcePlugin();
+          $resource_plugin->setPath($id);
+          $this->addHateoas($included_item, $resource_plugin);
+
+          $output['included'][] = $included_item;
+        }
+        if ($cardinality == 1) {
+          // Make them single items.
+          $output['relationships'][$public_field_name] = reset($output['relationships'][$public_field_name]);
+        }
       }
-      $output['data']['attributes'][$public_field_name] = $value;
+      else {
+        $output['attributes'][$public_field_name] = $value;
+      }
     }
     return $output;
   }
@@ -118,6 +146,8 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
    *
    * @param array $data
    *   The data array after initial massaging.
+   * @param ResourceInterface $resource
+   *   The resource to use.
    */
   protected function addHateoas(array &$data, ResourceInterface $resource = NULL) {
     $resource = $resource ?: $this->getResource();

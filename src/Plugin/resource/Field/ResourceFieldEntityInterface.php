@@ -131,4 +131,13 @@ interface ResourceFieldEntityInterface extends ResourceFieldInterface {
    */
   public function preprocess($value);
 
+  /**
+   * Gets the cardinality of the wrapped field.
+   *
+   * @return int
+   *   The number of potentially returned fields. Reuses field cardinality
+   *   constants.
+   */
+  public function cardinality();
+
 }

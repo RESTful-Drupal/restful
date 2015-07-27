@@ -104,7 +104,7 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
     $this->column = isset($field['column']) ? $field['column'] : $this->column;
     $this->imageStyles = isset($field['image_styles']) ? $field['image_styles'] : $this->imageStyles;
     if (!empty($field['bundles'])) {
-      $this->bundle = $field['bundles'];
+      $this->bundles = $field['bundles'];
     }
   }
 
@@ -844,6 +844,18 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
    */
   public function isComputed() {
     return $this->decorated->isComputed();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function cardinality() {
+    // Default to single cardinality.
+    $default = 1;
+    if (!$field_info = field_info_field($this->getProperty())) {
+      return $default;
+    }
+    return empty($field_info['cardinality']) ? $default : $field_info['cardinality'];
   }
 
   /**
