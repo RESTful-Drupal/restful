@@ -8,6 +8,7 @@
 namespace Drupal\restful\Plugin\formatter;
 
 use Drupal\restful\Exception\InternalServerErrorException;
+use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldResourceInterface;
@@ -45,9 +46,14 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
 
     $included = array();
     $output = array('data' => $this->extractFieldValues($data, $included));
-    // Loop through the included resource entities and add them to the output.
-    foreach ($included as $included_item) {
-      $output['included'][] = $included_item;
+    // Loop through the included resource entities and add them to the output if
+    // they are included from the request.
+    $input = $this->getRequest()->getParsedInput();
+    $requested_includes = empty($input['include']) ? array() : explode(',', $input['include']);
+    foreach ($requested_includes as $requested_include) {
+      foreach ($included[$requested_include] as $included_item) {
+        $output['included'][] = $included_item;
+      }
     }
 
     if ($resource = $this->getResource()) {
@@ -134,7 +140,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
           $resource_plugin->setPath($id);
           $this->addHateoas($included_item, $resource_plugin);
 
-          $included[md5($included_item['type'] . $included_item['id'])] = $included_item;
+          $included[$public_field_name][$included_item['type'] . $included_item['id']] = $included_item;
         }
         if ($cardinality == 1) {
           // Make them single items.
@@ -204,4 +210,18 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
   public function getContentTypeHeader() {
     return $this->contentType;
   }
+
+  /**
+   * Gets the request object for this formatter.
+   *
+   * @return RequestInterface
+   *   The request object.
+   */
+  protected function getRequest() {
+    if ($resource = $this->getResource()) {
+      return $resource->getRequest();
+    }
+    return restful()->getRequest();
+  }
+
 }
