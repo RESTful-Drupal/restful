@@ -331,7 +331,7 @@ function restful_delivery($var = NULL, $method = 'format') {
     // Get the formatter for the current resource.
     $resource = restful()
       ->getResourceManager()
-      ->negotiate($request);
+      ->negotiate();
     // Get a new formatter manager.
     $formatter_manager = restful()
       ->getFormatterManager();

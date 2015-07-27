@@ -217,15 +217,24 @@ interface ResourceFieldInterface {
   /**
    * Fetches the embedded identifier(s) for the current resource field, if any.
    *
+   * @param DataInterpreterInterface $interpreter
+   *   The data interpreter to get the compound ID.
+   *
    * @return string|string[]
    *   An identifier or an array of identifiers for cardinality > 1. NULL if
    *   there is no identifier to be found.
    */
-  public function compoundDocumentId();
+  public function compoundDocumentId(DataInterpreterInterface $interpreter);
 
   /**
-   * {@inheritdoc}
+   * Gets the value of a field and applies all process callbacks to it.
+   *
+   * @param DataInterpreterInterface $interpreter
+   *   The data interpreter.
+   *
+   * @return mixed
+   *   The value to render.
    */
-  public function render();
+  public function render(DataInterpreterInterface $interpreter);
 
 }

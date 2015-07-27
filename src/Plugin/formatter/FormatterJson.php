@@ -87,8 +87,7 @@ class FormatterJson extends Formatter implements FormatterInterface {
       if (!$data instanceof ResourceFieldCollectionInterface) {
         throw new InternalServerErrorException('Inconsistent output.');
       }
-      $value = $resource_field->value($data->getInterpreter());
-      $value = $resource_field->executeProcessCallbacks($value);
+      $value = $resource_field->render($data->getInterpreter());
       // If the field points to a resource that can be included, include it
       // right away.
       if (

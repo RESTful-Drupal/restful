@@ -174,8 +174,8 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
   /**
    * {@inheritdoc}
    */
-  public function compoundDocumentId() {
-    $property_wrapper = $this->propertyWrapper($this->getInterpreter());
+  public function compoundDocumentId(DataInterpreterInterface $interpreter) {
+    $property_wrapper = $this->propertyWrapper($interpreter);
 
     if ($property_wrapper instanceof \EntityListWrapper) {
       $values = array();
@@ -441,8 +441,8 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
   /**
    * {@inheritdoc}
    */
-  public function render() {
-    return $this->executeProcessCallbacks($this->value());
+  public function render(DataInterpreterInterface $interpreter) {
+    return $this->executeProcessCallbacks($this->value($interpreter));
   }
 
   /**

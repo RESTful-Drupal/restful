@@ -8,6 +8,7 @@
 namespace Drupal\restful\Plugin\resource\Field;
 
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
+use Drupal\restful\Plugin\resource\ResourceInterface;
 
 class ResourceFieldResource implements ResourceFieldResourceInterface {
 
@@ -33,6 +34,15 @@ class ResourceFieldResource implements ResourceFieldResourceInterface {
   protected $resourceMachineName;
 
   /**
+   * Resource plugin.
+   *
+   * Resource this field points to.
+   *
+   * @var ResourceInterface
+   */
+  protected $resourcePlugin;
+
+  /**
    * Constructor.
    *
    * @param array $field
@@ -45,11 +55,11 @@ class ResourceFieldResource implements ResourceFieldResourceInterface {
   /**
    * {@inheritdoc}
    */
-  public function getResourceId() {
+  public function getResourceId(DataInterpreterInterface $interpreter) {
     if (isset($this->resourceId)) {
       return $this->resourceId;
     }
-    $this->resourceId = $this->compoundDocumentId();
+    $this->resourceId = $this->compoundDocumentId($interpreter);
     return $this->resourceId;
   }
 
@@ -58,6 +68,20 @@ class ResourceFieldResource implements ResourceFieldResourceInterface {
    */
   public function getResourceMachineName() {
     return $this->resourceMachineName;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getResourcePlugin() {
+    return $this->resourcePlugin;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setResourcePlugin($resource_plugin) {
+    $this->resourcePlugin = $resource_plugin;
   }
 
   /**
@@ -249,21 +273,21 @@ class ResourceFieldResource implements ResourceFieldResourceInterface {
   /**
    * {@inheritdoc}
    */
-  public function compoundDocumentId() {
-    return $this->decorated->compoundDocumentId();
+  public function compoundDocumentId(DataInterpreterInterface $interpreter) {
+    return $this->decorated->compoundDocumentId($interpreter);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function render() {
-    return $this->executeProcessCallbacks($this->value());
+  public function render(DataInterpreterInterface $interpreter) {
+    return $this->executeProcessCallbacks($this->value($interpreter));
   }
 
   /**
    * If any method not declared, then defer it to the decorated field.
    */
-  function __call($name, $arguments) {
+  public function __call($name, $arguments) {
     return call_user_func_array(array($this->decorated, $name), $arguments);
   }
 

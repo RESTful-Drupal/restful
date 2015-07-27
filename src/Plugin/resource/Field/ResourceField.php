@@ -165,7 +165,7 @@ class ResourceField extends ResourceFieldBase implements ResourceFieldInterface 
   /**
    * {@inheritdoc}
    */
-  public function compoundDocumentId() {
+  public function compoundDocumentId(DataInterpreterInterface $interpreter) {
     // Since this kind of field can be anything, just return the value.
     return $this->value();
   }
@@ -173,7 +173,7 @@ class ResourceField extends ResourceFieldBase implements ResourceFieldInterface 
   /**
    * {@inheritdoc}
    */
-  public function render() {
-    return $this->executeProcessCallbacks($this->value());
+  public function render(DataInterpreterInterface $interpreter) {
+    return $this->executeProcessCallbacks($this->value($interpreter));
   }
 }

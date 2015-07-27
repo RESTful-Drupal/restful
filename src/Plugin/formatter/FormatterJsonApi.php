@@ -2,13 +2,16 @@
 
 /**
  * @file
- * Contains \Drupal\restful\Plugin\formatter\FormatterJsonApi.
+ * Contains \Drupal\restful\Plugin\formatter\FormatterJson.
  */
 
 namespace Drupal\restful\Plugin\formatter;
-use Drupal\restful\Exception\ServerConfigurationException;
-use Drupal\restful\Plugin\resource\Field\ResourceFieldBase;
+
+use Drupal\restful\Exception\InternalServerErrorException;
+use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
+use Drupal\restful\Plugin\resource\Field\ResourceFieldResourceInterface;
+use Drupal\restful\Plugin\resource\ResourceInterface;
 
 /**
  * Class FormatterJsonApi
@@ -39,11 +42,75 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
       $this->contentType = 'application/problem+json; charset=utf-8';
       return $data;
     }
-    // Here we get the data after calling the backend storage for the resources.
-    if (!$resource = $this->getResource()) {
-      throw new ServerConfigurationException('Resource unavailable for JSON API formatter.');
+
+    $output = array('data' => $this->extractFieldValues($data));
+
+    if ($resource = $this->getResource()) {
+      $request = $resource->getRequest();
+      $data_provider = $resource->getDataProvider();
+      if ($request->isListRequest($resource->getPath())) {
+        // Get the total number of items for the current request without
+        // pagination.
+        $output['count'] = $data_provider->count();
+      }
+      if (method_exists($resource, 'additionalHateoas')) {
+        $output = array_merge($output, $resource->additionalHateoas($output));
+      }
+
+      // Add HATEOAS to the output.
+      $this->addHateoas($output);
     }
-    return $data;
+
+    return $output;
+  }
+
+  /**
+   * Extracts the actual values from the resource fields.
+   *
+   * @param array[]|ResourceFieldCollectionInterface $data
+   *   The array of rows or a ResourceFieldCollection.
+   *
+   * @return array[]
+   *   The array of prepared data.
+   *
+   * @throws InternalServerErrorException
+   */
+  protected function extractFieldValues($data) {
+    $output = array();
+    foreach ($data as $public_field_name => $resource_field) {
+      if (!$resource_field instanceof ResourceFieldInterface) {
+        // If $resource_field is not a ResourceFieldInterface it means that we
+        // are dealing with a nested structure of some sort. If it is an array
+        // we process it as a set of rows, if not then use the value directly.
+        $output[$public_field_name] = static::isIterable($resource_field) ? $this->extractFieldValues($resource_field) : $resource_field;
+        continue;
+      }
+      if (!$data instanceof ResourceFieldCollectionInterface) {
+        throw new InternalServerErrorException('Inconsistent output.');
+      }
+      $interpreter = $data->getInterpreter();
+      $value = $resource_field->render($interpreter);
+      // If the field points to a resource that can be included, include it
+      // right away.
+      if (
+        static::isIterable($value) &&
+        $resource_field instanceof ResourceFieldResourceInterface
+      ) {
+        $value = $this->extractFieldValues($value);
+        $output['relationships'][$public_field_name] = array(
+          'type' => $resource_field->getResourceMachineName(),
+          'id' => $resource_field->getResourceId($interpreter),
+        );
+        $relationship = array(
+          'attributes' => $value,
+        );
+        $relationship = $output['relationships'][$public_field_name] + $relationship;
+        $this->addHateoas($relationship, $resource_field->getResourcePlugin());
+        $output['included'][] = $relationship;
+      }
+      $output['data']['attributes'][$public_field_name] = $value;
+    }
+    return $output;
   }
 
   /**
@@ -52,8 +119,9 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
    * @param array $data
    *   The data array after initial massaging.
    */
-  protected function addHateoas(array &$data) {
-    if (!$resource = $this->getResource()) {
+  protected function addHateoas(array &$data, ResourceInterface $resource = NULL) {
+    $resource = $resource ?: $this->getResource();
+    if (!$resource) {
       return;
     }
     $request = $resource->getRequest();
@@ -87,68 +155,6 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
   }
 
   /**
-   * Massage the data of a single row.
-   *
-   * @param array $row
-   *   A single row array.
-   * @param array $output
-   *   The output array, passed by reference.
-   *
-   * @return array
-   *   The massaged data of a single row.
-   */
-  public function prepareRow(array $row, array &$output) {
-    $this->addHateoasRow($row);
-
-    $embedded = array();
-    $nested_embed = $this
-      ->getResource()
-      ->getRequest()
-      ->isListRequest($this->getResource()->getPath());
-
-    $field_definitions = clone $this->getResource()->getFieldDefinitions();
-    foreach ($field_definitions as $pubilc_field_name => $resource_field) {
-      /* @var \Drupal\restful\Plugin\resource\Field\ResourceFieldInterface $resource_field */
-      if (!$resource_field->getResource()) {
-        // Not a resource.
-        continue;
-      }
-
-      if (empty($row[$pubilc_field_name])) {
-        // No value.
-        continue;
-      }
-
-      if ($nested_embed) {
-        $output += array('includes' => array());
-      }
-
-      $this->moveReferencesToEmbeds($output, $row, $resource_field, $embedded);
-    }
-
-    if (!empty($embedded) && $nested_embed) {
-      $row['_embedded'] = $embedded;
-    }
-
-    return $row;
-  }
-
-  /**
-   * Add Hateoas to a single row.
-   *
-   * @param array $row
-   *   A single row array, passed by reference.
-   */
-  protected function addHateoasRow(array &$row) {
-    if (!empty($row['self'])) {
-      $row += array('links' => array());
-      $row['links']['self'] = $row['self'];
-      unset($row['self']);
-    }
-
-  }
-
-  /**
    * {@inheritdoc}
    */
   public function render(array $structured_data) {
@@ -161,63 +167,4 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
   public function getContentTypeHeader() {
     return $this->contentType;
   }
-
-  /**
-   * Move the fields referencing other resources to the _embed key.
-   *
-   * Note that for multiple value entityreference
-   * fields $row[$public_field_name] will be an array of values rather than a
-   * single value.
-   *
-   * @param array $output
-   *   Output array to be modified.
-   * @param array $row
-   *   The row being processed.
-   * @param ResourceFieldInterface  $resource_field
-   *   The public field configuration array.
-   * @param array $embedded
-   *   Embedded array to be modified.
-   */
-  protected function moveReferencesToEmbeds(array &$output, array &$row, ResourceFieldInterface $resource_field, array &$embedded) {
-    $resource = $this->getResource();
-    $public_field_name = $resource_field->getPublicName();
-    $is_list_request = $resource
-      ->getRequest()
-      ->isListRequest($resource->getPath());
-    $values_metadata = $resource_field->getMetadata($row['id']);
-
-    // Wrap the row in an array if it isn't.
-    if (!is_array($row[$public_field_name])) {
-      $row[$public_field_name] = array();
-    }
-    $rows = ResourceFieldBase::isArrayNumeric($row[$public_field_name]) ? $row[$public_field_name] : array($row[$public_field_name]);
-
-    foreach ($rows as $subindex => $subrow) {
-      $metadata = $values_metadata[$subindex];
-
-      // Loop through each value for the field.
-      foreach ($subrow as $index => $resource_row) {
-        if (empty($metadata[$index])) {
-          // No metadata.
-          continue;
-        }
-
-        $resource_info = $resource_field->getResource();
-        $resource_name = $resource_info['name'];
-
-        $prepared_row = $this->prepareRow($subrow, $output);
-        if ($is_list_request) {
-          $embedded[$resource_name][] = $prepared_row;
-        }
-        else {
-          $output['included'][$resource_name][] = $prepared_row;
-        }
-      }
-    }
-
-    // Remove the original reference.
-    unset($row[$public_field_name]);
-    $row['relationships'][$public_field_name] = $row[$public_field_name];
-  }
-
 }
