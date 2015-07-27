@@ -172,6 +172,9 @@ class ResourceFieldEntityReference extends ResourceFieldEntity implements Resour
     if (!is_array($value)) {
       return NULL;
     }
+    if (!static::isArrayNumeric($value)) {
+      return empty($value['id']) ? NULL : $value['id'];
+    }
     $output = array();
     foreach ($value as $item) {
       $output[] = static::subRequestId($item);
