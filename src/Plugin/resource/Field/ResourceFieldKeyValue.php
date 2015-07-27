@@ -7,7 +7,6 @@
 
 namespace Drupal\restful\Plugin\resource\Field;
 
-
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
 
 class ResourceFieldKeyValue extends ResourceField implements ResourceFieldInterface {

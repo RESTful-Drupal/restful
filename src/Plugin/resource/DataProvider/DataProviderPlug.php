@@ -15,6 +15,7 @@ use Drupal\restful\Exception\UnauthorizedException;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterPlug;
 use Drupal\restful\Plugin\resource\DataInterpreter\PluginWrapper;
+use Drupal\restful\Plugin\resource\Field\ResourceFieldCollection;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldEntityInterface;
 use Drupal\restful\Plugin\resource\ResourceInterface;
@@ -53,7 +54,6 @@ class DataProviderPlug extends DataProvider implements DataProviderInterface {
    * {@inheritdoc}
    */
   public function view($identifier) {
-    $values = array();
     $resource_manager = restful()->getResourceManager();
     try {
       $plugin = $resource_manager->getPlugin($identifier);
@@ -64,7 +64,9 @@ class DataProviderPlug extends DataProvider implements DataProviderInterface {
     catch (PluginNotFoundException $e) {
       throw new NotFoundException('Invalid URL path.');
     }
+    $resource_field_collection = new ResourceFieldCollection();
     $interpreter = new DataInterpreterPlug($this->getAccount(), new PluginWrapper($plugin));
+    $resource_field_collection->setInterpreter($interpreter);
 
     $input = $this->getRequest()->getParsedInput();
     $limit_fields = !empty($input['fields']) ? explode(',', $input['fields']) : array();
@@ -77,17 +79,15 @@ class DataProviderPlug extends DataProvider implements DataProviderInterface {
         continue;
       }
 
-      $value = NULL;
-
       if (!$this->methodAccess($resource_field) || !$resource_field->access('view', $interpreter)) {
         // The field does not apply to the current method or has denied
         // access.
         continue;
       }
 
-      $values[$resource_field_name] = $resource_field;
+      $resource_field_collection->set($resource_field->id(), $resource_field);
     }
-    return $values;
+    return $resource_field_collection;
   }
 
   /**
