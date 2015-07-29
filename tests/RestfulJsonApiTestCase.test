@@ -11,12 +11,40 @@ use Drupal\restful\Http\Request;
 class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
 
   /**
+   * Hold the RESTful handler.
+   *
+   * @var \Drupal\restful\Plugin\resource\ResourceInterface
+   */
+  protected $handler = NULL;
+
+  /**
+   * Account created for testing.
+   *
+   * @var object
+   */
+  protected $account;
+
+  /**
+   * Array of entities.
+   *
+   * @var \Entity[]
+   */
+  protected $entities = array();
+
+  /**
+   * JSON API formatter.
+   *
+   * @var \Drupal\restful\Plugin\formatter\FormatterInterface
+   */
+  protected $formatter;
+
+  /**
    * {@inheritdoc}
    */
   public static function getInfo() {
     return array(
-      'name' => 'JSON API',
-      'description' => 'Test the JSON API formatter.',
+      'name' => 'JSON API GET',
+      'description' => 'Test the JSON API formatter for read operations.',
       'group' => 'RESTful',
     );
   }
@@ -28,12 +56,84 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
     parent::setUp('restful_example', 'restful_test', 'entityreference');
 
     restful_test_add_fields();
+
+    $this->account = $this->drupalCreateUser();
+    $this->entities[] = entity_create('entity_test', array(
+      'name' => 'main',
+      'uid' => $this->account->uid,
+    ));
+    $this->entities[0]->save();
+
+    $this->entities[] = entity_create('entity_test', array(
+      'name' => 'main',
+      'uid' => $this->account->uid,
+    ));
+    $this->entities[1]->save();
+
+    $this->entities[] = entity_create('entity_test', array(
+      'name' => 'main',
+      'uid' => $this->account->uid,
+    ));
+    /* @var \EntityDrupalWrapper $wrapper */
+    $wrapper = entity_metadata_wrapper('entity_test', $this->entities[2]);
+
+    $text1 = $this->randomName();
+    $text2 = $this->randomName();
+
+
+    $wrapper->text_single->set($text1);
+    $wrapper->text_multiple->set(array($text1, $text2));
+
+    $wrapper->entity_reference_single->set($this->entities[0]);
+    $wrapper->entity_reference_multiple[] = $this->entities[0];
+    $wrapper->entity_reference_multiple[] = $this->entities[1];
+
+    $wrapper->save();
+
+    $this->handler = restful()->getResourceManager()->getPlugin('main:1.1');
+    $this->formatter = restful()->getFormatterManager()->negotiateFormatter(NULL, 'json_api');
+    $configuration = array(
+      'resource' => $this->handler,
+    );
+    $this->formatter->setConfiguration($configuration);
   }
 
   /**
-   * Test the validation of a CSRF token for authenticated users.
+   * Test the attributes portion of the payload.
    */
   public function testAttributes() {
+    /* @var \EntityDrupalWrapper $wrapper */
+    $wrapper = entity_metadata_wrapper('entity_test', $this->entities[2]);
+    $this->handler->setRequest(Request::create('api/v1.1/main/' . $wrapper->getIdentifier()));
+    $this->handler->setPath($wrapper->getIdentifier());
+    $resource_field_collections = $this->handler->process();
+    $result = drupal_json_decode($this->formatter->format($resource_field_collections));
+    // Assert the basic properties of the resource.
+    $this->assertEqual('main', $result['data']['type']);
+    $this->assertEqual($wrapper->getIdentifier(), $result['data']['id']);
+    // Assert the "attributes" key.
+    // Remove the NULL keys since we're not adding them to the $expected array.
+    $attributes = array_filter($result['data']['attributes']);
+    $expected = array(
+      // The following fields don't have a resource in their definition,
+      // therefore they are treated as regular fields and not relationships.
+      'entity_reference_multiple' => array(
+        $this->entities[0]->pid,
+        $this->entities[1]->pid,
+      ),
+      'entity_reference_single' => $this->entities[0]->pid,
+      'id' => $wrapper->getIdentifier(),
+      'label' => $wrapper->label(),
+      'self' => $this->handler->versionedUrl($wrapper->getIdentifier()),
+      // Create it empty and fill it later.
+      'text_multiple' => array(),
+      'text_single' => $wrapper->text_single->value(),
+    );
+    foreach ($wrapper->text_multiple as $text_multiple_wrapper) {
+      /* @var \EntityStructureWrapper $text_multiple_wrapper */
+      $expected['text_multiple'][] = $text_multiple_wrapper->value();
+    }
+    $this->assertEqual($expected, $attributes);
   }
 
   /**

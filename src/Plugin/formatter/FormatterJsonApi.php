@@ -59,10 +59,15 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
     if ($resource = $this->getResource()) {
       $request = $resource->getRequest();
       $data_provider = $resource->getDataProvider();
-      if ($request->isListRequest($resource->getPath())) {
+      $is_list_request = $request->isListRequest($resource->getPath());
+      if ($is_list_request) {
         // Get the total number of items for the current request without
         // pagination.
         $output['count'] = $data_provider->count();
+      }
+      else {
+        // For non-list requests do not return an array of one item.
+        $output['data'] = reset($output['data']);
       }
       if (method_exists($resource, 'additionalHateoas')) {
         $output = array_merge($output, $resource->additionalHateoas($output));
