@@ -1,0 +1,63 @@
+<?php
+
+/**
+ * @file
+ * Contains \RestfulJsonApiTestCase
+ */
+
+use Drupal\restful\Http\RequestInterface;
+use Drupal\restful\Http\Request;
+
+class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function getInfo() {
+    return array(
+      'name' => 'JSON API',
+      'description' => 'Test the JSON API formatter.',
+      'group' => 'RESTful',
+    );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setUp() {
+    parent::setUp('restful_example', 'restful_test', 'entityreference');
+
+    restful_test_add_fields();
+  }
+
+  /**
+   * Test the validation of a CSRF token for authenticated users.
+   */
+  public function testAttributes() {
+  }
+
+  /**
+   * Test the validation of a CSRF token for anonymous users.
+   */
+  public function testRelationships() {
+  }
+
+  /**
+   * Test pagination.
+   */
+  public function testPagination() {
+  }
+
+  /**
+   * Test listings.
+   */
+  public function testListings() {
+  }
+
+  /**
+   * Test links.
+   */
+  public function testLinks() {
+  }
+
+}

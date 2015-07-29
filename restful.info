@@ -28,6 +28,7 @@ files[] = tests/RestfulExceptionHandleTestCase.test
 files[] = tests/RestfulGetHandlersTestCase.test
 files[] = tests/RestfulHalJsonTestCase.test
 files[] = tests/RestfulHookMenuTestCase.test
+files[] = tests/RestfulJsonApiTestCase.test
 ; files[] = tests/RestfulListEntityMultipleBundlesTestCase.test
 files[] = tests/RestfulListTestCase.test
 ; files[] = tests/RestfulPassThroughTestCase.test
