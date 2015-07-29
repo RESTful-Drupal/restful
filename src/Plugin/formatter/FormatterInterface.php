@@ -68,4 +68,12 @@ interface FormatterInterface extends PluginInspectionInterface, ConfigurablePlug
    */
   public function getResource();
 
+  /**
+   * Sets the underlying resource.
+   *
+   * @param ResourceInterface $resource
+   *   The resource to set.
+   */
+  public function setResource(ResourceInterface $resource);
+
 }

@@ -147,8 +147,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
           );
           // Set the resource for the reference to get HATEOAS from them.
           $resource_plugin = $resource_field->getResourcePlugin();
-          $resource_plugin->setPath($id);
-          $this->addHateoas($included_item, $resource_plugin);
+          $this->addHateoas($included_item, $resource_plugin, $id);
 
           $included[$public_field_name][$included_item['type'] . $included_item['id']] = $included_item;
         }
@@ -171,9 +170,12 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
    *   The data array after initial massaging.
    * @param ResourceInterface $resource
    *   The resource to use.
+   * @param string $path
+   *   The resource path.
    */
-  protected function addHateoas(array &$data, ResourceInterface $resource = NULL) {
+  protected function addHateoas(array &$data, ResourceInterface $resource = NULL, $path = NULL) {
     $resource = $resource ?: $this->getResource();
+    $path = isset($path) ? $path : $resource->getPath();
     if (!$resource) {
       return;
     }
@@ -184,7 +186,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
     }
 
     // Get self link.
-    $data['links']['self'] = $resource->versionedUrl($resource->getPath());
+    $data['links']['self'] = $resource->versionedUrl($path);
 
     $input = $request->getParsedInput();
     $data_provider = $resource->getDataProvider();

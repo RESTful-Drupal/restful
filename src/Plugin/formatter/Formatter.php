@@ -62,6 +62,13 @@ abstract class Formatter extends PluginBase implements FormatterInterface {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function setResource(ResourceInterface $resource) {
+    $this->resource = $resource;
+  }
+
+  /**
    * Helper function to know if a variable is iterable or not.
    *
    * @param mixed $input
