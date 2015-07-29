@@ -134,6 +134,23 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
       $expected['text_multiple'][] = $text_multiple_wrapper->value();
     }
     $this->assertEqual($expected, $attributes);
+
+    // Make a list request and check the attributes.
+    $this->handler->setRequest(Request::create(''));
+    $this->handler->setPath('');
+    $this->formatter->setResource($this->handler);
+    $resource_field_collections = $this->handler->process();
+    $result = drupal_json_decode($this->formatter->format($resource_field_collections));
+    $this->assertTrue(\Drupal\restful\Plugin\resource\Field\ResourceFieldBase::isArrayNumeric($result['data']));
+    $this->assertTrue(count($result['data']), count($this->entities));
+    foreach ($result['data'] as $delta => $row) {
+      // Assert the basic properties of the resource.
+      $this->assertEqual('main', $row['type']);
+      $this->assertEqual($this->entities[$delta]->pid, $row['id']);
+    }
+
+    $attributes = array_filter($result['data'][2]['attributes']);
+    $this->assertEqual($expected, $attributes);
   }
 
   /**
