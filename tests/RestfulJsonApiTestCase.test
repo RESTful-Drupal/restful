@@ -242,12 +242,6 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
   }
 
   /**
-   * Test listings.
-   */
-  public function testListings() {
-  }
-
-  /**
    * Test links.
    */
   public function testLinks() {
