@@ -50,9 +50,15 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
     // they are included from the request.
     $input = $this->getRequest()->getParsedInput();
     $requested_includes = empty($input['include']) ? array() : explode(',', $input['include']);
+    // Keep track of everything that has been included.
+    $include_keys = array();
     foreach ($requested_includes as $requested_include) {
-      foreach ($included[$requested_include] as $included_item) {
+      foreach ($included[$requested_include] as $include_key => $included_item) {
+        if (in_array($include_key, $include_keys)) {
+          continue;
+        }
         $output['included'][] = $included_item;
+        $include_keys[] = $include_key;
       }
     }
 
@@ -142,9 +148,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
             ));
           }
           $output['relationships'][$public_field_name][] = $basic_info;
-          $included_item = $basic_info + array(
-            'attributes' => $value_item,
-          );
+          $included_item = is_array($value_item) ? $basic_info + $value_item : $basic_info;
           // Set the resource for the reference to get HATEOAS from them.
           $resource_plugin = $resource_field->getResourcePlugin();
           $this->addHateoas($included_item, $resource_plugin, $id);
