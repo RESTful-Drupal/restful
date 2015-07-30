@@ -114,7 +114,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
       }
       if ($resource = $this->getResource()) {
         $output['type'] = $resource->getResourceMachineName();
-        $output['id'] = $data->getInterpreter()->getWrapper()->getIdentifier();
+        $output['id'] = (string) $data->getInterpreter()->getWrapper()->getIdentifier();
       }
       $interpreter = $data->getInterpreter();
       $value = $resource_field->render($interpreter);
@@ -135,7 +135,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
         foreach ($combined as $id => $value_item) {
           $basic_info = array(
             'type' => $resource_field->getResourceMachineName(),
-            'id' => $id,
+            'id' => (string) $id,
           );
           // If there is a resource plugin for the parent, set the related
           // links.
