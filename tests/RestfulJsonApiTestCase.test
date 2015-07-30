@@ -240,6 +240,64 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
    * Test pagination.
    */
   public function testPagination() {
+    $entities = $this->entities;
+    $count = count($entities);
+    for ($index = 0; $index < 4; $index++) {
+      $entities[] = entity_create('entity_test', array(
+        'name' => 'main',
+        'uid' => $this->account->uid,
+      ));
+      $entities[$count + $index]->save();
+    }
+
+    // 1. Test pagination links in the first page.
+    $range = 2;
+    $this->handler->setRequest(Request::create('', array('range' => $range)));
+    $this->handler->setPath('');
+    $this->formatter->setResource($this->handler);
+    $resource_field_collections = $this->handler->process();
+    $result = drupal_json_decode($this->formatter->format($resource_field_collections));
+    $links = $result['links'];
+    $expected_links = array(
+      'self' => $this->handler->versionedUrl(''),
+      'first' => $this->handler->versionedUrl('', array('query' => array('range' => $range))),
+      'last' => $this->handler->versionedUrl('', array('query' => array('range' => $range, 'page' => 3))),
+      'next' => $this->handler->versionedUrl('', array('query' => array('range' => $range, 'page' => 2))),
+    );
+    $this->assertEqual($links, $expected_links);
+
+    // 2. Test pagination links in the middle page.
+    $range = 2;
+    $this->handler->setRequest(Request::create('', array('range' => $range, 'page' => 2)));
+    $this->handler->setPath('');
+    $this->formatter->setResource($this->handler);
+    $resource_field_collections = $this->handler->process();
+    $result = drupal_json_decode($this->formatter->format($resource_field_collections));
+    $links = $result['links'];
+    $expected_links = array(
+      'self' => $this->handler->versionedUrl(''),
+      'first' => $this->handler->versionedUrl('', array('query' => array('range' => $range))),
+      'previous' => $this->handler->versionedUrl('', array('query' => array('range' => $range, 'page' => 1))),
+      'last' => $this->handler->versionedUrl('', array('query' => array('range' => $range, 'page' => 3))),
+      'next' => $this->handler->versionedUrl('', array('query' => array('range' => $range, 'page' => 3))),
+    );
+    $this->assertEqual($links, $expected_links);
+
+    // 3. Test pagination links in the last page.
+    $range = 2;
+    $this->handler->setRequest(Request::create('', array('range' => $range, 'page' => 3)));
+    $this->handler->setPath('');
+    $this->formatter->setResource($this->handler);
+    $resource_field_collections = $this->handler->process();
+    $result = drupal_json_decode($this->formatter->format($resource_field_collections));
+    $links = $result['links'];
+    $expected_links = array(
+      'self' => $this->handler->versionedUrl(''),
+      'first' => $this->handler->versionedUrl('', array('query' => array('range' => $range))),
+      'previous' => $this->handler->versionedUrl('', array('query' => array('range' => $range, 'page' => 2))),
+      'last' => $this->handler->versionedUrl('', array('query' => array('range' => $range, 'page' => 3))),
+    );
+    $this->assertEqual($links, $expected_links);
   }
 
 }

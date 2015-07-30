@@ -131,7 +131,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
           $value = array($value);
           $ids = array($ids);
         }
-        $combined = array_combine($ids, array_pad($value, count($ids), NULL));
+        $combined = $ids ? array_combine($ids, array_pad($value, count($ids), NULL)) : array();
         foreach ($combined as $id => $value_item) {
           $basic_info = array(
             'type' => $resource_field->getResourceMachineName(),
@@ -192,11 +192,14 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
     // Get self link.
     $data['links']['self'] = $resource->versionedUrl($path);
 
-    $input = $request->getParsedInput();
+    $input = $original_input = $request->getParsedInput();
     $data_provider = $resource->getDataProvider();
     $page = !empty($input['page']) ? $input['page'] : 1;
+    unset($input['page']);
+    $data['links']['first'] = $resource->getUrl(array('query' => $input));
 
     if ($page > 1) {
+      $input = $original_input;
       $input['page'] = $page - 1;
       $data['links']['previous'] = $resource->getUrl(array('query' => $input));
     }
@@ -204,12 +207,18 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
     // We know that there are more pages if the total count is bigger than the
     // number of items of the current request plus the number of items in
     // previous pages.
-    $items_per_page = empty($input['range']) ? $data_provider->getRange() : $input['range'];
-    $previous_items = ($page - 1) * $items_per_page;
-    $count = empty($data['data']) ? 0 : count($data['data']);
-    if (isset($data['count']) && $data['count'] > $count + $previous_items) {
-      $input['page'] = $page + 1;
-      $data['links']['next'] = $resource->getUrl(array('query' => $input));
+    $items_per_page = empty($original_input['range']) ? $data_provider->getRange() : $original_input['range'];
+    if (isset($data['count'])) {
+      if ($num_pages = floor($data['count'] / $items_per_page)) {
+        $input = $original_input;
+        $input['page'] = $num_pages;
+        $data['links']['last'] = $resource->getUrl(array('query' => $input));
+        if ($page != $num_pages) {
+          $input = $original_input;
+          $input['page'] = $page + 1;
+          $data['links']['next'] = $resource->getUrl(array('query' => $input));
+        }
+      }
     }
 
   }
