@@ -1055,8 +1055,11 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
       '<=',
       '<>',
       '!=',
-      'IN',
       'BETWEEN',
+      'CONTAINS',
+      'IN',
+      'NOT IN',
+      'STARTS_WITH',
     );
 
     foreach ($operators as $operator) {
@@ -1393,7 +1396,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
    */
   public function cacheInvalidate($cid) {
     $cache_info = $this->getPluginKey('render_cache');
-    if (!$cache_info['simple_invalidate']) {
+    if (!$cache_info['render'] || !$cache_info['simple_invalidate']) {
       // Simple invalidation is disabled. This means it is up to the
       // implementing module to take care of the invalidation.
       return;

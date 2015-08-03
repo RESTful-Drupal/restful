@@ -205,7 +205,8 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     $info = $this->getEntityInfo();
     // When a bundle key wasn't defined return false in order to make the
     // autocomplete support entities without bundle key. i.e: user, vocabulary.
-    return !empty($info['entity keys']['bundle']) ? array($this->getBundle()) : FALSE;
+    $bundle = $this->getBundle();
+    return !empty($bundle) && !empty($info['entity keys']['bundle']) ? array($bundle) : FALSE;
   }
 
   /**
@@ -674,13 +675,15 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
         continue;
       }
 
+      $field_value = $this->propertyValuesPreprocess($property_name, $request[$public_field_name], $public_field_name);
+      $wrapper->{$property_name}->set($field_value);
+
+      // We check the property access only after setting the values, as the
+      // access callback's response might change according to the field value.
       if (!$this->checkPropertyAccess('edit', $public_field_name, $wrapper->{$property_name}, $wrapper)) {
         throw new \RestfulBadRequestException(format_string('Property @name cannot be set.', array('@name' => $public_field_name)));
       }
 
-      $field_value = $this->propertyValuesPreprocess($property_name, $request[$public_field_name], $public_field_name);
-
-      $wrapper->{$property_name}->set($field_value);
       unset($original_request[$public_field_name]);
       $save = TRUE;
     }
