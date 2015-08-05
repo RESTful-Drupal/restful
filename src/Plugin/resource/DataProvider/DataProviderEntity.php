@@ -702,7 +702,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
 
     if ($this->checkEntityAccess($op, $entity_type, $entity) === FALSE) {
 
-      if ($op == 'view' && !$this->request->getPath()) {
+      if ($op == 'view' && !$this->resourcePath) {
         // Just return FALSE, without an exception, for example when a list of
         // entities is requested, and we don't want to fail all the list because
         // of a single item without access.
