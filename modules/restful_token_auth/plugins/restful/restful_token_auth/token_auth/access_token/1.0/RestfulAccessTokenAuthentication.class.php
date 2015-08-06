@@ -15,8 +15,8 @@ class RestfulAccessTokenAuthentication extends \RestfulTokenAuthenticationBase {
       '' => array(
         // Get or create a new token.
         \RestfulInterface::GET => 'getOrCreateToken',
-        // Delete the auth and refresh tokens.
-        \RestfulInterface::DELETE => 'deleteUsersTokens',
+        // Delete the access token.
+        \RestfulInterface::DELETE => 'deleteUsersToken',
       ),
     );
   }
@@ -67,7 +67,7 @@ class RestfulAccessTokenAuthentication extends \RestfulTokenAuthenticationBase {
   /**
    * Delete the access token for the user submitting the request.
    */
-  public function deleteUsersTokens() {
+  public function deleteUsersToken() {
     $account = $this->getAccount();
 
     // Check if there are other refresh tokens for the user.
