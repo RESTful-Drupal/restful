@@ -12,6 +12,9 @@ use Drupal\restful\Exception\BadRequestException;
 use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Exception\ServiceUnavailableException;
 use Drupal\restful\Http\RequestInterface;
+use Drupal\restful\Plugin\resource\DataInterpreter\ArrayWrapper;
+use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterArray;
+use Drupal\restful\Plugin\resource\Field\ResourceFieldCollection;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldDbColumnInterface;
 use Drupal\restful\Plugin\resource\ResourceInterface;
@@ -210,7 +213,10 @@ class DataProviderDbQuery extends DataProvider implements DataProviderDbQueryInt
    * {@inheritdoc}
    */
   protected function mapDbRowToPublicFields($row) {
-    $output = array();
+    $resource_field_collection = new ResourceFieldCollection();
+    $interpreter = new DataInterpreterArray($this->getAccount(), new ArrayWrapper((array) $row));
+    $resource_field_collection->setInterpreter($interpreter);
+
     // Loop over all the defined public fields.
     foreach ($this->fieldDefinitions as $public_field_name => $resource_field) {
       $value = NULL;
@@ -219,24 +225,24 @@ class DataProviderDbQuery extends DataProvider implements DataProviderDbQueryInt
         // Allow passing the value in the request.
         continue;
       }
-      // If there is a callback defined execute it instead of a direct mapping.
-      if ($callback = $resource_field->getCallback()) {
-        $value = ResourceManager::executeCallback($callback, array($row));
-      }
-      // Map row names to public properties.
-      elseif ($property = $resource_field->getProperty()) {
-        $value = $row->{$property};
-      }
-      // Execute the process callbacks.
-      $process_callbacks = $resource_field->getProcessCallbacks();
-      if ($value && $process_callbacks) {
-        foreach ($process_callbacks as $process_callback) {
-          $value = ResourceManager::executeCallback($process_callback, array($value));
-        }
-      }
-      $output[$public_field_name] = $value;
+//      // If there is a callback defined execute it instead of a direct mapping.
+//      if ($callback = $resource_field->getCallback()) {
+//        $value = ResourceManager::executeCallback($callback, array($row));
+//      }
+//      // Map row names to public properties.
+//      elseif ($property = $resource_field->getProperty()) {
+//        $value = $row->{$property};
+//      }
+//      // Execute the process callbacks.
+//      $process_callbacks = $resource_field->getProcessCallbacks();
+//      if ($value && $process_callbacks) {
+//        foreach ($process_callbacks as $process_callback) {
+//          $value = ResourceManager::executeCallback($process_callback, array($value));
+//        }
+//      }
+      $resource_field_collection->set($resource_field->id(), $resource_field);
     }
-    return $output;
+    return $resource_field_collection;
   }
 
   /**
@@ -245,7 +251,7 @@ class DataProviderDbQuery extends DataProvider implements DataProviderDbQueryInt
    * @param \SelectQuery $query
    *   The query to enhance.
    */
-  protected function addExtraInfoToQuery(\SelectQuery $query) {
+  protected function addExtraInfoToQuery($query) {
     $query->addTag('restful');
     $query->addMetaData('account', $this->getAccount());
     $query->addMetaData('restful_handler', $this);

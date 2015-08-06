@@ -40,10 +40,7 @@ class ResourceFieldDbColumn extends ResourceField implements ResourceFieldDbColu
   }
 
   /**
-   * Gets the column for the query.
-   *
-   * @return string
-   *   The name of the column.
+   * {@inheritdoc}
    */
   public function getColumnForQuery() {
     return $this->columnForQuery;

@@ -30,26 +30,27 @@ class RestfulDbQueryTestCase extends DrupalWebTestCase {
   /**
    * Operations before the testing begins.
    */
-  function setUp() {
+  public function setUp() {
     parent::setUp('restful_test');
   }
 
   /**
    * Test authenticating a user.
    */
-  function testCrudOperations() {
-    $randomInt = intval(mt_rand(1, 100));
-    $randomString = $this->randomName();
-    $randomSerialized = serialize(array(
-      'key1' => $randomInt,
-      'key2' => $randomString,
+  public function testCrudOperations() {
+    $resource_manager = restful()->getResourceManager();
+    $random_int = intval(mt_rand(1, 100));
+    $random_string = $this->randomName();
+    $random_serialized = serialize(array(
+      'key1' => $random_int,
+      'key2' => $random_string,
     ));
 
     // Populate the table with some values.
     $mock_data = array(
-      'str_field' => $randomString,
-      'int_field' => $randomInt,
-      'serialized_field' => $randomSerialized,
+      'str_field' => $random_string,
+      'int_field' => $random_int,
+      'serialized_field' => $random_serialized,
     );
     $id = db_insert($this->tableName)
       ->fields($mock_data)
@@ -59,10 +60,12 @@ class RestfulDbQueryTestCase extends DrupalWebTestCase {
     $this->assertTrue(!empty($id), 'The manual record could be inserted');
 
     // Get the handler.
-    $handler = restful_get_restful_handler('db_query_test');
+    $handler = $resource_manager->getPlugin('db_query_test:1.0');
 
     // Testing read context.
-    $result = $handler->get($id);
+    $handler->setRequest(Request::create('api/db_query_test/v1.0/' . $id));
+    $handler->setPath($id);
+    $result = $handler->process();
     $result = $result[0];
 
     $this->assertEqual($result['string'], $mock_data['str_field'], 'The record was retrieved successfully.');
@@ -83,9 +86,9 @@ class RestfulDbQueryTestCase extends DrupalWebTestCase {
       // String should be the string that we updated.
       'string' => $mock_data2['string'],
       // Serialized value should be unchanged.
-      'serialized' => $randomSerialized,
+      'serialized' => $random_serialized,
       // Integer value should be unchanged.
-      'integer' => $randomInt,
+      'integer' => $random_int,
     );
 
     // We expect that only the string field has changed.
@@ -123,12 +126,12 @@ class RestfulDbQueryTestCase extends DrupalWebTestCase {
 
     // Testing create context.
     $mock_data4 = array(
-      'string' => $randomString,
-      'integer' => $randomInt,
+      'string' => $random_string,
+      'integer' => $random_int,
       'serialized' => array(
-        'key1' => $randomInt,
-        'key2' => $randomString,
-      )
+        'key1' => $random_int,
+        'key2' => $random_string,
+      ),
     );
     $handler->post('', $mock_data4);
 
@@ -144,7 +147,7 @@ class RestfulDbQueryTestCase extends DrupalWebTestCase {
     // The created record should match our input.
     $expected = $mock_data4;
     // Account for serialization.
-    $expected['serialized'] = $randomSerialized;
+    $expected['serialized'] = $random_serialized;
     // Account for not knowing the ID of the new entity beforehand.
     unset($result[0]['id']);
 
