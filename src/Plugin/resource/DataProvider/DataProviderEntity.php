@@ -302,7 +302,6 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     $wrapper->delete();
 
     // Set the HTTP headers.
-    // Set the HTTP headers.
     $this->setHttpHeader('Status', 204);
   }
 
@@ -384,21 +383,6 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
 
     // Throw the exception.
     throw $exception;
-  }
-
-  /**
-   * Sets an HTTP header.
-   *
-   * @param string $name
-   *   The header name.
-   * @param string $value
-   *   The header value.
-   */
-  protected function setHttpHeader($name, $value) {
-    $this
-      ->getRequest()
-      ->getHeaders()
-      ->add(HttpHeader::create($name, $value));
   }
 
   /**

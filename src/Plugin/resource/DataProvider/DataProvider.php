@@ -9,6 +9,7 @@ namespace Drupal\restful\Plugin\resource\DataProvider;
 
 use Drupal\restful\Exception\BadRequestException;
 use Drupal\restful\Exception\ServiceUnavailableException;
+use Drupal\restful\Http\HttpHeader;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
@@ -454,6 +455,21 @@ abstract class DataProvider implements DataProviderInterface {
       $value = ResourceManager::executeCallback($process_callback, array($value));
     }
     return $value;
+  }
+
+  /**
+   * Sets an HTTP header.
+   *
+   * @param string $name
+   *   The header name.
+   * @param string $value
+   *   The header value.
+   */
+  protected function setHttpHeader($name, $value) {
+    $this
+      ->getRequest()
+      ->getHeaders()
+      ->add(HttpHeader::create($name, $value));
   }
 
 }
