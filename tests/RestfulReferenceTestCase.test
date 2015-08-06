@@ -42,8 +42,11 @@ class RestfulReferenceTestCase extends RestfulCurlBaseTestCase {
 
     $handler->setRequest(Request::create('api/test_articles/v1.2/' . $node1->nid));
     $handler->setPath($node1->nid);
-    $result = $handler->process();
-    $this->assertEqual($result[0]['user']->uid, $user1->uid, 'Property is not defined as resource, thus the referenced entity appears as the entity.');
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $result = $result['data'];
+    $this->assertEqual($result[0]['user']['uid'], $user1->uid, 'Property is not defined as resource, thus the referenced entity appears as the entity.');
 
     variable_set('restful_test_reference_resource', TRUE);
     $resource_manager->clearPluginCache('test_articles:1.2');
@@ -51,14 +54,17 @@ class RestfulReferenceTestCase extends RestfulCurlBaseTestCase {
 
     $handler->setRequest(Request::create('api/test_articles/v1.2/' . $node2->nid));
     $handler->setPath($node2->nid);
-    $result = $handler->process();
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $result = $result['data'];
     $this->assertEqual($result[0]['user']['id'], $user1->uid, 'Property is defined as resource, thus the referenced entity appears as the rendered resource.');
   }
 
   /**
    * Test field reference.
    */
-  function testEntityReference() {
+  public function testEntityReference() {
     $resource_manager = restful()->getResourceManager();
     restful_test_add_fields();
 
@@ -82,7 +88,10 @@ class RestfulReferenceTestCase extends RestfulCurlBaseTestCase {
     $node2 = $this->drupalCreateNode($settings);
 
     $user1 = $this->drupalCreateUser();
-    $entity1 = entity_create('entity_test', array('name' => 'main', 'uid' => $user1->uid));
+    $entity1 = entity_create('entity_test', array(
+      'name' => 'main',
+      'uid' => $user1->uid,
+    ));
     $entity1->save();
 
     $wrapper = entity_metadata_wrapper('entity_test', $entity1);
@@ -92,13 +101,23 @@ class RestfulReferenceTestCase extends RestfulCurlBaseTestCase {
 
     $handler->setRequest(Request::create('api/v1.6/main/' . $entity1->pid));
     $handler->setPath($entity1->pid);
-    $result = $handler->process();
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $result = $result['data'];
     $node_handler->setRequest(Request::create('api/v1.1/test_articles' . $node1->nid));
     $node_handler->setPath($node1->nid);
-    $response1 = $node_handler->process();
+    $response1 = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($node_handler->process(), 'json'));
+    $response1 = $response1['data'];
     $node_handler->setRequest(Request::create('api/v1.1/test_articles' . $node2->nid));
     $node_handler->setPath($node2->nid);
-    $response2 = $node_handler->process();
+    $response2 = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($node_handler->process(), 'json'));
+    $response2 = $response2['data'];
+
     $expected_result = $response1[0];
     $this->assertEqual($result[0]['entity_reference_single_resource'], $expected_result, 'Single reference with resource of another entity has correct response.');
 
@@ -112,17 +131,22 @@ class RestfulReferenceTestCase extends RestfulCurlBaseTestCase {
     // Test the "full_view" property on a referenced entity.
     // We change the definition via the handler instead of creating another
     // plugin.
-    $resource_field = $handler->getFieldDefinitions()->get('entity_reference_single_resource');
+    $resource_field = $handler->getFieldDefinitions()
+      ->get('entity_reference_single_resource');
     $resource_info = $resource_field->getResource();
     $resource_info['full_view'] = FALSE;
     $resource_field->setResource($resource_info);
-    $handler->getFieldDefinitions()->set('entity_reference_single_resource', $resource_field);
+    $handler->getFieldDefinitions()
+      ->set('entity_reference_single_resource', $resource_field);
 
     // Clear cache.
     CacheDecoratedDataProvider::invalidateEntityCache('*');
     $handler->setRequest(Request::create('api/v1.6/main/' . $entity1->pid));
     $handler->setPath($entity1->pid);
-    $result = $handler->process();
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $result = $result['data'];
     $this->assertEqual($result[0]['entity_reference_single_resource'], $node1->nid, '"full_view" disabled is showing only the entity ID.');
   }
 }

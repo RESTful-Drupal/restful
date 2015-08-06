@@ -7,7 +7,7 @@
 
 namespace Drupal\restful\Plugin\resource\Field;
 
-use Drupal\restful\Plugin\resource\ResourceInterface;
+use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
 
 class ResourceFieldCollection implements ResourceFieldCollectionInterface {
 
@@ -19,6 +19,13 @@ class ResourceFieldCollection implements ResourceFieldCollectionInterface {
    * @var array
    */
   protected $fields = array();
+
+  /**
+   * The data interpreter for all the fields in this field collection.
+   *
+   * @var DataInterpreterInterface $interpreter
+   */
+  protected $interpreter;
 
   /**
    * Constructor.
@@ -90,8 +97,13 @@ class ResourceFieldCollection implements ResourceFieldCollectionInterface {
     foreach ($fields as $public_name => $field_info) {
       $field_info['public_name'] = $public_name;
       // The default values are added.
-      $field = ResourceField::create($field_info);
-      $this->fields[$field->id()] = $field;
+      if (empty($field_info['resource'])) {
+        $resource_field = ResourceField::create($field_info);
+      }
+      else {
+        $resource_field = ResourceFieldResource::create($field_info);
+      }
+      $this->fields[$resource_field->id()] = $resource_field;
     }
   }
 
@@ -172,6 +184,20 @@ class ResourceFieldCollection implements ResourceFieldCollectionInterface {
    */
   public function count() {
     return count($this->fields);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getInterpreter() {
+    return $this->interpreter;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setInterpreter($interpreter) {
+    $this->interpreter = $interpreter;
   }
 
 }

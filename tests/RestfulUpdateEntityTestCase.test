@@ -59,13 +59,18 @@ class RestfulUpdateEntityTestCase extends DrupalWebTestCase {
 
     $handler->setRequest(Request::create('api/test_articles/v1.2/' . $id, array(), RequestInterface::METHOD_PUT, NULL, FALSE, NULL, array(), array(), array(), $request));
     $handler->setPath($id);
-    $result = $handler->process();
-    $expected_result = array(array(
-      'id' => $id,
-      'label' => $new_label,
-      'self' => $handler->versionedUrl($id),
-      'body' => NULL,
-    ));
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $result = $result['data'];
+    $expected_result = array(
+      array(
+        'id' => $id,
+        'label' => $new_label,
+        'self' => $handler->versionedUrl($id),
+        'body' => NULL,
+      )
+    );
 
     $this->assertEqual($result, $expected_result);
 
@@ -74,7 +79,7 @@ class RestfulUpdateEntityTestCase extends DrupalWebTestCase {
     try {
       $handler->setRequest(Request::create('api/test_articles/v1.2/' . $id, array(), RequestInterface::METHOD_PUT, NULL, FALSE, NULL, array(), array(), array(), $request));
       $handler->setPath($id);
-      $handler->process();
+      restful()->getFormatterManager()->format($handler->process(), 'json');
       $this->fail('User can update using PUT method an entity with invalid property name.');
     }
     catch (Exception $e) {
@@ -108,13 +113,18 @@ class RestfulUpdateEntityTestCase extends DrupalWebTestCase {
 
     $handler->setRequest(Request::create('api/test_articles/v1.2/' . $id, array(), RequestInterface::METHOD_PATCH, NULL, FALSE, NULL, array(), array(), array(), $request));
     $handler->setPath($id);
-    $result = $handler->process();
-    $expected_result = array(array(
-      'id' => $id,
-      'label' => $new_label,
-      'self' => $handler->versionedUrl($id),
-      'body' => $text,
-    ));
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $result = $result['data'];
+    $expected_result = array(
+      array(
+        'id' => $id,
+        'label' => $new_label,
+        'self' => $handler->versionedUrl($id),
+        'body' => $text,
+      )
+    );
 
     $result[0]['body'] = trim(strip_tags($result[0]['body']));
     $this->assertEqual($result, $expected_result);
@@ -124,7 +134,7 @@ class RestfulUpdateEntityTestCase extends DrupalWebTestCase {
     try {
       $handler->setRequest(Request::create('api/test_articles/v1.2/' . $id, array(), RequestInterface::METHOD_PATCH, NULL, FALSE, NULL, array(), array(), array(), $request));
       $handler->setPath($id);
-      $handler->process();
+      restful()->getFormatterManager()->format($handler->process(), 'json');
       $this->fail('User can update using PATCH method an entity with invalid property name.');
     }
     catch (Exception $e) {

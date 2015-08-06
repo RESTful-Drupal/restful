@@ -10,6 +10,7 @@ namespace Drupal\restful\Plugin\resource\Field;
 use Drupal\restful\Exception\IncompatibleFieldDefinitionException;
 use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
+use Drupal\restful\Resource\ResourceManager;
 
 interface ResourceFieldInterface {
 
@@ -201,5 +202,48 @@ interface ResourceFieldInterface {
    * @throws IncompatibleFieldDefinitionException
    */
   public function set($value, DataInterpreterInterface $interpreter);
+
+  /**
+   * Executes the process callbacks.
+   *
+   * @param mixed $value
+   *   The initial value.
+   *
+   * @return mixed
+   *   The processed value.
+   */
+  public function executeProcessCallbacks($value);
+
+  /**
+   * Fetches the embedded identifier(s) for the current resource field, if any.
+   *
+   * @param DataInterpreterInterface $interpreter
+   *   The data interpreter to get the compound ID.
+   *
+   * @return string|string[]
+   *   An identifier or an array of identifiers for cardinality > 1. NULL if
+   *   there is no identifier to be found.
+   */
+  public function compoundDocumentId(DataInterpreterInterface $interpreter);
+
+  /**
+   * Gets the value of a field and applies all process callbacks to it.
+   *
+   * @param DataInterpreterInterface $interpreter
+   *   The data interpreter.
+   *
+   * @return mixed
+   *   The value to render.
+   */
+  public function render(DataInterpreterInterface $interpreter);
+
+  /**
+   * Gets the cardinality of the wrapped field.
+   *
+   * @return int
+   *   The number of potentially returned fields. Reuses field cardinality
+   *   constants.
+   */
+  public function cardinality();
 
 }

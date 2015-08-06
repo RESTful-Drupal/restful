@@ -10,6 +10,8 @@ namespace Drupal\restful\Plugin\resource\Field;
 use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
+use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
+use Drupal\restful\Resource\ResourceManager;
 
 abstract class ResourceFieldBase implements ResourceFieldInterface {
 
@@ -271,6 +273,20 @@ abstract class ResourceFieldBase implements ResourceFieldInterface {
     $element = $this->internalMetadataElement($key);
 
     return isset($element[$leave]) ? $element[$leave] : NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function executeProcessCallbacks($value) {
+    $process_callbacks = $this->getProcessCallbacks();
+    if (!$value || empty($process_callbacks)) {
+      return $value;
+    }
+    foreach ($process_callbacks as $process_callback) {
+      $value = ResourceManager::executeCallback($process_callback, array($value));
+    }
+    return $value;
   }
 
   /**

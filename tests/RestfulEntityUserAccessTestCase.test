@@ -37,7 +37,7 @@ class RestfulEntityUserAccessTestCase extends DrupalWebTestCase {
     try {
       $handler->setRequest(Request::create('api/v1.0/users/' . $user2->uid));
       $handler->setPath($user2->uid);
-      $handler->process();
+      restful()->getFormatterManager()->format($handler->process(), 'json');
       $this->fail('Non-privileged user can view another user.');
     }
     catch (ForbiddenException $e) {
@@ -51,7 +51,7 @@ class RestfulEntityUserAccessTestCase extends DrupalWebTestCase {
     try {
       $handler->setRequest(Request::create('api/v1.0/users'));
       $handler->setPath('');
-      $handler->process();
+      restful()->getFormatterManager()->format($handler->process(), 'json');
       $this->fail('Non-privileged user can view listing of users.');
     }
     catch (ForbiddenException $e) {
@@ -64,13 +64,19 @@ class RestfulEntityUserAccessTestCase extends DrupalWebTestCase {
     // View own user account.
     $handler->setRequest(Request::create('api/v1.0/users/' . $user1->uid));
     $handler->setPath($user1->uid);
-    $response = $handler->process();
+    $response = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $response = $response['data'];
     $result = $response[0];
     $this->assertEqual($result['mail'], $user1->mail, 'User can see own mail.');
 
     // Privileged user, watching another user's profile.
     $handler->setAccount($user2);
-    $response = $handler->process();
+    $response = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $response = $response['data'];
     $result = $response[0];
     $expected_result = array(
       'id' => $user1->uid,
@@ -83,7 +89,10 @@ class RestfulEntityUserAccessTestCase extends DrupalWebTestCase {
     // Listing of users.
     $handler->setRequest(Request::create('api/v1.0/users'));
     $handler->setPath('');
-    $result = $handler->process();
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $result = $result['data'];
     // Check we have all the expected users count (user ID 1 and our declared
     // users plus the anon user).
     $this->assertTrue(count($result) == 4, 'Privileged user can access listing of users.');

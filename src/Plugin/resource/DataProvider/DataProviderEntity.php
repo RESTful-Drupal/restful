@@ -14,6 +14,7 @@ use Drupal\restful\Http\HttpHeader;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterEMW;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
+use Drupal\restful\Plugin\resource\Field\ResourceFieldCollection;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldEntity;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldEntityInterface;
@@ -219,37 +220,35 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
       return NULL;
     }
 
+    $resource_field_collection = new ResourceFieldCollection();
     /* @var \EntityDrupalWrapper $wrapper */
     $wrapper = entity_metadata_wrapper($this->entityType, $entity_id);
     $wrapper->language($this->getLangCode());
     $interpreter = new DataInterpreterEMW($this->getAccount(), $wrapper);
-    $values = array();
+    $resource_field_collection->setInterpreter($interpreter);
 
     $input = $this->getRequest()->getParsedInput();
     $limit_fields = !empty($input['fields']) ? explode(',', $input['fields']) : array();
 
     foreach ($this->fieldDefinitions as $resource_field_name => $resource_field) {
+      // Create an empty field collection and populate it with the appropriate
+      // resource fields.
       /* @var ResourceFieldEntityInterface $resource_field */
+
       if ($limit_fields && !in_array($resource_field_name, $limit_fields)) {
         // Limit fields doesn't include this property.
         continue;
       }
-
-      $value = NULL;
 
       if (!$this->methodAccess($resource_field) || !$resource_field->access('view', $interpreter)) {
         // The field does not apply to the current method or has denied access.
         continue;
       }
 
-      $value = $resource_field->value($interpreter);
-
-      $value = $this->processCallbacks($value, $resource_field);
-
-      $values[$resource_field_name] = $value;
+      $resource_field_collection->set($resource_field->id(), $resource_field);
     }
 
-    return $values;
+    return $resource_field_collection;
   }
 
   /**
@@ -342,8 +341,8 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
 
     $map = array();
     foreach ($this->fieldDefinitions as $resource_field_name => $resource_field) {
-      $property = $resource_field['property'];
-      if (empty($property)) {
+      /* @var ResourceFieldInterface */
+      if ($property = $resource_field->getProperty()) {
         continue;
       }
 
@@ -751,6 +750,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
 
     foreach ($this->fieldDefinitions as $public_field_name => $resource_field) {
       /* @var ResourceFieldEntityInterface $resource_field */
+
       if (!$this->methodAccess($resource_field)) {
         // Allow passing the value in the request.
         unset($original_object[$public_field_name]);

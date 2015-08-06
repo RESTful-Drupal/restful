@@ -41,7 +41,10 @@ class RestfulCreateNodeTestCase extends DrupalWebTestCase {
     $request = array('label' => $text1);
     $handler->setRequest(Request::create('', array(), RequestInterface::METHOD_POST, NULL, FALSE, NULL, array(), array(), array(), $request));
     $handler->setPath('');
-    $result = $handler->process();
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $result = $result['data'];
 
     $node = node_load($result[0]['id']);
     $this->assertEqual($node->uid, $user2->uid, 'Correct user was set to be the author of the node.');

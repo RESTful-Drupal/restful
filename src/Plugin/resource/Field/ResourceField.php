@@ -53,7 +53,8 @@ class ResourceField extends ResourceFieldBase implements ResourceFieldInterface 
   /**
    * {@inheritdoc}
    */
-  public function value(DataInterpreterInterface $interpreter) {
+  public function value(DataInterpreterInterface $interpreter = NULL) {
+    $interpreter = $interpreter ?: $this->getInterpreter();
     if ($callback = $this->getCallback()) {
       return ResourceManager::executeCallback($callback, array($interpreter));
     }
@@ -161,4 +162,26 @@ class ResourceField extends ResourceFieldBase implements ResourceFieldInterface 
     return NULL;
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function compoundDocumentId(DataInterpreterInterface $interpreter) {
+    // Since this kind of field can be anything, just return the value.
+    return $this->value();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function render(DataInterpreterInterface $interpreter) {
+    return $this->executeProcessCallbacks($this->value($interpreter));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function cardinality() {
+    // Default to cardinality of 1.
+    return 1;
+  }
 }

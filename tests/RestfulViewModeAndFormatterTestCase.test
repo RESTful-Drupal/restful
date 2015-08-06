@@ -32,7 +32,10 @@ class RestfulViewModeAndFormatterTestCase extends DrupalWebTestCase {
     // Make sure to get more than one node.
     $handler->setRequest(Request::create('api/articles/v1.7/' . $nodes[0]->nid . ',' . $nodes[1]->nid));
     $handler->setPath($nodes[0]->nid . ',' . $nodes[1]->nid);
-    $result = $handler->process();
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $result = $result['data'];
 
     // Make sure that all the fields were mapped.
     $this->assertNotNull($result[0]['body'], 'Body field is populated.');
@@ -63,7 +66,10 @@ class RestfulViewModeAndFormatterTestCase extends DrupalWebTestCase {
     $request = Request::create('api/articles/v1.5/' . $node->nid);
     $handler->setRequest($request);
     $handler->setPath($node->nid);
-    $result = $handler->process();
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $result = $result['data'];
     $this->assertEqual(trim(strip_tags($result[0]['body'])), $text, 'Raw value passed without a formatter.');
 
     // Add formatter settings.
@@ -83,7 +89,10 @@ class RestfulViewModeAndFormatterTestCase extends DrupalWebTestCase {
 
     $handler->setRequest($request);
     $handler->setPath($node->nid);
-    $result = $handler->process();
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $result = $result['data'];
     // Core's trim formatter also inclues the opening <p> tag in the calculation
     // of number of chars.
     $this->assertEqual($result[0]['body'], '<p>Some bo</p>', 'Value trimmed by formatter.');
