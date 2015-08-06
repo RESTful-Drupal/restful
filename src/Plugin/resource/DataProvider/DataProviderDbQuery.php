@@ -14,7 +14,7 @@ use Drupal\restful\Exception\ServiceUnavailableException;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldDbColumnInterface;
-use Drupal\restful\Resource\ResourceManager;
+use Drupal\restful\Plugin\resource\ResourceInterface;
 
 class DataProviderDbQuery extends DataProvider implements DataProviderDbQueryInterface {
 
@@ -91,6 +91,21 @@ class DataProviderDbQuery extends DataProvider implements DataProviderDbQueryInt
    */
   public function setPrimary($primary) {
     $this->primary = $primary;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getContext($identifier) {
+    if (is_array($identifier)) {
+      // Like in https://example.org/api/articles/1,2,3.
+      $identifier = implode(ResourceInterface::IDS_SEPARATOR, $identifier);
+    }
+    return array(
+      'tb' => $this->getTableName(),
+      'cl' => implode(',', $this->getIdColumn()),
+      'id' => $identifier,
+    );
   }
 
   /**
@@ -184,12 +199,11 @@ class DataProviderDbQuery extends DataProvider implements DataProviderDbQueryInt
       $query->condition($this->getTableName() . '.' . $column, current($this->getColumnFromIds(array($identifier), $index)));
     }
     $this->addExtraInfoToQuery($query);
-    $results = $query->execute();
-    $return = array();
-    foreach ($results as $result) {
-      $return[] = $this->mapDbRowToPublicFields($result);
-    }
-    return $return;
+    $result = $query
+      ->range(0, 1)
+      ->execute()
+      ->fetch(\PDO::FETCH_OBJ);
+    return $this->mapDbRowToPublicFields($result);
   }
 
   /**

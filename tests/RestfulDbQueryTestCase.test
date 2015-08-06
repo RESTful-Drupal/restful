@@ -5,6 +5,8 @@
  * Contains RestfulDbQueryTestCase.
  */
 
+use Drupal\restful\Http\Request;
+
 class RestfulDbQueryTestCase extends DrupalWebTestCase {
 
   /**
