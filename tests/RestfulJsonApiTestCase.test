@@ -58,38 +58,7 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
     restful_test_add_fields();
 
     $this->account = $this->drupalCreateUser();
-    $this->entities[] = entity_create('entity_test', array(
-      'name' => 'main',
-      'uid' => $this->account->uid,
-    ));
-    $this->entities[0]->save();
-
-    $this->entities[] = entity_create('entity_test', array(
-      'name' => 'main',
-      'uid' => $this->account->uid,
-    ));
-    $this->entities[1]->save();
-
-    $this->entities[] = entity_create('entity_test', array(
-      'name' => 'main',
-      'uid' => $this->account->uid,
-    ));
-    /* @var \EntityDrupalWrapper $wrapper */
-    $wrapper = entity_metadata_wrapper('entity_test', $this->entities[2]);
-
-    $text1 = $this->randomName();
-    $text2 = $this->randomName();
-
-
-    $wrapper->text_single->set($text1);
-    $wrapper->text_multiple->set(array($text1, $text2));
-
-    $wrapper->entity_reference_single->set($this->entities[0]);
-    $wrapper->entity_reference_multiple[] = $this->entities[0];
-    $wrapper->entity_reference_multiple[] = $this->entities[1];
-
-    $wrapper->save();
-
+    $this->entities = $this->createEntities();
     $this->handler = restful()->getResourceManager()->getPlugin('main:1.1');
     $this->formatter = restful()->getFormatterManager()->negotiateFormatter(NULL, 'json_api');
     $configuration = array(
@@ -240,9 +209,9 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
    * Test pagination.
    */
   public function testPagination() {
-    $entities = $this->entities;
+    $entities = $this->createEntities();
     $count = count($entities);
-    for ($index = 0; $index < 4; $index++) {
+    for ($index = 0; $index < 3; $index++) {
       $entities[] = entity_create('entity_test', array(
         'name' => 'main',
         'uid' => $this->account->uid,
@@ -261,7 +230,7 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
     $expected_links = array(
       'self' => $this->handler->versionedUrl(''),
       'first' => $this->handler->versionedUrl('', array('query' => array('range' => $range))),
-      'last' => $this->handler->versionedUrl('', array('query' => array('range' => $range, 'page' => 3))),
+      'last' => $this->handler->versionedUrl('', array('query' => array('range' => $range, 'page' => 5))),
       'next' => $this->handler->versionedUrl('', array('query' => array('range' => $range, 'page' => 2))),
     );
     $this->assertEqual($links, $expected_links);
@@ -278,14 +247,14 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
       'self' => $this->handler->versionedUrl(''),
       'first' => $this->handler->versionedUrl('', array('query' => array('range' => $range))),
       'previous' => $this->handler->versionedUrl('', array('query' => array('range' => $range, 'page' => 1))),
-      'last' => $this->handler->versionedUrl('', array('query' => array('range' => $range, 'page' => 3))),
+      'last' => $this->handler->versionedUrl('', array('query' => array('range' => $range, 'page' => 5))),
       'next' => $this->handler->versionedUrl('', array('query' => array('range' => $range, 'page' => 3))),
     );
     $this->assertEqual($links, $expected_links);
 
     // 3. Test pagination links in the last page.
     $range = 2;
-    $this->handler->setRequest(Request::create('', array('range' => $range, 'page' => 3)));
+    $this->handler->setRequest(Request::create('', array('range' => $range, 'page' => 5)));
     $this->handler->setPath('');
     $this->formatter->setResource($this->handler);
     $resource_field_collections = $this->handler->process();
@@ -294,10 +263,52 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
     $expected_links = array(
       'self' => $this->handler->versionedUrl(''),
       'first' => $this->handler->versionedUrl('', array('query' => array('range' => $range))),
-      'previous' => $this->handler->versionedUrl('', array('query' => array('range' => $range, 'page' => 2))),
-      'last' => $this->handler->versionedUrl('', array('query' => array('range' => $range, 'page' => 3))),
+      'previous' => $this->handler->versionedUrl('', array('query' => array('range' => $range, 'page' => 4))),
+      'last' => $this->handler->versionedUrl('', array('query' => array('range' => $range, 'page' => 5))),
     );
     $this->assertEqual($links, $expected_links);
+  }
+
+  /**
+   * Create test entities.
+   *
+   * @return Entity[]
+   *   An array of entities.
+   */
+  protected function createEntities() {
+    $entities = array();
+    $entities[] = entity_create('entity_test', array(
+      'name' => 'main',
+      'uid' => $this->account->uid,
+    ));
+    $entities[0]->save();
+
+    $entities[] = entity_create('entity_test', array(
+      'name' => 'main',
+      'uid' => $this->account->uid,
+    ));
+    $entities[1]->save();
+
+    $entities[] = entity_create('entity_test', array(
+      'name' => 'main',
+      'uid' => $this->account->uid,
+    ));
+    /* @var \EntityDrupalWrapper $wrapper */
+    $wrapper = entity_metadata_wrapper('entity_test', $entities[2]);
+
+    $text1 = $this->randomName();
+    $text2 = $this->randomName();
+
+
+    $wrapper->text_single->set($text1);
+    $wrapper->text_multiple->set(array($text1, $text2));
+
+    $wrapper->entity_reference_single->set($entities[0]);
+    $wrapper->entity_reference_multiple[] = $entities[0];
+    $wrapper->entity_reference_multiple[] = $entities[1];
+
+    $wrapper->save();
+    return $entities;
   }
 
 }

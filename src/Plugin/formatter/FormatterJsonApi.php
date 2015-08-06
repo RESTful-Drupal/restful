@@ -195,21 +195,22 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
     $input = $original_input = $request->getParsedInput();
     $data_provider = $resource->getDataProvider();
     $page = !empty($input['page']) ? $input['page'] : 1;
-    unset($input['page']);
-    $data['links']['first'] = $resource->getUrl(array('query' => $input), FALSE);
-
-    if ($page > 1) {
-      $input = $original_input;
-      $input['page'] = $page - 1;
-      $data['links']['previous'] = $resource->getUrl(array('query' => $input), FALSE);
-    }
 
     // We know that there are more pages if the total count is bigger than the
     // number of items of the current request plus the number of items in
     // previous pages.
     $items_per_page = empty($original_input['range']) ? $data_provider->getRange() : $original_input['range'];
-    if (isset($data['count'])) {
-      if ($num_pages = floor($data['count'] / $items_per_page)) {
+    if (isset($data['count']) && $data['count'] > $items_per_page) {
+      $num_pages = ceil($data['count'] / $items_per_page);
+      unset($input['page']);
+      $data['links']['first'] = $resource->getUrl(array('query' => $input), FALSE);
+
+      if ($page > 1) {
+        $input = $original_input;
+        $input['page'] = $page - 1;
+        $data['links']['previous'] = $resource->getUrl(array('query' => $input), FALSE);
+      }
+      if ($num_pages > 1) {
         $input = $original_input;
         $input['page'] = $num_pages;
         $data['links']['last'] = $resource->getUrl(array('query' => $input), FALSE);
