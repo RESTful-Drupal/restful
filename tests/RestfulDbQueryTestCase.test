@@ -5,6 +5,9 @@
  * Contains RestfulDbQueryTestCase.
  */
 
+use Drupal\restful\Http\Request;
+use Drupal\restful\Http\RequestInterface;
+
 class RestfulDbQueryTestCase extends DrupalWebTestCase {
 
   /**
@@ -28,26 +31,27 @@ class RestfulDbQueryTestCase extends DrupalWebTestCase {
   /**
    * Operations before the testing begins.
    */
-  function setUp() {
+  public function setUp() {
     parent::setUp('restful_test');
   }
 
   /**
    * Test authenticating a user.
    */
-  function testCrudOperations() {
-    $randomInt = intval(mt_rand(1, 100));
-    $randomString = $this->randomName();
-    $randomSerialized = serialize(array(
-      'key1' => $randomInt,
-      'key2' => $randomString,
+  public function testCrudOperations() {
+    $resource_manager = restful()->getResourceManager();
+    $random_int = intval(mt_rand(1, 100));
+    $random_string = $this->randomName();
+    $random_serialized = serialize(array(
+      'key1' => $random_int,
+      'key2' => $random_string,
     ));
 
     // Populate the table with some values.
     $mock_data = array(
-      'str_field' => $randomString,
-      'int_field' => $randomInt,
-      'serialized_field' => $randomSerialized,
+      'str_field' => $random_string,
+      'int_field' => $random_int,
+      'serialized_field' => $random_serialized,
     );
     $id = db_insert($this->tableName)
       ->fields($mock_data)
@@ -57,23 +61,35 @@ class RestfulDbQueryTestCase extends DrupalWebTestCase {
     $this->assertTrue(!empty($id), 'The manual record could be inserted');
 
     // Get the handler.
-    $handler = restful_get_restful_handler('db_query_test');
+    $handler = $resource_manager->getPlugin('db_query_test:1.0');
 
     // Testing read context.
-    $result = $handler->get($id);
-    $result = $result[0];
-
-    $this->assertEqual($result['string'], $mock_data['str_field'], 'The record was retrieved successfully.');
-    $this->assertEqual($result['integer'], $mock_data['int_field'], 'The record was retrieved successfully.');
-    $this->assertEqual($result['serialized'], $mock_data['serialized_field'], 'The record was retrieved successfully.');
+    $handler->setRequest(Request::create('api/db_query_test/v1.0/' . $id));
+    $handler->setPath($id);
+    $result = $handler->process();
+    /* @var \Drupal\restful\Plugin\resource\Field\ResourceFieldCollection $collection */
+    $collection = $result[0];;
+    $this->assertEqual($collection->get('string')
+      ->value($collection->getInterpreter()), $mock_data['str_field'], 'The record was retrieved successfully.');
+    $this->assertEqual($collection->get('integer')
+      ->value($collection->getInterpreter()), $mock_data['int_field'], 'The record was retrieved successfully.');
+    $this->assertEqual($collection->get('serialized')
+      ->value($collection->getInterpreter()), $mock_data['serialized_field'], 'The record was retrieved successfully.');
 
     // Testing update context.
     $mock_data2 = array(
       'string' => $this->randomName(),
     );
 
-    $handler->patch($id, $mock_data2);
-    $result = $handler->get($id);
+    $handler->setRequest(Request::create('api/db_query_test/v1.0/' . $id, array(), RequestInterface::METHOD_PATCH, NULL, FALSE, NULL, array(), array(), array(), $mock_data2));
+    $handler->setPath($id);
+    $handler->process();
+    // Now get the updated object.
+    $handler->setRequest(Request::create('api/db_query_test/v1.0/' . $id));
+    $handler->setPath($id);
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
 
     $expected = array(
       // ID should be unchanged.
@@ -81,21 +97,28 @@ class RestfulDbQueryTestCase extends DrupalWebTestCase {
       // String should be the string that we updated.
       'string' => $mock_data2['string'],
       // Serialized value should be unchanged.
-      'serialized' => $randomSerialized,
+      'serialized' => $random_serialized,
       // Integer value should be unchanged.
-      'integer' => $randomInt,
+      'integer' => $random_int,
     );
 
     // We expect that only the string field has changed.
-    $this->assertEqual($result[0], $expected, 'The record was updated with PUT successfully.');
+    $this->assertEqual($result['data'][0], $expected, 'The record was updated with PUT successfully.');
 
 
     // Testing replace context.
     $mock_data3 = array(
       'string' => $this->randomName(),
     );
-    $handler->put($id, $mock_data3);
-    $result = $handler->get($id);
+    $handler->setRequest(Request::create('api/db_query_test/v1.0/' . $id, array(), RequestInterface::METHOD_PUT, NULL, FALSE, NULL, array(), array(), array(), $mock_data3));
+    $handler->setPath($id);
+    $handler->process();
+    // Now get the updated object.
+    $handler->setRequest(Request::create('api/db_query_test/v1.0/' . $id));
+    $handler->setPath($id);
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
 
     $expected = array(
       // ID should be unchanged.
@@ -109,10 +132,12 @@ class RestfulDbQueryTestCase extends DrupalWebTestCase {
     );
 
     // We expect that only the supplied fields are present.
-    $this->assertEqual($result[0], $expected, 'The record was updated with PATCH successfully.');
+    $this->assertEqual($result['data'][0], $expected, 'The record was updated with PATCH successfully.');
 
     // Testing delete context.
-    $handler->delete($id);
+    $handler->setRequest(Request::create('api/db_query_test/v1.0/' . $id, array(), RequestInterface::METHOD_DELETE));
+    $handler->setPath($id);
+    $handler->process();
     $count = db_select($this->tableName)
       ->countQuery()
       ->execute()
@@ -121,14 +146,16 @@ class RestfulDbQueryTestCase extends DrupalWebTestCase {
 
     // Testing create context.
     $mock_data4 = array(
-      'string' => $randomString,
-      'integer' => $randomInt,
+      'string' => $random_string,
+      'integer' => $random_int,
       'serialized' => array(
-        'key1' => $randomInt,
-        'key2' => $randomString,
-      )
+        'key1' => $random_int,
+        'key2' => $random_string,
+      ),
     );
-    $handler->post('', $mock_data4);
+    $handler->setRequest(Request::create('api/db_query_test/v1.0', array(), RequestInterface::METHOD_POST, NULL, FALSE, NULL, array(), array(), array(), $mock_data4));
+    $handler->setPath('');
+    $handler->process();
 
     $count = db_select($this->tableName)
       ->countQuery()
@@ -137,16 +164,20 @@ class RestfulDbQueryTestCase extends DrupalWebTestCase {
     $this->assertEqual($count, 1, 'The record was created.');
 
     // Testing listing for read context.
-    $result = $handler->get();
+    $handler->setRequest(Request::create('api/db_query_test/v1.0'));
+    $handler->setPath('');
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
 
     // The created record should match our input.
     $expected = $mock_data4;
     // Account for serialization.
-    $expected['serialized'] = $randomSerialized;
+    $expected['serialized'] = $random_serialized;
     // Account for not knowing the ID of the new entity beforehand.
-    unset($result[0]['id']);
+    unset($result['data'][0]['id']);
 
-    $this->assertEqual($result[0], $expected, 'All the content listed successfully.');
+    $this->assertEqual($result['data'][0], $expected, 'All the content listed successfully.');
 
     // Testing filters.
     $mock_data5 = array(
@@ -167,25 +198,42 @@ class RestfulDbQueryTestCase extends DrupalWebTestCase {
       ->fields($mock_data6)
       ->execute();
 
-    $request = array('filter' => array('integer' => array(
-      'value' => array(101, 102),
-      'conjunction' => 'OR',
-    )));
-    $result = $handler->get('', $request);
-    $this->assertEqual(count($result), 2);
-    $request = array('filter' => array('integer' => array(
-      'value' => array(101, 102),
-      'operator' => array('=', '>='),
-      'conjunction' => 'OR',
-    )));
-    $result = $handler->get('', $request);
-    $this->assertEqual(count($result), 2);
+    $parsed_input = array(
+      'filter' => array(
+        'integer' => array(
+          'value' => array(101, 102),
+          'conjunction' => 'OR',
+        ),
+      ),
+    );
+    $handler->setRequest(Request::create('api/db_query_test/v1.0', $parsed_input));
+    $handler->setPath('');
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $this->assertEqual(count($result['data']), 2);
+    $parsed_input = array(
+      'filter' => array(
+        'integer' => array(
+          'value' => array(101, 102),
+          'operator' => array('=', '>='),
+          'conjunction' => 'OR',
+        ),
+      ),
+    );
+    $handler->setRequest(Request::create('api/db_query_test/v1.0', $parsed_input));
+    $handler->setPath('');
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $this->assertEqual(count($result['data']), 2);
   }
 
   /**
    * Test the render cache.
    */
-  public function testRenderCache() {
+  public function __testRenderCache() {
+    $resource_manager = restful()->getResourceManager();
     $account = $this->drupalCreateUser();
 
     // Populate the table with some values.
@@ -200,14 +248,17 @@ class RestfulDbQueryTestCase extends DrupalWebTestCase {
     $id = intval($id);
 
     // Get the handler.
-    $handler = restful_get_restful_handler('db_query_test');
+    /* @var \Drupal\restful\Plugin\resource\Decorators\CacheDecoratedResourceInterface $handler */
+    $handler = $resource_manager->getPlugin('db_query_test:1.0');
     $handler->setAccount($account);
     $cache = $handler->getCacheController();
 
     // Populate the cache entry.
-    $handler->get($id);
+    $handler->setRequest(Request::create('api/db_query_test/v1.0/' . $id));
+    $handler->setPath($id);
+    $handler->process();
     $version = $handler->getVersion();
-    $cid = 'v'. $version['major'] . '.' . $version['minor'] . '::db_query_test::uu' . $account->uid . '::patb:restful_test_db_query::cl:id::id:' . $id;
+    $cid = 'v' . $version['major'] . '.' . $version['minor'] . '::db_query_test::uu' . $account->uid . '::patb:restful_test_db_query::cl:id::id:' . $id;
     $cache_data = $cache->get($cid);
     $this->assertNotNull($cache_data->data, 'Cache data is present.');
 

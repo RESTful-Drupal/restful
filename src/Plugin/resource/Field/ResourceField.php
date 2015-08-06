@@ -53,8 +53,7 @@ class ResourceField extends ResourceFieldBase implements ResourceFieldInterface 
   /**
    * {@inheritdoc}
    */
-  public function value(DataInterpreterInterface $interpreter = NULL) {
-    $interpreter = $interpreter ?: $this->getInterpreter();
+  public function value(DataInterpreterInterface $interpreter) {
     if ($callback = $this->getCallback()) {
       return ResourceManager::executeCallback($callback, array($interpreter));
     }
