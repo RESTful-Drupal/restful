@@ -91,11 +91,6 @@ class RestfulTokenAuthenticationTestCase extends DrupalWebTestCase {
     $result = $response[0];
     $this->assertEqual($result['label'], $title1, 'Article resource can be accessed with valid access token.');
 
-    // Get a "protected" resource with the dashed access token .
-    $response = $handler->get($id, array('access-token' => $access_token));
-    $result = $response[0];
-    $this->assertEqual($result['label'], $title1, 'Article resource can be accessed with valid (dashed) access token.');
-
     // Set the expiration token to the past.
     $query = new \EntityFieldQuery();
     $result = $query
