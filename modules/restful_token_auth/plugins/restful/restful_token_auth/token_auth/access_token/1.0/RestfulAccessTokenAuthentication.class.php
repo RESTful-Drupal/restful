@@ -15,6 +15,8 @@ class RestfulAccessTokenAuthentication extends \RestfulTokenAuthenticationBase {
       '' => array(
         // Get or create a new token.
         \RestfulInterface::GET => 'getOrCreateToken',
+        // Delete the auth and refresh tokens.
+        \RestfulInterface::DELETE => 'deleteUsersTokens',
       ),
     );
   }
@@ -60,6 +62,32 @@ class RestfulAccessTokenAuthentication extends \RestfulTokenAuthenticationBase {
     $output = $this->viewEntity($id);
 
     return $output;
+  }
+
+  /**
+   * Delete the access token for the user submitting the request.
+   */
+  public function deleteUsersTokens() {
+    $account = $this->getAccount();
+
+    // Check if there are other refresh tokens for the user.
+    $query = new \EntityFieldQuery();
+    $results = $query
+      ->entityCondition('entity_type', 'restful_token_auth')
+      ->entityCondition('bundle', 'access_token')
+      ->propertyCondition('uid', $account->uid)
+      ->execute();
+
+    if (!empty($results['restful_token_auth'])) {
+      foreach (array_keys($results['restful_token_auth']) as $entity_id) {
+        $this->isValidEntity('view', $entity_id);
+        $wrapper = entity_metadata_wrapper($this->entityType, $entity_id);
+        $wrapper->delete();
+      }
+    }
+
+    $this->setHttpHeaders('Status', 204);
+    return array();
   }
 
 }
