@@ -385,7 +385,7 @@ class DataProviderDbQuery extends DataProvider implements DataProviderDbQueryInt
   protected function defaultSortInfo() {
     $sorts = array();
     foreach ($this->getIdColumn() as $column) {
-      if (!empty($this->fieldDefinitions->get($column))) {
+      if (!$this->fieldDefinitions->get($column)) {
         // Sort by the first ID column that is a public field.
         $sorts[$column] = 'ASC';
         break;
