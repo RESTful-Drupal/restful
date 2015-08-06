@@ -42,13 +42,22 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
    */
   public function testViewEntity() {
     $user1 = $this->drupalCreateUser();
-    $entity1 = entity_create('entity_test', array('name' => 'main', 'uid' => $user1->uid));
+    $entity1 = entity_create('entity_test', array(
+      'name' => 'main',
+      'uid' => $user1->uid,
+    ));
     $entity1->save();
 
-    $entity2 = entity_create('entity_test', array('name' => 'main', 'uid' => $user1->uid));
+    $entity2 = entity_create('entity_test', array(
+      'name' => 'main',
+      'uid' => $user1->uid,
+    ));
     $entity2->save();
 
-    $entity3 = entity_create('entity_test', array('name' => 'main', 'uid' => $user1->uid));
+    $entity3 = entity_create('entity_test', array(
+      'name' => 'main',
+      'uid' => $user1->uid,
+    ));
     $wrapper = entity_metadata_wrapper('entity_test', $entity3);
 
     $text1 = $this->randomName();
@@ -81,7 +90,10 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
     $expected_result = $base_expected_result;
 
     $handler->setPath($id);
-    $response = $handler->process();
+    $response = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $response = $response['data'];
     $result = $response[0];
     $this->assertEqual($result, $expected_result, 'Entity view has expected result for "main" resource v1');
 
@@ -91,7 +103,10 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
     $handler->setRequest($request);
     $base_expected_result['self'] = $handler->versionedUrl($id);
     $handler->setPath($id);
-    $response = $handler->process();
+    $response = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $response = $response['data'];
     $result = $response[0];
 
     $base_expected_result_v1 = $base_expected_result;
@@ -120,12 +135,22 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
     $request = Request::create('api/main/v1.1/' . $entity1->pid);
     $handler->setRequest($request);
     $handler->setPath($entity1->pid);
-    $response = $handler->process();
+    $response = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $response = $response['data'];
     $expected_result['entity_reference_single_resource'] = $response[0];
-    $response1 = $handler->process();
+    $response1 = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process()));
+    $response1 = $response1['data'];
+
     $request2 = Request::create('api/main/v1.1/' . $entity2->pid);
     $handler->setRequest($request2);
-    $response2 = $handler->process();
+    $response2 = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process()));
+    $response2 = $response2['data'];
     $expected_result['entity_reference_multiple_resource'] = array(
       $response1[0],
       $response2[0],
@@ -156,7 +181,10 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
     $request = Request::create('api/main/v1.1/' . $id);
     $handler->setRequest($request);
     $handler->setPath($id);
-    $result = $handler->process();
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $result = $result['data'];
     $this->assertEqual($result[0]['entity_reference_single_resource'], $entity1->pid, '"full_view" property is working properly.');
 
     // Empty the text and entity reference fields.
@@ -168,7 +196,10 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
 
     $handler->setRequest($request);
     $handler->setPath($id);
-    $response = $handler->process();
+    $response = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $response = $response['data'];
     $result = $response[0];
     $expected_result = $base_expected_result_v1;
     $expected_result['text_single'] = NULL;
@@ -186,7 +217,10 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
 
 
     // Load an entity by an alternate field.
-    $entity4 = entity_create('entity_test', array('name' => 'main', 'uid' => $user1->uid));
+    $entity4 = entity_create('entity_test', array(
+      'name' => 'main',
+      'uid' => $user1->uid,
+    ));
     $wrapper = entity_metadata_wrapper('entity_test', $entity4);
     $text = $this->randomName();
     $wrapper->text_single->set($text);
@@ -195,7 +229,10 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
     $request = Request::create('api/main/v1.1/' . $text, array('loadByFieldName' => 'text_single'));
     $handler->setRequest($request);
     $handler->setPath($text);
-    $result = $handler->process();
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $result = $result['data'];
     $this->assertNotNull($result[0]);
 
     // Make sure canonical header is added.
@@ -209,7 +246,10 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
     $handler->setRequest($request);
     $base_expected_result['self'] = $handler->versionedUrl($id);
     $handler->setPath($id);
-    $response = $handler->process();
+    $response = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $response = $response['data'];
     $result = $response[0];
     $expected_result = $base_expected_result;
     $expected_result['callback'] = 'callback';
@@ -223,10 +263,10 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
     $handler->setRequest($request);
     try {
       $handler->setPath($id);
-      $handler->process();
+      restful()->getFormatterManager()->format($handler->process(), 'json');
       $this->fail('Non-existing "callback" property did not trigger an exception.');
     }
-    catch(Exception $e) {
+    catch (Exception $e) {
       $this->pass('Non-existing "callback" property triggered an exception.');
     }
 
@@ -236,10 +276,10 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
     $handler->setRequest($request);
     try {
       $handler->setPath($id);
-      $handler->process();
+      restful()->getFormatterManager()->format($handler->process(), 'json');
       $this->fail('Non-existing "process callback" property did not trigger an exception.');
     }
-    catch(Exception $e) {
+    catch (Exception $e) {
       $this->pass('Non-existing "process callback" property triggered an exception.');
     }
 
@@ -268,7 +308,7 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
     // </api>
 
     $xml = new SimpleXMLElement($response['body']);
-    $results = $xml->xpath('/api/articles/item0/label');
+    $results = $xml->xpath('/api/_embedded/articles/item0/label');
     $result = reset($results);
 
     $this->assertEqual($node->title, $result->__toString(), 'XML parsed correctly.');
@@ -310,12 +350,23 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
     $request = Request::create('api/v1.5/articles/' . $article->nid);
     $handler->setRequest($request);
     $handler->setPath($article->nid);
-    $result = $handler->process();
-    $this->assertEqual(array_keys($result[0]['image']['styles']) == array('thumbnail', 'medium', 'large'), 'The selected image styles are present.');
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $result = $result['data'];
+    $this->assertEqual(array_keys($result[0]['image']['styles']) == array(
+        'thumbnail',
+        'medium',
+        'large',
+      ), 'The selected image styles are present.');
     $this->assertEqual(count(array_filter(array_values($result[0]['image']['styles']))) == 3, 'The image styles are populated.');
 
     $this->assertEqual(count($result[0]['images']), count($images), 'The number of images is correct.');
-    $this->assertEqual(array_keys($result[0]['images'][0]['styles']) == array('thumbnail', 'medium', 'large'), 'The selected image styles are present.');
+    $this->assertEqual(array_keys($result[0]['images'][0]['styles']) == array(
+        'thumbnail',
+        'medium',
+        'large',
+      ), 'The selected image styles are present.');
     $this->assertEqual(count(array_filter(array_values($result[0]['images'][0]['styles']))) == 3, 'The image styles are populated.');
   }
 

@@ -33,4 +33,11 @@ class ResourceFieldEntityFile extends ResourceFieldEntity implements ResourceFie
     return $return;
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function executeProcessCallbacks($value) {
+    return $this->decorated->executeProcessCallbacks($value);
+  }
+
 }

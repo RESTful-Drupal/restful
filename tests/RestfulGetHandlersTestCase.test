@@ -4,7 +4,6 @@
  * @file
  * Contains RestfulGetHandlersTestCase
  */
-
 class RestfulGetHandlersTestCase extends DrupalWebTestCase {
 
   public static function getInfo() {
@@ -35,7 +34,10 @@ class RestfulGetHandlersTestCase extends DrupalWebTestCase {
     $this->assertTrue($handler instanceof \Drupal\restful_example\Plugin\resource\node\article\v1\Articles__1_0);
     $handler->setRequest(\Drupal\restful\Http\Request::create('articles/v1.1/' . $node1->nid));
     $handler->setPath($node1->nid);
-    $response = $handler->process();
+    $response = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $response = $response['data'];
     $result = $response[0];
     $this->assertTrue(empty($result['self']), '"self" property does not appear in minor version 1.');
   }

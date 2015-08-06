@@ -33,7 +33,7 @@ class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
    */
   protected $account;
 
-  function setUp() {
+  public function setUp() {
     parent::setUp('restful_test', 'entityreference');
 
     // Add common fields, vocabulary and terms.
@@ -48,7 +48,7 @@ class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
   /**
    * Test creating an entity (POST method).
    */
-  function testCreateEntity() {
+  public function testCreateEntity() {
     $resource_manager = restful()->getResourceManager();
     // Create test entities to be referenced.
     $ids = array();
@@ -59,7 +59,7 @@ class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
       $ids[] = $entity->pid;
     }
 
-    $images =  array();
+    $images = array();
     foreach ($this->drupalGetTestFiles('image') as $file) {
       $file = file_save($file);
       $images[] = $file->fid;
@@ -81,26 +81,24 @@ class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
     $request = array(
       'text_single' => $text1,
       'text_multiple' => array($text1, $text2),
-
       'text_single_processing' => $text1,
       'text_multiple_processing' => array($text1, $text2),
-
       'entity_reference_single' => $ids[0],
       'entity_reference_multiple' => $ids,
-
       'term_single' => $tids[0],
       'term_multiple' => array($tids[0], $tids[1]),
-
       'file_single' => $images[0],
       'file_multiple' => array($images[0], $images[1]),
-
       'image_single' => $images[0],
       'image_multiple' => array($images[0], $images[1]),
     );
 
     $handler->setRequest(Request::create('', array(), RequestInterface::METHOD_POST, NULL, FALSE, NULL, array(), array(), array(), $request));
     $handler->setPath('');
-    $response = $handler->process();
+    $response = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process()));
+    $response = $response['data'];
     $result = $response[0];
 
     $text_single = trim(strip_tags($result['text_single']));
@@ -129,14 +127,14 @@ class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
     ksort($expected_result);
     $this->assertEqual($expected_result, $striped_result, 'Entity was created with correct values.');
 
-    $this->assertEqual($result['entity_reference_single_resource']['id'], $ids[0],' Entity reference single resource was created correctly');
-    $this->assertEqual($result['entity_reference_multiple_resource'][0]['id'], $ids[0],' Entity reference multiple resource was created correctly');
+    $this->assertEqual($result['entity_reference_single_resource']['id'], $ids[0], ' Entity reference single resource was created correctly');
+    $this->assertEqual($result['entity_reference_multiple_resource'][0]['id'], $ids[0], ' Entity reference multiple resource was created correctly');
 
     // Create an entity with empty request.
     try {
       $handler->setRequest(Request::create('', array(), RequestInterface::METHOD_POST));
       $handler->setPath('');
-      $handler->process();
+      restful()->getFormatterManager()->format($handler->process(), 'json');
       $this->fail('User can create an entity with empty request.');
     }
     catch (BadRequestException $e) {
@@ -148,7 +146,7 @@ class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
     try {
       $handler->setRequest(Request::create('', array(), RequestInterface::METHOD_POST, NULL, FALSE, NULL, array(), array(), array(), $request));
       $handler->setPath('');
-      $handler->process();
+      restful()->getFormatterManager()->format($handler->process(), 'json');
       $this->fail('User can create an entity with invalid property name.');
     }
     catch (BadRequestException $e) {
@@ -159,7 +157,10 @@ class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
     $request = array('entity_reference_multiple' => implode(',', $ids));
     $handler->setRequest(Request::create('', array(), RequestInterface::METHOD_POST, NULL, FALSE, NULL, array(), array(), array(), $request));
     $handler->setPath('');
-    $response = $handler->process();
+    $response = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $response = $response['data'];
     $result = $response[0];
     $this->assertEqual($result['entity_reference_multiple'], $ids, 'Created entity with comma separated multiple entity reference.');
 
@@ -168,7 +169,10 @@ class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
     $request = array('term_multiple' => implode(',', $ids));
     $handler->setRequest(Request::create('', array(), RequestInterface::METHOD_POST, NULL, FALSE, NULL, array(), array(), array(), $request));
     $handler->setPath('');
-    $response = $handler->process();
+    $response = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $response = $response['data'];
     $result = $response[0];
     $this->assertEqual($result['term_multiple'], $ids, 'Created entity with comma separated multiple taxonomy term reference.');
 
@@ -177,7 +181,10 @@ class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
     $request = array('file_multiple' => implode(',', $ids));
     $handler->setRequest(Request::create('', array(), RequestInterface::METHOD_POST, NULL, FALSE, NULL, array(), array(), array(), $request));
     $handler->setPath('');
-    $response = $handler->process();
+    $response = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $response = $response['data'];
     $result = $response[0];
     $this->assertEqual($result['file_multiple'], $ids, 'Created entity with comma separated multiple file reference.');
 
@@ -186,7 +193,10 @@ class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
     $request = array('image_multiple' => implode(',', $ids));
     $handler->setRequest(Request::create('', array(), RequestInterface::METHOD_POST, NULL, FALSE, NULL, array(), array(), array(), $request));
     $handler->setPath('');
-    $response = $handler->process();
+    $response = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $response = $response['data'];
     $result = $response[0];
     $this->assertEqual($result['image_multiple'], $ids, 'Created entity with comma separated multiple image reference.');
 
@@ -207,9 +217,11 @@ class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
     variable_set('restful_file_upload_allow_anonymous_user', FALSE);
     // Now that we have a successfully uploaded file, make sure it's the same
     // file that was uploaded.
-    $return = $handler->process();
+    $response = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process()));
     $original = hash_file('md5', $this->imagePath);
-    $file = file_load($return[0][0]['id']);
+    $file = file_load($response['data'][0][0]['id']);
     $uploaded = hash_file('md5', file_create_url($file->uri));
     $this->assertEqual($original, $uploaded, 'Original and uploaded file are identical.');
     // Test access for anonymous user (denied).
@@ -236,6 +248,9 @@ class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
    *
    * @return \Drupal\restful\Plugin\resource\ResourceInterface
    *   The file resource.
+   *
+   * @throws \Drupal\restful\Exception\BadRequestException
+   * @throws \Drupal\restful\Exception\ServiceUnavailableException
    */
   protected function fileResource() {
     // We are setting the $_FILES array directly on tests, so we need to

@@ -336,12 +336,12 @@ abstract class DataProvider implements DataProviderInterface {
   protected function parseRequestForListPagination() {
     $input = $this->getRequest()->getParsedInput();
 
-    $page = isset($input['page']) ? $input['page'] : 1;
+    $page = isset($input['page']) ? (int) $input['page'] : 1;
     if (!ctype_digit((string) $page) || $page < 1) {
       throw new BadRequestException('"Page" property should be numeric and equal or higher than 1.');
     }
 
-    $range = isset($input['range']) ? $input['range'] : $this->getRange();
+    $range = isset($input['range']) ? (int) $input['range'] : $this->getRange();
     if (!ctype_digit((string) $range) || $range < 1) {
       throw new BadRequestException('"Range" property should be numeric and equal or higher than 1.');
     }
@@ -430,30 +430,6 @@ abstract class DataProvider implements DataProviderInterface {
   protected static function getLanguage() {
     // Move to its own method to allow unit testing.
     return $GLOBALS['language']->language;
-  }
-
-  /**
-   * Applies the process callbacks.
-   *
-   * @param mixed $value
-   *   The value for the field.
-   * @param ResourceFieldInterface $resource_field
-   *   The resource field.
-   *
-   * @return mixed
-   *   The value after applying all the process callbacks.
-   *
-   * @throws \Drupal\restful\Exception\ServerConfigurationException
-   */
-  protected function processCallbacks($value, ResourceFieldInterface $resource_field) {
-    $process_callbacks = $resource_field->getProcessCallbacks();
-    if (!$value || empty($process_callbacks)) {
-      return $value;
-    }
-    foreach ($process_callbacks as $process_callback) {
-      $value = ResourceManager::executeCallback($process_callback, array($value));
-    }
-    return $value;
   }
 
 }

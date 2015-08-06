@@ -136,7 +136,7 @@ class RestfulAuthenticationTestCase extends RestfulCurlBaseTestCase {
     $handler->setPath('');
     $handler->setAccount(NULL);
     try {
-      $handler->process();
+      restful()->getFormatterManager()->format($handler->process(), 'json');
       $this->fail('Anonymous user did not get 403 when trying to access the "users" resource.');
     }
     catch (\Drupal\restful\Exception\ForbiddenException $e) {
@@ -147,6 +147,6 @@ class RestfulAuthenticationTestCase extends RestfulCurlBaseTestCase {
     // permission for anonymous to access other user's profile.
     user_role_change_permissions(DRUPAL_ANONYMOUS_RID, array('access user profiles' => TRUE));
     // If the process function does not throw an exception, the test passes.
-    $handler->process();
+    restful()->getFormatterManager()->format($handler->process(), 'json');
   }
 }

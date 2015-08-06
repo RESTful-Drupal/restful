@@ -7,6 +7,8 @@
 
 namespace Drupal\restful\Plugin\resource\Field;
 
+use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
+
 interface ResourceFieldCollectionInterface extends \Iterator, \Countable {
 
   /**
@@ -65,5 +67,21 @@ interface ResourceFieldCollectionInterface extends \Iterator, \Countable {
    *   The field to set.
    */
   public function set($key, ResourceFieldInterface $field);
+
+  /**
+   * Sets the data interpreter.
+   *
+   * @param DataInterpreterInterface $interpreter
+   *   The interpreter.
+   */
+  public function setInterpreter($interpreter);
+
+  /**
+   * Gets the data interpreter.
+   *
+   * @return DataInterpreterInterface
+   *   The interpreter.
+   */
+  public function getInterpreter();
 
 }

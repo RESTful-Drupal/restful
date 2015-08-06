@@ -15,6 +15,7 @@ use Drupal\restful\Exception\UnauthorizedException;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterPlug;
 use Drupal\restful\Plugin\resource\DataInterpreter\PluginWrapper;
+use Drupal\restful\Plugin\resource\Field\ResourceFieldCollection;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldEntityInterface;
 use Drupal\restful\Plugin\resource\ResourceInterface;
@@ -53,7 +54,6 @@ class DataProviderPlug extends DataProvider implements DataProviderInterface {
    * {@inheritdoc}
    */
   public function view($identifier) {
-    $values = array();
     $resource_manager = restful()->getResourceManager();
     try {
       $plugin = $resource_manager->getPlugin($identifier);
@@ -64,19 +64,20 @@ class DataProviderPlug extends DataProvider implements DataProviderInterface {
     catch (PluginNotFoundException $e) {
       throw new NotFoundException('Invalid URL path.');
     }
+    $resource_field_collection = new ResourceFieldCollection();
     $interpreter = new DataInterpreterPlug($this->getAccount(), new PluginWrapper($plugin));
+    $resource_field_collection->setInterpreter($interpreter);
 
     $input = $this->getRequest()->getParsedInput();
     $limit_fields = !empty($input['fields']) ? explode(',', $input['fields']) : array();
 
     foreach ($this->fieldDefinitions as $resource_field_name => $resource_field) {
       /* @var ResourceFieldEntityInterface $resource_field */
+
       if ($limit_fields && !in_array($resource_field_name, $limit_fields)) {
         // Limit fields doesn't include this property.
         continue;
       }
-
-      $value = NULL;
 
       if (!$this->methodAccess($resource_field) || !$resource_field->access('view', $interpreter)) {
         // The field does not apply to the current method or has denied
@@ -84,13 +85,9 @@ class DataProviderPlug extends DataProvider implements DataProviderInterface {
         continue;
       }
 
-      $value = $resource_field->value($interpreter);
-
-      $value = $this->processCallbacks($value, $resource_field);
-
-      $values[$resource_field_name] = $value;
+      $resource_field_collection->set($resource_field->id(), $resource_field);
     }
-    return $values;
+    return $resource_field_collection;
   }
 
   /**

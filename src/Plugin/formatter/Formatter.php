@@ -61,4 +61,24 @@ abstract class Formatter extends PluginBase implements FormatterInterface {
     return $this->resource;
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function setResource(ResourceInterface $resource) {
+    $this->resource = $resource;
+  }
+
+  /**
+   * Helper function to know if a variable is iterable or not.
+   *
+   * @param mixed $input
+   *   The variable to test.
+   *
+   * @return bool
+   *   TRUE if the variable is iterable.
+   */
+  protected static function isIterable($input) {
+    return is_array($input) || $input instanceof \Traversable || $input instanceof \stdClass;
+  }
+
 }

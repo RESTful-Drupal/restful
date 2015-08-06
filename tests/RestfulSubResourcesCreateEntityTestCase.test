@@ -203,9 +203,11 @@ class RestfulSubResourcesCreateEntityTestCase extends DrupalWebTestCase {
     }
     $this->handler->setRequest(Request::create($path, $query, $method, NULL, FALSE, NULL, array(), array(), array(), $parsed_body));
     $this->handler->setPath($path);
-    $response = $this->handler->process();
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($this->handler->process(), 'json'));
+    $result = $result['data'][0];
 
-    $result = $response[0];
     $this->assertTrue($result['id'], 'Parent entity created.');
     $this->assertTrue($result['entity_reference_single']['id'], 'Single sub-resource created or updated.');
     $this->assertTrue($result['entity_reference_multiple'][0]['id'] && $result['entity_reference_multiple'][1]['id'], 'Multiple sub-resource created or updated.');
