@@ -356,6 +356,42 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     $request['filter'] = array('integer_single' => '1');
     $result = $handler->get('', $request);
     $this->assertEqual($result[0]['id'], $nodes['abc'], 'Filter list by Single value field.');
+    
+    // LIKE operator.
+    $request['filter'] = array(
+      'label' => array(
+        'value' => '%nothe%',
+        'operator' => 'LIKE',
+      ),
+    );
+    $result = $handler->get('', $request);
+    $this->assertEqual($result[0]['id'], $nodes['another abc'], 'Filter list using LIKE operator.');
+
+    // STARTS_WITH operator.
+    $request['filter'] = array(
+      'label' => array(
+        'value' => 'las',
+        'operator' => 'STARTS_WITH',
+      ),
+    );
+    $result = $handler->get('', $request);
+    $this->assertEqual($result[0]['id'], $nodes['last'], 'Filter list using STARTS_WITH operator.');
+
+    // CONTAINS operator.
+    $request['filter'] = array(
+      'label' => array(
+        'value' => 'bc',
+        'operator' => 'CONTAINS',
+      ),
+    );
+    $result = $handler->get('', $request);
+
+    // Sort the results before checking it.
+    usort($result, function ($a, $b){
+      return strcmp($a['label'], $b['label']);
+    });
+    $this->assertEqual($result[0]['id'], $nodes['abc'], 'Filter list using CONTAINS operator.');
+    $this->assertEqual($result[1]['id'], $nodes['another abc'], 'Filter list using CONTAINS operator.');
 
     // Multiple value field.
     $request['filter'] = array(

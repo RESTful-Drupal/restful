@@ -1055,14 +1055,17 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
       '<=',
       '<>',
       '!=',
-      'IN',
       'BETWEEN',
+      'CONTAINS',
+      'IN',
+      'NOT IN',
+      'STARTS_WITH',
     );
 
     foreach ($operators as $operator) {
       if (!in_array($operator, $allowed_operators)) {
         throw new \RestfulBadRequestException(format_string('Operator "@operator" is not allowed for filtering on this resource. Allowed operators are: !allowed', array(
-          '@operator' => $operators,
+          '@operator' => $operator,
           '!allowed' => implode(', ', $allowed_operators),
         )));
       }
