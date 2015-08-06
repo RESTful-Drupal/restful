@@ -271,8 +271,8 @@ abstract class DataProvider implements DataProviderInterface {
       return array();
     }
 
-    $url_params = $this->options['urlParams'];
-    if (!$url_params['filter']) {
+    $url_params = empty($this->options['urlParams']) ? array() : $this->options['urlParams'];
+    if (isset($url_params['filter']) && !$url_params['filter']) {
       throw new ServiceUnavailableException('Filter parameters have been disabled in server configuration.');
     }
 
@@ -347,7 +347,7 @@ abstract class DataProvider implements DataProviderInterface {
       throw new BadRequestException('"Range" property should be numeric and equal or higher than 1.');
     }
 
-    $url_params = $this->options['urlParams'];
+    $url_params = empty($this->options['urlParams']) ? array() : $this->options['urlParams'];
     if (isset($url_params['range']) && !$url_params['range']) {
       throw new ServiceUnavailableException('Range parameters have been disabled in server configuration.');
     }

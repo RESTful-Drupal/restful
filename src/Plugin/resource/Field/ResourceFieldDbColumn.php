@@ -8,6 +8,7 @@
 namespace Drupal\restful\Plugin\resource\Field;
 
 use Drupal\restful\Exception\ServerConfigurationException;
+use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
 
 class ResourceFieldDbColumn extends ResourceField implements ResourceFieldDbColumnInterface {
 
@@ -44,6 +45,17 @@ class ResourceFieldDbColumn extends ResourceField implements ResourceFieldDbColu
    */
   public function getColumnForQuery() {
     return $this->columnForQuery;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function value(DataInterpreterInterface $interpreter) {
+    $value = parent::value($interpreter);
+    if (isset($value)) {
+      return $value;
+    }
+    return $interpreter->getWrapper()->get($this->getProperty());
   }
 
 }

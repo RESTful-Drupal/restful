@@ -162,8 +162,8 @@ class DataProviderDbQuery extends DataProvider implements DataProviderDbQueryInt
         unset($original_object[$public_field_name]);
         continue;
       }
-      if (isset($parsed_body[$public_field_name])) {
-        $record[$property_name] = $parsed_body[$public_field_name];
+      if (isset($object[$public_field_name])) {
+        $record[$property_name] = $object[$public_field_name];
       }
       unset($original_object[$public_field_name]);
       $save = TRUE;
@@ -263,11 +263,11 @@ class DataProviderDbQuery extends DataProvider implements DataProviderDbQueryInt
   public function viewMultiple(array $identifiers) {
     // Get a list query with all the sorting and pagination in place.
     $query = $this->getQueryForList();
-    if (empty($ids)) {
+    if (empty($identifiers)) {
       return array();
     }
     foreach ($this->getIdColumn() as $index => $column) {
-      $query->condition($this->getTableName() . '.' . $column, $this->getColumnFromIds($ids, $index), 'IN');
+      $query->condition($this->getTableName() . '.' . $column, $this->getColumnFromIds($identifiers, $index), 'IN');
     }
     $results = $query->execute();
     $return = array();
