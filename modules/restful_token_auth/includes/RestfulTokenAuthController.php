@@ -79,25 +79,27 @@ class RestfulTokenAuthController extends \EntityAPIController {
    * @return bool
    *   If the token(s) were deleted or not.
    */
-  private function deleteToken($uid, $bundle = NULL) {
+  public function deleteToken($uid, $bundle = NULL) {
     // Check if there are tokens for the user.
     $query = new \EntityFieldQuery();
-    $results = $query
-      ->entityCondition('entity_type', 'restful_token_auth')
+    $query->entityCondition('entity_type', 'restful_token_auth')
       ->propertyCondition('uid', $uid);
 
     // Add a bundle if one has been passed, otherwise all tokens for the uid
     // will be deleted.
     if (!empty($bundle)) {
-      $results->entityCondition('bundle', $bundle);
+      $query->entityCondition('bundle', $bundle);
     }
 
-    $results->execute();
+    $results = $query->execute();
 
     if (!empty($results['restful_token_auth'])) {
       // Delete the tokens.
-      entity_delete_multiple('restful_token_auth', array_keys($results['restful_token_auth']));
+      return entity_delete_multiple('restful_token_auth', array_keys($results['restful_token_auth']));
     }
+
+    // If nothing was found, it is appropriate to return a 204, no conntent.
+    return true;
   }
 
   /**
