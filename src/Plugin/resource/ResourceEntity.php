@@ -176,6 +176,9 @@ abstract class ResourceEntity extends Resource {
    * @param array $field_definitions
    *   The field definitions to process.
    *
+   * @throws \Drupal\restful\Exception\ServerConfigurationException
+   *   For resources without ID field.
+   *
    * @return array
    *   The field definition array.
    */

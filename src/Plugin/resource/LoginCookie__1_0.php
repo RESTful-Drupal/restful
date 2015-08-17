@@ -58,7 +58,11 @@ class LoginCookie__1_0 extends ResourceEntity implements ResourceInterface {
    * {@inheritdoc}
    */
   public function publicFields() {
-    return array();
+    $public_fields = parent::publicFields();
+    $public_fields['id']['methods'] = array();
+
+    // Just return the hidden ID.
+    return array('id' => $public_fields['id']);
   }
 
   /**
@@ -106,27 +110,6 @@ class LoginCookie__1_0 extends ResourceEntity implements ResourceInterface {
 
     $login_array = array('name' => $account->name);
     user_login_finalize($login_array);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function processPublicFields(array $field_definitions) {
-    // The fields that only contain a property need to be set to be
-    // ResourceFieldEntity. Otherwise they will be considered regular
-    // ResourceField.
-    $field_definitions = array_map(function ($field_definition) {
-      return $field_definition + array('class' => '\Drupal\restful\Plugin\resource\Field\ResourceFieldEntity');
-    }, $field_definitions);
-
-    // If there is an alternate id field, use it instead of the entity id.
-    $plugin_definition = $this->getPluginDefinition();
-    if (!empty($plugin_definition['dataProvider']['idField'])) {
-      // Remove the 'id' field.
-      unset($field_definitions['id']);
-    }
-
-    return $field_definitions;
   }
 
 }
