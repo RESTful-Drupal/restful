@@ -16,6 +16,17 @@ passed in the URL itself.
 Using a HTTP `GET` request on a resource's root URL will return information
 about that resource, in addition to the data itself.
 
+``` shell
+curl https://example.com/api/
+``
+This will output all the available **latest** resources (of course, if you have enabled the "Discovery Resource" option). For example, if there are 3 different api version plugins for content type Article (1.0, 1.1, 2.0) it will display the latest only (2.0 in this case).
+
+If you want to display all the versions of all the resources declared add the query **?all=true** like this.
+
+``` shell
+curl https://example.com/api?all=true
+```
+
 The data results are stored in the `data` property of the JSON response, while
 the `self` and `next` objects contain information about the resource.
 
