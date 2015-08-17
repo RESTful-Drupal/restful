@@ -206,7 +206,7 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
       $identifier = $property_wrapper->getIdentifier() ?: NULL;
       $resource = $this->getResource();
       // TODO: Make sure we still want to support full_view.
-      if (!$resource || !$identifier || $resource['full_view'] === FALSE) {
+      if (!$resource || !$identifier || (isset($resource['full_view']) && $resource['full_view'] === FALSE)) {
         return $identifier;
       }
       // If there is a resource that we are pointing to, we need to use the id
