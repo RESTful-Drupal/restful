@@ -15,6 +15,30 @@ use Drupal\restful\Plugin\resource\DataProvider\DataProviderResource;
 class ResourceFieldEntityReference extends ResourceFieldEntity implements ResourceFieldEntityReferenceInterface {
 
   /**
+   * Property where the ID should be retrieved from.
+   *
+   * If empty, the entity ID will be used. It's either the property or Field API
+   * field name.
+   *
+   * @var string
+   */
+  protected $referencedIdProperty;
+
+  /**
+   * Constructs a ResourceFieldEntityReference.
+   *
+   * @param array $field
+   *   Contains the field values.
+   */
+  public function __construct(array $field) {
+    parent::__construct($field);
+    if (!empty($field['referencedIdProperty'])) {
+      $this->referencedIdProperty = $field['referencedIdProperty'];
+    }
+    // TODO: Document referencedIdProperty.
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function preprocess($value) {
@@ -219,12 +243,29 @@ class ResourceFieldEntityReference extends ResourceFieldEntity implements Resour
       $values = array();
       foreach ($property_wrapper->getIterator() as $item_wrapper) {
         /* @var $item_wrapper \EntityDrupalWrapper */
-        $values[] = $item_wrapper->getIdentifier();
+        $values[] = $this->referencedId($item_wrapper);
       }
       return $values;
     }
     /* @var $property_wrapper \EntityDrupalWrapper */
-    return $property_wrapper->getIdentifier();
+    return $this->referencedId($property_wrapper);
+  }
+
+  /**
+   * Helper function to get the referenced entity ID.
+   *
+   * @param \EntityDrupalWrapper $property_wrapper
+   *   The wrapper for the referenced entity.
+   *
+   * @return mixed
+   *   The ID.
+   */
+  protected function referencedId(\EntityDrupalWrapper $property_wrapper) {
+    $identifier = $property_wrapper->getIdentifier();
+    if (!$this->referencedIdProperty) {
+      return $identifier;
+    }
+    return $identifier ? $property_wrapper->{$this->referencedIdProperty}->value() : NULL;
   }
 
 }

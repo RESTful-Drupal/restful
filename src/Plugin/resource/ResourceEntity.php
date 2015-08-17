@@ -51,7 +51,7 @@ abstract class ResourceEntity extends Resource {
    * @return DataProviderEntityInterface
    *   The data provider for this resource.
    *
-   * @throws NotImplementedException
+   * @throws ServerConfigurationException
    */
   public function dataProviderFactory() {
     $plugin_definition = $this->getPluginDefinition();
@@ -183,9 +183,21 @@ abstract class ResourceEntity extends Resource {
     // The fields that only contain a property need to be set to be
     // ResourceFieldEntity. Otherwise they will be considered regular
     // ResourceField.
-    return array_map(function ($field_definition) {
+    $field_definitions = array_map(function ($field_definition) {
       return $field_definition + array('class' => '\Drupal\restful\Plugin\resource\Field\ResourceFieldEntity');
     }, $field_definitions);
+
+    // If there is an alternate id field, use it instead of the entity id.
+    $plugin_definition = $this->getPluginDefinition();
+    if (!empty($plugin_definition['dataProvider']['idField'])) {
+      // Remove the 'id' field.
+      unset($field_definitions['id']);
+    }
+    if (empty($field_definitions['id']) && empty($plugin_definition['dataProvider']['idField'])) {
+      throw new ServerConfigurationException('You need to have a field that identifies your entity. Do not unset the "id" field, if you want to hide it use the HTTP "methods" access control and set it to an empty array');
+    }
+
+    return $field_definitions;
   }
 
   /**

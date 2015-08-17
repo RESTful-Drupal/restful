@@ -12,6 +12,8 @@ use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataProvider\DataProviderResource;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
+use Drupal\restful\Plugin\resource\ResourceInterface;
+use Drupal\restful\Plugin\ResourcePluginManager;
 use Drupal\restful\Util\String;
 
 class ResourceFieldEntity implements ResourceFieldEntityInterface {
@@ -201,14 +203,33 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
     if ($property_wrapper instanceof \EntityDrupalWrapper) {
       // The property wrapper is a reference to another entity get the entity
       // ID.
-      $embedded_identifier = $property_wrapper->getIdentifier();
+      $identifier = $property_wrapper->getIdentifier() ?: NULL;
+      $resource = $this->getResource();
+      if (!$resource || !$identifier) {
+        return $identifier;
+      }
+      // If there is a resource that we are pointing to, we need to use the id
+      // field that that particular resource has in its configuration. Trying to
+      // load by the entity id in that scenario will lead to a 404.
+      // We'll load the plugin to get the idField configuration.
+      $instance_id = sprintf('%s:%d.%d', $resource['name'], $resource['majorVersion'], $resource['minorVersion']);
+      $plugin_manager = ResourcePluginManager::create('cache', Request::create('', array(), RequestInterface::METHOD_GET));
+      /* @var ResourceInterface $resource */
+      $resource = $plugin_manager->createInstance($instance_id);
+      $plugin_definition = $resource->getPluginDefinition();
+      if (empty($plugin_definition['dataProvider']['idField'])) {
+        return $identifier;
+      }
+      try {
+        return $property_wrapper->{$plugin_definition['dataProvider']['idField']}->value();
+      }
+      catch (\EntityMetadataWrapperException $e) {
+        return $identifier;
+      }
     }
-    else {
-      // The property is a regular one, get the value out of it and use it as
-      // the embedded identifier.
-      $embedded_identifier = $this->fieldValue($property_wrapper);
-    }
-    return $embedded_identifier;
+    // The property is a regular one, get the value out of it and use it as
+    // the embedded identifier.
+    return $this->fieldValue($property_wrapper);
   }
 
   /**
