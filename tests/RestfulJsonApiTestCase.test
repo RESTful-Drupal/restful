@@ -129,6 +129,7 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
     $expected_includes = array(
       array(
         'attributes' => array(
+          'entity_reference_single' => $wrapper->entity_reference_single->entity_reference_single->getIdentifier(),
           'id' => $wrapper->entity_reference_multiple[0]->getIdentifier(),
           'label' => $wrapper->entity_reference_multiple[0]->label(),
           'self' => $this->handler->versionedUrl($wrapper->entity_reference_multiple[0]->getIdentifier()),
@@ -139,6 +140,15 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
           'self' => $this->handler->versionedUrl($wrapper->entity_reference_multiple[0]->getIdentifier()),
         ),
         'type' => 'main',
+        'relationships' => array(
+          'entity_reference_single_resource' => array(
+            'id' => $wrapper->entity_reference_single->entity_reference_single->getIdentifier(),
+            'links' => array(
+              'related' => $this->handler->versionedUrl('', array('query' => array('filter' => array('entity_reference_single_resource' => $wrapper->entity_reference_single->entity_reference_single->getIdentifier())))),
+            ),
+            'type' => 'main',
+          ),
+        ),
       ),
       array(
         'attributes' => array(
@@ -184,8 +194,21 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
     $resource_field_collections = $this->handler->process();
     $result = drupal_json_decode($this->formatter->format($resource_field_collections));
     $included = $result['included'];
-    $this->assertEqual(1, count($included));
+    $this->assertEqual(2, count($included));
     $expected_includes = array(
+      array(
+        'type' => 'main',
+        'id' => (string) $wrapper->entity_reference_single->entity_reference_single->getIdentifier(),
+        'links' => array(
+          'related' => $this->handler->versionedUrl('', array('query' => array('filter' => array('entity_reference_single_resource' => $wrapper->entity_reference_single->entity_reference_single->getIdentifier())))),
+          'self' => $this->handler->versionedUrl($wrapper->entity_reference_single->entity_reference_single->getIdentifier()),
+        ),
+        'attributes' => array(
+          'id' => $wrapper->entity_reference_single->entity_reference_single->getIdentifier(),
+          'label' => $wrapper->entity_reference_single->entity_reference_single->label(),
+          'self' => $this->handler->versionedUrl($wrapper->entity_reference_single->entity_reference_single->getIdentifier()),
+        ),
+      ),
       array(
         'type' => 'main',
         'id' => (string) $wrapper->entity_reference_single->getIdentifier(),
@@ -194,14 +217,25 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
           'self' => $this->handler->versionedUrl($wrapper->entity_reference_single->getIdentifier()),
         ),
         'attributes' => array(
+          'entity_reference_single' => $wrapper->entity_reference_single->entity_reference_single->getIdentifier(),
           'id' => $wrapper->entity_reference_single->getIdentifier(),
           'label' => $wrapper->entity_reference_single->label(),
           'self' => $this->handler->versionedUrl($wrapper->entity_reference_single->getIdentifier()),
+        ),
+        'relationships' => array(
+          'entity_reference_single_resource' => array(
+            'id' => $wrapper->entity_reference_single->entity_reference_single->getIdentifier(),
+            'type' => 'main',
+            'links' => array(
+              'related' => $this->handler->versionedUrl('', array('query' => array('filter' => array('entity_reference_single_resource' => $wrapper->entity_reference_single->entity_reference_single->getIdentifier())))),
+            ),
+          ),
         ),
       ),
     );
     // Remove the empty fields from the actual response for easier comparison.
     $included[0]['attributes'] = array_filter($included[0]['attributes']);
+    $included[1]['attributes'] = array_filter($included[1]['attributes']);
     $this->assertEqual($expected_includes, $included);
 
 
@@ -314,6 +348,7 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
     $wrapper->text_multiple->set(array($text1, $text2));
 
     $wrapper->entity_reference_single->set($entities[0]);
+    $wrapper->entity_reference_single->entity_reference_single->set($entities[1]);
     $wrapper->entity_reference_multiple[] = $entities[0];
     $wrapper->entity_reference_multiple[] = $entities[1];
 
