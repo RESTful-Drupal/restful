@@ -339,9 +339,11 @@ class Request implements RequestInterface {
     // fieldsets. fields=active,image.category.name,image.description becomes
     // fields=active,image,image.category,image.category.name,image.description
     foreach (array('fields', 'include') as $key_name) {
-      $keys = empty($input[$key_name]) ? array() : explode(',', $input[$key_name]);
+      if (empty($input[$key_name])) {
+        continue;
+      }
       $added_keys = array();
-      foreach ($keys as $key) {
+      foreach (explode(',', $input[$key_name]) as $key) {
         $parts = explode('.', $key);
         for ($index = 0; $index < count($parts); $index++) {
           $path = implode('.', array_slice($parts, 0, $index + 1));
