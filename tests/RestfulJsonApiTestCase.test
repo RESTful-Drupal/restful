@@ -203,6 +203,16 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
     // Remove the empty fields from the actual response for easier comparison.
     $included[0]['attributes'] = array_filter($included[0]['attributes']);
     $this->assertEqual($expected_includes, $included);
+
+
+    // 5. Assert request processing.
+    $request = Request::create('', array(
+      'fields' => 'first.second.third.fourth,first.third.fourth',
+      'include' => 'fifth.sixth.seventh',
+    ));
+    $input = $request->getParsedInput();
+    $this->assertEqual($input['fields'], 'first,first.second,first.second.third,first.second.third.fourth,first.third,first.third.fourth');
+    $this->assertEqual($input['include'], 'fifth,fifth.sixth,fifth.sixth.seventh');
   }
 
   /**
