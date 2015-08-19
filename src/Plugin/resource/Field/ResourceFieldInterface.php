@@ -9,6 +9,7 @@ namespace Drupal\restful\Plugin\resource\Field;
 
 use Drupal\restful\Exception\IncompatibleFieldDefinitionException;
 use Drupal\restful\Exception\ServerConfigurationException;
+use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
 use Drupal\restful\Resource\ResourceManager;
 
@@ -245,5 +246,21 @@ interface ResourceFieldInterface {
    *   constants.
    */
   public function cardinality();
+
+  /**
+   * Get the request in the data provider.
+   *
+   * @return RequestInterface
+   *   The request.
+   */
+  public function getRequest();
+
+  /**
+   * Set the request.
+   *
+   * @param RequestInterface $request
+   *   The request.
+   */
+  public function setRequest(RequestInterface $request);
 
 }
