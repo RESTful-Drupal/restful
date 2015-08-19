@@ -47,6 +47,7 @@ class ResourceField extends ResourceFieldBase implements ResourceFieldInterface 
       // Call the create factory in the derived class.
       return call_user_func_array(array($class_name, 'create'), array(
         $field,
+        $request,
         new static($field, $request),
       ));
     }

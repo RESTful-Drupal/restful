@@ -7,6 +7,7 @@
 
 namespace Drupal\restful\Plugin\resource\Field;
 
+use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
 
 class ResourceFieldKeyValue extends ResourceField implements ResourceFieldInterface {
@@ -14,8 +15,9 @@ class ResourceFieldKeyValue extends ResourceField implements ResourceFieldInterf
   /**
    * {@inheritdoc}
    */
-  public static function create(array $field) {
-    $resource_field = new static($field);
+  public static function create(array $field, RequestInterface $request = NULL) {
+    $request = $request ?: restful()->getRequest();
+    $resource_field = new static($field, $request);
     $resource_field->addDefaults();
     return $resource_field;
   }
