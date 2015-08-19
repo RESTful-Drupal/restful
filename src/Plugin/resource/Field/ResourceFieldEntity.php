@@ -739,7 +739,7 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
   /**
    * {@inheritdoc}
    */
-  public function getImageUris(array $file_array, $image_styles) {
+  public static function getImageUris(array $file_array, $image_styles) {
     // Return early if there are no image styles.
     if (empty($image_styles)) {
       return $file_array;
@@ -749,7 +749,7 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
     if (static::isArrayNumeric($file_array)) {
       $output = array();
       foreach ($file_array as $item) {
-        $output[] = $this->getImageUris($item, $image_styles);
+        $output[] = static::getImageUris($item, $image_styles);
       }
       return $output;
     }
