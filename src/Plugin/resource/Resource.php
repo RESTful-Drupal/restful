@@ -82,7 +82,7 @@ abstract class Resource extends PluginBase implements ResourceInterface {
    */
   public function __construct(array $configuration, $plugin_id, $plugin_definition) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
-    $this->fieldDefinitions = ResourceFieldCollection::factory($this->processPublicFields($this->publicFields()));
+    $this->fieldDefinitions = ResourceFieldCollection::factory($this->processPublicFields($this->publicFields()), $this->getRequest());
 
     $this->initAuthenticationManager();
   }
@@ -148,6 +148,10 @@ abstract class Resource extends PluginBase implements ResourceInterface {
     $this->request = $request;
     // Make sure that the request is updated in the data provider.
     $this->getDataProvider()->setRequest($request);
+    foreach ($this->fieldDefinitions as $resource_field) {
+      /* @var \Drupal\restful\Plugin\resource\Field\ResourceFieldInterface $resource_field */
+      $resource_field->setRequest($request);
+    }
   }
 
   /**

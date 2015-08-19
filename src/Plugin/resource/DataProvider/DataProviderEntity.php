@@ -231,7 +231,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
       return NULL;
     }
 
-    $resource_field_collection = new ResourceFieldCollection();
+    $resource_field_collection = new ResourceFieldCollection(array(), $this->getRequest());
     /* @var \EntityDrupalWrapper $wrapper */
     $wrapper = entity_metadata_wrapper($this->entityType, $entity_id);
     $wrapper->language($this->getLangCode());
