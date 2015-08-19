@@ -119,7 +119,7 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
   /**
    * {@inheritdoc}
    */
-  public static function create(array $field, ResourceFieldInterface $decorated = NULL, RequestInterface $request = NULL) {
+  public static function create(array $field, RequestInterface $request = NULL, ResourceFieldInterface $decorated = NULL) {
     $request = $request ?: restful()->getRequest();
     $resource_field = NULL;
     $class_name = static::fieldClassName($field);
@@ -140,7 +140,9 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
       // Create the current object.
       $resource_field = new static($field, $request);
     }
-
+    if (!$resource_field) {
+      throw new ServerConfigurationException('Unable to create resource field');
+    }
     // Set the basic object to the decorated property.
     $resource_field->decorate($decorated ? $decorated : new ResourceField($field, $request));
     $resource_field->decorated->addDefaults();

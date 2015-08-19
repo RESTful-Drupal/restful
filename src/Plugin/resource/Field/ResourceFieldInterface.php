@@ -111,13 +111,15 @@ interface ResourceFieldInterface {
    *
    * @param array $field
    *   Contains the field values.
+   * @param RequestInterface $request
+   *   The request.
    *
    * @return ResourceFieldInterface
    *   The created field
    *
    * @throws ServerConfigurationException
    */
-  public static function create(array $field);
+  public static function create(array $field, RequestInterface $request = NULL);
 
   /**
    * Gets the value for the field given a data source.

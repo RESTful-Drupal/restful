@@ -110,6 +110,7 @@ class ResourceFieldResource implements ResourceFieldResourceInterface {
    * {@inheritdoc}
    */
   public static function create(array $field, RequestInterface $request = NULL) {
+    $request = $request ?: restful()->getRequest();
     $resource_field = ResourceField::create($field, $request);
     $output = new static($field, $request);
     $output->decorate($resource_field);
