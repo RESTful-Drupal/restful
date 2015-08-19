@@ -7,6 +7,7 @@
 
 namespace Drupal\restful\Plugin\resource\Field;
 
+use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
 
 interface ResourceFieldCollectionInterface extends \Iterator, \Countable {
@@ -19,11 +20,13 @@ interface ResourceFieldCollectionInterface extends \Iterator, \Countable {
    *
    * @param array $fields
    *   An array of field mappings.
+   * @param RequestInterface $request
+   *   The request.
    *
    * @return ResourceFieldCollectionInterface
    *   The newly created object.
    */
-  public static function factory(array $fields = array());
+  public static function factory(array $fields = array(), RequestInterface $request = NULL);
 
   /**
    * Factory.
