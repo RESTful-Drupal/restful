@@ -265,4 +265,12 @@ interface ResourceFieldInterface {
    */
   public function setRequest(RequestInterface $request);
 
+  /**
+   * Gets the original field definition as declared in Resource::publicFields().
+   *
+   * @return array
+   *   The field definition.
+   */
+  public function getDefinition();
+
 }

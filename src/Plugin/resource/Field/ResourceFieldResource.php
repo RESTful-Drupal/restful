@@ -328,4 +328,11 @@ class ResourceFieldResource implements ResourceFieldResourceInterface {
     $this->decorated->setRequest($request);
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getDefinition() {
+    return $this->decorated->getDefinition();
+  }
+
 }

@@ -7,36 +7,89 @@
 
 namespace Drupal\restful\Plugin\resource\Field;
 
-use Drupal\restful\Exception\ServerConfigurationException;
+use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
-use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
+use Drupal\restful\Plugin\resource\ResourceInterface;
+use Drupal\restful\Plugin\ResourcePluginManager;
 
 class ResourceFieldFileEntityReference extends ResourceFieldEntityReference implements ResourceFieldEntityReferenceInterface {
 
   // TODO: Add testing to this!
   /**
-   * Get the wrapper for the property associated to the current field.
+   * Helper function to get the identifier from a property wrapper.
    *
-   * @param DataInterpreterInterface $interpreter
-   *   The data source.
+   * @param \EntityMetadataWrapper $property_wrapper
+   *   The property wrapper to get the ID from.
    *
-   * @return \EntityMetadataWrapper
-   *   Either a \EntityStructureWrapper or a \EntityListWrapper.
-   *
-   * @throws ServerConfigurationException
+   * @return string
+   *   An identifier.
    */
-  protected function propertyWrapper(DataInterpreterInterface $interpreter) {
-    $property_wrapper = parent::propertyWrapper($interpreter);
-    // If the file_entity module is not installed, throw an exception.
-    if (!module_exists('file_entity')) {
-      throw new ServerConfigurationException(sprintf('You cannot use %s if file_entity is not installed.', __CLASS__));
-    }
-    // If the wrapper is around the file array, then get the entity wrapper.
-    if ($property_wrapper instanceof \EntityDrupalWrapper) {
-      return $property_wrapper;
-    }
+  protected function propertyIdentifier(\EntityMetadataWrapper $property_wrapper) {
+    // The property wrapper is a reference to another entity get the entity
+    // ID.
     $file_array = $property_wrapper->value();
-    return new \EntityDrupalWrapper('file', $file_array['fid']);
+    $identifier = $file_array['fid'];
+    $resource = $this->getResource();
+    // TODO: Make sure we still want to support full_view.
+    if (!$resource || !$identifier || (isset($resource['full_view']) && $resource['full_view'] === FALSE)) {
+      return $identifier;
+    }
+    // If there is a resource that we are pointing to, we need to use the id
+    // field that that particular resource has in its configuration. Trying to
+    // load by the entity id in that scenario will lead to a 404.
+    // We'll load the plugin to get the idField configuration.
+    $instance_id = sprintf('%s:%d.%d', $resource['name'], $resource['majorVersion'], $resource['minorVersion']);
+    $plugin_manager = ResourcePluginManager::create('cache', Request::create('', array(), RequestInterface::METHOD_GET));
+    /* @var ResourceInterface $resource */
+    $resource = $plugin_manager->createInstance($instance_id);
+    $plugin_definition = $resource->getPluginDefinition();
+    if (empty($plugin_definition['dataProvider']['idField'])) {
+      return $identifier;
+    }
+    try {
+      $file_wrapper = entity_metadata_wrapper('file', $file_array['fid']);
+      return $file_wrapper->{$plugin_definition['dataProvider']['idField']}->value();
+    }
+    catch (\EntityMetadataWrapperException $e) {
+      return $identifier;
+    }
+  }
+
+  /**
+   * Builds a metadata item for a field value.
+   *
+   * It will add information about the referenced entity.
+   *
+   * @param \EntityMetadataWrapper $wrapper
+   *   The wrapper for the referenced file array.
+   *
+   * @return array
+   *   The metadata array item.
+   */
+  protected function buildResourceMetadataItem($wrapper) {
+    $file_array = $wrapper->value();
+    /* @var \EntityDrupalWrapper $wrapper */
+    $wrapper = entity_metadata_wrapper('file', $file_array['fid']);
+    return parent::buildResourceMetadataItem($wrapper);
+  }
+
+  /**
+   * Helper function to get the referenced entity ID.
+   *
+   * @param \EntityStructureWrapper $property_wrapper
+   *   The wrapper for the referenced file array.
+   *
+   * @return mixed
+   *   The ID.
+   */
+  protected function referencedId($property_wrapper) {
+    $file_array = $property_wrapper->value();
+    if (!$this->referencedIdProperty) {
+      return $file_array['fid'];
+    }
+    /* @var \EntityDrupalWrapper $wrapper */
+    $wrapper = entity_metadata_wrapper('file', $file_array['fid']);
+    return $wrapper->{$this->referencedIdProperty}->value();
   }
 
   /**

@@ -246,7 +246,6 @@ class ResourceFieldEntityReference extends ResourceFieldEntity implements Resour
     if ($property_wrapper instanceof \EntityListWrapper) {
       $values = array();
       foreach ($property_wrapper->getIterator() as $item_wrapper) {
-        /* @var $item_wrapper \EntityDrupalWrapper */
         $values[] = $this->referencedId($item_wrapper);
       }
       return $values;
@@ -264,7 +263,7 @@ class ResourceFieldEntityReference extends ResourceFieldEntity implements Resour
    * @return mixed
    *   The ID.
    */
-  protected function referencedId(\EntityDrupalWrapper $property_wrapper) {
+  protected function referencedId($property_wrapper) {
     $identifier = $property_wrapper->getIdentifier();
     if (!$this->referencedIdProperty) {
       return $identifier;
@@ -284,6 +283,13 @@ class ResourceFieldEntityReference extends ResourceFieldEntity implements Resour
    */
   public function setRequest(RequestInterface $request) {
     $this->decorated->setRequest($request);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDefinition() {
+    return $this->decorated->getDefinition();
   }
 
 }

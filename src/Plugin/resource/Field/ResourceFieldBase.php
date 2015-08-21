@@ -132,6 +132,15 @@ abstract class ResourceFieldBase implements ResourceFieldInterface {
   protected $request;
 
   /**
+   * The field definition array.
+   *
+   * Use with caution.
+   *
+   * @var array
+   */
+  protected $definition = array();
+
+  /**
    * Get the request in the data provider.
    *
    * @return RequestInterface
@@ -300,6 +309,13 @@ abstract class ResourceFieldBase implements ResourceFieldInterface {
     $element = $this->internalMetadataElement($key);
 
     return isset($element[$leave]) ? $element[$leave] : NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDefinition() {
+    return $this->definition;
   }
 
   /**
