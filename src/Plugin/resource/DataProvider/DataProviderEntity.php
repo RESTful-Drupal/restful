@@ -596,24 +596,30 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
       // Determine if filtering is by field or property.
       /* @var ResourceFieldEntityInterface $resource_field */
       if (!$resource_field = $resource_fields->get($filter['public_field'])) {
-        return;
+        continue;
       }
       if (!$property_name = $resource_field->getProperty()) {
         throw new BadRequestException(sprintf('The current filter "%s" selection does not map to any entity property or Field API field.', $filter['public_field']));
       }
       if (field_info_field($property_name)) {
         if (in_array(strtoupper($filter['operator'][0]), array('IN', 'BETWEEN'))) {
-          $query->fieldCondition($property_name, $resource_field->getColumn(), $filter['value'], $filter['operator'][0]);
+          $query->fieldCondition($property_name, $resource_field->getColumn(), $this->getReferencedIds($filter['value'], $resource_field), $filter['operator'][0]);
           continue;
         }
         for ($index = 0; $index < count($filter['value']); $index++) {
-          $query->fieldCondition($property_name, $resource_field->getColumn(), $filter['value'][$index], $filter['operator'][$index]);
+          // If referencing an entity by an alternate ID, change the user
+          // provided value by the entity value.
+          $query->fieldCondition($property_name, $resource_field->getColumn(), $this->getReferencedId($filter['value'][$index], $resource_field), $filter['operator'][$index]);
         }
       }
       else {
         $column = $this->getColumnFromProperty($property_name);
+        if (in_array(strtoupper($filter['operator'][0]), array('IN', 'BETWEEN'))) {
+          $query->propertyCondition($column, $this->getReferencedIds($filter['value'], $resource_field), $filter['operator'][0]);
+          continue;
+        }
         for ($index = 0; $index < count($filter['value']); $index++) {
-          $query->propertyCondition($column, $filter['value'][$index], $filter['operator'][$index]);
+          $query->propertyCondition($column, $this->getReferencedId($filter['value'][$index], $resource_field), $filter['operator'][$index]);
         }
       }
     }
@@ -856,4 +862,102 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
   protected static function checkPropertyAccess(ResourceFieldInterface $resource_field, $op, DataInterpreterInterface $interpreter) {
     return $resource_field->access($op, $interpreter);
   }
+
+  /**
+   * Get referenced ID.
+   *
+   * @param string $value
+   *   The provided value, it can be an ID or not.
+   * @param ResourceFieldInterface $resource_field
+   *   The resource field that points to another entity.
+   *
+   * @return string
+   *   If the field uses an alternate ID property, then the ID gets translated
+   *   to the original entity ID. If not, then the same provided ID is returned.
+   *
+   * @todo: Add testing to this functionality.
+   */
+  protected function getReferencedId($value, ResourceFieldInterface $resource_field) {
+    $field_definition = $resource_field->getDefinition();
+    if (empty($field_definition['referencedIdProperty'])) {
+      return $value;
+    }
+    $id_property = $field_definition['referencedIdProperty'];
+    // Get information about the the Drupal field to see what entity type we are
+    // dealing with.
+    $field_info = field_info_field($resource_field->getProperty());
+    // We support:
+    // - Entity Reference.
+    // - Taxonomy Term.
+    // - File & Image field.
+    // If you need to support other types, you can create a custom data provider
+    // that overrides this method.
+    $target_entity_type = NULL;
+    $bundles = array();
+    $query = $this->EFQObject();
+    if ($field_info['type'] == 'entityreference') {
+      $target_entity_type = $field_info['settings']['target_type'];
+      $bundles = empty($field_info['settings']['handler_settings']['target_bundles']) ? array() : $field_info['settings']['handler_settings']['target_bundles'];
+    }
+    elseif ($field_info['type'] == 'file') {
+      $target_entity_type = 'file';
+    }
+    elseif ($field_info['type'] == 'taxonomy_term_reference') {
+      $target_entity_type = 'taxonomy_term';
+      // Narrow down with the vocabulary information. Very useful if there are
+      // multiple terms with the same name in different vocabularies.
+      foreach ($field_info['settings']['allowed_values'] as $allowed_value) {
+        $bundles[] = $allowed_value['vocabulary'];
+      }
+    }
+    if (empty($target_entity_type)) {
+      return $value;
+    }
+
+    // Now we have the entity type and bundles to look for the entity based on
+    // the contents of the field or the entity property.
+    $query->entityCondition('entity_type', $target_entity_type);
+    if (!empty($bundles)) {
+      // Narrow down for bundles.
+      $query->entityCondition('bundle', $bundles, 'IN');
+    }
+    // Check if the $id_property is a field or a property.
+    if (field_info_field($id_property)) {
+      $query->fieldCondition($id_property, $resource_field->getColumn(), $value);
+    }
+    else {
+      $query->propertyCondition($id_property, $value);
+    }
+    // Only one result is returned. Make sure that you are using "unique" fields
+    // as your referencedIdProperty.
+    $results = $query->range(0, 1)->execute();
+    if ($results[$target_entity_type]) {
+      return key($results[$target_entity_type]);
+    }
+    // If no entity could be found, fall back to the original value.
+    return $value;
+  }
+
+  /**
+   * Get reference IDs for multiple values.
+   *
+   * @param array $values
+   *   The provided values, they can be an IDs or not.
+   * @param ResourceFieldInterface $resource_field
+   *   The resource field that points to another entity.
+   *
+   * @return string
+   *   If the field uses an alternate ID property, then the ID gets translated
+   *   to the original entity ID. If not, then the same provided ID is returned.
+   *
+   * @see getReferencedId()
+   */
+  protected function getReferencedIds(array $values, ResourceFieldInterface $resource_field) {
+    $output = array();
+    foreach ($values as $value) {
+      $output[] = $this->getReferencedId($value, $resource_field);
+    }
+    return $output;
+  }
+
 }
