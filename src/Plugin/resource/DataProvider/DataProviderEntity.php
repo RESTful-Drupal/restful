@@ -535,7 +535,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     parent::addExtraInfoToQuery($query);
     // The only time you need to add the access tags to a EFQ is when you don't
     // have fieldConditions.
-    if (empty($query->fieldConditions)) {
+    if (empty($query->fieldConditions) && empty($query->order)) {
       // Add a generic entity access tag to the query.
       $query->addTag($this->entityType . '_access');
     }
