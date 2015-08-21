@@ -114,7 +114,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
       }
       if ($resource = $this->getResource()) {
         $output['type'] = $resource->getResourceMachineName();
-        $output['id'] = (string) $data->getInterpreter()->getWrapper()->getIdentifier();
+        $output['id'] = (string) $data->getIdField()->value($data->getInterpreter());
       }
       $interpreter = $data->getInterpreter();
       $value = $resource_field->render($interpreter);
@@ -125,7 +125,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
         $resource_field instanceof ResourceFieldResourceInterface
       ) {
         $value = $this->extractFieldValues($value, $included);
-        $ids = $resource_field->getResourceId($interpreter);
+        $ids = $resource_field->compoundDocumentId($interpreter);
         $cardinality = $resource_field->cardinality();
         if ($cardinality == 1) {
           $value = array($value);

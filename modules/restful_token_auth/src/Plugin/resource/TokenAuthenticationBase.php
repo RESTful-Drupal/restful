@@ -18,6 +18,10 @@ abstract class TokenAuthenticationBase extends ResourceEntity implements Resourc
    * @see http://tools.ietf.org/html/rfc6750#section-4
    */
   public function publicFields() {
+    $public_fields = parent::publicFields();
+    unset($public_fields['label']);
+    unset($public_fields['self']);
+    $public_fields['id']['methods'] = array();
     $public_fields['access_token'] = array(
       'property' => 'token',
     );

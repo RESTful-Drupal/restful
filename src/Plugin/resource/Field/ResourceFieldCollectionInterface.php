@@ -84,4 +84,20 @@ interface ResourceFieldCollectionInterface extends \Iterator, \Countable {
    */
   public function getInterpreter();
 
+  /**
+   * Get the resource field that will return the ID.
+   *
+   * @return ResourceFieldInterface
+   *   The field.
+   */
+  public function getIdField();
+
+  /**
+   * Set the resource field that will return the ID.
+   *
+   * @param ResourceFieldInterface $id_field
+   *   The field to set.
+   */
+  public function setIdField($id_field);
+
 }

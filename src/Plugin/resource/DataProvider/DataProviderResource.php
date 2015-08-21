@@ -64,11 +64,12 @@ class DataProviderResource extends DataProvider implements DataProviderResourceI
   /**
    * {@inheritdoc}
    */
-  public static function init(RequestInterface $request, $resource_name, array $version) {
+  public static function init(RequestInterface $request, $resource_name, array $version, $resource_path = NULL) {
     $plugin_manager = ResourcePluginManager::create('cache', $request);
     /* @var ResourceInterface $resource */
     $resource = $plugin_manager->createInstance($resource_name . PluginBase::DERIVATIVE_SEPARATOR . $version[0] . '.' . $version[1]);
     $plugin_definition = $resource->getPluginDefinition();
+    $resource->setPath($resource_path);
     return new static($request, $resource->getFieldDefinitions(), $resource->getAccount(), $resource->getPath(), $plugin_definition['dataProvider'], static::getLanguage(), $resource);
   }
 

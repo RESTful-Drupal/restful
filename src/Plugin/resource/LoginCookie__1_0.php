@@ -58,7 +58,11 @@ class LoginCookie__1_0 extends ResourceEntity implements ResourceInterface {
    * {@inheritdoc}
    */
   public function publicFields() {
-    return array();
+    $public_fields = parent::publicFields();
+    $public_fields['id']['methods'] = array();
+
+    // Just return the hidden ID.
+    return array('id' => $public_fields['id']);
   }
 
   /**

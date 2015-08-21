@@ -28,6 +28,13 @@ class ResourceFieldCollection implements ResourceFieldCollectionInterface {
   protected $interpreter;
 
   /**
+   * Contains the resource field representing the ID.
+   *
+   * @var ResourceFieldInterface $idField;
+   */
+  protected $idField;
+
+  /**
    * Constructor.
    *
    * Creates the collection and each one of the field resource fields in it
@@ -105,6 +112,7 @@ class ResourceFieldCollection implements ResourceFieldCollectionInterface {
       }
       $this->fields[$resource_field->id()] = $resource_field;
     }
+    $this->idField = empty($fields['id']) ? NULL : $this->get('id');
   }
 
   /**
@@ -198,6 +206,20 @@ class ResourceFieldCollection implements ResourceFieldCollectionInterface {
    */
   public function setInterpreter($interpreter) {
     $this->interpreter = $interpreter;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getIdField() {
+    return $this->idField;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setIdField($id_field) {
+    $this->idField = $id_field;
   }
 
 }

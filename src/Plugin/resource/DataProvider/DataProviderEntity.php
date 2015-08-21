@@ -10,7 +10,6 @@ namespace Drupal\restful\Plugin\resource\DataProvider;
 use Drupal\restful\Exception\ForbiddenException;
 use Drupal\restful\Exception\InternalServerErrorException;
 use Drupal\restful\Exception\ServerConfigurationException;
-use Drupal\restful\Http\HttpHeader;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterEMW;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
@@ -23,7 +22,6 @@ use Drupal\restful\Exception\UnprocessableEntityException;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
 use Drupal\restful\Plugin\resource\Resource;
 use Drupal\restful\Plugin\resource\ResourceInterface;
-use Drupal\restful\Resource\ResourceManager;
 
 class DataProviderEntity extends DataProvider implements DataProviderEntityInterface {
 
@@ -152,7 +150,20 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
       return array();
     }
 
-    return array_keys($result[$this->entityType]);
+    $entity_ids = array_keys($result[$this->entityType]);
+    if (empty($this->options['idField'])) {
+      return $entity_ids;
+    }
+
+    // Get the list of IDs.
+    $resource_field = $this->fieldDefinitions->get($this->options['idField']);
+    $ids = array();
+    foreach ($entity_ids as $entity_id) {
+      $interpreter = new DataInterpreterEMW($this->getAccount(), new \EntityDrupalWrapper($this->entityType, $entity_id));
+      $ids[] = $resource_field->value($interpreter);
+    }
+
+    return $ids;
   }
 
   /**
@@ -226,6 +237,8 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     $wrapper->language($this->getLangCode());
     $interpreter = new DataInterpreterEMW($this->getAccount(), $wrapper);
     $resource_field_collection->setInterpreter($interpreter);
+    $id_field_name = empty($this->options['idField']) ? 'id' : $this->options['idField'];
+    $resource_field_collection->setIdField($this->fieldDefinitions->get($id_field_name));
 
     $input = $this->getRequest()->getParsedInput();
     $limit_fields = !empty($input['fields']) ? explode(',', $input['fields']) : array();
@@ -402,11 +415,12 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
   protected function getEntityIdByFieldId($id) {
     $request = $this->getRequest();
     $input = $request->getParsedInput();
-    if (empty($input['loadByFieldName'])) {
+    $public_property_name = empty($input['loadByFieldName']) ? NULL : $input['loadByFieldName'];
+    $public_property_name = $public_property_name ?: (empty($this->options['idField']) ? NULL : $this->options['idField']);
+    if (!$public_property_name) {
       // The regular entity ID was provided.
       return $id;
     }
-    $public_property_name = $input['loadByFieldName'];
     // We need to get the internal field/property from the public name.
     if ((!$public_field_info = $this->fieldDefinitions->get($public_property_name)) || !$public_field_info->getProperty()) {
       throw new BadRequestException(format_string('Cannot load an entity using the field "@name"', array(
