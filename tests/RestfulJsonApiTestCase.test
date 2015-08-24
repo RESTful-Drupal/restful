@@ -53,7 +53,7 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
    * {@inheritdoc}
    */
   public function setUp() {
-    parent::setUp('restful_example', 'restful_test', 'entityreference');
+    parent::setUp('restful_example', 'restful_test', 'entityreference', 'uuid');
 
     restful_test_add_fields();
 
@@ -379,6 +379,57 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
   }
 
   /**
+   * Test alternative ID field.
+   */
+  public function testAlternativeIdField() {
+    $entities = $this->createEntities();
+    $resource_manager = restful()->getResourceManager();
+    $resource_manager->clearPluginCache('main:1.7');
+    $handler = $resource_manager->getPlugin('main:1.7');
+
+    // Add files and taxonomy term references.
+    $query = new EntityFieldQuery();
+    $result = $query
+      ->entityCondition('entity_type', 'taxonomy_term')
+      ->entityCondition('bundle', 'test_vocab')
+      ->execute();
+    $tids = array_keys($result['taxonomy_term']);
+
+    $images = array();
+    foreach ($this->drupalGetTestFiles('image') as $file) {
+      $file = file_save($file);
+      $images[] = $file->fid;
+    }
+
+    $entities[2]->term_single[LANGUAGE_NONE][] = array('tid' => $tids[0]);
+    $entities[2]->term_multiple[LANGUAGE_NONE][] = array('tid' => $tids[1]);
+    $entities[2]->term_multiple[LANGUAGE_NONE][] = array('tid' => $tids[2]);
+    $entities[2]->file_single[LANGUAGE_NONE][] = array('fid' => $images[0], 'display' => TRUE);
+    $entities[2]->file_multiple[LANGUAGE_NONE][] = array('fid' => $images[1], 'display' => TRUE);
+    $entities[2]->file_multiple[LANGUAGE_NONE][] = array('fid' => $images[2], 'display' => TRUE);
+    entity_save('entity_test', $entities[2]);
+
+
+    $handler->setRequest(Request::create('api/main/v1.7/' . $entities[2]->pid));
+    $handler->setPath($entities[2]->pid);
+
+    $result = restful()
+      ->getFormatterManager()
+      ->negotiateFormatter(NULL, 'json_api')
+      ->prepare($handler->process());
+
+    $result = $result['data'][0]['attributes'];
+
+    // Make sure that IDs are UUID.
+    $this->assertEqual(count(entity_uuid_load('file', array($result['file_single']))), 1, 'UUID correctly loaded for: file_single');
+    $this->assertEqual(count(entity_uuid_load('file', $result['file_multiple'])), 2, 'UUID correctly loaded for: file_multiple');
+    $this->assertEqual(count(entity_uuid_load('taxonomy_term', array($result['term_single']))), 1, 'UUID correctly loaded for: term_single');
+    $this->assertEqual(count(entity_uuid_load('taxonomy_term', $result['term_multiple'])), 2, 'UUID correctly loaded for: term_multiple');
+    $this->assertEqual(count(entity_uuid_load('entity_test', array($result['entity_reference_single']))), 1, 'UUID correctly loaded for: entity_reference_single');
+    $this->assertEqual(count(entity_uuid_load('entity_test', $result['entity_reference_multiple'])), 2, 'UUID correctly loaded for: entity_reference_multiple');
+  }
+
+  /**
    * Create test entities.
    *
    * @return Entity[]
@@ -402,22 +453,14 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
       'name' => 'main',
       'uid' => $this->account->uid,
     ));
-    /* @var \EntityDrupalWrapper $wrapper */
-    $wrapper = entity_metadata_wrapper('entity_test', $entities[2]);
 
-    $text1 = $this->randomName();
-    $text2 = $this->randomName();
+    $entities[0]->entity_reference_single[LANGUAGE_NONE][] = array('target_id' => $entities[1]->pid);
+    $entities[0]->save();
+    $entities[2]->entity_reference_single[LANGUAGE_NONE][] = array('target_id' => $entities[0]->pid);
+    $entities[2]->entity_reference_multiple[LANGUAGE_NONE][] = array('target_id' => $entities[0]->pid);
+    $entities[2]->entity_reference_multiple[LANGUAGE_NONE][] = array('target_id' => $entities[1]->pid);
+    $entities[2]->save();
 
-
-    $wrapper->text_single->set($text1);
-    $wrapper->text_multiple->set(array($text1, $text2));
-
-    $wrapper->entity_reference_single->set($entities[0]);
-    $wrapper->entity_reference_single->entity_reference_single->set($entities[1]);
-    $wrapper->entity_reference_multiple[] = $entities[0];
-    $wrapper->entity_reference_multiple[] = $entities[1];
-
-    $wrapper->save();
     return $entities;
   }
 
