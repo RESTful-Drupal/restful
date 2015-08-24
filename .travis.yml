@@ -77,6 +77,9 @@ script:
   - drush --yes pm-enable simpletest restful restful_token_auth
   # Run the tests
   - cd $TRAVIS_BUILD_DIR/../drupal
-  - php ./scripts/run-tests.sh --php $(which php) --verbose --color --concurrency 4 --url http://localhost RESTful | tee /tmp/simpletest-result.txt
+  - php ./scripts/run-tests.sh --php $(which php) --verbose --color --concurrency 4 --url http://localhost --class RestfulEntityUserAccessTestCase,RestfulAuthenticationTestCase | tee /tmp/simpletest-result.txt
+  - echo '####### RESULTS #######'
+  - cat /tmp/simpletest-result.txt
+  - echo '#######################'
   - egrep -i "([1-9]+ fail)|(Fatal error)|([1-9]+ exception)" /tmp/simpletest-result.txt && exit 1
   - exit 0
