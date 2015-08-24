@@ -135,13 +135,12 @@ class RestfulAuthenticationTestCase extends RestfulCurlBaseTestCase {
     $handler->setRequest(Request::create('api/v1.0/users'));
     $handler->setPath('');
     $handler->setAccount(NULL);
-    try {
-      restful()->getFormatterManager()->format($handler->process(), 'json');
-      $this->fail('Anonymous user did not get 403 when trying to access the "users" resource.');
-    }
-    catch (\Drupal\restful\Exception\ForbiddenException $e) {
-      $this->pass('Anonymous user got 403 when trying to access the "users" resource.');
-    }
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $result = $result['data'];
+    $this->assertEqual($result[0]['self'], 'http://restful.local/api/v1.0/users/0');
+    $this->assertEqual(count($result), 1, 'The anonymous users can only see themselves.');
 
     // To assert permissions control access to the resource, we change the
     // permission for anonymous to access other user's profile.

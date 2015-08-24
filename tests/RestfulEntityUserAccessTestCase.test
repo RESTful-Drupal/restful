@@ -56,7 +56,7 @@ class RestfulEntityUserAccessTestCase extends DrupalWebTestCase {
     $result = $result['data'];
     $this->assertEqual($result[0]['self'], 'http://restful.local/api/v1.0/users/0');
     $this->assertEqual($result[1]['self'], 'http://restful.local/api/v1.0/users/2');
-    $this->assertEqual(count($result), 2, 'The current user can only see themselves and the anonymous user.');
+    $this->assertEqual(count($result), 2, 'Unprivileged users can only see themselves and the anonymous user.');
 
     // View own user account.
     $handler->setRequest(Request::create('api/v1.0/users/' . $user1->uid));
