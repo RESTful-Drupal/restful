@@ -281,10 +281,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     $entity_id = $this->getEntityIdByFieldId($id);
     $request = $this->getRequest();
 
-    $cached_data = $this->getRenderedCache(array(
-      'et' => $this->getEntityType(),
-      'ei' => $entity_id,
-    ));
+    $cached_data = $this->getRenderedCache($this->getEntityCacheTags($entity_id));
     if (!empty($cached_data->data)) {
       return $cached_data->data;
     }
@@ -353,11 +350,25 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       $values[$public_field_name] = $value;
     }
 
-    $this->setRenderedCache($values, array(
+    $this->setRenderedCache($values, $this->getEntityCacheTags($entity_id));
+    return $values;
+  }
+
+  /**
+   * The array of parameters by which entities should be cached.
+   *
+   * @param mixed $entity_id
+   *   The entity ID of the entity to be cached.
+   *
+   * @return array
+   *   An array of parameter keys and values which should be added
+   *   to the cache key for each entity.
+   */
+  public function getEntityCacheTags($entity_id) {
+    return array(
       'et' => $this->getEntityType(),
       'ei' => $entity_id,
-    ));
-    return $values;
+    );
   }
 
   /**
@@ -469,6 +480,9 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       }
       elseif ($field['type'] == 'commerce_line_item_reference') {
         return 'commerce_line_item';
+      }
+      elseif ($field['type'] == 'node_reference') {
+        return 'node';
       }
 
       throw new \RestfulException(format_string('Field @property is not an entity reference or taxonomy reference field.', $params));
