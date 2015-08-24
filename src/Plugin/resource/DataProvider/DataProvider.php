@@ -448,4 +448,18 @@ abstract class DataProvider implements DataProviderInterface {
       ->add(HttpHeader::create($name, $value));
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function setResourcePath($resource_path) {
+    $this->resourcePath = $resource_path;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getResourcePath() {
+    return $this->resourcePath;
+  }
+
 }

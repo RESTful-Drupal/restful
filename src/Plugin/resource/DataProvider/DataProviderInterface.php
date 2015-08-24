@@ -139,4 +139,20 @@ interface DataProviderInterface extends CrudInterface {
    */
   public function getIndexIds();
 
+  /**
+   * Set the resource path.
+   *
+   * @param string $resource_path
+   *   The resource path.
+   */
+  public function setResourcePath($resource_path);
+
+  /**
+   * Get the resource path.
+   *
+   * @return string
+   *   The resource path.
+   */
+  public function getResourcePath();
+
 }
