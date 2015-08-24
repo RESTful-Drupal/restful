@@ -54,8 +54,8 @@ class RestfulEntityUserAccessTestCase extends DrupalWebTestCase {
       ->getFormatterManager()
       ->format($handler->process(), 'json'));
     $result = $result['data'];
-    $this->assertEqual($result[0]['self'], 'http://restful.local/api/v1.0/users/0');
-    $this->assertEqual($result[1]['self'], 'http://restful.local/api/v1.0/users/2');
+    $this->assertEqual($result[0]['self'], url('api/v1.0/users/0', array('absolute' => TRUE)));
+    $this->assertEqual($result[1]['self'], url('api/v1.0/users/2', array('absolute' => TRUE)));
     $this->assertEqual(count($result), 2, 'Unprivileged users can only see themselves and the anonymous user.');
 
     // View own user account.

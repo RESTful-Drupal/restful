@@ -139,7 +139,7 @@ class RestfulAuthenticationTestCase extends RestfulCurlBaseTestCase {
       ->getFormatterManager()
       ->format($handler->process(), 'json'));
     $result = $result['data'];
-    $this->assertEqual($result[0]['self'], 'http://restful.local/api/v1.0/users/0');
+    $this->assertEqual($result[0]['self'], url('api/v1.0/users/0', array('absolute' => TRUE)));
     $this->assertEqual(count($result), 1, 'The anonymous users can only see themselves.');
 
     // To assert permissions control access to the resource, we change the
