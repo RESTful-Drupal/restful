@@ -103,7 +103,7 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
       /* @var \EntityStructureWrapper $text_multiple_wrapper */
       $expected['text_multiple'][] = $text_multiple_wrapper->value();
     }
-    $this->assertEqual($expected, $attributes);
+    $this->assertEqual(array_filter($expected), array_filter($attributes));
     $this->assertEqual($this->handler->versionedUrl($wrapper->getIdentifier()), $result['links']['self']);
 
     // 2. Assert the relationships.
@@ -249,6 +249,7 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
       $this->assertEqual($this->entities[$delta]->pid, $row['id']);
     }
 
+    $expected = array_filter($expected);
     $attributes = array_filter($result['data'][2]['attributes']);
     $this->assertEqual($expected, $attributes);
 
