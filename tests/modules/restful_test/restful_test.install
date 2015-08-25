@@ -41,6 +41,7 @@ function restful_test_schema_alter(&$schema = array()) {
  * Implements hook_uninstall().
  */
 function restful_test_uninstall() {
+  variable_del('restful_test_alternative_id_error');
   field_attach_delete_bundle('restful_test_translatable_entity', 'restful_test_translatable_entity');
 }
 

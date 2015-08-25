@@ -5,7 +5,7 @@
  * Contains \RestfulJsonApiTestCase
  */
 
-use Drupal\restful\Http\RequestInterface;
+use Drupal\restful\Exception\UnprocessableEntityException;
 use Drupal\restful\Http\Request;
 
 class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
@@ -411,15 +411,15 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
     entity_save('entity_test', $entities[2]);
 
 
-    $handler->setRequest(Request::create('api/main/v1.7/' . $entities[2]->pid));
-    $handler->setPath($entities[2]->pid);
+    $handler->setRequest(Request::create('api/main/v1.7/' . $entities[2]->uuid));
+    $handler->setPath($entities[2]->uuid);
 
-    $result = restful()
+    $response = restful()
       ->getFormatterManager()
       ->negotiateFormatter(NULL, 'json_api')
       ->prepare($handler->process());
 
-    $result = $result['data'][0]['attributes'];
+    $result = $response['data'][0]['attributes'];
 
     // Make sure that IDs are UUID.
     $this->assertEqual(count(entity_uuid_load('file', array($result['file_single']))), 1, 'UUID correctly loaded for: file_single');
@@ -428,6 +428,30 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
     $this->assertEqual(count(entity_uuid_load('taxonomy_term', $result['term_multiple'])), 2, 'UUID correctly loaded for: term_multiple');
     $this->assertEqual(count(entity_uuid_load('entity_test', array($result['entity_reference_single']))), 1, 'UUID correctly loaded for: entity_reference_single');
     $this->assertEqual(count(entity_uuid_load('entity_test', $result['entity_reference_multiple'])), 2, 'UUID correctly loaded for: entity_reference_multiple');
+
+    // Assert relationship.
+    $relationships = $response['data'][0]['relationships'];
+    $this->assertEqual($relationships['entity_reference_resource']['id'], $entities[0]->uuid);
+    $this->assertEqual($relationships['entity_reference_resource']['type'], 'main');
+
+    // Test that if referencedIdProperty and idField don't match, embedding does
+    // not happen.
+    variable_set('restful_test_alternative_id_error', TRUE);
+    $resource_manager->clearPluginCache('main:1.7');
+    $handler = $resource_manager->getPlugin('main:1.7');
+    $handler->setRequest(Request::create('api/main/v1.7/' . $entities[2]->uuid));
+    $handler->setPath($entities[2]->uuid);
+    try {
+      restful()
+        ->getFormatterManager()
+        ->negotiateFormatter(NULL, 'json_api')
+        ->prepare($handler->process());
+      $this->fail('Entity can be loaded with uuid when there is no idField.');
+    }
+    catch (UnprocessableEntityException $e) {
+      $this->pass('Entity cannot be loaded with uuid when there is no idField.');
+    }
+    variable_del('restful_test_alternative_id_error');
   }
 
   /**

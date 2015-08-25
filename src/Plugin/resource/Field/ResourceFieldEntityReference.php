@@ -241,6 +241,10 @@ class ResourceFieldEntityReference extends ResourceFieldEntity implements Resour
     // we can know for sure that the property wrappers are instances of
     // \EntityDrupalWrapper or lists of them.
     $property_wrapper = $this->propertyWrapper($interpreter);
+    if (!$property_wrapper->value()) {
+      // If there is no referenced entity, return.
+      return NULL;
+    }
 
     // If this is a multivalue field, then call recursively on the items.
     if ($property_wrapper instanceof \EntityListWrapper) {
