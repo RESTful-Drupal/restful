@@ -385,6 +385,7 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
   public function testAlternativeIdField() {
     $entities = $this->createEntities();
     $resource_manager = restful()->getResourceManager();
+    $format_manager = restful()->getFormatterManager();
     $resource_manager->clearPluginCache('main:1.7');
     $handler = $resource_manager->getPlugin('main:1.7');
 
@@ -414,8 +415,7 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
     $handler->setRequest(Request::create('api/main/v1.7/' . $entities[2]->uuid));
     $handler->setPath($entities[2]->uuid);
 
-    $response = restful()
-      ->getFormatterManager()
+    $response = $format_manager
       ->negotiateFormatter(NULL, 'json_api')
       ->prepare($handler->process());
 
@@ -442,8 +442,7 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
     $handler->setRequest(Request::create('api/main/v1.7/' . $entities[2]->uuid));
     $handler->setPath($entities[2]->uuid);
     try {
-      restful()
-        ->getFormatterManager()
+      $format_manager
         ->negotiateFormatter(NULL, 'json_api')
         ->prepare($handler->process());
       $this->fail('Entity can be loaded with uuid when there is no idField.');
@@ -452,6 +451,30 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
       $this->pass('Entity cannot be loaded with uuid when there is no idField.');
     }
     variable_del('restful_test_alternative_id_error');
+
+    // Clear caches to remove error field.
+    $resource_manager->clearPluginCache('main:1.7');
+    $handler = $resource_manager->getPlugin('main:1.7');
+    $format_manager->setResource($handler);
+
+    // Filter the entities by the reference.
+    $handler->setRequest(Request::create('api/main/v1.7', array(
+      'filter' => array('entity_reference_single' => $entities[0]->uuid),
+    )));
+    $handler->setPath('');
+    $response = drupal_json_decode($format_manager
+      ->format($handler->process(), 'json_api'));
+    // Assert that $entities[2] points to $entities[0]
+    $this->assertEqual($response['data'][0]['id'], $entities[2]->uuid);
+    // Filter the entities by the reference.
+    $handler->setRequest(Request::create('api/main/v1.7', array(
+      'filter' => array('entity_reference_multiple' => $entities[1]->uuid),
+    )));
+    $handler->setPath('');
+    $response = drupal_json_decode($format_manager
+      ->format($handler->process(), 'json_api'));
+    // Assert that $entities[2] points to $entities[0]
+    $this->assertEqual($response['data'][0]['id'], $entities[2]->uuid);
   }
 
   /**
