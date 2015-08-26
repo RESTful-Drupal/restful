@@ -143,8 +143,8 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
           $this->addHateoas($included_item, $resource_plugin, $id);
 
           // We want to be able to include only the images in articles.images,
-          //but not articles.related.images. That's why we need the path
-          //including the parents.
+          // but not articles.related.images. That's why we need the path
+          // including the parents.
 
           // Remove numeric parents since those only indicate that the field was
           // multivalue, not a parent.
