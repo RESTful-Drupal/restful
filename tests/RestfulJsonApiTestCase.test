@@ -386,6 +386,7 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
     $entities = $this->createEntities();
     $resource_manager = restful()->getResourceManager();
     $format_manager = restful()->getFormatterManager();
+    $formatter = $format_manager->negotiateFormatter(NULL, 'json_api');
     $resource_manager->clearPluginCache('main:1.7');
     $handler = $resource_manager->getPlugin('main:1.7');
 
@@ -414,12 +415,10 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
 
     $handler->setRequest(Request::create('api/main/v1.7/' . $entities[2]->uuid));
     $handler->setPath($entities[2]->uuid);
+    $formatter->setResource($handler);
+    $response = $formatter->prepare($handler->process());
 
-    $response = $format_manager
-      ->negotiateFormatter(NULL, 'json_api')
-      ->prepare($handler->process());
-
-    $result = $response['data'][0]['attributes'];
+    $result = $response['data']['attributes'];
 
     // Make sure that IDs are UUID.
     $this->assertEqual(count(entity_uuid_load('file', array($result['file_single']))), 1, 'UUID correctly loaded for: file_single');
@@ -430,9 +429,12 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
     $this->assertEqual(count(entity_uuid_load('entity_test', $result['entity_reference_multiple'])), 2, 'UUID correctly loaded for: entity_reference_multiple');
 
     // Assert relationship.
-    $relationships = $response['data'][0]['relationships'];
+    $relationships = $response['data']['relationships'];
     $this->assertEqual($relationships['entity_reference_resource']['id'], $entities[0]->uuid);
     $this->assertEqual($relationships['entity_reference_resource']['type'], 'main');
+
+    // Assert that the self link contains the UUID.
+    $this->assertTrue(strpos($response['links']['self'], $entities[2]->uuid) !== FALSE, 'UUID found in self link.');
 
     // Test that if referencedIdProperty and idField don't match, embedding does
     // not happen.
@@ -441,6 +443,7 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
     $handler = $resource_manager->getPlugin('main:1.7');
     $handler->setRequest(Request::create('api/main/v1.7/' . $entities[2]->uuid));
     $handler->setPath($entities[2]->uuid);
+    $format_manager->setResource($handler);
     try {
       $format_manager
         ->negotiateFormatter(NULL, 'json_api')
@@ -455,15 +458,14 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
     // Clear caches to remove error field.
     $resource_manager->clearPluginCache('main:1.7');
     $handler = $resource_manager->getPlugin('main:1.7');
-    $format_manager->setResource($handler);
 
     // Filter the entities by the reference.
     $handler->setRequest(Request::create('api/main/v1.7', array(
       'filter' => array('entity_reference_single' => $entities[0]->uuid),
     )));
     $handler->setPath('');
-    $response = drupal_json_decode($format_manager
-      ->format($handler->process(), 'json_api'));
+    $formatter->setResource($handler);
+    $response = $formatter->prepare($handler->process());
     // Assert that $entities[2] points to $entities[0]
     $this->assertEqual($response['data'][0]['id'], $entities[2]->uuid);
     // Filter the entities by the reference.
@@ -471,8 +473,8 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
       'filter' => array('entity_reference_multiple' => $entities[1]->uuid),
     )));
     $handler->setPath('');
-    $response = drupal_json_decode($format_manager
-      ->format($handler->process(), 'json_api'));
+    $formatter->setResource($handler);
+    $response = $formatter->prepare($handler->process());
     // Assert that $entities[2] points to $entities[0]
     $this->assertEqual($response['data'][0]['id'], $entities[2]->uuid);
   }
