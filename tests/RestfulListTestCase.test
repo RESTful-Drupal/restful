@@ -312,6 +312,14 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
 
     $nodes = array();
 
+    // We set the 'created' property of the node in order to test the operator
+    // 'BETWEEN' on a property.
+    $nodes_created = array(
+      'abc' => strtotime('june 1 1971'),
+      'another abc' => strtotime('june 1 1986'),
+      'last' => strtotime('june 1 1996'),
+    );
+
     foreach ($info as $row) {
       $title = $row['title'];
 
@@ -327,6 +335,9 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
       }
 
       $settings['uid'] = $row['uid'];
+
+      // Setting the 'created' time of the node.
+      $settings['created'] = $nodes_created[$title];
 
       $node = $this->drupalCreateNode($settings);
       $nodes[$title] = $node->nid;
@@ -422,6 +433,32 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     $query = array('filter' => array('invalid-key' => 'foo'));
     $result = $this->httpRequest('api/v1.0/articles/1', \RestfulInterface::GET, $query);
     $this->assertEqual($result['code'], '200', 'Invalid filter key was ignored on non-list query.');
+
+    // Test the 'BETWEEN' operator on the 'created' property.
+    $request = array(
+      'filter' => array(
+        'created' => array(
+          'value' => array(0, $nodes_created['abc']),
+          'operator' => 'BETWEEN',
+        ),
+      ),
+    );
+
+    $result = $handler->get('', $request);
+    $this->assertEqual(count($result), 1);
+
+    $request['filter']['created']['value'] = array($nodes_created['abc'], $nodes_created['last'] - 1);
+    $result = $handler->get('', $request);
+    $this->assertEqual(count($result), 2);
+
+    $request['filter']['created']['value'] = array($nodes_created['abc']);
+    try {
+      $handler->get('', $request);
+      $this->fail('Exception not raised when using one value on operator BETWEEN (on a property).');
+    }
+    catch (\PDOException $e) {
+      $this->pass('Exception raised when using one value on operator BETWEEN (on a property).');
+    }
 
     // Test multiple filters on the same field.
     $request = array('filter' => array('integer_single' => array(
