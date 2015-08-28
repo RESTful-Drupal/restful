@@ -577,12 +577,6 @@ function restful_parse_request() {
       $request['file_upload'] = true;
     }
   }
-  elseif ($method == \RestfulInterface::HEAD) {
-    $request = array('method' => $method);
-  }
-  elseif ($method == \RestfulInterface::DELETE) {
-    $request = array('method' => $method);
-  }
 
   // if we get this far, then we need to do special processing on php://input to get the data
   if (!$request) {
