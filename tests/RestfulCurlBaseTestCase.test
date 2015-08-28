@@ -66,6 +66,22 @@ class RestfulCurlBaseTestCase extends DrupalWebTestCase {
         break;
 
       case \RestfulInterface::PUT:
+        if (is_string($body)) {
+          if (file_exists($body)) {
+            $fh = fopen($body, 'r');
+            $curl_options = array(
+              CURLOPT_PUT => TRUE,
+              CURLOPT_INFILE => $fh,
+              CURLOPT_INFILESIZE => filesize($body),
+              CURLOPT_URL => url($url, array('absolute' => TRUE)),
+              CURLOPT_NOBODY => FALSE,
+            );
+          }
+          else {
+            throw new Exception("File $body does not exist.");
+          }
+          break;
+        }
       case \RestfulInterface::PATCH:
         $curl_options = array(
           CURLOPT_HTTPGET => FALSE,
