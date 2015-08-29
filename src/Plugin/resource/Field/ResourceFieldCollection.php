@@ -225,4 +225,82 @@ class ResourceFieldCollection implements ResourceFieldCollectionInterface {
     $this->idField = $id_field;
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function evalFilter(array $filter) {
+    // Initialize to TRUE for AND and FALSE for OR (neutral value).
+    $match = $filter['conjunction'] == 'AND';
+    for ($index = 0; $index < count($filter['value']); $index++) {
+      if (!$resource_field = $this->get($filter['public_field'])) {
+        // If the field is unknown don't use se filter.
+        return TRUE;
+      }
+      $plugin_value = $resource_field->value($this->getInterpreter());
+      if (is_null($plugin_value)) {
+        // Property doesn't exist on the plugin, so filter it out.
+        return FALSE;
+      }
+
+      if ($filter['conjunction'] == 'OR') {
+        $match = $match || $this::evaluateExpression($plugin_value, $filter['value'][$index], $filter['operator'][$index]);
+        if ($match) {
+          break;
+        }
+      }
+      else {
+        $match = $match && $this::evaluateExpression($plugin_value, $filter['value'][$index], $filter['operator'][$index]);
+        if (!$match) {
+          break;
+        }
+      }
+    }
+    return $match;
+  }
+
+  /**
+   * Evaluate a simple expression.
+   *
+   * @param mixed $value1
+   *   The first value.
+   * @param mixed $value2
+   *   The second value.
+   * @param string $operator
+   *   The operator.
+   *
+   * @return bool
+   *   TRUE or FALSE based on the evaluated expression.
+   *
+   * @throws BadRequestException
+   */
+  protected static function evaluateExpression($value1, $value2, $operator) {
+    switch($operator) {
+      case '=':
+        return $value1 == $value2;
+
+      case '<':
+        return $value1 < $value2;
+
+      case '>':
+        return $value1 > $value2;
+
+      case '>=':
+        return $value1 >= $value2;
+
+      case '<=':
+        return $value1 <= $value2;
+
+      case '<>':
+      case '!=':
+        return $value1 != $value2;
+
+      case 'IN':
+        return in_array($value1, $value2);
+
+      case 'BETWEEN':
+        return $value1 >= $value2[0] && $value1 >= $value2[1];
+    }
+    return FALSE;
+  }
+
 }

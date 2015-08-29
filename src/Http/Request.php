@@ -355,6 +355,7 @@ class Request implements RequestInterface {
 
     return $input;
   }
+
   /**
    * Parses the header names and values from globals.
    *

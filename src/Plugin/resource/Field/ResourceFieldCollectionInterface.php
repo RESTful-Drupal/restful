@@ -103,4 +103,15 @@ interface ResourceFieldCollectionInterface extends \Iterator, \Countable {
    */
   public function setIdField($id_field);
 
+  /**
+   * Evaluate a parsed filter on a field collection.
+   *
+   * @param array $filter
+   *   The parsed filter.
+   *
+   * @return bool
+   *   TRUE if the collection matches the filter. FALSE otherwise.
+   */
+  public function evalFilter(array $filter);
+
 }

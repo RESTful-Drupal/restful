@@ -10,7 +10,9 @@ namespace Drupal\restful\Plugin\resource\DataProvider;
 use Drupal\restful\Exception\ForbiddenException;
 use Drupal\restful\Exception\InternalServerErrorException;
 use Drupal\restful\Exception\ServerConfigurationException;
+use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
+use Drupal\restful\Plugin\resource\ResourceEntity;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterEMW;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollection;
@@ -22,6 +24,10 @@ use Drupal\restful\Exception\UnprocessableEntityException;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
 use Drupal\restful\Plugin\resource\Resource;
 use Drupal\restful\Plugin\resource\ResourceInterface;
+use Drupal\restful\Plugin\ResourcePluginManager;
+use Drupal\restful\Util\EntityFieldQuery;
+use Drupal\restful\Util\RelationalFilter;
+use Drupal\restful\Util\RelationalFilterInterface;
 
 class DataProviderEntity extends DataProvider implements DataProviderEntityInterface {
 
@@ -44,7 +50,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
    *
    * @var string
    */
-  protected $EFQClass = '\EntityFieldQuery';
+  protected $EFQClass = '\Drupal\restful\Util\EntityFieldQuery';
 
   /**
    * Constructor.
@@ -592,15 +598,28 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
    */
   protected function queryForListFilter(\EntityFieldQuery $query) {
     $resource_fields = $this->fieldDefinitions;
-    foreach ($this->parseRequestForListFilter() as $filter) {
+    $filters = $this->parseRequestForListFilter();
+    $this->validateFilters($filters);
+    foreach ($filters as $filter) {
       // Determine if filtering is by field or property.
       /* @var ResourceFieldEntityInterface $resource_field */
       if (!$resource_field = $resource_fields->get($filter['public_field'])) {
+        if (!static::isNestedField($filter['public_field'])) {
+          // This is not a nested filter.
+          continue;
+        }
+        if (!empty($filter['target'])) {
+          // If we cannot find the field, it may be a nested filter. Check if
+          // the target of that is the current resource.
+          continue;
+        }
+        $this->addNestedFilter($filter, $query);
         continue;
       }
       if (!$property_name = $resource_field->getProperty()) {
         throw new BadRequestException(sprintf('The current filter "%s" selection does not map to any entity property or Field API field.', $filter['public_field']));
       }
+
       if (field_info_field($property_name)) {
         if (in_array(strtoupper($filter['operator'][0]), array('IN', 'BETWEEN'))) {
           $query->fieldCondition($property_name, $resource_field->getColumn(), $this->getReferencedIds($filter['value'], $resource_field), $filter['operator'][0]);
@@ -620,6 +639,32 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
         }
         for ($index = 0; $index < count($filter['value']); $index++) {
           $query->propertyCondition($column, $this->getReferencedId($filter['value'][$index], $resource_field), $filter['operator'][$index]);
+        }
+      }
+    }
+  }
+
+  /**
+   * Validates the query parameters.
+   *
+   * @param array $filters
+   *   The parsed filters.
+   *
+   * @throws BadRequestException
+   *   When there is an invalid target for relational filters.
+   */
+  protected function validateFilters(array $filters) {
+    foreach ($filters as $filter) {
+      if (empty($filter['target'])) {
+        continue;
+      }
+      // If the target is not a part of the field, then raise an error.
+      $field_name_parts = explode('.', $filter['public_field']);
+      $target_parts = explode('.', $filter['target']);
+      foreach ($target_parts as $delta => $target_part) {
+        if ($target_part != $field_name_parts[$delta]) {
+          // There is a discrepancy between target and field name.
+          throw new BadRequestException(sprintf('The target "%s" should be a part of the field name "%s".', $filter['target'], $filter['public_field']));
         }
       }
     }
@@ -958,6 +1003,103 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
       $output[] = $this->getReferencedId($value, $resource_field);
     }
     return $output;
+  }
+
+  /**
+   * Add relational filters to EFQ.
+   *
+   * This is for situation like when you only want articles that have taxonomies
+   * that contain the word Drupal in their body field. This cannot be resolved
+   * via EFQ alone.
+   *
+   * @param array $filter
+   *   The filter.
+   * @param \EntityFieldQuery $query
+   *   The query to alter.
+   */
+  protected function addNestedFilter(array $filter, \EntityFieldQuery $query) {
+    $relational_filters = array();
+    foreach ($this->getFieldsFromPublicName($filter['public_field']) as $field) {
+      $relational_filters[] = new RelationalFilter($field['name'], $field['type'], $field['column'], $field['destination'], $field['entity_type'], $field['bundles']);
+    }
+    $query->addRelationship($filter + array('relational_filters' => $relational_filters));
+  }
+
+  /**
+   * Transform the nested public name into an array of Drupal field names.
+   *
+   * @param string $name
+   *   The dot separated public name.
+   *
+   * @throws ServerConfigurationException
+   *   When the required resource information is not available.
+   *
+   * @return array[]
+   *   An array of fields with name and type.
+   */
+  protected function getFieldsFromPublicName($name) {
+    $public_field_names = explode('.', $name);
+    $last_public_field_name = array_pop($public_field_names);
+    $fields = array();
+
+    // The first field is in the current resource, but not the other ones.
+    $definitions = $this->fieldDefinitions;
+    foreach ($public_field_names as $index => $public_field_name) {
+      /* @var ResourceFieldEntity $resource_field */
+      $resource_field = $definitions->get($public_field_name);
+      // Get the resource for the field, so we can get information for the next
+      // iteration.
+      if (!$resource = $resource_field->getResource()) {
+        throw new ServerConfigurationException(sprintf('The nested field %s cannot be accessed because %s has no resource associated to it.', $name, $public_field_name));
+      }
+      list($item, $definitions) = $this->getFieldsFromPublicNameItem($resource_field);
+      $fields[] = $item;
+    }
+    $resource_field = $definitions->get($last_public_field_name);
+    $property = $resource_field->getProperty();
+    $item = array(
+      'name' => $property,
+      'type' => ResourceFieldEntity::propertyIsField($property) ? RelationalFilterInterface::TYPE_FIELD : RelationalFilterInterface::TYPE_PROPERTY,
+      'entity_type' => NULL,
+      'bundles' => array(),
+    );
+    $item['column'] = $item['type'] == RelationalFilterInterface::TYPE_FIELD ? $resource_field->getColumn() : NULL;
+    $fields[] = $item;
+
+    return $fields;
+  }
+
+  /**
+   * Get the field name for a single item.
+   *
+   * @param ResourceFieldInterface $resource_field
+   *   The resource field.
+   *
+   * @throws \Drupal\restful\Exception\BadRequestException
+   *
+   * @return array
+   *   The result.
+   */
+  protected function getFieldsFromPublicNameItem(ResourceFieldInterface $resource_field) {
+    $property = $resource_field->getProperty();
+    $resource = $resource_field->getResource();
+    $item = array(
+      'name' => $property,
+      'type' => ResourceFieldEntity::propertyIsField($property) ? RelationalFilterInterface::TYPE_FIELD : RelationalFilterInterface::TYPE_PROPERTY,
+      'entity_type' => NULL,
+      'bundles' => array(),
+    );
+    $item['column'] = $item['type'] == RelationalFilterInterface::TYPE_FIELD ? $resource_field->getColumn() : NULL;
+    $instance_id = sprintf('%s:%d.%d', $resource['name'], $resource['majorVersion'], $resource['minorVersion']);
+    $plugin_manager = ResourcePluginManager::create('cache', Request::create('', array(), RequestInterface::METHOD_GET));
+    /* @var ResourceEntity $resource */
+    $resource = $plugin_manager->createInstance($instance_id);
+
+    // Variables for the next iteration.
+    $definitions = $resource->getFieldDefinitions();
+    $item['entity_type'] = $resource->getEntityType();
+    $item['bundles'] = $resource->getBundles();
+    return array($item, $definitions);
   }
 
 }

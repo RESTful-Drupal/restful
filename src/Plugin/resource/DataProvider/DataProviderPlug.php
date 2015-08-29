@@ -8,7 +8,6 @@
 namespace Drupal\restful\Plugin\resource\DataProvider;
 
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
-use Drupal\restful\Exception\BadRequestException;
 use Drupal\restful\Exception\NotFoundException;
 use Drupal\restful\Exception\NotImplementedException;
 use Drupal\restful\Exception\UnauthorizedException;
@@ -178,34 +177,7 @@ class DataProviderPlug extends DataProvider implements DataProviderInterface {
         continue;
       }
       foreach ($filters as $filter) {
-        $interpreter = new DataInterpreterPlug($this->getAccount(), new PluginWrapper($plugin));
-        // Initialize to TRUE for AND and FALSE for OR (neutral value).
-        $match = $filter['conjunction'] == 'AND';
-        for ($index = 0; $index < count($filter['value']); $index++) {
-          $property = $this->fieldDefinitions->get($filter['public_field'])->getProperty();
-
-          $plugin_value = $interpreter->getWrapper()->get($property);
-          if (is_null($plugin_value)) {
-            // Property doesn't exist on the plugin, so filter it out.
-            unset($plugins[$instance_id]);
-            continue;
-          }
-
-          if ($filter['conjunction'] == 'OR') {
-            $match = $match || $this->evaluateExpression($plugin_value, $filter['value'][$index], $filter['operator'][$index]);
-            if ($match) {
-              break;
-            }
-          }
-          else {
-            $match = $match && $this->evaluateExpression($plugin_value, $filter['value'][$index], $filter['operator'][$index]);
-            if (!$match) {
-              break;
-            }
-          }
-        }
-        if (!$match) {
-          // Property doesn't match the filter.
+        if (!$this->fieldDefinitions->evalFilter($filter)) {
           unset($plugins[$instance_id]);
         }
       }
@@ -242,51 +214,6 @@ class DataProviderPlug extends DataProvider implements DataProviderInterface {
       });
     }
     return $plugins;
-  }
-
-  /**
-   * Evaluate a simple expression.
-   *
-   * @param mixed $value1
-   *   The first value.
-   * @param mixed $value2
-   *   The second value.
-   * @param string $operator
-   *   The operator.
-   *
-   * @return bool
-   *   TRUE or FALSE based on the evaluated expression.
-   *
-   * @throws BadRequestException
-   */
-  protected function evaluateExpression($value1, $value2, $operator) {
-    switch($operator) {
-      case '=':
-        return $value1 == $value2;
-
-      case '<':
-        return $value1 < $value2;
-
-      case '>':
-        return $value1 > $value2;
-
-      case '>=':
-        return $value1 >= $value2;
-
-      case '<=':
-        return $value1 <= $value2;
-
-      case '<>':
-      case '!=':
-        return $value1 != $value2;
-
-      case 'IN':
-        return in_array($value1, $value2);
-
-      case 'BETWEEN':
-        return $value1 >= $value2[0] && $value1 >= $value2[1];
-    }
-    return FALSE;
   }
 
 }

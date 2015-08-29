@@ -7,11 +7,37 @@
 
 namespace Drupal\restful\Plugin\resource\DataProvider;
 
+use Drupal\restful\Exception\BadRequestException;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\CrudInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
 
 interface DataProviderInterface extends CrudInterface {
+  /**
+   * Checks if the passed in string is a dot-nested field.
+   *
+   * @param string $field_name
+   *   The field name.
+   *
+   * @return bool
+   *   TRUE if the field is nested. FALSE otherwise.
+   */
+  public static function isNestedField($field_name);
+
+  /**
+   * Processes the input for a filter and adds the appropriate defaults.
+   *
+   * @param mixed $filter
+   *   The input value for the filter.
+   * @param string $public_field
+   *   The public name for the filter.
+   *
+   * @throws \Drupal\restful\Exception\BadRequestException
+   *
+   * @return array
+   *   The processed filter item with all of the defaults.
+   */
+  public static function processFilterInput($filter, $public_field);
 
   /**
    * Gets the range.

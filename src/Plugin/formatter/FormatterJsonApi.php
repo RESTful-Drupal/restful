@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\restful\Plugin\formatter\FormatterJson.
+ * Contains \Drupal\restful\Plugin\formatter\FormatterJsonApi.
  */
 
 namespace Drupal\restful\Plugin\formatter;
@@ -108,6 +108,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
       // If the field points to a resource that can be included, include it
       // right away.
       if (
+        !empty($value) &&
         static::isIterable($value) &&
         $resource_field instanceof ResourceFieldResourceInterface
       ) {

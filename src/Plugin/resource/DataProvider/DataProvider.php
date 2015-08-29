@@ -67,6 +67,52 @@ abstract class DataProvider implements DataProviderInterface {
   protected $resourcePath;
 
   /**
+   * {@inheritdoc}
+   */
+  public static function processFilterInput($filter, $public_field) {
+    // Filtering can be achieved in different ways:
+    // 1. filter[foo]=bar
+    // 2. filter[foo][0]=bar&filter[foo][1]=baz
+    // 3. filter[foo][value]=bar
+    // 4. filter[foo][value][0]=bar&filter[foo][value][1]=baz
+    if (!is_array($filter)) {
+      // Request uses the shorthand form for filter. For example
+      // filter[foo]=bar would be converted to filter[foo][value] = bar.
+      $filter = array('value' => $filter);
+    }
+    if (!is_array($filter['value'])) {
+      $filter['value'] = array($filter['value']);
+    }
+    // Add the property.
+    $filter['public_field'] = $public_field;
+
+    // Set default operator.
+    $filter += array('operator' => array_fill(0, count($filter['value']), '='));
+    if (!is_array($filter['operator'])) {
+      $filter['operator'] = array($filter['operator']);
+    }
+
+    // Make sure that we have the same amount of operators than values.
+    if (!in_array(strtoupper($filter['operator'][0]), array(
+        'IN',
+        'BETWEEN',
+      )) && count($filter['value']) != count($filter['operator'])
+    ) {
+      throw new BadRequestException('The number of operators and values has to be the same.');
+    }
+
+    $filter += array('conjunction' => 'AND');
+
+    // Clean the operator in case it came from the URL.
+    // e.g. filter[minor_version][operator]=">="
+    $filter['operator'] = str_replace(array('"', "'"), '', $filter['operator']);
+
+    static::isValidOperatorsForFilter($filter['operator']);
+    static::isValidConjunctionForFilter($filter['conjunction']);
+    return $filter;
+  }
+
+  /**
    * Constructor.
    *
    * @param RequestInterface $request
@@ -208,7 +254,8 @@ abstract class DataProvider implements DataProviderInterface {
    * {@inheritdoc}
    */
   public function methodAccess(ResourceFieldInterface $resource_field) {
-    return in_array($this->getRequest()->getMethod(), $resource_field->getMethods());
+    return in_array($this->getRequest()
+      ->getMethod(), $resource_field->getMethods());
   }
 
   /**
@@ -279,47 +326,10 @@ abstract class DataProvider implements DataProviderInterface {
     $filters = array();
 
     foreach ($input['filter'] as $public_field => $value) {
-      if (!$this->fieldDefinitions->get($public_field)) {
+      if (!static::isNestedField($public_field) && !$this->fieldDefinitions->get($public_field)) {
         throw new BadRequestException(format_string('The filter @filter is not allowed for this path.', array('@filter' => $public_field)));
       }
-
-      // Filtering can be achieved in different ways:
-      // 1. filter[foo]=bar
-      // 2. filter[foo][0]=bar&filter[foo][1]=baz
-      // 3. filter[foo][value]=bar
-      // 4. filter[foo][value][0]=bar&filter[foo][value][1]=baz
-      if (!is_array($value)) {
-        // Request uses the shorthand form for filter. For example
-        // filter[foo]=bar would be converted to filter[foo][value] = bar.
-        $value = array('value' => $value);
-      }
-      if (!is_array($value['value'])) {
-        $value['value'] = array($value['value']);
-      }
-      // Add the property.
-      $value['public_field'] = $public_field;
-
-      // Set default operator.
-      $value += array('operator' => array_fill(0, count($value['value']), '='));
-      if (!is_array($value['operator'])) {
-        $value['operator'] = array($value['operator']);
-      }
-
-      // Make sure that we have the same amount of operators than values.
-      if (!in_array(strtoupper($value['operator'][0]), array('IN', 'BETWEEN')) && count($value['value']) != count($value['operator'])) {
-        throw new BadRequestException('The number of operators and values has to be the same.');
-      }
-
-      $value += array('conjunction' => 'AND');
-
-      // Clean the operator in case it came from the URL.
-      // e.g. filter[minor_version][operator]=">="
-      $value['operator'] = str_replace(array('"', "'"), '', $value['operator']);
-
-      static::isValidOperatorsForFilter($value['operator']);
-      static::isValidConjunctionForFilter($value['conjunction']);
-
-      $filters[] = $value;
+      $filters[] = static::processFilterInput($value, $public_field);
     }
 
     return $filters;
@@ -460,6 +470,13 @@ abstract class DataProvider implements DataProviderInterface {
    */
   public function getResourcePath() {
     return $this->resourcePath;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function isNestedField($field_name) {
+    return strpos($field_name, '.') !== FALSE;
   }
 
 }
