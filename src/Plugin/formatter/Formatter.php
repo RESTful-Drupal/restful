@@ -81,4 +81,24 @@ abstract class Formatter extends PluginBase implements FormatterInterface {
     return is_array($input) || $input instanceof \Traversable || $input instanceof \stdClass;
   }
 
+  /**
+   * Determines if the response is an error, and sets content type accordingly.
+   *
+   * @param int $status
+   *   The HTTP status code.
+   * @param string $content_type
+   *   The content type
+   *
+   * @return bool
+   *   TRUE if the status if of error, otherwise FALSE.
+   */
+  protected function isError($status, $content_type = 'application/problem+json; charset=utf-8') {
+    if (!empty($status) && floor($status / 100) != 2) {
+      $this->contentType = $content_type;
+      return TRUE;
+    }
+
+    return FALSE;
+  }
+
 }
