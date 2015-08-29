@@ -1180,7 +1180,8 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    * Check access to CRUD an entity.
    *
    * @param $op
-   *   The operation. Allowed values are "create", "update" and "delete".
+   *   The operation. Allowed values are "view", "create", "update" and
+   *   "delete".
    * @param $entity_type
    *   The entity type.
    * @param $entity
