@@ -102,7 +102,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
         $value->setBundles($this->bundles);
       }
     }
-    $this->resourcePath = $resource_path;
+    $this->setResourcePath($resource_path);
     if (empty($this->options['urlParams'])) {
       $this->options['urlParams'] = array(
         'filter' => TRUE,
@@ -702,7 +702,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
 
     if ($this->checkEntityAccess($op, $entity_type, $entity) === FALSE) {
 
-      if ($op == 'view' && !$this->request->getPath()) {
+      if ($op == 'view' && !$this->getResourcePath()) {
         // Just return FALSE, without an exception, for example when a list of
         // entities is requested, and we don't want to fail all the list because
         // of a single item without access.

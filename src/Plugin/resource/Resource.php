@@ -162,6 +162,7 @@ abstract class Resource extends PluginBase implements ResourceInterface {
    */
   public function setPath($path) {
     $this->path = $path;
+    $this->getDataProvider()->setResourcePath($path);
   }
 
   /**

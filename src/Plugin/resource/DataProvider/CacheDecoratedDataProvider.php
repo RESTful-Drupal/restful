@@ -431,4 +431,18 @@ class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface 
     $this->subject->setOptions($options);
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function setResourcePath($resource_path) {
+    $this->subject->setResourcePath($resource_path);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getResourcePath() {
+    return $this->subject->getResourcePath();
+  }
+
 }

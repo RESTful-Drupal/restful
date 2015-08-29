@@ -37,7 +37,7 @@ class RestfulEntityUserAccessTestCase extends DrupalWebTestCase {
     try {
       $handler->setRequest(Request::create('api/v1.0/users/' . $user2->uid));
       $handler->setPath($user2->uid);
-      restful()->getFormatterManager()->format($handler->process(), 'json');
+      $handler->process();
       $this->fail('Non-privileged user can view another user.');
     }
     catch (ForbiddenException $e) {
@@ -48,18 +48,15 @@ class RestfulEntityUserAccessTestCase extends DrupalWebTestCase {
     }
 
     // Listing of users.
-    try {
-      $handler->setRequest(Request::create('api/v1.0/users'));
-      $handler->setPath('');
-      restful()->getFormatterManager()->format($handler->process(), 'json');
-      $this->fail('Non-privileged user can view listing of users.');
-    }
-    catch (ForbiddenException $e) {
-      $this->pass('Non-privileged user cannot view listing of users.');
-    }
-    catch (\Exception $e) {
-      $this->fail('Incorrect exception thrown for non-privileged user accessing listing of users.');
-    }
+    $handler->setRequest(Request::create('api/v1.0/users'));
+    $handler->setPath('');
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
+    $result = $result['data'];
+    $this->assertEqual($result[0]['self'], url('api/v1.0/users/0', array('absolute' => TRUE)));
+    $this->assertEqual($result[1]['self'], url('api/v1.0/users/2', array('absolute' => TRUE)));
+    $this->assertEqual(count($result), 2, 'Unprivileged users can only see themselves and the anonymous user.');
 
     // View own user account.
     $handler->setRequest(Request::create('api/v1.0/users/' . $user1->uid));
