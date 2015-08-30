@@ -176,12 +176,16 @@ class DataProviderPlug extends DataProvider implements DataProviderInterface {
         unset($plugins[$instance_id]);
         continue;
       }
+
+      $interpreter = new DataInterpreterPlug($this->getAccount(), new PluginWrapper($plugin));
+      $this->fieldDefinitions->setInterpreter($interpreter);
       foreach ($filters as $filter) {
         if (!$this->fieldDefinitions->evalFilter($filter)) {
           unset($plugins[$instance_id]);
         }
       }
     }
+    $this->fieldDefinitions->setInterpreter(NULL);
     return $plugins;
   }
 
