@@ -36,13 +36,38 @@ class EntityFieldQuery extends \EntityFieldQuery implements EntityFieldQueryRela
    * {@inheritdoc}
    */
   public function finishQuery($select_query, $id_key = 'entity_id') {
-    foreach ($this->getRelationships() as $relationship) {
+    $entity_type = $this->entityConditions['entity_type']['value'];
+    foreach ($this->getRelationships() as $delta => $relationship) {
       // A relational filter consists of a chain of relationships and a value
       // for a condition at the end.
       // Relationships start with the entity base table.
-      $entity_info = entity_get_info($this->entityConditions['entity_type']['value']);
+      $entity_info = entity_get_info($entity_type);
       $entity_table = $entity_table_alias = $entity_info['base table'];
-      $condition = array_pop($relationship['relational_filters']);
+
+      // Add the table if the base entity table was not added because:
+      // 1. There was a fieldCondition or fieldOrderBy, AND
+      // 2. There was no property condition ot order.
+      if ($delta == 0) {
+        $is_entity_table_present = FALSE;
+        $field_base_table_alias = NULL;
+        foreach ($select_query->getTables() as $table_info) {
+          // Search for the base table and check if the entity table is present
+          // for the resource's entity type.
+          if (!$field_base_table_alias && empty($table_info['join type'])) {
+            $field_base_table_alias = $table_info['alias'];
+          }
+          if ($table_info['table'] == $entity_table) {
+            $is_entity_table_present = TRUE;
+            break;
+          }
+        }
+        if (!$is_entity_table_present && $field_base_table_alias) {
+          // We have the base table and we need to join it to the entity table.
+          _field_sql_storage_query_join_entity($select_query, $entity_type, $field_base_table_alias);
+        }
+      }
+      // Pop the last item, since it is the one that has to match the filter and
+      // will have the WHERE associated.
       foreach ($relationship['relational_filters'] as $relational_filter) {
         /* @var RelationalFilterInterface $relational_filter */
         if ($relational_filter->getType() == RelationalFilterInterface::TYPE_FIELD) {
