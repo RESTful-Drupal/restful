@@ -7,7 +7,7 @@
 
 namespace Drupal\restful\Plugin\resource\DataProvider;
 
-use Drupal\restful\Exception\BadRequestException;
+use Doctrine\Common\Collections\ArrayCollection;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\CrudInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
@@ -180,5 +180,13 @@ interface DataProviderInterface extends CrudInterface {
    *   The resource path.
    */
   public function getResourcePath();
+
+  /**
+   * Returns the metadata collection.
+   *
+   * @return ArrayCollection
+   *   The collection object.
+   */
+  public function getMetadata();
 
 }

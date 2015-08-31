@@ -7,13 +7,13 @@
 
 namespace Drupal\restful\Plugin\resource\DataProvider;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use Drupal\restful\Exception\BadRequestException;
 use Drupal\restful\Exception\ServiceUnavailableException;
 use Drupal\restful\Http\HttpHeader;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
-use Drupal\restful\Resource\ResourceManager;
 
 abstract class DataProvider implements DataProviderInterface {
 
@@ -65,6 +65,14 @@ abstract class DataProvider implements DataProviderInterface {
    * @var string
    */
   protected $resourcePath;
+
+  /**
+   * Array of metadata. Use this as a mean to pass info to the render layer.
+   *
+   * @var ArrayCollection
+   *   Key value store.
+   */
+  protected $metadata;
 
   /**
    * {@inheritdoc}
@@ -139,6 +147,7 @@ abstract class DataProvider implements DataProviderInterface {
       $this->range = $options['range'];
     }
     $this->langcode = $langcode ?: static::getLanguage();
+    $this->metadata = new ArrayCollection();
   }
 
   /**
@@ -476,6 +485,13 @@ abstract class DataProvider implements DataProviderInterface {
    */
   public static function isNestedField($field_name) {
     return strpos($field_name, '.') !== FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getMetadata() {
+    return $this->metadata;
   }
 
 }

@@ -25,7 +25,6 @@ use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
 use Drupal\restful\Plugin\resource\Resource;
 use Drupal\restful\Plugin\resource\ResourceInterface;
 use Drupal\restful\Plugin\ResourcePluginManager;
-use Drupal\restful\Util\EntityFieldQuery;
 use Drupal\restful\Util\RelationalFilter;
 use Drupal\restful\Util\RelationalFilterInterface;
 
@@ -757,6 +756,13 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
         // Just return FALSE, without an exception, for example when a list of
         // entities is requested, and we don't want to fail all the list because
         // of a single item without access.
+
+        // Add the inaccessible item to the metadata to fix the record count in
+        // the formatter.
+        $inaccessible_records = $this->getMetadata()->get('inaccessible_records');
+        $inaccessible_records[] = $entity_id;
+        $this->getMetadata()->set('inaccessible_records', $inaccessible_records);
+
         return FALSE;
       }
 
