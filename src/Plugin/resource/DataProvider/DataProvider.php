@@ -254,8 +254,7 @@ abstract class DataProvider implements DataProviderInterface {
    * {@inheritdoc}
    */
   public function methodAccess(ResourceFieldInterface $resource_field) {
-    return in_array($this->getRequest()
-      ->getMethod(), $resource_field->getMethods());
+    return in_array($this->getRequest()->getMethod(), $resource_field->getMethods());
   }
 
   /**

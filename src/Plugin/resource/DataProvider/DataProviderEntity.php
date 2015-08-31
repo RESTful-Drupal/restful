@@ -626,8 +626,8 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
           continue;
         }
         for ($index = 0; $index < count($filter['value']); $index++) {
-          // If referencing an entity by an alternate ID, change the user
-          // provided value by the entity value.
+          // If referencing an entity by an alternate ID, retrieve the actual
+          // Drupal's entity ID using getReferencedId.
           $query->fieldCondition($property_name, $resource_field->getColumn(), $this->getReferencedId($filter['value'][$index], $resource_field), $filter['operator'][$index]);
         }
       }
@@ -973,8 +973,8 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     else {
       $query->propertyCondition($id_property, $value);
     }
-    // Only one result is returned. Make sure that you are using "unique" fields
-    // as your referencedIdProperty.
+    // Only one result is returned. This assumes the reference fields are unique
+    // for every entity.
     $results = $query->range(0, 1)->execute();
     if ($results[$target_entity_type]) {
       return key($results[$target_entity_type]);
@@ -1019,14 +1019,14 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
    */
   protected function addNestedFilter(array $filter, \EntityFieldQuery $query) {
     $relational_filters = array();
-    foreach ($this->getFieldsFromPublicName($filter['public_field']) as $field) {
-      $relational_filters[] = new RelationalFilter($field['name'], $field['type'], $field['column'], $field['destination'], $field['entity_type'], $field['bundles']);
+    foreach ($this->getFieldsInfoFromPublicName($filter['public_field']) as $field_info) {
+      $relational_filters[] = new RelationalFilter($field_info['name'], $field_info['type'], $field_info['column'], $field_info['entity_type'], $field_info['bundles']);
     }
     $query->addRelationship($filter + array('relational_filters' => $relational_filters));
   }
 
   /**
-   * Transform the nested public name into an array of Drupal field names.
+   * Transform the nested public name into an array of Drupal field information.
    *
    * @param string $name
    *   The dot separated public name.
@@ -1037,7 +1037,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
    * @return array[]
    *   An array of fields with name and type.
    */
-  protected function getFieldsFromPublicName($name) {
+  protected function getFieldsInfoFromPublicName($name) {
     $public_field_names = explode('.', $name);
     $last_public_field_name = array_pop($public_field_names);
     $fields = array();
@@ -1070,7 +1070,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
   }
 
   /**
-   * Get the field name for a single item.
+   * Get the (reference) field information for a single item.
    *
    * @param ResourceFieldInterface $resource_field
    *   The resource field.
@@ -1078,7 +1078,15 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
    * @throws \Drupal\restful\Exception\BadRequestException
    *
    * @return array
-   *   The result.
+   *   An array containing the following keys:
+   *   - 'name': Drupal's internal field name. Ex: field_article_related
+   *   - 'type': Either a field or a property.
+   *   - 'entity_type': The entity type this field points to. Not populated if
+   *     the field is not a reference (for instance the destination field used
+   *     in the where clause).
+   *   - 'bundles': The allowed bundles for this field. Not populated if the
+   *     field is not a reference (for instance the destination field used in
+   *     the where clause).
    */
   protected function getFieldsFromPublicNameItem(ResourceFieldInterface $resource_field) {
     $property = $resource_field->getProperty();

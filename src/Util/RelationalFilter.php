@@ -24,13 +24,6 @@ class RelationalFilter implements RelationalFilterInterface {
   protected $type;
 
   /**
-   * Is destination filter.
-   *
-   * @var bool
-   */
-  protected $isDestination;
-
-  /**
    * The referenced entity type.
    *
    * @var string
@@ -57,15 +50,13 @@ class RelationalFilter implements RelationalFilterInterface {
    * @param string $name
    * @param string $type
    * @param string $column
-   * @param bool $is_destiantion
    * @param string $entity_type
    * @param array $bundles
    */
-  public function __construct($name, $type, $column, $is_destiantion, $entity_type, array $bundles = array()) {
+  public function __construct($name, $type, $column, $entity_type, array $bundles = array()) {
     $this->name = $name;
     $this->type = $type;
     $this->column = $column;
-    $this->isDestination = $is_destiantion;
     $this->entityType = $entity_type;
     $this->bundles = $bundles;
   }
@@ -82,13 +73,6 @@ class RelationalFilter implements RelationalFilterInterface {
    */
   public function getType() {
     return $this->type;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function isIsDestination() {
-    return $this->isDestination;
   }
 
   /**

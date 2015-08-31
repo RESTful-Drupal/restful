@@ -29,14 +29,6 @@ interface RelationalFilterInterface {
   public function getType();
 
   /**
-   * Is this the last relational filter?.
-   *
-   * @return bool
-   *   TRUE if this filter is the one that has the WHERE condition.
-   */
-  public function isIsDestination();
-
-  /**
    * Gets the entity type.
    *
    * @return string

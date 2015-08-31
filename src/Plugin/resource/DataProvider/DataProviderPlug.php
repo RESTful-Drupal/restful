@@ -11,6 +11,7 @@ use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\restful\Exception\NotFoundException;
 use Drupal\restful\Exception\NotImplementedException;
 use Drupal\restful\Exception\UnauthorizedException;
+use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterPlug;
 use Drupal\restful\Plugin\resource\DataInterpreter\PluginWrapper;
@@ -136,7 +137,7 @@ class DataProviderPlug extends DataProvider implements DataProviderInterface {
     $output = $plugins->getIterator()->getArrayCopy();
 
     // Apply filters.
-    $output = $this->applyFilters($output);
+    $output = $this->applyFilters($plugins);
     $output = $this->applySort($output);
     return array_keys($output);
   }
@@ -177,6 +178,8 @@ class DataProviderPlug extends DataProvider implements DataProviderInterface {
         continue;
       }
 
+      // A filter on a result needs the ResourceFieldCollection representing the
+      // result to return.
       $interpreter = new DataInterpreterPlug($this->getAccount(), new PluginWrapper($plugin));
       $this->fieldDefinitions->setInterpreter($interpreter);
       foreach ($filters as $filter) {

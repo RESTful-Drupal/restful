@@ -148,7 +148,8 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
           // including the parents.
 
           // Remove numeric parents since those only indicate that the field was
-          // multivalue, not a parent.
+          // multivalue, not a parent: articles[related][1][tags][2][name] turns
+          // into 'articles.related.tags.name'.
           $array_path = $parents;
           array_push($array_path, $public_field_name);
           $include_path = implode('.', array_filter($array_path, function ($item) {
