@@ -137,7 +137,7 @@ class DataProviderPlug extends DataProvider implements DataProviderInterface {
     $output = $plugins->getIterator()->getArrayCopy();
 
     // Apply filters.
-    $output = $this->applyFilters($plugins);
+    $output = $this->applyFilters($output);
     $output = $this->applySort($output);
     return array_keys($output);
   }
