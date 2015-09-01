@@ -1,0 +1,80 @@
+<?php
+
+/**
+ * @file
+ * Contains RestfulPutFileTestCase
+ */
+
+public class RestfulPutFileTestCase extends RestfulCurlBaseTestCase {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Put files',
+      'description' => 'Test the PUT method with files.',
+      'group' => 'RESTful',
+    );
+  }
+
+  /**
+   * @var string
+   *
+   * Holds the original file we will be copying for each test
+   */
+  private $originalFile;
+
+  /**
+   * @var string
+   *
+   * Holds the copy of the original file we will be replacing.
+   */
+  private $targetFile;
+
+  /**
+   * @var string
+   *
+   * Holds the image path to the file we will replace $originalFile with
+   */
+  private $replaceFile;
+
+  /**
+   * @var \stdClass
+   *
+   * Holds the created account.
+   */
+  protected $account;
+
+  function setUp() {
+    parent::setUp('restful_test', 'entityreference');
+
+    // Add common fields, vocabulary and terms.
+    restful_test_add_fields();
+
+    $images = $this->drupalGetTestFiles('image');
+    if (count($images) >= 2) {
+      list(,$f) = each($images);
+      $this->originalFile = $f;
+      $this->targetFile = file_copy($f);
+      list(,$f) = each($images);
+      $this->replaceFile = drupal_realpath($f->uri);
+    }
+    else {
+      throw new Exception('Not enough files to test PUT operations.');
+    }
+    $this->account = $this->drupalCreateUser();
+  }
+
+  private function putFile($fid) {
+    return $this->httpRequest('api/file-upload/'.$fid, \RestfulInterface::PUT, $this->replaceFile, array(), TRUE);
+  }
+
+  public function testPutFiles() {
+    variable_set('restful_file_upload', TRUE);
+    $response = $this->putFile($this->targetFile->fid);
+    $this->assertEqual($response['code'], 200, 'PUT request completed.');
+
+    $originalHash = hash_file('md5', $this->replaceFile);
+    $newFile = $response['data'][0];
+    $newHash = hash_file('md5', drupal_realpath($newFile->uri));
+    $this->assertEqual($originalHash, $newHash, 'Original file was replaced with new file.');
+  }
+}

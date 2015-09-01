@@ -15,8 +15,8 @@ class RestfulCurlBaseTestCase extends DrupalWebTestCase {
    *   The URL of the request.
    * @param string $method
    *   The HTTP method of the request. Defaults to "GET".
-   * @param array $body
-   *   Either the body for POST and PUT or additional URL parameters for GET.
+   * @param mixed $body
+   *   Either the body for POST and PUT, additional URL parameters for GET, or the file name to PUT.
    * @param array $headers
    *   Additional HTTP header parameters.
    * @param bool $use_token
@@ -25,6 +25,9 @@ class RestfulCurlBaseTestCase extends DrupalWebTestCase {
    *
    * @return array
    *   Array keyed with the "code", "headers", and "body" of the response.
+   *
+   * @throws Exception
+   *   Throw when passing a string for the body that is not an existing file.
    */
   protected function httpRequest($url, $method = \RestfulInterface::GET, $body = NULL, $headers = array(), $use_token = TRUE) {
     $format = 'x-www-form-encoded';
