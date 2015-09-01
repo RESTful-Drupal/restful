@@ -360,35 +360,8 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
   /**
    * {@inheritdoc}
    */
-  public function view($id) {
-    $cache_id = array(
-      'tb' => $this->getTableName(),
-      'cl' => implode(',', $this->getIdColumn()),
-      'id' => $id,
-    );
-    $cached_data = $this->getRenderedCache($cache_id);
-    if (!empty($cached_data->data)) {
-      return $cached_data->data;
-    }
-
-    $table = $this->getTableName();
-    $query = db_select($table)
-      ->fields($table);
-    foreach ($this->getIdColumn() as $index => $column) {
-      $query->condition($this->getTableName() . '.' . $column, current($this->getColumnFromIds(array($id), $index)));
-    }
-    $this->addExtraInfoToQuery($query);
-    $results = $query->execute();
-
-
-    $return = array();
-
-    foreach ($results as $result) {
-      $return[] = $this->mapDbRowToPublicFields($result);
-    }
-
-    $this->setRenderedCache($return, $cache_id);
-    return $return;
+  public function view($ids) {
+    return $this->viewMultiple(explode(',', $ids));
   }
 
   /**
@@ -581,7 +554,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
       }
 
       // Execute the process callbacks.
-      if ($value && $info['process_callbacks']) {
+      if (isset($value) && $info['process_callbacks']) {
         foreach ($info['process_callbacks'] as $process_callback) {
           $value = static::executeCallback($process_callback, array($value));
         }

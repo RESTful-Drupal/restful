@@ -182,6 +182,10 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
         }
       }
       else {
+        if (in_array(strtoupper($filter['operator'][0]), array('IN', 'BETWEEN'))) {
+          $query->propertyCondition($property_name, $filter['value'], $filter['operator'][0]);
+          continue;
+        }
         $column = $this->getColumnFromProperty($property_name);
         for ($index = 0; $index < count($filter['value']); $index++) {
           $query->propertyCondition($column, $filter['value'][$index], $filter['operator'][$index]);
@@ -220,6 +224,36 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
   protected function getColumnFromProperty($property_name) {
     $property_info = entity_get_property_info($this->getEntityType());
     return $property_info['properties'][$property_name]['schema field'];
+  }
+
+  /**
+   * Overrides \RestfulBase::isValidOperatorsForFilter().
+   */
+  protected static function isValidOperatorsForFilter(array $operators) {
+    $allowed_operators = array(
+      '=',
+      '>',
+      '<',
+      '>=',
+      '<=',
+      '<>',
+      '!=',
+      'BETWEEN',
+      'CONTAINS',
+      'IN',
+      'LIKE',
+      'NOT IN',
+      'STARTS_WITH',
+    );
+
+    foreach ($operators as $operator) {
+      if (!in_array($operator, $allowed_operators)) {
+        throw new \RestfulBadRequestException(format_string('Operator "@operator" is not allowed for filtering on this resource. Allowed operators are: !allowed', array(
+          '@operator' => $operator,
+          '!allowed' => implode(', ', $allowed_operators),
+        )));
+      }
+    }
   }
 
   /**

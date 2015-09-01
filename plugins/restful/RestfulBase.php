@@ -1055,14 +1055,17 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
       '<=',
       '<>',
       '!=',
-      'IN',
       'BETWEEN',
+      'CONTAINS',
+      'IN',
+      'NOT IN',
+      'STARTS_WITH',
     );
 
     foreach ($operators as $operator) {
       if (!in_array($operator, $allowed_operators)) {
         throw new \RestfulBadRequestException(format_string('Operator "@operator" is not allowed for filtering on this resource. Allowed operators are: !allowed', array(
-          '@operator' => $operators,
+          '@operator' => $operator,
           '!allowed' => implode(', ', $allowed_operators),
         )));
       }
@@ -1393,7 +1396,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
    */
   public function cacheInvalidate($cid) {
     $cache_info = $this->getPluginKey('render_cache');
-    if (!$cache_info['simple_invalidate']) {
+    if (!$cache_info['render'] || !$cache_info['simple_invalidate']) {
       // Simple invalidation is disabled. This means it is up to the
       // implementing module to take care of the invalidation.
       return;

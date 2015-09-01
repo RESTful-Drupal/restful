@@ -10,11 +10,21 @@ passed in the URL itself.
 
 ## Getting information about the resource
 
-
 ### Exploring the resource
 
 Using a HTTP `GET` request on a resource's root URL will return information
 about that resource, in addition to the data itself.
+
+``` shell
+curl https://example.com/api/
+```
+This will output all the available **latest** resources (of course, if you have enabled the "Discovery Resource" option). For example, if there are 3 different api version plugins for content type Article (1.0, 1.1, 2.0) it will display the latest only (2.0 in this case).
+
+If you want to display all the versions of all the resources declared add the query **?all=true** like this.
+
+``` shell
+curl https://example.com/api?all=true
+```
 
 The data results are stored in the `data` property of the JSON response, while
 the `self` and `next` objects contain information about the resource.
@@ -118,6 +128,21 @@ and another equal to 10.
 curl https://example.com/api/articles?filter[integer_multiple][value][0]=5&filter[integer_multiple][value][1]=10&filter[integer_multiple][operator][0]=">"&filter[integer_multiple][operator][0]="="
 ```
 
+## Applying a query sort
+RESTful allows specifying of a sort property to the database query used to generate the list.
+
+```php
+# Handler v1.0
+curl https://example.com/api/v1/articles?sort=label
+```
+
+The sort order will default to ascending, however it can be set to descending by prepending a minus (-) sign the sort parameter value.
+
+```shell
+# Handler v1.0
+curl https://example.com/api/v1/articles?sort=-label
+```
+
 ## Loading by an alternate ID.
 Some times you need to load an entity by an alternate ID that is not the regular
 entity ID, for example a unique ID title. All that you need to do is provide the
@@ -178,6 +203,52 @@ curl -u "username:password" https://example.com/api/login
 # Call a "protected" with token resource (Articles resource version 1.3 in "Restful example")
 curl https://example.com/api/v1.3/articles/1?access_token=YOUR_TOKEN
 ```
+
+## Change request formatter
+
+By default Restful module allows for any **Content-type** requests by setting the ```Accept: */*```. This means that you can make requests in the format you want (of course if this format is available on the restful plugins). 
+
+For example let's say that we want to get a request in ```xml``` while by default we get the requests in ```hal+json```. All we have to do is set a Header parameter like this ```Accept: application/xml```.
+
+```shell
+curl -H 'Accept:application/xml' https://example.com/api/articles
+```
+
+And will return data in xml formatter.
+
+```xml
+<?xml version="1.0"?>
+<api>
+  <articles>
+    <item0>
+      <id>1</id>
+      <label>Article title</label>
+      <_links>
+          <self>
+            <href>http://example.com/api/articles/1</href>
+          </self>
+        </_links>
+    </item0>
+    <item1>
+      <id>2</id>
+      <label>Article title</label>
+      <_links>
+          <self>
+            <href>http://example.com/api/articles/2</href>
+          </self>
+        </_links>
+    </item1>
+    <count>3</count>
+    <_links>
+      <self>
+        <title>Self</title>
+        <href>http://example.com/api/articles</href>
+      </self>
+    </_links>
+</api>
+
+```
+
 
 ## Error handling
 If an error occurs when operating the REST endpoint via URL, A valid JSON object

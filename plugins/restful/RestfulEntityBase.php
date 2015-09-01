@@ -281,10 +281,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     $entity_id = $this->getEntityIdByFieldId($id);
     $request = $this->getRequest();
 
-    $cached_data = $this->getRenderedCache(array(
-      'et' => $this->getEntityType(),
-      'ei' => $entity_id,
-    ));
+    $cached_data = $this->getRenderedCache($this->getEntityCacheTags($entity_id));
     if (!empty($cached_data->data)) {
       return $cached_data->data;
     }
@@ -354,11 +351,25 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       $values[$public_field_name] = $value;
     }
 
-    $this->setRenderedCache($values, array(
+    $this->setRenderedCache($values, $this->getEntityCacheTags($entity_id));
+    return $values;
+  }
+
+  /**
+   * The array of parameters by which entities should be cached.
+   *
+   * @param mixed $entity_id
+   *   The entity ID of the entity to be cached.
+   *
+   * @return array
+   *   An array of parameter keys and values which should be added
+   *   to the cache key for each entity.
+   */
+  public function getEntityCacheTags($entity_id) {
+    return array(
       'et' => $this->getEntityType(),
       'ei' => $entity_id,
-    ));
-    return $values;
+    );
   }
 
   /**
@@ -470,6 +481,9 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       }
       elseif ($field['type'] == 'commerce_line_item_reference') {
         return 'commerce_line_item';
+      }
+      elseif ($field['type'] == 'node_reference') {
+        return 'node';
       }
 
       throw new \RestfulException(format_string('Field @property is not an entity reference or taxonomy reference field.', $params));
@@ -676,13 +690,15 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
         continue;
       }
 
+      $field_value = $this->propertyValuesPreprocess($property_name, $request[$public_field_name], $public_field_name);
+      $wrapper->{$property_name}->set($field_value);
+
+      // We check the property access only after setting the values, as the
+      // access callback's response might change according to the field value.
       if (!$this->checkPropertyAccess('edit', $public_field_name, $wrapper->{$property_name}, $wrapper)) {
         throw new \RestfulBadRequestException(format_string('Property @name cannot be set.', array('@name' => $public_field_name)));
       }
 
-      $field_value = $this->propertyValuesPreprocess($property_name, $request[$public_field_name], $public_field_name);
-
-      $wrapper->{$property_name}->set($field_value);
       unset($original_request[$public_field_name]);
       $save = TRUE;
     }
@@ -1165,7 +1181,8 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    * Check access to CRUD an entity.
    *
    * @param $op
-   *   The operation. Allowed values are "create", "update" and "delete".
+   *   The operation. Allowed values are "view", "create", "update" and
+   *   "delete".
    * @param $entity_type
    *   The entity type.
    * @param $entity
