@@ -202,7 +202,8 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
    */
   protected function queryForLanguage(\EntityFieldQuery $query) {
     if (!empty($this->langcode)) {
-      $query->propertyCondition('language', array($this->langcode, 'und'), 'IN');
+      $query->addTag('entity_translation');
+      $query->addMetaData('language', $this->langcode);
     }
   }
 

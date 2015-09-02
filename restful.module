@@ -820,3 +820,19 @@ function _restful_get_query_string_from_php_input() {
 
     return $query_string;
 }
+
+/**
+ * Implements hook_query_TAG_alter.
+ *
+ * When a language is set in query alterMetaData, alter the query to return
+ * only content for that language and undefined.
+ *
+ * @param \QueryAlterableInterface $query
+ */
+function restful_query_entity_translation_alter(QueryAlterableInterface $query) {
+  if (!empty($query->alterMetaData['language'])) {
+    $lang = $query->alterMetaData['language'];
+    $query->innerJoin('entity_translation', 'et', 'et.entity_id = node.nid');
+    $query->condition('et.language', array($lang, 'und'), 'IN');
+  }
+}
