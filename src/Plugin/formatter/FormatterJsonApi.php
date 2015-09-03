@@ -150,7 +150,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
             ));
           }
           $output['relationships'][$public_field_name][] = $basic_info;
-          $included_item = is_array($value_item) ? $basic_info + $value_item : $basic_info;
+          $included_item = is_array($value_item) ? $basic_info['data'] + $value_item : $basic_info['data'];
           // Set the resource for the reference to get HATEOAS from them.
           $resource_plugin = $resource_field->getResourcePlugin();
           $this->addHateoas($included_item, $resource_plugin, $id);
