@@ -210,7 +210,7 @@ function restful_angular_example_page($example) {
   if ($example == 'form') {
     // Pass info via Drupal.settings.
     $settings['restfulExample'] = array(
-      'basePath' => url('', array('absolute' => TRUE)),
+      'basePath' => url('', array('absolute' => TRUE)) .'/',
       'csrfToken' => drupal_get_token(\RestfulInterface::TOKEN_VALUE),
       'data' => array(
         'article' => array(
