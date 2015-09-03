@@ -134,10 +134,8 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
         $combined = $ids ? array_combine($ids, array_pad($value, count($ids), NULL)) : array();
         foreach ($combined as $id => $value_item) {
           $basic_info = array(
-            'data' => array(
-              'type' => $resource_field->getResourceMachineName(),
-              'id' => (string) $id,
-            ),
+            'type' => $resource_field->getResourceMachineName(),
+            'id' => (string) $id,
           );
           // If there is a resource plugin for the parent, set the related
           // links.
@@ -149,8 +147,13 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
               ),
             ));
           }
-          $output['relationships'][$public_field_name][] = $basic_info;
-          $included_item = is_array($value_item) ? $basic_info['data'] + $value_item : $basic_info['data'];
+
+          $related_info = array(
+            'data' => array('type' => $basic_info['type'], 'id' => $basic_info['id']),
+            'links' => $basic_info['links']
+          );
+          $output['relationships'][$public_field_name][] = $related_info;
+          $included_item = is_array($value_item) ? $basic_info + $value_item : $basic_info;
           // Set the resource for the reference to get HATEOAS from them.
           $resource_plugin = $resource_field->getResourcePlugin();
           $this->addHateoas($included_item, $resource_plugin, $id);
