@@ -205,8 +205,8 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
     // number of items of the current request plus the number of items in
     // previous pages.
     $items_per_page = empty($original_input['range']) ? $data_provider->getRange() : $original_input['range'];
-    if (isset($data['count']) && $data['count'] > $items_per_page) {
-      $num_pages = ceil($data['count'] / $items_per_page);
+    if (isset($data['meta']['count']) && $data['meta']['count'] > $items_per_page) {
+      $num_pages = ceil($data['meta']['count'] / $items_per_page);
       unset($input['page']);
       $data['links']['first'] = $resource->getUrl(array('query' => $input), FALSE);
 
