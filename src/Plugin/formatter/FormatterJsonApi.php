@@ -69,7 +69,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
       if ($is_list_request) {
         // Get the total number of items for the current request without
         // pagination.
-        $output['count'] = $data_provider->count();
+        $output['meta']['count'] = $data_provider->count();
       }
       else {
         // For non-list requests do not return an array of one item.
@@ -134,8 +134,10 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
         $combined = $ids ? array_combine($ids, array_pad($value, count($ids), NULL)) : array();
         foreach ($combined as $id => $value_item) {
           $basic_info = array(
-            'type' => $resource_field->getResourceMachineName(),
-            'id' => (string) $id,
+            'data' => array(
+              'type' => $resource_field->getResourceMachineName(),
+              'id' => (string) $id,
+            ),
           );
           // If there is a resource plugin for the parent, set the related
           // links.
