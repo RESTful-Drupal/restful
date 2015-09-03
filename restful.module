@@ -832,7 +832,24 @@ function _restful_get_query_string_from_php_input() {
 function restful_query_entity_translation_alter(QueryAlterableInterface $query) {
   if (!empty($query->alterMetaData['language'])) {
     $lang = $query->alterMetaData['language'];
-    $query->innerJoin('entity_translation', 'et', 'et.entity_id = node.nid');
-    $query->condition('et.language', array($lang, 'und'), 'IN');
+
+    // Figure out what table to join with based on the current base table.
+    $tables = $query->getTables();
+    foreach ($tables as $table) {
+      if ($table['table'] == 'node') {
+        $join_con = 'node.nid';
+        break;
+      }
+      if (strpos($table['table'], 'field_data') === 0) {
+        $join_con = $table['alias'] . '.entity_id';
+      }
+    }
+
+    // If we have a join condition, join on entity translation and limit results
+    // to current language.
+    if (!empty($join_con)) {
+      $query->innerJoin('entity_translation', 'et', "et.entity_id = $join_con");
+      $query->condition('et.language', array($lang, 'und'), 'IN');
+    }
   }
 }

@@ -332,7 +332,8 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
     $entity_type = $this->getEntityType();
     // The only time you need to add the access tags to a EFQ is when you don't
     // have fieldConditions.
-    if (empty($query->fieldConditions)) {
+    // This currently breaks when field tables are joined for sorting.
+    if (empty($query->fieldConditions) && empty($query->order[0]['specifier']['field'])) {
       // Add a generic entity access tag to the query.
       $query->addTag($entity_type . '_access');
     }
