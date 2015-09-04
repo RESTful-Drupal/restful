@@ -9,6 +9,7 @@ namespace Drupal\restful\Plugin\resource\Field;
 
 use Drupal\restful\Http\HttpHeaderBag;
 use Drupal\restful\Http\Request;
+use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
 use Drupal\restful\Plugin\resource\DataProvider\DataProviderResource;
 
@@ -29,9 +30,12 @@ class ResourceFieldEntityReference extends ResourceFieldEntity implements Resour
    *
    * @param array $field
    *   Contains the field values.
+   *
+   * @param RequestInterface $request
+   *   The request.
    */
-  public function __construct(array $field) {
-    parent::__construct($field);
+  public function __construct(array $field, RequestInterface $request) {
+    parent::__construct($field, $request);
     if (!empty($field['referencedIdProperty'])) {
       $this->referencedIdProperty = $field['referencedIdProperty'];
     }
@@ -242,7 +246,6 @@ class ResourceFieldEntityReference extends ResourceFieldEntity implements Resour
     if ($property_wrapper instanceof \EntityListWrapper) {
       $values = array();
       foreach ($property_wrapper->getIterator() as $item_wrapper) {
-        /* @var $item_wrapper \EntityDrupalWrapper */
         $values[] = $this->referencedId($item_wrapper);
       }
       return $values;
@@ -260,12 +263,33 @@ class ResourceFieldEntityReference extends ResourceFieldEntity implements Resour
    * @return mixed
    *   The ID.
    */
-  protected function referencedId(\EntityDrupalWrapper $property_wrapper) {
+  protected function referencedId($property_wrapper) {
     $identifier = $property_wrapper->getIdentifier();
     if (!$this->referencedIdProperty) {
       return $identifier;
     }
     return $identifier ? $property_wrapper->{$this->referencedIdProperty}->value() : NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getRequest() {
+    return $this->decorated->getRequest();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setRequest(RequestInterface $request) {
+    $this->decorated->setRequest($request);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDefinition() {
+    return $this->decorated->getDefinition();
   }
 
 }
