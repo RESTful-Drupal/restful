@@ -7,6 +7,7 @@
 
 namespace Drupal\restful\Plugin\resource\Field;
 
+use Drupal\restful\Exception\ForbiddenException;
 use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
@@ -305,8 +306,15 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
       $metadata ?: array();
       $metadata[] = $this->buildResourceMetadataItem($property_wrapper);
       $this->addMetadata($wrapper->getIdentifier(), $metadata);
-      /* @var ResourceFieldCollection $embedded_entity */
-      $embedded_entity = $resource_data_provider->view($embedded_identifier);
+      try {
+        /* @var ResourceFieldCollection $embedded_entity */
+        $embedded_entity = $resource_data_provider->view($embedded_identifier);
+      }
+      catch (ForbiddenException $e) {
+        // If you don't have access to the embedded entity is like not having
+        // access to the property.
+        return NULL;
+      }
       // Test if the $embedded_entity meets the filter or not.
       if (empty($parsed_input['filter'])) {
         return $embedded_entity;
