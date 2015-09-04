@@ -118,10 +118,10 @@ class RestfulManager {
   /**
    * Mutator for the resource manager.
    *
-   * @param ResourceManagerInterface $resourceManager
+   * @param ResourceManagerInterface $resource_manager
    */
-  public function setResourceManager(ResourceManagerInterface $resourceManager) {
-    $this->resourceManager = $resourceManager;
+  public function setResourceManager(ResourceManagerInterface $resource_manager) {
+    $this->resourceManager = $resource_manager;
   }
 
   /**
