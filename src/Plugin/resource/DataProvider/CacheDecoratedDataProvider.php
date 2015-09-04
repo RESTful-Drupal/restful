@@ -46,20 +46,6 @@ class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface 
   /**
    * {@inheritdoc}
    */
-  public static function isNestedField($field_name) {
-    return DataProvider::isNestedField($field_name);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function processFilterInput($filter, $public_field) {
-    return DataProvider::processFilterInput($filter, $public_field);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function getRange() {
     return $this->subject->getRange();
   }
