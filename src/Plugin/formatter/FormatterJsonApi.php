@@ -69,7 +69,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
       if ($is_list_request) {
         // Get the total number of items for the current request without
         // pagination.
-        $output['count'] = $data_provider->count();
+        $output['meta']['count'] = $data_provider->count();
       }
       else {
         // For non-list requests do not return an array of one item.
@@ -147,7 +147,12 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
               ),
             ));
           }
-          $output['relationships'][$public_field_name][] = $basic_info;
+
+          $related_info = array(
+            'data' => array('type' => $basic_info['type'], 'id' => $basic_info['id']),
+            'links' => $basic_info['links']
+          );
+          $output['relationships'][$public_field_name][] = $related_info;
           $included_item = is_array($value_item) ? $basic_info + $value_item : $basic_info;
           // Set the resource for the reference to get HATEOAS from them.
           $resource_plugin = $resource_field->getResourcePlugin();
@@ -200,8 +205,8 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
     // number of items of the current request plus the number of items in
     // previous pages.
     $items_per_page = empty($original_input['range']) ? $data_provider->getRange() : $original_input['range'];
-    if (isset($data['count']) && $data['count'] > $items_per_page) {
-      $num_pages = ceil($data['count'] / $items_per_page);
+    if (isset($data['meta']['count']) && $data['meta']['count'] > $items_per_page) {
+      $num_pages = ceil($data['meta']['count'] / $items_per_page);
       unset($input['page']);
       $data['links']['first'] = $resource->getUrl(array('query' => $input), FALSE);
 
