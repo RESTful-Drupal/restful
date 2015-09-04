@@ -213,7 +213,7 @@ class DataProviderDbQuery extends DataProvider implements DataProviderDbQueryInt
    * {@inheritdoc}
    */
   protected function mapDbRowToPublicFields($row) {
-    $resource_field_collection = new ResourceFieldCollection();
+    $resource_field_collection = new ResourceFieldCollection(array(), $this->getRequest());
     $interpreter = new DataInterpreterArray($this->getAccount(), new ArrayWrapper((array) $row));
     $resource_field_collection->setInterpreter($interpreter);
 
