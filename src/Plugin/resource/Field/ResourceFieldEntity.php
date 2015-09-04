@@ -2,7 +2,7 @@
 
 /**
  * @file
-* Contains \Drupal\restful\Plugin\resource\Field\ResourceFieldEntity
+ * Contains \Drupal\restful\Plugin\resource\Field\ResourceFieldEntity
  */
 
 namespace Drupal\restful\Plugin\resource\Field;
@@ -10,6 +10,7 @@ namespace Drupal\restful\Plugin\resource\Field;
 use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
+use Drupal\restful\Plugin\resource\DataProvider\DataProvider;
 use Drupal\restful\Plugin\resource\DataProvider\DataProviderResource;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
 use Drupal\restful\Plugin\resource\ResourceInterface;
@@ -97,8 +98,14 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
    *
    * @param array $field
    *   Contains the field values.
+   *
+   * @param RequestInterface $request
+   *   The request.
    */
-  public function __construct(array $field) {
+  public function __construct(array $field, RequestInterface $request) {
+    if ($this->decorated) {
+      $this->setRequest($request);
+    }
     $this->wrapperMethod = isset($field['wrapper_method']) ? $field['wrapper_method'] : $this->wrapperMethod;
     $this->subProperty = isset($field['sub_property']) ? $field['sub_property'] : $this->subProperty;
     $this->formatter = isset($field['formatter']) ? $field['formatter'] : $this->formatter;
@@ -113,7 +120,8 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
   /**
    * {@inheritdoc}
    */
-  public static function create(array $field, ResourceFieldInterface $decorated = NULL) {
+  public static function create(array $field, RequestInterface $request = NULL, ResourceFieldInterface $decorated = NULL) {
+    $request = $request ?: restful()->getRequest();
     $resource_field = NULL;
     $class_name = static::fieldClassName($field);
     // If the class exists and is a ResourceFieldEntityInterface use that one.
@@ -125,17 +133,19 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
         class_implements($class_name)
       )
     ) {
-      $resource_field = new $class_name($field);
+      $resource_field = new $class_name($field, $request);
     }
 
     // If no specific class was found then use the current one.
     if (!$resource_field) {
       // Create the current object.
-      $resource_field = new static($field);
+      $resource_field = new static($field, $request);
     }
-
+    if (!$resource_field) {
+      throw new ServerConfigurationException('Unable to create resource field');
+    }
     // Set the basic object to the decorated property.
-    $resource_field->decorate($decorated ? $decorated : new ResourceField($field));
+    $resource_field->decorate($decorated ? $decorated : new ResourceField($field, $request));
     $resource_field->decorated->addDefaults();
 
     // Add the default specifics for the current object.
@@ -203,7 +213,7 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
     if ($property_wrapper instanceof \EntityDrupalWrapper) {
       // The property wrapper is a reference to another entity get the entity
       // ID.
-      $identifier = $property_wrapper->getIdentifier() ?: NULL;
+      $identifier = $this->referencedId($property_wrapper);
       $resource = $this->getResource();
       // TODO: Make sure we still want to support full_view.
       if (!$resource || !$identifier || (isset($resource['full_view']) && $resource['full_view'] === FALSE)) {
@@ -274,20 +284,40 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
       if (isset($resource['full_view']) && $resource['full_view'] === FALSE) {
         return $embedded_identifier;
       }
-      $request = Request::create('', array(), RequestInterface::METHOD_GET);
+      // We support dot notation for the sparse fieldsets. That means that
+      // clients can specify the fields to show based on the "fields" query
+      // string parameter.
+      $parsed_input = array(
+        'fields' => implode(',', $this->nestedDottedChildren('fields')),
+        'include' => implode(',', $this->nestedDottedChildren('include')),
+        'filter' => $this->nestedDottedChildren('filter'),
+      );
+      $request = Request::create('', array_filter($parsed_input), RequestInterface::METHOD_GET);
       // Remove the $_GET options for the sub-request.
-      $request->setParsedInput(array());
       // TODO: Get version automatically to avoid setting it in the plugin definition. Ideally we would fill this when processing the plugin definition defaults.
       $resource_data_provider = DataProviderResource::init($request, $resource['name'], array(
         $resource['majorVersion'],
         $resource['minorVersion'],
-      ));
+      ), $embedded_identifier);
 
       $metadata = $this->getMetadata($wrapper->getIdentifier());
       $metadata ?: array();
       $metadata[] = $this->buildResourceMetadataItem($property_wrapper);
       $this->addMetadata($wrapper->getIdentifier(), $metadata);
-      return $resource_data_provider->view($embedded_identifier);
+      /* @var ResourceFieldCollection $embedded_entity */
+      $embedded_entity = $resource_data_provider->view($embedded_identifier);
+      // Test if the $embedded_entity meets the filter or not.
+      if (empty($parsed_input['filter'])) {
+        return $embedded_entity;
+      }
+      foreach ($parsed_input['filter'] as $filter) {
+        // Filters only apply if the target is the current field.
+        if (!empty($filter['target']) && $filter['target'] == $this->getPublicName() && !$embedded_entity->evalFilter($filter)) {
+          // This filter is not met.
+          return NULL;
+        }
+      }
+      return $embedded_entity;
     }
 
     if ($this->getFormatter()) {
@@ -319,7 +349,9 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
     }
 
     // Perform field API access checks.
-    $property_wrapper = $this->propertyWrapper($interpreter);
+    if (!$property_wrapper = $this->propertyWrapper($interpreter)) {
+      return FALSE;
+    }
     if ($this->isWrapperMethodOnEntity() && $this->getWrapperMethod() && $this->getProperty()) {
       // Sometimes we define fields as $wrapper->getIdentifier. We need to
       // resolve that to $wrapper->nid to call $wrapper->nid->info().
@@ -352,7 +384,8 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
     // errors.
     // Ex: this happens when the embedded author is the anonymous user. Doing
     // user_load(0) returns FALSE.
-    $access = $interpreter->getWrapper()->value() !== FALSE && $property_wrapper->access($op, $account);
+    $access = $interpreter->getWrapper()
+        ->value() !== FALSE && $property_wrapper->access($op, $account);
     return $access !== FALSE;
   }
 
@@ -440,6 +473,70 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
   }
 
   /**
+   * Get the children of a query string parameter that apply to the field.
+   *
+   * For instance: if the field is 'relatedArticles' and the query string is
+   * '?relatedArticles.one.two,articles' it returns array('one.two').
+   *
+   * @param string $key
+   *   The name of the key: include|fields
+   *
+   * @return string[]
+   *   The list of fields.
+   */
+  protected function nestedDottedChildren($key) {
+    // Filters are dealt with differently.
+    if ($key == 'filter') {
+      return $this->nestedDottedFilters();
+    }
+    $allowed_values = array('include', 'fields');
+    if (!in_array($key, $allowed_values)) {
+      return array();
+    }
+    $input = $this
+      ->getRequest()
+      ->getParsedInput();
+    $limit_values = !empty($input[$key]) ? explode(',', $input[$key]) : array();
+    $limit_values = array_filter($limit_values, function ($value) {
+      $parts = explode('.', $value);
+      return $parts[0] == $this->getPublicName() && $value != $this->getPublicName();
+    });
+    return array_map(function ($value) {
+      return substr($value, strlen($this->getPublicName()) + 1);
+    }, $limit_values);
+  }
+
+  /**
+   * Process the filter query string for the relevant sub-query.
+   *
+   * Selects the filters that start with the field name.
+   *
+   * @return array
+   *   The processed filters.
+   */
+  protected function nestedDottedFilters() {
+
+    $input = $this
+      ->getRequest()
+      ->getParsedInput();
+    if (empty($input['filter'])) {
+      return array();
+    }
+    $output_filters = array();
+    $filters = $input['filter'];
+    foreach ($filters as $filter_public_name => $filter) {
+      $filter = DataProvider::processFilterInput($filter, $filter_public_name);
+      if (strpos($filter_public_name, $this->getPublicName() . '.') === 0) {
+        // Remove the prefix and add it to the filters for the next request.
+        $new_name = substr($filter_public_name, strlen($this->getPublicName()) + 1);
+        $filter['public_field'] = $new_name;
+        $output_filters[$new_name] = $filter;
+      }
+    }
+    return $output_filters;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function addMetadata($key, $value) {
@@ -451,6 +548,20 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
    */
   public function getMetadata($key) {
     return $this->decorated->getMetadata($key);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getRequest() {
+    return $this->decorated->getRequest();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setRequest(RequestInterface $request) {
+    $this->decorated->setRequest($request);
   }
 
   /**
@@ -468,6 +579,13 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function getDefinition() {
+    return $this->decorated->getDefinition();
+  }
+
+  /**
    * Get value for a field based on another resource.
    *
    * @param DataInterpreterInterface $source
@@ -476,7 +594,8 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
    * @return mixed
    *   A single or multiple values.
    */
-  protected function resourceValue(DataInterpreterInterface $source) {}
+  protected function resourceValue(DataInterpreterInterface $source) {
+  }
 
   /**
    * {@inheritdoc}
@@ -620,6 +739,12 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
     // There are occasions when the wrapper property is not the schema
     // database field.
     $wrapper = entity_metadata_wrapper($entity_type);
+    if (!is_a($wrapper, '\EntityStructureWrapper')) {
+      // The entity type does not exist.
+      return;
+    }
+
+    /* @var $wrapper \EntityStructureWrapper */
     foreach ($wrapper->getPropertyInfo() as $wrapper_property => $property_info) {
       if (!empty($property_info['schema field']) && $property_info['schema field'] == $property) {
         $property = $wrapper_property;
@@ -672,7 +797,7 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
   /**
    * {@inheritdoc}
    */
-  public function getImageUris(array $file_array, $image_styles) {
+  public static function getImageUris(array $file_array, $image_styles) {
     // Return early if there are no image styles.
     if (empty($image_styles)) {
       return $file_array;
@@ -682,7 +807,7 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
     if (static::isArrayNumeric($file_array)) {
       $output = array();
       foreach ($file_array as $item) {
-        $output[] = $this->getImageUris($item, $image_styles);
+        $output[] = static::getImageUris($item, $image_styles);
       }
       return $output;
     }
@@ -721,7 +846,7 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
    *   ResourceFieldInterface then ResourceField will be used. NULL if nothing
    *   was found.
    */
-  protected static function fieldClassName(array $field_definition) {
+  public static function fieldClassName(array $field_definition) {
     if (!empty($field_definition['class']) && $field_definition['class'] != '\Drupal\restful\Plugin\resource\Field\ResourceFieldEntity') {
       // If there is a class that is not the current, return it.
       return $field_definition['class'];
@@ -896,7 +1021,10 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
   /**
    * Builds a metadata item for a field value.
    *
-   * It will add information about the referenced entity.
+   * It will add information about the referenced entity. NOTE: Do not type hint
+   * the $wrapper argument to avoid PHP errors for the file entities. Those are
+   * no true entity references, but file arrays (although they reference file
+   * entities)
    *
    * @param \EntityDrupalWrapper $wrapper
    *   The wrapper to the referenced entity.
@@ -904,7 +1032,7 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
    * @return array
    *   The metadata array item.
    */
-  protected function buildResourceMetadataItem(\EntityDrupalWrapper $wrapper) {
+  protected function buildResourceMetadataItem($wrapper) {
     $id = $wrapper->getIdentifier();
     $bundle = $wrapper->getBundle();
     $resource = $this->getResource();
@@ -914,6 +1042,19 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
       'bundle' => $bundle,
       'resource_name' => $resource['name'],
     );
+  }
+
+  /**
+   * Helper function to get the referenced entity ID.
+   *
+   * @param \EntityDrupalWrapper $property_wrapper
+   *   The wrapper for the referenced file array.
+   *
+   * @return mixed
+   *   The ID.
+   */
+  protected function referencedId($property_wrapper) {
+    return $property_wrapper->getIdentifier() ?: NULL;
   }
 
 }

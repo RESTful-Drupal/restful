@@ -8,6 +8,7 @@
 namespace Drupal\restful\Plugin\resource\Field;
 
 use Drupal\restful\Exception\ServerConfigurationException;
+use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
 
 class ResourceFieldDbColumn extends ResourceField implements ResourceFieldDbColumnInterface {
@@ -26,16 +27,16 @@ class ResourceFieldDbColumn extends ResourceField implements ResourceFieldDbColu
    *
    * @throws ServerConfigurationException
    */
-  public function __construct(array $field) {
-    parent::__construct($field);
+  public function __construct(array $field, RequestInterface $request) {
+    parent::__construct($field, $request);
     $this->columnForQuery = empty($field['columnForQuery']) ? $this->getProperty() : $field['columnForQuery'];
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function create(array $field) {
-    $resource_field = new static($field);
+  public static function create(array $field, RequestInterface $request = NULL) {
+    $resource_field = new static($field, $request ?: restful()->getRequest());
     $resource_field->addDefaults();
     return $resource_field;
   }

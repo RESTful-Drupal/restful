@@ -125,6 +125,42 @@ abstract class ResourceFieldBase implements ResourceFieldInterface {
   );
 
   /**
+   * The request object to be used.
+   *
+   * @var RequestInterface
+   */
+  protected $request;
+
+  /**
+   * The field definition array.
+   *
+   * Use with caution.
+   *
+   * @var array
+   */
+  protected $definition = array();
+
+  /**
+   * Get the request in the data provider.
+   *
+   * @return RequestInterface
+   *   The request.
+   */
+  public function getRequest() {
+    return $this->request;
+  }
+
+  /**
+   * Set the request.
+   *
+   * @param RequestInterface $request
+   *   The request.
+   */
+  public function setRequest(RequestInterface $request) {
+    $this->request = $request;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function getPublicName() {
@@ -273,6 +309,13 @@ abstract class ResourceFieldBase implements ResourceFieldInterface {
     $element = $this->internalMetadataElement($key);
 
     return isset($element[$leave]) ? $element[$leave] : NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDefinition() {
+    return $this->definition;
   }
 
   /**

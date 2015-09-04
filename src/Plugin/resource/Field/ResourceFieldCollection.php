@@ -7,6 +7,7 @@
 
 namespace Drupal\restful\Plugin\resource\Field;
 
+use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
 
 class ResourceFieldCollection implements ResourceFieldCollectionInterface {
@@ -85,7 +86,7 @@ class ResourceFieldCollection implements ResourceFieldCollectionInterface {
    *     ignored.
    *     It is also possible to pass an array as the value, with:
    *     - "name": The resource name.
-   *     - "full_view": Determines if the referenced resource should be rendered,
+   *     - "full_view": Determines if the referenced resource should be rendered
    *     or just the referenced ID(s) to appear. Defaults to TRUE.
    *     array(
    *       // Shorthand.
@@ -99,16 +100,18 @@ class ResourceFieldCollection implements ResourceFieldCollectionInterface {
    *   - "create_or_update_passthrough": Determines if a public field that isn't
    *     mapped to any property or field, may be passed upon create or update
    *     of an entity. Defaults to FALSE.
+   * @param RequestInterface $request
+   *   The request.
    */
-  public function __construct(array $fields = array()) {
+  public function __construct(array $fields = array(), RequestInterface $request) {
     foreach ($fields as $public_name => $field_info) {
       $field_info['public_name'] = $public_name;
       // The default values are added.
       if (empty($field_info['resource'])) {
-        $resource_field = ResourceField::create($field_info);
+        $resource_field = ResourceField::create($field_info, $request);
       }
       else {
-        $resource_field = ResourceFieldResource::create($field_info);
+        $resource_field = ResourceFieldResource::create($field_info, $request);
       }
       $this->fields[$resource_field->id()] = $resource_field;
     }
@@ -118,9 +121,9 @@ class ResourceFieldCollection implements ResourceFieldCollectionInterface {
   /**
    * {@inheritdoc}
    */
-  public static function factory(array $fields = array()) {
+  public static function factory(array $fields = array(), RequestInterface $request = NULL) {
     // TODO: Explore the possibility to change factory methods by using FactoryInterface.
-    return new static($fields);
+    return new static($fields, $request ?: restful()->getRequest());
   }
 
   /**
@@ -220,6 +223,84 @@ class ResourceFieldCollection implements ResourceFieldCollectionInterface {
    */
   public function setIdField($id_field) {
     $this->idField = $id_field;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function evalFilter(array $filter) {
+    // Initialize to TRUE for AND and FALSE for OR (neutral value).
+    $match = $filter['conjunction'] == 'AND';
+    for ($index = 0; $index < count($filter['value']); $index++) {
+      if (!$resource_field = $this->get($filter['public_field'])) {
+        // If the field is unknown don't use se filter.
+        return TRUE;
+      }
+      $plugin_value = $resource_field->value($this->getInterpreter());
+      if (is_null($plugin_value)) {
+        // Property doesn't exist on the plugin, so filter it out.
+        return FALSE;
+      }
+
+      if ($filter['conjunction'] == 'OR') {
+        $match = $match || $this::evaluateExpression($plugin_value, $filter['value'][$index], $filter['operator'][$index]);
+        if ($match) {
+          break;
+        }
+      }
+      else {
+        $match = $match && $this::evaluateExpression($plugin_value, $filter['value'][$index], $filter['operator'][$index]);
+        if (!$match) {
+          break;
+        }
+      }
+    }
+    return $match;
+  }
+
+  /**
+   * Evaluate a simple expression.
+   *
+   * @param mixed $value1
+   *   The first value.
+   * @param mixed $value2
+   *   The second value.
+   * @param string $operator
+   *   The operator.
+   *
+   * @return bool
+   *   TRUE or FALSE based on the evaluated expression.
+   *
+   * @throws BadRequestException
+   */
+  protected static function evaluateExpression($value1, $value2, $operator) {
+    switch($operator) {
+      case '=':
+        return $value1 == $value2;
+
+      case '<':
+        return $value1 < $value2;
+
+      case '>':
+        return $value1 > $value2;
+
+      case '>=':
+        return $value1 >= $value2;
+
+      case '<=':
+        return $value1 <= $value2;
+
+      case '<>':
+      case '!=':
+        return $value1 != $value2;
+
+      case 'IN':
+        return in_array($value1, $value2);
+
+      case 'BETWEEN':
+        return $value1 >= $value2[0] && $value1 >= $value2[1];
+    }
+    return FALSE;
   }
 
 }

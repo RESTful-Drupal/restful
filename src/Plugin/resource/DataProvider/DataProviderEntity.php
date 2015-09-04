@@ -10,7 +10,9 @@ namespace Drupal\restful\Plugin\resource\DataProvider;
 use Drupal\restful\Exception\ForbiddenException;
 use Drupal\restful\Exception\InternalServerErrorException;
 use Drupal\restful\Exception\ServerConfigurationException;
+use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
+use Drupal\restful\Plugin\resource\ResourceEntity;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterEMW;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollection;
@@ -22,6 +24,10 @@ use Drupal\restful\Exception\UnprocessableEntityException;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
 use Drupal\restful\Plugin\resource\Resource;
 use Drupal\restful\Plugin\resource\ResourceInterface;
+use Drupal\restful\Plugin\ResourcePluginManager;
+use Drupal\restful\Util\EntityFieldQuery;
+use Drupal\restful\Util\RelationalFilter;
+use Drupal\restful\Util\RelationalFilterInterface;
 
 class DataProviderEntity extends DataProvider implements DataProviderEntityInterface {
 
@@ -44,7 +50,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
    *
    * @var string
    */
-  protected $EFQClass = '\EntityFieldQuery';
+  protected $EFQClass = '\Drupal\restful\Util\EntityFieldQuery';
 
   /**
    * Constructor.
@@ -231,7 +237,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
       return NULL;
     }
 
-    $resource_field_collection = new ResourceFieldCollection();
+    $resource_field_collection = new ResourceFieldCollection(array(), $this->getRequest());
     /* @var \EntityDrupalWrapper $wrapper */
     $wrapper = entity_metadata_wrapper($this->entityType, $entity_id);
     $wrapper->language($this->getLangCode());
@@ -535,7 +541,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     parent::addExtraInfoToQuery($query);
     // The only time you need to add the access tags to a EFQ is when you don't
     // have fieldConditions.
-    if (empty($query->fieldConditions)) {
+    if (empty($query->fieldConditions) && empty($query->order)) {
       // Add a generic entity access tag to the query.
       $query->addTag($this->entityType . '_access');
     }
@@ -592,28 +598,73 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
    */
   protected function queryForListFilter(\EntityFieldQuery $query) {
     $resource_fields = $this->fieldDefinitions;
-    foreach ($this->parseRequestForListFilter() as $filter) {
+    $filters = $this->parseRequestForListFilter();
+    $this->validateFilters($filters);
+    foreach ($filters as $filter) {
       // Determine if filtering is by field or property.
       /* @var ResourceFieldEntityInterface $resource_field */
       if (!$resource_field = $resource_fields->get($filter['public_field'])) {
-        return;
+        if (!static::isNestedField($filter['public_field'])) {
+          // This is not a nested filter.
+          continue;
+        }
+        if (!empty($filter['target'])) {
+          // If we cannot find the field, it may be a nested filter. Check if
+          // the target of that is the current resource.
+          continue;
+        }
+        $this->addNestedFilter($filter, $query);
+        continue;
       }
       if (!$property_name = $resource_field->getProperty()) {
         throw new BadRequestException(sprintf('The current filter "%s" selection does not map to any entity property or Field API field.', $filter['public_field']));
       }
+
       if (field_info_field($property_name)) {
         if (in_array(strtoupper($filter['operator'][0]), array('IN', 'BETWEEN'))) {
-          $query->fieldCondition($property_name, $resource_field->getColumn(), $filter['value'], $filter['operator'][0]);
+          $query->fieldCondition($property_name, $resource_field->getColumn(), $this->getReferencedIds($filter['value'], $resource_field), $filter['operator'][0]);
           continue;
         }
         for ($index = 0; $index < count($filter['value']); $index++) {
-          $query->fieldCondition($property_name, $resource_field->getColumn(), $filter['value'][$index], $filter['operator'][$index]);
+          // If referencing an entity by an alternate ID, retrieve the actual
+          // Drupal's entity ID using getReferencedId.
+          $query->fieldCondition($property_name, $resource_field->getColumn(), $this->getReferencedId($filter['value'][$index], $resource_field), $filter['operator'][$index]);
         }
       }
       else {
         $column = $this->getColumnFromProperty($property_name);
+        if (in_array(strtoupper($filter['operator'][0]), array('IN', 'BETWEEN'))) {
+          $query->propertyCondition($column, $this->getReferencedIds($filter['value'], $resource_field), $filter['operator'][0]);
+          continue;
+        }
         for ($index = 0; $index < count($filter['value']); $index++) {
-          $query->propertyCondition($column, $filter['value'][$index], $filter['operator'][$index]);
+          $query->propertyCondition($column, $this->getReferencedId($filter['value'][$index], $resource_field), $filter['operator'][$index]);
+        }
+      }
+    }
+  }
+
+  /**
+   * Validates the query parameters.
+   *
+   * @param array $filters
+   *   The parsed filters.
+   *
+   * @throws BadRequestException
+   *   When there is an invalid target for relational filters.
+   */
+  protected function validateFilters(array $filters) {
+    foreach ($filters as $filter) {
+      if (empty($filter['target'])) {
+        continue;
+      }
+      // If the target is not a part of the field, then raise an error.
+      $field_name_parts = explode('.', $filter['public_field']);
+      $target_parts = explode('.', $filter['target']);
+      foreach ($target_parts as $delta => $target_part) {
+        if ($target_part != $field_name_parts[$delta]) {
+          // There is a discrepancy between target and field name.
+          throw new BadRequestException(sprintf('The target "%s" should be a part of the field name "%s".', $filter['target'], $filter['public_field']));
         }
       }
     }
@@ -856,4 +907,207 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
   protected static function checkPropertyAccess(ResourceFieldInterface $resource_field, $op, DataInterpreterInterface $interpreter) {
     return $resource_field->access($op, $interpreter);
   }
+
+  /**
+   * Get referenced ID.
+   *
+   * @param string $value
+   *   The provided value, it can be an ID or not.
+   * @param ResourceFieldInterface $resource_field
+   *   The resource field that points to another entity.
+   *
+   * @return string
+   *   If the field uses an alternate ID property, then the ID gets translated
+   *   to the original entity ID. If not, then the same provided ID is returned.
+   *
+   * @todo: Add testing to this functionality.
+   */
+  protected function getReferencedId($value, ResourceFieldInterface $resource_field) {
+    $field_definition = $resource_field->getDefinition();
+    if (empty($field_definition['referencedIdProperty'])) {
+      return $value;
+    }
+    $id_property = $field_definition['referencedIdProperty'];
+    // Get information about the the Drupal field to see what entity type we are
+    // dealing with.
+    $field_info = field_info_field($resource_field->getProperty());
+    // We support:
+    // - Entity Reference.
+    // - Taxonomy Term.
+    // - File & Image field.
+    // If you need to support other types, you can create a custom data provider
+    // that overrides this method.
+    $target_entity_type = NULL;
+    $bundles = array();
+    $query = $this->EFQObject();
+    if ($field_info['type'] == 'entityreference') {
+      $target_entity_type = $field_info['settings']['target_type'];
+      $bundles = empty($field_info['settings']['handler_settings']['target_bundles']) ? array() : $field_info['settings']['handler_settings']['target_bundles'];
+    }
+    elseif ($field_info['type'] == 'file') {
+      $target_entity_type = 'file';
+    }
+    elseif ($field_info['type'] == 'taxonomy_term_reference') {
+      $target_entity_type = 'taxonomy_term';
+      // Narrow down with the vocabulary information. Very useful if there are
+      // multiple terms with the same name in different vocabularies.
+      foreach ($field_info['settings']['allowed_values'] as $allowed_value) {
+        $bundles[] = $allowed_value['vocabulary'];
+      }
+    }
+    if (empty($target_entity_type)) {
+      return $value;
+    }
+
+    // Now we have the entity type and bundles to look for the entity based on
+    // the contents of the field or the entity property.
+    $query->entityCondition('entity_type', $target_entity_type);
+    if (!empty($bundles)) {
+      // Narrow down for bundles.
+      $query->entityCondition('bundle', $bundles, 'IN');
+    }
+    // Check if the $id_property is a field or a property.
+    if (field_info_field($id_property)) {
+      $query->fieldCondition($id_property, $resource_field->getColumn(), $value);
+    }
+    else {
+      $query->propertyCondition($id_property, $value);
+    }
+    // Only one result is returned. This assumes the reference fields are unique
+    // for every entity.
+    $results = $query->range(0, 1)->execute();
+    if ($results[$target_entity_type]) {
+      return key($results[$target_entity_type]);
+    }
+    // If no entity could be found, fall back to the original value.
+    return $value;
+  }
+
+  /**
+   * Get reference IDs for multiple values.
+   *
+   * @param array $values
+   *   The provided values, they can be an IDs or not.
+   * @param ResourceFieldInterface $resource_field
+   *   The resource field that points to another entity.
+   *
+   * @return string
+   *   If the field uses an alternate ID property, then the ID gets translated
+   *   to the original entity ID. If not, then the same provided ID is returned.
+   *
+   * @see getReferencedId()
+   */
+  protected function getReferencedIds(array $values, ResourceFieldInterface $resource_field) {
+    $output = array();
+    foreach ($values as $value) {
+      $output[] = $this->getReferencedId($value, $resource_field);
+    }
+    return $output;
+  }
+
+  /**
+   * Add relational filters to EFQ.
+   *
+   * This is for situation like when you only want articles that have taxonomies
+   * that contain the word Drupal in their body field. This cannot be resolved
+   * via EFQ alone.
+   *
+   * @param array $filter
+   *   The filter.
+   * @param \EntityFieldQuery $query
+   *   The query to alter.
+   */
+  protected function addNestedFilter(array $filter, \EntityFieldQuery $query) {
+    $relational_filters = array();
+    foreach ($this->getFieldsInfoFromPublicName($filter['public_field']) as $field_info) {
+      $relational_filters[] = new RelationalFilter($field_info['name'], $field_info['type'], $field_info['column'], $field_info['entity_type'], $field_info['bundles']);
+    }
+    $query->addRelationship($filter + array('relational_filters' => $relational_filters));
+  }
+
+  /**
+   * Transform the nested public name into an array of Drupal field information.
+   *
+   * @param string $name
+   *   The dot separated public name.
+   *
+   * @throws ServerConfigurationException
+   *   When the required resource information is not available.
+   *
+   * @return array[]
+   *   An array of fields with name and type.
+   */
+  protected function getFieldsInfoFromPublicName($name) {
+    $public_field_names = explode('.', $name);
+    $last_public_field_name = array_pop($public_field_names);
+    $fields = array();
+
+    // The first field is in the current resource, but not the other ones.
+    $definitions = $this->fieldDefinitions;
+    foreach ($public_field_names as $index => $public_field_name) {
+      /* @var ResourceFieldEntity $resource_field */
+      $resource_field = $definitions->get($public_field_name);
+      // Get the resource for the field, so we can get information for the next
+      // iteration.
+      if (!$resource = $resource_field->getResource()) {
+        throw new ServerConfigurationException(sprintf('The nested field %s cannot be accessed because %s has no resource associated to it.', $name, $public_field_name));
+      }
+      list($item, $definitions) = $this->getFieldsFromPublicNameItem($resource_field);
+      $fields[] = $item;
+    }
+    $resource_field = $definitions->get($last_public_field_name);
+    $property = $resource_field->getProperty();
+    $item = array(
+      'name' => $property,
+      'type' => ResourceFieldEntity::propertyIsField($property) ? RelationalFilterInterface::TYPE_FIELD : RelationalFilterInterface::TYPE_PROPERTY,
+      'entity_type' => NULL,
+      'bundles' => array(),
+    );
+    $item['column'] = $item['type'] == RelationalFilterInterface::TYPE_FIELD ? $resource_field->getColumn() : NULL;
+    $fields[] = $item;
+
+    return $fields;
+  }
+
+  /**
+   * Get the (reference) field information for a single item.
+   *
+   * @param ResourceFieldInterface $resource_field
+   *   The resource field.
+   *
+   * @throws \Drupal\restful\Exception\BadRequestException
+   *
+   * @return array
+   *   An array containing the following keys:
+   *   - 'name': Drupal's internal field name. Ex: field_article_related
+   *   - 'type': Either a field or a property.
+   *   - 'entity_type': The entity type this field points to. Not populated if
+   *     the field is not a reference (for instance the destination field used
+   *     in the where clause).
+   *   - 'bundles': The allowed bundles for this field. Not populated if the
+   *     field is not a reference (for instance the destination field used in
+   *     the where clause).
+   */
+  protected function getFieldsFromPublicNameItem(ResourceFieldInterface $resource_field) {
+    $property = $resource_field->getProperty();
+    $resource = $resource_field->getResource();
+    $item = array(
+      'name' => $property,
+      'type' => ResourceFieldEntity::propertyIsField($property) ? RelationalFilterInterface::TYPE_FIELD : RelationalFilterInterface::TYPE_PROPERTY,
+      'entity_type' => NULL,
+      'bundles' => array(),
+    );
+    $item['column'] = $item['type'] == RelationalFilterInterface::TYPE_FIELD ? $resource_field->getColumn() : NULL;
+    $instance_id = sprintf('%s:%d.%d', $resource['name'], $resource['majorVersion'], $resource['minorVersion']);
+    $plugin_manager = ResourcePluginManager::create('cache', Request::create('', array(), RequestInterface::METHOD_GET));
+    /* @var ResourceEntity $resource */
+    $resource = $plugin_manager->createInstance($instance_id);
+
+    // Variables for the next iteration.
+    $definitions = $resource->getFieldDefinitions();
+    $item['entity_type'] = $resource->getEntityType();
+    $item['bundles'] = $resource->getBundles();
+    return array($item, $definitions);
+  }
+
 }

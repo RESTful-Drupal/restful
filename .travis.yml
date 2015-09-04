@@ -67,6 +67,7 @@ script:
   - drush --yes dl plug
   - drush --yes dl entity
   - drush --yes dl entityreference
+  - drush --yes dl uuid
   - drush --yes pm-enable plug
 
   # Patch Entity API.
@@ -77,6 +78,6 @@ script:
   - drush --yes pm-enable simpletest restful restful_token_auth
   # Run the tests
   - cd $TRAVIS_BUILD_DIR/../drupal
-  - php ./scripts/run-tests.sh --php $(which php) --verbose --color --concurrency 4 --url http://localhost RESTful | tee /tmp/simpletest-result.txt
+  - php ./scripts/run-tests.sh --php $(which php) --verbose --color --url http://localhost RESTful 2>&1 | tee /tmp/simpletest-result.txt
   - egrep -i "([1-9]+ fail)|(Fatal error)|([1-9]+ exception)" /tmp/simpletest-result.txt && exit 1
   - exit 0

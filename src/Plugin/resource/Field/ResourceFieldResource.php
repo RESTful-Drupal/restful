@@ -7,6 +7,7 @@
 
 namespace Drupal\restful\Plugin\resource\Field;
 
+use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
 use Drupal\restful\Plugin\resource\ResourceInterface;
 
@@ -47,8 +48,14 @@ class ResourceFieldResource implements ResourceFieldResourceInterface {
    *
    * @param array $field
    *   Contains the field values.
+   *
+   * @param RequestInterface $request
+   *   The request.
    */
-  public function __construct(array $field) {
+  public function __construct(array $field, RequestInterface $request) {
+    if ($this->decorated) {
+      $this->setRequest($request);
+    }
     $this->resourceMachineName = $field['resource']['name'];
   }
 
@@ -102,9 +109,10 @@ class ResourceFieldResource implements ResourceFieldResourceInterface {
   /**
    * {@inheritdoc}
    */
-  public static function create(array $field) {
-    $resource_field = ResourceField::create($field);
-    $output = new static($field);
+  public static function create(array $field, RequestInterface $request = NULL) {
+    $request = $request ?: restful()->getRequest();
+    $resource_field = ResourceField::create($field, $request);
+    $output = new static($field, $request);
     $output->decorate($resource_field);
     return $output;
   }
@@ -304,6 +312,27 @@ class ResourceFieldResource implements ResourceFieldResourceInterface {
    */
   public function __call($name, $arguments) {
     return call_user_func_array(array($this->decorated, $name), $arguments);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getRequest() {
+    return $this->decorated->getRequest();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setRequest(RequestInterface $request) {
+    $this->decorated->setRequest($request);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDefinition() {
+    return $this->decorated->getDefinition();
   }
 
 }

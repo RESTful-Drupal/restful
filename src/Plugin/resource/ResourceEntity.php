@@ -8,12 +8,12 @@
 namespace Drupal\restful\Plugin\resource;
 
 use Drupal\restful\Exception\InternalServerErrorException;
-use Drupal\restful\Exception\NotImplementedException;
 use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
 use Drupal\restful\Plugin\resource\DataProvider\DataProviderEntityInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollection;
+use Drupal\restful\Plugin\resource\Field\ResourceFieldEntity;
 
 abstract class ResourceEntity extends Resource {
 
@@ -58,7 +58,7 @@ abstract class ResourceEntity extends Resource {
     $field_definitions = $this->getFieldDefinitions();
     if (!empty($plugin_definition['dataProvider']['viewMode'])) {
       $field_definitions_array = $this->viewModeFields($plugin_definition['dataProvider']['viewMode']);
-      $field_definitions = ResourceFieldCollection::factory($field_definitions_array);
+      $field_definitions = ResourceFieldCollection::factory($field_definitions_array, $this->getRequest());
     }
     $class_name = $this->dataProviderClassName();
     if (!class_exists($class_name)) {
@@ -187,7 +187,12 @@ abstract class ResourceEntity extends Resource {
     // ResourceFieldEntity. Otherwise they will be considered regular
     // ResourceField.
     $field_definitions = array_map(function ($field_definition) {
-      return $field_definition + array('class' => '\Drupal\restful\Plugin\resource\Field\ResourceFieldEntity');
+      $field_entity_class = '\Drupal\restful\Plugin\resource\Field\ResourceFieldEntity';
+      $class_name = ResourceFieldEntity::fieldClassName($field_definition);
+      if (!$class_name || is_subclass_of($class_name, $field_entity_class)) {
+        $class_name = $field_entity_class;
+      }
+      return $field_definition + array('class' => $class_name);
     }, $field_definitions);
 
     // If there is an alternate id field, use it instead of the entity id.
