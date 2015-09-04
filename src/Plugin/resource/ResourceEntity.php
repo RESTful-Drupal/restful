@@ -58,7 +58,7 @@ abstract class ResourceEntity extends Resource {
     $field_definitions = $this->getFieldDefinitions();
     if (!empty($plugin_definition['dataProvider']['viewMode'])) {
       $field_definitions_array = $this->viewModeFields($plugin_definition['dataProvider']['viewMode']);
-      $field_definitions = ResourceFieldCollection::factory($field_definitions_array);
+      $field_definitions = ResourceFieldCollection::factory($field_definitions_array, $this->getRequest());
     }
     $class_name = $this->dataProviderClassName();
     if (!class_exists($class_name)) {

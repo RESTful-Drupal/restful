@@ -64,7 +64,7 @@ class DataProviderPlug extends DataProvider implements DataProviderInterface {
     catch (PluginNotFoundException $e) {
       throw new NotFoundException('Invalid URL path.');
     }
-    $resource_field_collection = new ResourceFieldCollection();
+    $resource_field_collection = new ResourceFieldCollection(array(), $this->getRequest());
     $interpreter = new DataInterpreterPlug($this->getAccount(), new PluginWrapper($plugin));
     $resource_field_collection->setInterpreter($interpreter);
 

@@ -107,7 +107,7 @@ interface ResourceFieldEntityInterface extends ResourceFieldInterface {
    * @return array
    *   The input file array with an extra key for the image styles.
    */
-  public function getImageUris(array $file_array, $image_styles);
+  public static function getImageUris(array $file_array, $image_styles);
 
   /**
    * Checks if a given string represents a Field API field.
