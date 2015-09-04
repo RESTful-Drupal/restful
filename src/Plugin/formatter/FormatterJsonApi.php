@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\restful\Plugin\formatter\FormatterJson.
+ * Contains \Drupal\restful\Plugin\formatter\FormatterJsonApi.
  */
 
 namespace Drupal\restful\Plugin\formatter;
@@ -108,6 +108,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
       // If the field points to a resource that can be included, include it
       // right away.
       if (
+        !empty($value) &&
         static::isIterable($value) &&
         $resource_field instanceof ResourceFieldResourceInterface
       ) {
@@ -152,7 +153,8 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
           // including the parents.
 
           // Remove numeric parents since those only indicate that the field was
-          // multivalue, not a parent.
+          // multivalue, not a parent: articles[related][1][tags][2][name] turns
+          // into 'articles.related.tags.name'.
           $array_path = $parents;
           array_push($array_path, $public_field_name);
           $include_path = implode('.', array_filter($array_path, function ($item) {

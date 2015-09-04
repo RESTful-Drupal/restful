@@ -10,6 +10,7 @@ namespace Drupal\restful\Plugin\resource\Field;
 use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
+use Drupal\restful\Plugin\resource\DataProvider\DataProvider;
 use Drupal\restful\Plugin\resource\DataProvider\DataProviderResource;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
 use Drupal\restful\Plugin\resource\ResourceInterface;
@@ -289,6 +290,7 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
       $parsed_input = array(
         'fields' => implode(',', $this->nestedDottedChildren('fields')),
         'include' => implode(',', $this->nestedDottedChildren('include')),
+        'filter' => $this->nestedDottedChildren('filter'),
       );
       $request = Request::create('', array_filter($parsed_input), RequestInterface::METHOD_GET);
       // Remove the $_GET options for the sub-request.
@@ -302,7 +304,20 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
       $metadata ?: array();
       $metadata[] = $this->buildResourceMetadataItem($property_wrapper);
       $this->addMetadata($wrapper->getIdentifier(), $metadata);
-      return $resource_data_provider->view($embedded_identifier);
+      /* @var ResourceFieldCollection $embedded_entity */
+      $embedded_entity = $resource_data_provider->view($embedded_identifier);
+      // Test if the $embedded_entity meets the filter or not.
+      if (empty($parsed_input['filter'])) {
+        return $embedded_entity;
+      }
+      foreach ($parsed_input['filter'] as $filter) {
+        // Filters only apply if the target is the current field.
+        if (!empty($filter['target']) && $filter['target'] == $this->getPublicName() && !$embedded_entity->evalFilter($filter)) {
+          // This filter is not met.
+          return NULL;
+        }
+      }
+      return $embedded_entity;
     }
 
     if ($this->getFormatter()) {
@@ -334,7 +349,9 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
     }
 
     // Perform field API access checks.
-    $property_wrapper = $this->propertyWrapper($interpreter);
+    if (!$property_wrapper = $this->propertyWrapper($interpreter)) {
+      return FALSE;
+    }
     if ($this->isWrapperMethodOnEntity() && $this->getWrapperMethod() && $this->getProperty()) {
       // Sometimes we define fields as $wrapper->getIdentifier. We need to
       // resolve that to $wrapper->nid to call $wrapper->nid->info().
@@ -468,6 +485,10 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
    *   The list of fields.
    */
   protected function nestedDottedChildren($key) {
+    // Filters are dealt with differently.
+    if ($key == 'filter') {
+      return $this->nestedDottedFilters();
+    }
     $allowed_values = array('include', 'fields');
     if (!in_array($key, $allowed_values)) {
       return array();
@@ -483,6 +504,36 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
     return array_map(function ($value) {
       return substr($value, strlen($this->getPublicName()) + 1);
     }, $limit_values);
+  }
+
+  /**
+   * Process the filter query string for the relevant sub-query.
+   *
+   * Selects the filters that start with the field name.
+   *
+   * @return array
+   *   The processed filters.
+   */
+  protected function nestedDottedFilters() {
+
+    $input = $this
+      ->getRequest()
+      ->getParsedInput();
+    if (empty($input['filter'])) {
+      return array();
+    }
+    $output_filters = array();
+    $filters = $input['filter'];
+    foreach ($filters as $filter_public_name => $filter) {
+      $filter = DataProvider::processFilterInput($filter, $filter_public_name);
+      if (strpos($filter_public_name, $this->getPublicName() . '.') === 0) {
+        // Remove the prefix and add it to the filters for the next request.
+        $new_name = substr($filter_public_name, strlen($this->getPublicName()) + 1);
+        $filter['public_field'] = $new_name;
+        $output_filters[$new_name] = $filter;
+      }
+    }
+    return $output_filters;
   }
 
   /**

@@ -328,6 +328,10 @@ class Request implements RequestInterface {
   /**
    * Helps fixing the fields to ensure that dot-notation makes sense.
    *
+   * Make sure to add all of the parents for the dot-notation sparse
+   * fieldsets. fields=active,image.category.name,image.description becomes
+   * fields=active,image,image.category,image.category.name,image.description
+   *
    * @param array $input
    *   The parsed input to fix.
    *
@@ -335,9 +339,6 @@ class Request implements RequestInterface {
    *   The parsed input array.
    */
   protected function fixQueryFields(array $input) {
-    // Make sure to add all of the parents for the dot-notation sparse
-    // fieldsets. fields=active,image.category.name,image.description becomes
-    // fields=active,image,image.category,image.category.name,image.description
     foreach (array('fields', 'include') as $key_name) {
       if (empty($input[$key_name])) {
         continue;
@@ -355,6 +356,7 @@ class Request implements RequestInterface {
 
     return $input;
   }
+
   /**
    * Parses the header names and values from globals.
    *
