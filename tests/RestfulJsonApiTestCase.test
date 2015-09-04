@@ -142,11 +142,13 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
         'type' => 'main',
         'relationships' => array(
           'entity_reference_single_resource' => array(
-            'id' => $wrapper->entity_reference_single->entity_reference_single->getIdentifier(),
+            'data' => array(
+              'id' => $wrapper->entity_reference_single->entity_reference_single->getIdentifier(),
+              'type' => 'main',
+            ),
             'links' => array(
               'related' => $this->handler->versionedUrl('', array('query' => array('filter' => array('entity_reference_single_resource' => $wrapper->entity_reference_single->entity_reference_single->getIdentifier())))),
             ),
-            'type' => 'main',
           ),
         ),
       ),
@@ -173,12 +175,12 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
     $relationships = $result['data']['relationships'];
     // Make sure that the entity_reference_*_resource are included as
     // relationships.
-    $this->assertEqual($relationships['entity_reference_single_resource']['type'], 'main');
-    $this->assertEqual($relationships['entity_reference_single_resource']['id'], $wrapper->entity_reference_single->getIdentifier());
-    $this->assertEqual($relationships['entity_reference_multiple_resource'][0]['type'], 'main');
-    $this->assertEqual($relationships['entity_reference_multiple_resource'][0]['id'], $wrapper->entity_reference_multiple[0]->getIdentifier());
-    $this->assertEqual($relationships['entity_reference_multiple_resource'][1]['type'], 'main');
-    $this->assertEqual($relationships['entity_reference_multiple_resource'][1]['id'], $wrapper->entity_reference_multiple[1]->getIdentifier());
+    $this->assertEqual($relationships['entity_reference_single_resource']['data']['type'], 'main');
+    $this->assertEqual($relationships['entity_reference_single_resource']['data']['id'], $wrapper->entity_reference_single->getIdentifier());
+    $this->assertEqual($relationships['entity_reference_multiple_resource'][0]['data']['type'], 'main');
+    $this->assertEqual($relationships['entity_reference_multiple_resource'][0]['data']['id'], $wrapper->entity_reference_multiple[0]->getIdentifier());
+    $this->assertEqual($relationships['entity_reference_multiple_resource'][1]['data']['type'], 'main');
+    $this->assertEqual($relationships['entity_reference_multiple_resource'][1]['data']['id'], $wrapper->entity_reference_multiple[1]->getIdentifier());
 
     // Make a request with the include query string.
     $this->handler->setRequest(Request::create('api/v1.1/main/' . $wrapper->getIdentifier(), array('include' => 'entity_reference_single_resource.entity_reference_single_resource')));
@@ -205,76 +207,13 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
         'type' => 'main',
         'relationships' => array(
           'entity_reference_single_resource' => array(
-            'id' => $wrapper->entity_reference_single->entity_reference_single->getIdentifier(),
+            'data' => array(
+              'id' => $wrapper->entity_reference_single->entity_reference_single->getIdentifier(),
+              'type' => 'main',
+            ),
             'links' => array(
               'related' => $this->handler->versionedUrl('', array('query' => array('filter' => array('entity_reference_single_resource' => $wrapper->entity_reference_single->entity_reference_single->getIdentifier())))),
             ),
-            'type' => 'main',
-          ),
-        ),
-      ),
-      array(
-        'attributes' => array(
-          'id' => $wrapper->entity_reference_multiple[1]->getIdentifier(),
-          'label' => $wrapper->entity_reference_multiple[1]->label(),
-          'self' => $this->handler->versionedUrl($wrapper->entity_reference_multiple[1]->getIdentifier()),
-        ),
-        'id' => $wrapper->entity_reference_multiple[1]->getIdentifier(),
-        'links' => array(
-          'related' => $this->handler->versionedUrl('', array('query' => array('filter' => array('entity_reference_single_resource' => $wrapper->entity_reference_multiple[1]->getIdentifier())))),
-          'self' => $this->handler->versionedUrl($wrapper->entity_reference_multiple[1]->getIdentifier()),
-        ),
-        'type' => 'main',
-      ),
-    );
-    // Remove the empty fields from the actual response for easier comparison.
-    $included[0]['attributes'] = array_filter($included[0]['attributes']);
-    $included[1]['attributes'] = array_filter($included[1]['attributes']);
-    sort($expected_includes);
-    sort($included);
-    $this->assertEqual($expected_includes, $included);
-
-    // 3. Assert the nested relationships.
-    $relationships = $result['data']['relationships'];
-    // Make sure that the entity_reference_*_resource are included as
-    // relationships.
-    $this->assertEqual($relationships['entity_reference_single_resource']['type'], 'main');
-    $this->assertEqual($relationships['entity_reference_single_resource']['id'], $wrapper->entity_reference_single->getIdentifier());
-    $this->assertEqual($relationships['entity_reference_multiple_resource'][0]['type'], 'main');
-    $this->assertEqual($relationships['entity_reference_multiple_resource'][0]['id'], $wrapper->entity_reference_multiple[0]->getIdentifier());
-    $this->assertEqual($relationships['entity_reference_multiple_resource'][1]['type'], 'main');
-    $this->assertEqual($relationships['entity_reference_multiple_resource'][1]['id'], $wrapper->entity_reference_multiple[1]->getIdentifier());
-
-    // Make a request with the include query string.
-    $this->handler->setRequest(Request::create('api/v1.1/main/' . $wrapper->getIdentifier(), array('include' => 'entity_reference_single_resource.entity_reference_single_resource')));
-    $this->handler->setPath($wrapper->getIdentifier());
-    $this->formatter->setResource($this->handler);
-    $resource_field_collections = $this->handler->process();
-    $result = drupal_json_decode($this->formatter->format($resource_field_collections));
-    $included = $result['included'];
-    // Make sure there are no repeated includes.
-    $this->assertEqual(2, count($included));
-    $expected_includes = array(
-      array(
-        'attributes' => array(
-          'entity_reference_single' => $wrapper->entity_reference_single->entity_reference_single->getIdentifier(),
-          'id' => $wrapper->entity_reference_multiple[0]->getIdentifier(),
-          'label' => $wrapper->entity_reference_multiple[0]->label(),
-          'self' => $this->handler->versionedUrl($wrapper->entity_reference_multiple[0]->getIdentifier()),
-        ),
-        'id' => $wrapper->entity_reference_multiple[0]->getIdentifier(),
-        'links' => array(
-          'related' => $this->handler->versionedUrl('', array('query' => array('filter' => array('entity_reference_single_resource' => $wrapper->entity_reference_multiple[0]->getIdentifier())))),
-          'self' => $this->handler->versionedUrl($wrapper->entity_reference_multiple[0]->getIdentifier()),
-        ),
-        'type' => 'main',
-        'relationships' => array(
-          'entity_reference_single_resource' => array(
-            'id' => $wrapper->entity_reference_single->entity_reference_single->getIdentifier(),
-            'links' => array(
-              'related' => $this->handler->versionedUrl('', array('query' => array('filter' => array('entity_reference_single_resource' => $wrapper->entity_reference_single->entity_reference_single->getIdentifier())))),
-            ),
-            'type' => 'main',
           ),
         ),
       ),
@@ -343,7 +282,7 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
     $this->assertTrue(empty($result['included'][1]['relationships']));
     $this->assertEqual(array('text_multiple'), array_keys($result['included'][1]['attributes']));
 
-    // 5. Assert the attributes for a list.
+    // 6. Assert the attributes for a list.
     // Make a list request and check the attributes.
     $this->handler->setRequest(Request::create(''));
     $this->handler->setPath('');
@@ -399,8 +338,10 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
         ),
         'relationships' => array(
           'entity_reference_single_resource' => array(
-            'id' => $wrapper->entity_reference_single->entity_reference_single->getIdentifier(),
-            'type' => 'main',
+            'data' => array(
+              'id' => $wrapper->entity_reference_single->entity_reference_single->getIdentifier(),
+              'type' => 'main',
+            ),
             'links' => array(
               'related' => $this->handler->versionedUrl('', array('query' => array('filter' => array('entity_reference_single_resource' => $wrapper->entity_reference_single->entity_reference_single->getIdentifier())))),
             ),
@@ -413,8 +354,7 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
     $included[1]['attributes'] = array_filter($included[1]['attributes']);
     $this->assertEqual($expected_includes, $included);
 
-
-    // 6. Assert request processing.
+    // 7. Assert request processing.
     $request = Request::create('', array(
       'fields' => 'first.second.third.fourth,first.third.fourth',
       'include' => 'fifth.sixth.seventh',
@@ -539,8 +479,8 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
 
     // Assert relationship.
     $relationships = $response['data']['relationships'];
-    $this->assertEqual($relationships['entity_reference_resource']['id'], $entities[0]->uuid);
-    $this->assertEqual($relationships['entity_reference_resource']['type'], 'main');
+    $this->assertEqual($relationships['entity_reference_resource']['data']['id'], $entities[0]->uuid);
+    $this->assertEqual($relationships['entity_reference_resource']['data']['type'], 'main');
 
     // Assert that the self link contains the UUID.
     $this->assertTrue(strpos($response['links']['self'], $entities[2]->uuid) !== FALSE, 'UUID found in self link.');
