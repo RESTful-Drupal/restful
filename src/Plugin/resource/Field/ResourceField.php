@@ -36,6 +36,9 @@ class ResourceField extends ResourceFieldBase implements ResourceFieldInterface 
     $this->processCallbacks = isset($field['process_callbacks']) ? $field['process_callbacks'] : $this->processCallbacks;
     $this->resource = isset($field['resource']) ? $field['resource'] : $this->resource;
     $this->methods = isset($field['methods']) ? $field['methods'] : $this->methods;
+    // Store the definition, useful to access custom keys on custom resource
+    // fields.
+    $this->definition = $field;
   }
 
   /**

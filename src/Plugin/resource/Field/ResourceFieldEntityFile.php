@@ -56,4 +56,11 @@ class ResourceFieldEntityFile extends ResourceFieldEntity implements ResourceFie
     $this->decorated->setRequest($request);
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getDefinition() {
+    return $this->decorated->getDefinition();
+  }
+
 }

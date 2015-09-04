@@ -212,7 +212,7 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
     if ($property_wrapper instanceof \EntityDrupalWrapper) {
       // The property wrapper is a reference to another entity get the entity
       // ID.
-      $identifier = $property_wrapper->getIdentifier() ?: NULL;
+      $identifier = $this->referencedId($property_wrapper);
       $resource = $this->getResource();
       // TODO: Make sure we still want to support full_view.
       if (!$resource || !$identifier || (isset($resource['full_view']) && $resource['full_view'] === FALSE)) {
@@ -525,6 +525,13 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
    */
   public function render(DataInterpreterInterface $interpreter) {
     return $this->executeProcessCallbacks($this->value($interpreter));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDefinition() {
+    return $this->decorated->getDefinition();
   }
 
   /**
@@ -963,7 +970,10 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
   /**
    * Builds a metadata item for a field value.
    *
-   * It will add information about the referenced entity.
+   * It will add information about the referenced entity. NOTE: Do not type hint
+   * the $wrapper argument to avoid PHP errors for the file entities. Those are
+   * no true entity references, but file arrays (although they reference file
+   * entities)
    *
    * @param \EntityDrupalWrapper $wrapper
    *   The wrapper to the referenced entity.
@@ -971,7 +981,7 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
    * @return array
    *   The metadata array item.
    */
-  protected function buildResourceMetadataItem(\EntityDrupalWrapper $wrapper) {
+  protected function buildResourceMetadataItem($wrapper) {
     $id = $wrapper->getIdentifier();
     $bundle = $wrapper->getBundle();
     $resource = $this->getResource();
@@ -981,6 +991,19 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
       'bundle' => $bundle,
       'resource_name' => $resource['name'],
     );
+  }
+
+  /**
+   * Helper function to get the referenced entity ID.
+   *
+   * @param \EntityDrupalWrapper $property_wrapper
+   *   The wrapper for the referenced file array.
+   *
+   * @return mixed
+   *   The ID.
+   */
+  protected function referencedId($property_wrapper) {
+    return $property_wrapper->getIdentifier() ?: NULL;
   }
 
 }
