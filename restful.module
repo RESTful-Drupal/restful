@@ -131,7 +131,11 @@ function restful_help($path, $arg) {
  *   The manager.
  */
 function restful() {
-  return drupal_static('restful.manager', RestfulManager::createFromGlobals());
+  static $manager;
+  if (!isset($manager)) {
+    $manager = RestfulManager::createFromGlobals();
+  }
+  return $manager;
 }
 
 /**
