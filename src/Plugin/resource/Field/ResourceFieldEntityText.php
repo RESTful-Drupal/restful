@@ -7,6 +7,7 @@
 
 namespace Drupal\restful\Plugin\resource\Field;
 
+use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
 
 class ResourceFieldEntityText extends ResourceFieldEntity implements ResourceFieldEntityInterface {
@@ -71,6 +72,27 @@ class ResourceFieldEntityText extends ResourceFieldEntity implements ResourceFie
    */
   public function executeProcessCallbacks($value) {
     return $this->decorated->executeProcessCallbacks($value);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getRequest() {
+    return $this->decorated->getRequest();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setRequest(RequestInterface $request) {
+    $this->decorated->setRequest($request);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDefinition() {
+    return $this->decorated->getDefinition();
   }
 
 }

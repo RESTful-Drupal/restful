@@ -9,6 +9,7 @@ namespace Drupal\restful\Plugin\resource\Field;
 
 use Drupal\restful\Exception\IncompatibleFieldDefinitionException;
 use Drupal\restful\Exception\ServerConfigurationException;
+use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
 use Drupal\restful\Resource\ResourceManager;
 
@@ -22,7 +23,8 @@ class ResourceField extends ResourceFieldBase implements ResourceFieldInterface 
    *
    * @throws ServerConfigurationException
    */
-  public function __construct(array $field) {
+  public function __construct(array $field, RequestInterface $request) {
+    $this->setRequest($request);
     if (empty($field['public_name'])) {
       throw new ServerConfigurationException('No public name provided in the field mappings.');
     }
@@ -34,18 +36,26 @@ class ResourceField extends ResourceFieldBase implements ResourceFieldInterface 
     $this->processCallbacks = isset($field['process_callbacks']) ? $field['process_callbacks'] : $this->processCallbacks;
     $this->resource = isset($field['resource']) ? $field['resource'] : $this->resource;
     $this->methods = isset($field['methods']) ? $field['methods'] : $this->methods;
+    // Store the definition, useful to access custom keys on custom resource
+    // fields.
+    $this->definition = $field;
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function create(array $field) {
+  public static function create(array $field, RequestInterface $request = NULL) {
+    $request = $request ?: restful()->getRequest();
     if ($class_name = static::fieldClassName($field)) {
       // Call the create factory in the derived class.
-      return call_user_func_array(array($class_name, 'create'), array($field, new static($field)));
+      return call_user_func_array(array($class_name, 'create'), array(
+        $field,
+        $request,
+        new static($field, $request),
+      ));
     }
     // If no other class was found, then use the current one.
-    $resource_field = new static($field);
+    $resource_field = new static($field, $request);
     $resource_field->addDefaults();
     return $resource_field;
   }
@@ -127,7 +137,7 @@ class ResourceField extends ResourceFieldBase implements ResourceFieldInterface 
    *   ResourceFieldInterface then ResourceField will be used. NULL if nothing
    *   was found.
    */
-  protected static function fieldClassName(array $field_definition) {
+  public static function fieldClassName(array $field_definition) {
     if (!empty($field_definition['class'])) {
       $class_name = $field_definition['class'];
     }

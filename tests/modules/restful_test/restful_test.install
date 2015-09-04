@@ -6,9 +6,42 @@
  */
 
 /**
+ * Implements hook_install().
+ */
+function restful_test_install() {
+  if (!db_field_exists('entity_test', 'uuid')) {
+    db_add_field('entity_test', 'uuid', array(
+      'type' => 'char',
+      'length' => 36,
+      'not null' => TRUE,
+      'default' => '',
+      'description' => 'The Universally Unique Identifier.',
+    ));
+    db_add_index('entity_test', 'uuid', array('uuid'));
+  }
+}
+
+/**
+ * Implements hook_schema_alter().
+ */
+function restful_test_schema_alter(&$schema = array()) {
+  $field = array(
+    'type' => 'char',
+    'length' => 36,
+    'not null' => TRUE,
+    'default' => '',
+    'description' => 'The Universally Unique Identifier.',
+  );
+  foreach (array('entity_test', 'restful_test_translatable_entity') as $table) {
+    $schema[$table]['fields']['uuid'] = $field;
+  }
+}
+
+/**
  * Implements hook_uninstall().
  */
 function restful_test_uninstall() {
+  variable_del('restful_test_alternative_id_error');
   field_attach_delete_bundle('restful_test_translatable_entity', 'restful_test_translatable_entity');
 }
 
@@ -44,9 +77,17 @@ function restful_test_schema() {
         'not null' => TRUE,
         'default' => '',
       ),
+      'uuid' => array(
+        'type' => 'char',
+        'length' => 36,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The Universally Unique Identifier.',
+      ),
     ),
     'indexes' => array(
       'uid' => array('uid'),
+      'uuid' => array('uuid'),
     ),
     'foreign keys' => array(
       'uid' => array('users' => 'uid'),

@@ -137,7 +137,8 @@ class Request implements RequestInterface {
    */
   public function __construct($path, array $query, $method = 'GET', HttpHeaderBag $headers, $via_router = FALSE, $csrf_token = NULL, array $cookies = array(), array $files = array(), array $server = array(), $parsed_body = NULL) {
     $this->path = $path;
-    $this->query = !isset($query) ? static::parseInput($method) : $query;
+    $this->query = !isset($query) ? static::parseInput() : $query;
+    $this->query = $this->fixQueryFields($this->query);
     // If the method is empty, fall back to GET.
     $this->method = $method ?: static::METHOD_GET;
     $this->headers = $headers;
@@ -320,10 +321,40 @@ class Request implements RequestInterface {
    * @return array
    *   The parsed input.
    */
-  protected static function parseInput($method) {
+  protected static function parseInput() {
     return $_GET;
   }
 
+  /**
+   * Helps fixing the fields to ensure that dot-notation makes sense.
+   *
+   * @param array $input
+   *   The parsed input to fix.
+   *
+   * @return array
+   *   The parsed input array.
+   */
+  protected function fixQueryFields(array $input) {
+    // Make sure to add all of the parents for the dot-notation sparse
+    // fieldsets. fields=active,image.category.name,image.description becomes
+    // fields=active,image,image.category,image.category.name,image.description
+    foreach (array('fields', 'include') as $key_name) {
+      if (empty($input[$key_name])) {
+        continue;
+      }
+      $added_keys = array();
+      foreach (explode(',', $input[$key_name]) as $key) {
+        $parts = explode('.', $key);
+        for ($index = 0; $index < count($parts); $index++) {
+          $path = implode('.', array_slice($parts, 0, $index + 1));
+          $added_keys[$path] = TRUE;
+        }
+      }
+      $input[$key_name] = implode(',', array_keys(array_filter($added_keys))) ?: NULL;
+    }
+
+    return $input;
+  }
   /**
    * Parses the header names and values from globals.
    *
