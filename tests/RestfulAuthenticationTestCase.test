@@ -26,6 +26,13 @@ class RestfulAuthenticationTestCase extends RestfulCurlBaseTestCase {
   protected $originalServer;
 
   /**
+   * Holds the current value of the $_SESSION super global.
+   *
+   * @var array
+   */
+  protected $originalSession;
+
+  /**
    * The plugin manager.
    *
    * @var PluginManagerInterface
@@ -40,18 +47,20 @@ class RestfulAuthenticationTestCase extends RestfulCurlBaseTestCase {
     );
   }
 
-  function setUp() {
+  public function setUp() {
     parent::setUp('restful_test');
     // Create a custom user that we'll use to identify.
     $this->account = $this->drupalCreateUser();
 
     $this->originalServer = $_SERVER;
+    $this->originalSessions = $_SESSION;
     $this->pluginManager = AuthenticationPluginManager::create();
   }
 
-  function tearDown() {
+  public function tearDown() {
     // Put back the $_SERVER array.
     $_SERVER = $this->originalServer;
+    $_SESSION = $this->originalSession;
     parent::tearDown();
   }
 

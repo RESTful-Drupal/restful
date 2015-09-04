@@ -8,10 +8,10 @@
 namespace Drupal\restful\Plugin\resource\DataProvider;
 
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
-use Drupal\restful\Exception\BadRequestException;
 use Drupal\restful\Exception\NotFoundException;
 use Drupal\restful\Exception\NotImplementedException;
 use Drupal\restful\Exception\UnauthorizedException;
+use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterPlug;
 use Drupal\restful\Plugin\resource\DataInterpreter\PluginWrapper;
@@ -64,7 +64,7 @@ class DataProviderPlug extends DataProvider implements DataProviderInterface {
     catch (PluginNotFoundException $e) {
       throw new NotFoundException('Invalid URL path.');
     }
-    $resource_field_collection = new ResourceFieldCollection();
+    $resource_field_collection = new ResourceFieldCollection(array(), $this->getRequest());
     $interpreter = new DataInterpreterPlug($this->getAccount(), new PluginWrapper($plugin));
     $resource_field_collection->setInterpreter($interpreter);
 
@@ -177,39 +177,18 @@ class DataProviderPlug extends DataProvider implements DataProviderInterface {
         unset($plugins[$instance_id]);
         continue;
       }
+
+      // A filter on a result needs the ResourceFieldCollection representing the
+      // result to return.
+      $interpreter = new DataInterpreterPlug($this->getAccount(), new PluginWrapper($plugin));
+      $this->fieldDefinitions->setInterpreter($interpreter);
       foreach ($filters as $filter) {
-        $interpreter = new DataInterpreterPlug($this->getAccount(), new PluginWrapper($plugin));
-        // Initialize to TRUE for AND and FALSE for OR (neutral value).
-        $match = $filter['conjunction'] == 'AND';
-        for ($index = 0; $index < count($filter['value']); $index++) {
-          $property = $this->fieldDefinitions->get($filter['public_field'])->getProperty();
-
-          $plugin_value = $interpreter->getWrapper()->get($property);
-          if (is_null($plugin_value)) {
-            // Property doesn't exist on the plugin, so filter it out.
-            unset($plugins[$instance_id]);
-            continue;
-          }
-
-          if ($filter['conjunction'] == 'OR') {
-            $match = $match || $this->evaluateExpression($plugin_value, $filter['value'][$index], $filter['operator'][$index]);
-            if ($match) {
-              break;
-            }
-          }
-          else {
-            $match = $match && $this->evaluateExpression($plugin_value, $filter['value'][$index], $filter['operator'][$index]);
-            if (!$match) {
-              break;
-            }
-          }
-        }
-        if (!$match) {
-          // Property doesn't match the filter.
+        if (!$this->fieldDefinitions->evalFilter($filter)) {
           unset($plugins[$instance_id]);
         }
       }
     }
+    $this->fieldDefinitions->setInterpreter(NULL);
     return $plugins;
   }
 
@@ -242,51 +221,6 @@ class DataProviderPlug extends DataProvider implements DataProviderInterface {
       });
     }
     return $plugins;
-  }
-
-  /**
-   * Evaluate a simple expression.
-   *
-   * @param mixed $value1
-   *   The first value.
-   * @param mixed $value2
-   *   The second value.
-   * @param string $operator
-   *   The operator.
-   *
-   * @return bool
-   *   TRUE or FALSE based on the evaluated expression.
-   *
-   * @throws BadRequestException
-   */
-  protected function evaluateExpression($value1, $value2, $operator) {
-    switch($operator) {
-      case '=':
-        return $value1 == $value2;
-
-      case '<':
-        return $value1 < $value2;
-
-      case '>':
-        return $value1 > $value2;
-
-      case '>=':
-        return $value1 >= $value2;
-
-      case '<=':
-        return $value1 <= $value2;
-
-      case '<>':
-      case '!=':
-        return $value1 != $value2;
-
-      case 'IN':
-        return in_array($value1, $value2);
-
-      case 'BETWEEN':
-        return $value1 >= $value2[0] && $value1 >= $value2[1];
-    }
-    return FALSE;
   }
 
 }
