@@ -132,7 +132,7 @@ class DataProviderPlug extends DataProvider implements DataProviderInterface {
     // Return all of the instance IDs, even for disabled resources.
     $plugins = restful()
       ->getResourceManager()
-      ->getPlugins(TRUE);
+      ->getPlugins(FALSE);
 
     $output = $plugins->getIterator()->getArrayCopy();
 
