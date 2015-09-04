@@ -274,14 +274,19 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
       if (isset($resource['full_view']) && $resource['full_view'] === FALSE) {
         return $embedded_identifier;
       }
-      $request = Request::create('', array(), RequestInterface::METHOD_GET);
+      // We support dot notation for the sparse fieldsets. That means that
+      // clients can specify the fields to show based on the "fields" query
+      // string parameter.
+      $parsed_input = array(
+        'fields' => implode(',', $this->emdeddedSparseFieldsets()),
+      );
+      $request = Request::create('', $parsed_input, RequestInterface::METHOD_GET);
       // Remove the $_GET options for the sub-request.
-      $request->setParsedInput(array());
       // TODO: Get version automatically to avoid setting it in the plugin definition. Ideally we would fill this when processing the plugin definition defaults.
       $resource_data_provider = DataProviderResource::init($request, $resource['name'], array(
         $resource['majorVersion'],
         $resource['minorVersion'],
-      ));
+      ), $embedded_identifier);
 
       $metadata = $this->getMetadata($wrapper->getIdentifier());
       $metadata ?: array();
@@ -437,6 +442,27 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
     }
 
     return $value;
+  }
+
+  /**
+   * Gets the list of fields to show in the embedded resource.
+   *
+   * @return string[]
+   *   The list of fields.
+   */
+  protected function emdeddedSparseFieldsets() {
+    // TODO: Inject the request object here.
+    $input = restful()
+      ->getRequest()
+      ->getParsedInput();
+    $limit_fields = !empty($input['fields']) ? explode(',', $input['fields']) : array();
+    $limit_fields = array_filter($limit_fields, function ($field) {
+      $parts = explode('.', $field);
+      return $parts[0] == $this->getPublicName() && $field != $this->getPublicName();
+    });
+    return array_map(function ($field) {
+      return substr($field, strlen($this->getPublicName()) + 1);
+    }, $limit_fields);
   }
 
   /**
@@ -620,6 +646,12 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
     // There are occasions when the wrapper property is not the schema
     // database field.
     $wrapper = entity_metadata_wrapper($entity_type);
+    if (!is_a($wrapper, '\EntityStructureWrapper')) {
+      // The entity type does not exist.
+      return;
+    }
+
+    /* @var $wrapper \EntityStructureWrapper */
     foreach ($wrapper->getPropertyInfo() as $wrapper_property => $property_info) {
       if (!empty($property_info['schema field']) && $property_info['schema field'] == $property) {
         $property = $wrapper_property;
