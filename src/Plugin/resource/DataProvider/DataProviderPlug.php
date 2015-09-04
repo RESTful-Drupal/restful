@@ -129,10 +129,10 @@ class DataProviderPlug extends DataProvider implements DataProviderInterface {
    * {@inheritdoc}
    */
   public function getIndexIds() {
-    // Return all of the instance IDs, even for disabled resources.
+    // Return all of the instance IDs.
     $plugins = restful()
       ->getResourceManager()
-      ->getPlugins(FALSE);
+      ->getPlugins();
 
     $output = $plugins->getIterator()->getArrayCopy();
 
