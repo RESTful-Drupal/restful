@@ -299,7 +299,51 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
     sort($included);
     $this->assertEqual($expected_includes, $included);
 
-    // 4. Assert the attributes for a list.
+    // 4. Assert the nested sparse fieldsets.
+    // Make a request with the include query string.
+    $this->handler->setRequest(Request::create('api/v1.1/main/' . $wrapper->getIdentifier(), array(
+      'include' => 'entity_reference_single_resource.entity_reference_single_resource',
+      'fields' => implode(',', array(
+        // Request a field in the first include and another one in the second.
+        'entity_reference_single_resource.text_single',
+        'entity_reference_single_resource.entity_reference_single_resource.text_multiple',
+      )),
+    )));
+    $this->handler->setPath($wrapper->getIdentifier());
+    $this->formatter->setResource($this->handler);
+    $result = $this->formatter->prepare($this->handler->process());
+
+    $this->assertEqual(2, count($result['included']));
+    // Make sure there is only one field in the nested includes.
+    $this->assertTrue(empty($result['data']['attributes']));
+    $this->assertFalse(empty($result['data']['relationships']));
+    $this->assertEqual(array('text_single'), array_keys($result['included'][0]['attributes']));
+    $this->assertFalse(empty($result['included'][0]['relationships']));
+    $this->assertEqual(array('text_multiple'), array_keys($result['included'][1]['attributes']));
+    $this->assertTrue(empty($result['included'][1]['relationships']));
+
+    // Make a request with the include query string.
+    $this->handler->setRequest(Request::create('api/v1.1/main/' . $wrapper->getIdentifier(), array(
+      'include' => 'entity_reference_single_resource.entity_reference_single_resource',
+      'fields' => implode(',', array(
+        // Request a field in the first include and another one in the second.
+        'entity_reference_single_resource.entity_reference_single_resource.text_multiple',
+      )),
+    )));
+    $this->handler->setPath($wrapper->getIdentifier());
+    $this->formatter->setResource($this->handler);
+    $result = $this->formatter->prepare($this->handler->process());
+
+    $this->assertEqual(2, count($result['included']));
+    // Make sure there is only one field in the nested includes.
+    $this->assertTrue(empty($result['data']['attributes']));
+    $this->assertFalse(empty($result['data']['relationships']));
+    $this->assertTrue(empty($result['included'][0]['attributes']));
+    $this->assertFalse(empty($result['included'][0]['relationships']));
+    $this->assertTrue(empty($result['included'][1]['relationships']));
+    $this->assertEqual(array('text_multiple'), array_keys($result['included'][1]['attributes']));
+
+    // 5. Assert the attributes for a list.
     // Make a list request and check the attributes.
     $this->handler->setRequest(Request::create(''));
     $this->handler->setPath('');
@@ -569,22 +613,12 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
       'uid' => $this->account->uid,
     ));
 
-<<<<<<< HEAD
     $entities[0]->entity_reference_single[LANGUAGE_NONE][] = array('target_id' => $entities[1]->pid);
     $entities[0]->save();
     $entities[2]->entity_reference_single[LANGUAGE_NONE][] = array('target_id' => $entities[0]->pid);
     $entities[2]->entity_reference_multiple[LANGUAGE_NONE][] = array('target_id' => $entities[0]->pid);
     $entities[2]->entity_reference_multiple[LANGUAGE_NONE][] = array('target_id' => $entities[1]->pid);
     $entities[2]->save();
-=======
-    $wrapper->text_single->set($text1);
-    $wrapper->text_multiple->set(array($text1, $text2));
-
-    $wrapper->entity_reference_single->set($entities[0]);
-    $wrapper->entity_reference_single->entity_reference_single->set($entities[1]);
-    $wrapper->entity_reference_multiple[] = $entities[0];
-    $wrapper->entity_reference_multiple[] = $entities[1];
->>>>>>> 7.x-2.x
 
     return $entities;
   }
