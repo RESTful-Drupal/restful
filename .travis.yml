@@ -67,6 +67,7 @@ script:
   - drush --yes dl plug
   - drush --yes dl entity
   - drush --yes dl entityreference
+  - drush --yes dl uuid
   - drush --yes pm-enable plug
 
   # Patch Entity API.

@@ -9,6 +9,7 @@ namespace Drupal\restful\Plugin\resource\Field;
 
 use Drupal\restful\Exception\IncompatibleFieldDefinitionException;
 use Drupal\restful\Exception\ServerConfigurationException;
+use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
 use Drupal\restful\Resource\ResourceManager;
 
@@ -110,13 +111,15 @@ interface ResourceFieldInterface {
    *
    * @param array $field
    *   Contains the field values.
+   * @param RequestInterface $request
+   *   The request.
    *
    * @return ResourceFieldInterface
    *   The created field
    *
    * @throws ServerConfigurationException
    */
-  public static function create(array $field);
+  public static function create(array $field, RequestInterface $request = NULL);
 
   /**
    * Gets the value for the field given a data source.
@@ -245,5 +248,29 @@ interface ResourceFieldInterface {
    *   constants.
    */
   public function cardinality();
+
+  /**
+   * Get the request in the data provider.
+   *
+   * @return RequestInterface
+   *   The request.
+   */
+  public function getRequest();
+
+  /**
+   * Set the request.
+   *
+   * @param RequestInterface $request
+   *   The request.
+   */
+  public function setRequest(RequestInterface $request);
+
+  /**
+   * Gets the original field definition as declared in Resource::publicFields().
+   *
+   * @return array
+   *   The field definition.
+   */
+  public function getDefinition();
 
 }

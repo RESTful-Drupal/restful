@@ -426,6 +426,7 @@ function restful_test_entity_info() {
         'id' => 'pid',
         'bundle' => 'name',
         'label' => 'label',
+        'uuid' => 'uuid',
       ),
       // Make use the class' label() and uri() implementation by default.
       'label callback' => 'entity_class_label',
@@ -442,6 +443,7 @@ function restful_test_entity_info() {
       'translation' => array(
         'locale' => TRUE,
       ),
+      'uuid' => TRUE,
     ),
   );
 }
@@ -456,5 +458,42 @@ function restful_test_restful_resource_alter(\Drupal\restful\Plugin\resource\Res
   // Disable the Files Upload resource based on the settings variable.
   if ($resource->getResourceMachineName() == 'files_upload_test') {
     variable_get('restful_file_upload', FALSE) ? $resource->enable() : $resource->disable();
+  }
+}
+
+/**
+ * Implements hook_entity_info_alter().
+ */
+function restful_test_entity_info_alter(&$entity_info) {
+  $entity_info['entity_test']['uuid'] = TRUE;
+  $entity_info['entity_test']['entity keys']['uuid'] = 'uuid';
+}
+
+/**
+ * Implements hook_entity_property_info_alter().
+ */
+function restful_test_entity_property_info_alter(&$info) {
+  $entity_types = array('entity_test', 'restful_test_translatable_entity');
+  foreach ($entity_types as $entity_type) {
+    $entity_info = entity_get_info($entity_type);
+    if (isset($entity_info['uuid']) && $entity_info['uuid'] == TRUE
+      && !empty($entity_info['entity keys']['uuid'])
+      && empty($info[$entity_type]['properties'][$entity_info['entity keys']['uuid']])) {
+      $info[$entity_type]['properties'][$entity_info['entity keys']['uuid']] = array(
+        'label' => t('UUID'),
+        'type' => 'text',
+        'description' => t('The universally unique ID.'),
+        'schema field' => $entity_info['entity keys']['uuid'],
+      );
+      if (!empty($entity_info['entity keys']['revision uuid'])
+        && empty($info[$entity_type]['properties'][$entity_info['entity keys']['revision uuid']])) {
+        $info[$entity_type]['properties'][$entity_info['entity keys']['revision uuid']] = array(
+          'label' => t('Revision UUID'),
+          'type' => 'text',
+          'description' => t("The revision's universally unique ID."),
+          'schema field' => $entity_info['entity keys']['revision uuid'],
+        );
+      }
+    }
   }
 }
