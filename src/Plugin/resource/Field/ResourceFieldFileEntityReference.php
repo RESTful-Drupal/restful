@@ -8,6 +8,7 @@
 namespace Drupal\restful\Plugin\resource\Field;
 
 use Drupal\restful\Exception\ServerConfigurationException;
+use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
 
 class ResourceFieldFileEntityReference extends ResourceFieldEntityReference implements ResourceFieldEntityReferenceInterface {
@@ -36,6 +37,20 @@ class ResourceFieldFileEntityReference extends ResourceFieldEntityReference impl
     }
     $file_array = $property_wrapper->value();
     return new \EntityDrupalWrapper('file', $file_array['fid']);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getRequest() {
+    return $this->decorated->getRequest();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setRequest(RequestInterface $request) {
+    $this->decorated->setRequest($request);
   }
 
 }
