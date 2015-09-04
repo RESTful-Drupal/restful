@@ -795,7 +795,7 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
    *   ResourceFieldInterface then ResourceField will be used. NULL if nothing
    *   was found.
    */
-  protected static function fieldClassName(array $field_definition) {
+  public static function fieldClassName(array $field_definition) {
     if (!empty($field_definition['class']) && $field_definition['class'] != '\Drupal\restful\Plugin\resource\Field\ResourceFieldEntity') {
       // If there is a class that is not the current, return it.
       return $field_definition['class'];

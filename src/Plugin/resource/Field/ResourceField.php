@@ -137,7 +137,7 @@ class ResourceField extends ResourceFieldBase implements ResourceFieldInterface 
    *   ResourceFieldInterface then ResourceField will be used. NULL if nothing
    *   was found.
    */
-  protected static function fieldClassName(array $field_definition) {
+  public static function fieldClassName(array $field_definition) {
     if (!empty($field_definition['class'])) {
       $class_name = $field_definition['class'];
     }
