@@ -1105,9 +1105,10 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     );
     $item['column'] = $item['type'] == RelationalFilterInterface::TYPE_FIELD ? $resource_field->getColumn() : NULL;
     $instance_id = sprintf('%s:%d.%d', $resource['name'], $resource['majorVersion'], $resource['minorVersion']);
-    $plugin_manager = ResourcePluginManager::create('cache', Request::create('', array(), RequestInterface::METHOD_GET));
     /* @var ResourceEntity $resource */
-    $resource = $plugin_manager->createInstance($instance_id);
+    $resource = restful()
+      ->getResourceManager()
+      ->getPlugin($instance_id, Request::create('', array(), RequestInterface::METHOD_GET));
 
     // Variables for the next iteration.
     $definitions = $resource->getFieldDefinitions();

@@ -16,6 +16,8 @@ use Drupal\restful\Http\ResponseInterface;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
 use Drupal\restful\Resource\ResourceManager;
 use Drupal\restful\Resource\ResourceManagerInterface;
+use Drupal\restful\Util\PersistableCache;
+use Drupal\restful\Util\PersistableCacheInterface;
 
 class RestfulManager {
 
@@ -56,6 +58,13 @@ class RestfulManager {
    * @var FormatterManagerInterface
    */
   protected $formatterManager;
+
+  /**
+   * The persistable cache global.
+   *
+   * @var PersistableCacheInterface
+   */
+  protected $persistableCache;
 
   /**
    * Accessor for the request.
@@ -109,10 +118,10 @@ class RestfulManager {
   /**
    * Mutator for the resource manager.
    *
-   * @param ResourceManagerInterface $resourceManager
+   * @param ResourceManagerInterface $resource_manager
    */
-  public function setResourceManager(ResourceManagerInterface $resourceManager) {
-    $this->resourceManager = $resourceManager;
+  public function setResourceManager(ResourceManagerInterface $resource_manager) {
+    $this->resourceManager = $resource_manager;
   }
 
   /**
@@ -127,21 +136,36 @@ class RestfulManager {
   /**
    * Mutator for the formatter manager.
    *
-   * @param FormatterManagerInterface $formatterManager
+   * @param FormatterManagerInterface $formatter_manager
    */
-  public function setFormatterManager(FormatterManagerInterface $formatterManager) {
-    $this->formatterManager = $formatterManager;
+  public function setFormatterManager(FormatterManagerInterface $formatter_manager) {
+    $this->formatterManager = $formatter_manager;
+  }
+
+  /**
+   * @return PersistableCacheInterface
+   */
+  public function getPersistableCache() {
+    return $this->persistableCache;
+  }
+
+  /**
+   * @param PersistableCacheInterface $persistable_cache
+   */
+  public function setPersistableCache($persistable_cache) {
+    $this->persistableCache = $persistable_cache;
   }
 
   /**
    * Constructor.
    */
-  public function __construct(RequestInterface $request, ResponseInterface $response, ResourceManagerInterface $resource_manager, FormatterManagerInterface $formatter_manager) {
+  public function __construct(RequestInterface $request, ResponseInterface $response, ResourceManagerInterface $resource_manager, FormatterManagerInterface $formatter_manager, PersistableCacheInterface $persistable_cache) {
     // Init the properties.
     $this->request = $request;
     $this->response = $response;
     $this->resourceManager = $resource_manager;
     $this->formatterManager = $formatter_manager;
+    $this->persistableCache = $persistable_cache;
   }
 
   /**
@@ -155,8 +179,9 @@ class RestfulManager {
     $response = Response::create();
     $resource_manager = new ResourceManager($request);
     $formatter_manager = new FormatterManager();
+    $persistable_cache = new PersistableCache('restful_cache');
 
-    return new static($request, $response, $resource_manager, $formatter_manager);
+    return new static($request, $response, $resource_manager, $formatter_manager, $persistable_cache);
   }
 
   /**

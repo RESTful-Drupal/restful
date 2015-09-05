@@ -7,6 +7,7 @@
 
 namespace Drupal\restful\Plugin\resource\Field;
 
+use Drupal\restful\Exception\ForbiddenException;
 use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
@@ -224,9 +225,10 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
       // load by the entity id in that scenario will lead to a 404.
       // We'll load the plugin to get the idField configuration.
       $instance_id = sprintf('%s:%d.%d', $resource['name'], $resource['majorVersion'], $resource['minorVersion']);
-      $plugin_manager = ResourcePluginManager::create('cache', Request::create('', array(), RequestInterface::METHOD_GET));
       /* @var ResourceInterface $resource */
-      $resource = $plugin_manager->createInstance($instance_id);
+      $resource = restful()
+        ->getResourceManager()
+        ->getPlugin($instance_id, Request::create('', array(), RequestInterface::METHOD_GET));
       $plugin_definition = $resource->getPluginDefinition();
       if (empty($plugin_definition['dataProvider']['idField'])) {
         return $identifier;
@@ -304,8 +306,15 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
       $metadata ?: array();
       $metadata[] = $this->buildResourceMetadataItem($property_wrapper);
       $this->addMetadata($wrapper->getIdentifier(), $metadata);
-      /* @var ResourceFieldCollection $embedded_entity */
-      $embedded_entity = $resource_data_provider->view($embedded_identifier);
+      try {
+        /* @var ResourceFieldCollection $embedded_entity */
+        $embedded_entity = $resource_data_provider->view($embedded_identifier);
+      }
+      catch (ForbiddenException $e) {
+        // If you don't have access to the embedded entity is like not having
+        // access to the property.
+        return NULL;
+      }
       // Test if the $embedded_entity meets the filter or not.
       if (empty($parsed_input['filter'])) {
         return $embedded_entity;
@@ -738,7 +747,7 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
 
     // There are occasions when the wrapper property is not the schema
     // database field.
-    $wrapper = entity_metadata_wrapper($entity_type);
+    $wrapper = $this->entityTypeWrapper();
     if (!is_a($wrapper, '\EntityStructureWrapper')) {
       // The entity type does not exist.
       return;
@@ -753,6 +762,21 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
     }
 
     $this->decorated->setProperty($property);
+  }
+
+  /**
+   * Gets the \EntityStructureWrapper for the entity type.
+   *
+   * @return mixed
+   *   The \EntityStructureWrapper if the entity type exists.
+   */
+  protected function entityTypeWrapper() {
+    static $entity_wrappers = array();
+    if (isset($entity_wrappers[$this->entityType])) {
+      return $entity_wrappers[$this->entityType];
+    }
+    $entity_wrappers[$this->entityType] = entity_metadata_wrapper($this->entityType);
+    return $entity_wrappers[$this->entityType];
   }
 
   /**

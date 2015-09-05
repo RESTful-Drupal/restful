@@ -131,7 +131,11 @@ function restful_help($path, $arg) {
  *   The manager.
  */
 function restful() {
-  return drupal_static('restful.manager', RestfulManager::createFromGlobals());
+  static $manager;
+  if (!isset($manager)) {
+    $manager = RestfulManager::createFromGlobals();
+  }
+  return $manager;
 }
 
 /**
@@ -172,7 +176,10 @@ function restful_menu_access_callback($resource_name, $version_string = NULL) {
     // be negotiated.
   }
   catch (\Drupal\Component\Plugin\Exception\PluginNotFoundException $e) {
-    drupal_not_found();
+    drupal_add_http_header('Status', 404);
+    restful_deliver_menu_not_found(MENU_NOT_FOUND);
+    drupal_page_footer();
+    exit();
   }
   return FALSE;
 }
