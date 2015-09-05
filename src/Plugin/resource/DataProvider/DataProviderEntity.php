@@ -813,7 +813,8 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     // Keeps a list of the fields that have been set.
     $processed_fields = array();
 
-    foreach ($this->fieldDefinitions as $public_field_name => $resource_field) {
+    $field_definitions = clone $this->fieldDefinitions;
+    foreach ($field_definitions as $public_field_name => $resource_field) {
       /* @var ResourceFieldEntityInterface $resource_field */
 
       if (!$this->methodAccess($resource_field)) {
