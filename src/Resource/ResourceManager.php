@@ -60,7 +60,7 @@ class ResourceManager implements ResourceManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function getPlugins($only_enabled = FALSE) {
+  public function getPlugins($only_enabled = TRUE) {
     if (!$only_enabled) {
       return $this->plugins;
     }
