@@ -7,7 +7,6 @@
 
 namespace Drupal\restful\Plugin\resource\DataProvider;
 
-use Drupal\restful\Exception\BadRequestException;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\CrudInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;

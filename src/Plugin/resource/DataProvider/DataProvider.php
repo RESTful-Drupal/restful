@@ -13,7 +13,6 @@ use Drupal\restful\Http\HttpHeader;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
-use Drupal\restful\Resource\ResourceManager;
 
 abstract class DataProvider implements DataProviderInterface {
 
