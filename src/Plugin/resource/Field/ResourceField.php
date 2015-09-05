@@ -103,27 +103,29 @@ class ResourceField extends ResourceFieldBase implements ResourceFieldInterface 
     // Almost all the defaults come are applied by the object's property
     // defaults.
 
-    $resources = $this->getResource();
-    foreach ($resources as &$resource) {
-      // Expand array to be verbose.
-      if (!is_array($resource)) {
-        $resource = array('name' => $resource);
-      }
-
-      // Set default value.
-      $resource += array(
-        'full_view' => TRUE,
-      );
-
-      // Set the default value for the version of the referenced resource.
-      if (empty($resource['majorVersion']) || empty($resource['minorVersion'])) {
-        list($major_version, $minor_version) = restful()
-          ->getResourceManager()
-          ->getResourceLastVersion($resource['name']);
-        $resource['majorVersion'] = $major_version;
-        $resource['minorVersion'] = $minor_version;
-      }
+    if (!$resource = $this->getResource()) {
+      return;
     }
+    // Expand array to be verbose.
+    if (!is_array($resource)) {
+      $resource = array('name' => $resource);
+    }
+
+    // Set default value.
+    $resource += array(
+      'full_view' => TRUE,
+    );
+
+    // Set the default value for the version of the referenced resource.
+    if (!isset($resource['majorVersion']) || !isset($resource['minorVersion'])) {
+      list($major_version, $minor_version) = restful()
+        ->getResourceManager()
+        ->getResourceLastVersion($resource['name']);
+      $resource['majorVersion'] = $major_version;
+      $resource['minorVersion'] = $minor_version;
+    }
+
+    $this->setResource($resource);
   }
 
   /**
