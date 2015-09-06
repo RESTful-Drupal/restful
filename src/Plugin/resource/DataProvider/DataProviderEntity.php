@@ -1103,7 +1103,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     /* @var ResourceEntity $resource */
     $resource = restful()
       ->getResourceManager()
-      ->getPlugin($instance_id, Request::create('', array(), RequestInterface::METHOD_GET));
+      ->getPluginCopy($instance_id, Request::create('', array(), RequestInterface::METHOD_GET));
 
     // Variables for the next iteration.
     $definitions = $resource->getFieldDefinitions();

@@ -140,7 +140,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
 
           $related_info = array(
             'data' => array('type' => $basic_info['type'], 'id' => $basic_info['id']),
-            'links' => $basic_info['links']
+            'links' => $basic_info['links'],
           );
           $output['relationships'][$public_field_name][] = $related_info;
           $included_item = is_array($value_item) ? $basic_info + $value_item : $basic_info;

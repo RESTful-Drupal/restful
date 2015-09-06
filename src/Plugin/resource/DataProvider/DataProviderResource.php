@@ -69,7 +69,7 @@ class DataProviderResource extends DataProvider implements DataProviderResourceI
     $instance_id = $resource_name . PluginBase::DERIVATIVE_SEPARATOR . $version[0] . '.' . $version[1];
     $resource = restful()
       ->getResourceManager()
-      ->getPlugin($instance_id, Request::create('', array(), RequestInterface::METHOD_GET));
+      ->getPluginCopy($instance_id, Request::create('', array(), RequestInterface::METHOD_GET));
     $plugin_definition = $resource->getPluginDefinition();
     $resource->setPath($resource_path);
     return new static($request, $resource->getFieldDefinitions(), $resource->getAccount(), $resource->getPath(), $plugin_definition['dataProvider'], static::getLanguage(), $resource);

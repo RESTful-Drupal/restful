@@ -42,7 +42,7 @@ class ResourceFieldFileEntityReference extends ResourceFieldEntityReference impl
     /* @var ResourceInterface $resource */
     $resource = restful()
       ->getResourceManager()
-      ->getPlugin($instance_id, Request::create('', array(), RequestInterface::METHOD_GET));
+      ->getPluginCopy($instance_id, Request::create('', array(), RequestInterface::METHOD_GET));
     $plugin_definition = $resource->getPluginDefinition();
     if (empty($plugin_definition['dataProvider']['idField'])) {
       return $identifier;
