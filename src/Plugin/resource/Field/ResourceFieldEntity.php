@@ -890,6 +890,10 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
       case 'text':
       case 'text_long':
       case 'text_with_summary':
+        // If the field is treated as a resource, then default to the reference.
+        if (!empty($field_definition['resource'])) {
+          return '\Drupal\restful\Plugin\resource\Field\ResourceFieldFileEntityReference';
+        }
         return '\Drupal\restful\Plugin\resource\Field\ResourceFieldEntityText';
 
       case 'file':
