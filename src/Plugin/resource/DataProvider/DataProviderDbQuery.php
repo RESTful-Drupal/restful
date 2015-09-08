@@ -426,7 +426,7 @@ class DataProviderDbQuery extends DataProvider implements DataProviderDbQueryInt
   protected function queryForListFilter(\SelectQuery $query) {
     foreach ($this->parseRequestForListFilter() as $filter) {
       $column_name = $this->fieldDefinitions->get($filter['public_field'])->getColumnForQuery();
-      if (in_array(strtoupper($filter['operator'][0]), array('IN', 'BETWEEN'))) {
+      if (in_array(strtoupper($filter['operator'][0]), array('IN', 'NOT IN', 'BETWEEN'))) {
         $query->condition($column_name, $filter['value'], $filter['operator'][0]);
         continue;
       }

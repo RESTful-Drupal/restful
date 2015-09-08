@@ -94,6 +94,7 @@ abstract class DataProvider implements DataProviderInterface {
     // Make sure that we have the same amount of operators than values.
     if (!in_array(strtoupper($filter['operator'][0]), array(
         'IN',
+        'NOT IN',
         'BETWEEN',
       )) && count($filter['value']) != count($filter['operator'])
     ) {
@@ -394,6 +395,7 @@ abstract class DataProvider implements DataProviderInterface {
       '<>',
       '!=',
       'IN',
+      'NOT IN',
       'BETWEEN',
     );
 
