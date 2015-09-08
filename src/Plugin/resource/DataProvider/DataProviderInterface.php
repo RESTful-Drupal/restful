@@ -12,6 +12,18 @@ use Drupal\restful\Plugin\resource\CrudInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
 
 interface DataProviderInterface extends CrudInterface {
+
+  /**
+   * Return the discovery information for the given entity.
+   *
+   * @param string $path
+   *   The request path.
+   *
+   * @return array
+   *   An array of data for the thing being discovered.
+   */
+  public function discover($path = NULL);
+
   /**
    * Checks if the passed in string is a dot-nested field.
    *

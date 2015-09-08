@@ -11,7 +11,6 @@ use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\restful\Exception\NotFoundException;
 use Drupal\restful\Exception\NotImplementedException;
 use Drupal\restful\Exception\UnauthorizedException;
-use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterPlug;
 use Drupal\restful\Plugin\resource\DataInterpreter\PluginWrapper;
@@ -21,8 +20,9 @@ use Drupal\restful\Plugin\resource\Field\ResourceFieldEntityInterface;
 use Drupal\restful\Plugin\resource\ResourceInterface;
 
 class DataProviderPlug extends DataProvider implements DataProviderInterface {
+
   /**
-   * @inheritDoc
+   * {@inheritdoc}
    */
   public function __construct(RequestInterface $request, ResourceFieldCollectionInterface $field_definitions, $account, $resource_path = NULL, array $options = array(), $langcode = NULL) {
     parent::__construct($request, $field_definitions, $account, $resource_path, $options, $langcode);
@@ -34,7 +34,6 @@ class DataProviderPlug extends DataProvider implements DataProviderInterface {
       );
     }
   }
-
 
   /**
    * {@inheritdoc}

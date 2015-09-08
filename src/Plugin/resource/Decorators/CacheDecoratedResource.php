@@ -258,4 +258,11 @@ class CacheDecoratedResource extends ResourceDecoratorBase implements CacheDecor
     return $this->subject->isEnabled();
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function discover($path = NULL) {
+    return $this->subject->discover($path);
+  }
+
 }

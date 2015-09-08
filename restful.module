@@ -329,11 +329,6 @@ function restful_delivery($var = NULL, $method = 'format') {
     return;
   }
 
-  // If we are returning from an OPTIONS call, always use render.
-  if ($request->getMethod() == RequestInterface::METHOD_OPTIONS) {
-    $method = 'render';
-  }
-
   try {
     // Get the formatter for the current resource.
     $resource = restful()

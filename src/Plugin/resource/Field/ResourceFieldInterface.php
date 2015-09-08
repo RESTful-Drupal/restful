@@ -11,6 +11,7 @@ use Drupal\restful\Exception\IncompatibleFieldDefinitionException;
 use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
+use Drupal\restful\Plugin\resource\Field\PublicFieldInfo\PublicFieldInfoInterface;
 use Drupal\restful\Resource\ResourceManager;
 
 interface ResourceFieldInterface {
@@ -272,5 +273,21 @@ interface ResourceFieldInterface {
    *   The field definition.
    */
   public function getDefinition();
+
+  /**
+   * Gets the public field info object.
+   *
+   * @return PublicFieldInfoInterface
+   *   The public field info object.
+   */
+  public function getPublicFieldInfo();
+
+  /**
+   * Gets the public field info object.
+   *
+   * @param PublicFieldInfoInterface $public_field_info
+   *   The public field info object.
+   */
+  public function setPublicFieldInfo(PublicFieldInfoInterface $public_field_info);
 
 }

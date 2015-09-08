@@ -14,8 +14,10 @@ use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataProvider\DataProvider;
 use Drupal\restful\Plugin\resource\DataProvider\DataProviderResource;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
+use Drupal\restful\Plugin\resource\Field\PublicFieldInfo\PublicFieldInfoEntity;
+use Drupal\restful\Plugin\resource\Field\PublicFieldInfo\PublicFieldInfoEntityInterface;
+use Drupal\restful\Plugin\resource\Field\PublicFieldInfo\PublicFieldInfoInterface;
 use Drupal\restful\Plugin\resource\ResourceInterface;
-use Drupal\restful\Plugin\ResourcePluginManager;
 use Drupal\restful\Util\String;
 
 class ResourceFieldEntity implements ResourceFieldEntityInterface {
@@ -88,11 +90,11 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
   protected $entityType;
 
   /**
-   * The bundles.
+   * The bundle name.
    *
-   * @var array
+   * @var string
    */
-  protected $bundles;
+  protected $bundle;
 
   /**
    * Constructor.
@@ -113,9 +115,11 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
     $this->wrapperMethodOnEntity = isset($field['wrapper_method_on_entity']) ? $field['wrapper_method_on_entity'] : $this->wrapperMethodOnEntity;
     $this->column = isset($field['column']) ? $field['column'] : $this->column;
     $this->imageStyles = isset($field['image_styles']) ? $field['image_styles'] : $this->imageStyles;
-    if (!empty($field['bundles'])) {
-      $this->bundles = $field['bundles'];
+    if (!empty($field['bundle'])) {
+      // TODO: Document this usage.
+      $this->bundle = $field['bundle'];
     }
+
   }
 
   /**
@@ -410,6 +414,11 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
    * @throws ServerConfigurationException
    */
   protected function propertyWrapper(DataInterpreterInterface $interpreter) {
+    // This is the first method that gets called for all fields after loading
+    // the entity. We'll use that opportunity to set the actual bundle of the
+    // field.
+    $this->setBundle($interpreter->getWrapper()->getBundle());
+
     // Exposing an entity field.
     $wrapper = $interpreter->getWrapper();
     // For entity fields the DataInterpreter needs to contain an EMW.
@@ -417,7 +426,8 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
       throw new ServerConfigurationException('Cannot get a value without an entity metadata wrapper data source.');
     }
     $property = $this->getProperty();
-    return ($property && !$this->isWrapperMethodOnEntity()) ? $wrapper->{$property} : $wrapper;
+    $property_wrapper = ($property && !$this->isWrapperMethodOnEntity()) ? $wrapper->{$property} : $wrapper;
+    return $property_wrapper;
   }
 
   /**
@@ -595,6 +605,20 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function getPublicFieldInfo() {
+    return $this->decorated->getPublicFieldInfo();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setPublicFieldInfo(PublicFieldInfoInterface $public_field_info) {
+    $this->decorated->setPublicFieldInfo($public_field_info);
+  }
+
+  /**
    * Get value for a field based on another resource.
    *
    * @param DataInterpreterInterface $source
@@ -723,45 +747,11 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
   public function setEntityType($entity_type) {
     $this->entityType = $entity_type;
 
-    // If there is no property try to get it based on the wrapper method and
-    // store the value in the decorated object.
-    $property = NULL;
     // If entity metadata wrapper methods were used, then return the appropriate
     // entity property.
-    if (!$this->isWrapperMethodOnEntity() || !($wrapper_method = $this->getWrapperMethod())) {
-      return NULL;
+    if ($this->isWrapperMethodOnEntity() && $this->getWrapperMethod()) {
+      $this->propertyOnEntity();
     }
-    $entity_info = entity_get_info($entity_type);
-    if ($wrapper_method == 'label') {
-      // Store the label key.
-      $property = empty($entity_info['entity keys']['label']) ? NULL : $entity_info['entity keys']['label'];
-    }
-    elseif ($wrapper_method == 'getBundle') {
-      // Store the label key.
-      $this->decorated->setProperty($property);
-    }
-    elseif ($wrapper_method == 'getIdentifier') {
-      // Store the ID key.
-      $property = empty($entity_info['entity keys']['id']) ? NULL : $entity_info['entity keys']['id'];
-    }
-
-    // There are occasions when the wrapper property is not the schema
-    // database field.
-    $wrapper = $this->entityTypeWrapper();
-    if (!is_a($wrapper, '\EntityStructureWrapper')) {
-      // The entity type does not exist.
-      return;
-    }
-
-    /* @var $wrapper \EntityStructureWrapper */
-    foreach ($wrapper->getPropertyInfo() as $wrapper_property => $property_info) {
-      if (!empty($property_info['schema field']) && $property_info['schema field'] == $property) {
-        $property = $wrapper_property;
-        break;
-      }
-    }
-
-    $this->decorated->setProperty($property);
   }
 
   /**
@@ -782,15 +772,26 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
   /**
    * {@inheritdoc}
    */
-  public function getBundles() {
-    return $this->bundles;
+  public function getBundle() {
+    return $this->bundle;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function setBundles($bundles) {
-    $this->bundles = $bundles;
+  public function setBundle($bundle) {
+    // Do not do pointless work if not needed.
+    if (!empty($this->bundle) && $this->bundle == $bundle) {
+      return;
+    }
+    $this->bundle = $bundle;
+
+    // If this is an options call, then introspect Entity API to add more data
+    // to the public field information.
+    if ($this->getRequest()->getMethod() != RequestInterface::METHOD_OPTIONS) {
+      return;
+    }
+    $this->populatePublicInfoField();
   }
 
   /**
@@ -1020,6 +1021,16 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
   /**
    * {@inheritdoc}
    */
+  public function autoDiscovery() {
+    if (method_exists($this->decorated, 'autoDiscovery')) {
+      return $this->decorated->autoDiscovery();
+    }
+    return ResourceFieldBase::emptyDiscoveryInfo($this->getPublicName());
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function cardinality() {
     // Default to single cardinality.
     $default = 1;
@@ -1079,6 +1090,101 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
    */
   protected function referencedId($property_wrapper) {
     return $property_wrapper->getIdentifier() ?: NULL;
+  }
+
+  /**
+   * Sets the resource field property to the schema field in the entity.
+   *
+   * @throws \EntityMetadataWrapperException
+   */
+  protected function propertyOnEntity() {
+    // If there is no property try to get it based on the wrapper method and
+    // store the value in the decorated object.
+    $property = NULL;
+
+    $entity_type = $this->entityType;
+    $wrapper_method = $this->getWrapperMethod();
+    $entity_info = entity_get_info($entity_type);
+    if ($wrapper_method == 'label') {
+      // Store the label key.
+      $property = empty($entity_info['entity keys']['label']) ? NULL : $entity_info['entity keys']['label'];
+    }
+    elseif ($wrapper_method == 'getBundle') {
+      // Store the label key.
+      $this->decorated->setProperty($property);
+    }
+    elseif ($wrapper_method == 'getIdentifier') {
+      // Store the ID key.
+      $property = empty($entity_info['entity keys']['id']) ? NULL : $entity_info['entity keys']['id'];
+    }
+
+    // There are occasions when the wrapper property is not the schema
+    // database field.
+    $wrapper = $this->entityTypeWrapper();
+    if (!is_a($wrapper, '\EntityStructureWrapper')) {
+      // The entity type does not exist.
+      return;
+    }
+
+    /* @var $wrapper \EntityStructureWrapper */
+    foreach ($wrapper->getPropertyInfo() as $wrapper_property => $property_info) {
+      if (!empty($property_info['schema field']) && $property_info['schema field'] == $property) {
+        $property = $wrapper_property;
+        break;
+      }
+    }
+
+    $this->decorated->setProperty($property);
+  }
+
+  /**
+   * Populate public info field with Property API information.
+   */
+  protected function populatePublicInfoField() {
+    $field_definition = $this->getDefinition();
+    $discovery_info = empty($field_definition['discovery']) ? array() : $field_definition['discovery'];
+    $public_field_info = new PublicFieldInfoEntity(
+      $this->getPublicName(),
+      $this->getProperty(),
+      $this->getEntityType(),
+      $this->getBundle(),
+      $discovery_info
+    );
+    $this->setPublicFieldInfo($public_field_info);
+
+    if ($field_instance = field_info_instance($this->getEntityType(), $this->getProperty(), $this->getBundle())) {
+      $public_field_info->addSectionDefaults('info', array(
+        'label' => $field_instance['label'],
+        'description' => $field_instance['description'],
+      ));
+      $field_info = field_info_field($this->getProperty());
+      $public_field_info->addSectionDefaults('info', array(
+        'label' => $field_info['label'],
+        'description' => $field_info['description'],
+      ));
+      $allowed_values = $public_field_info instanceof PublicFieldInfoEntityInterface ? $public_field_info->getFormSchemaAllowedValues() : NULL;
+      $public_field_info->addSectionDefaults('form_element', array(
+        'default_value' => isset($field_instance['default_value']) ? $field_instance['default_value'] : NULL,
+        'allowed_values' => $allowed_values,
+      ));
+    }
+    else {
+      // Extract the discovery information from the property info.
+      $property_info = $this
+        ->entityTypeWrapper()
+        ->getPropertyInfo($this->getProperty());
+      if (empty($property_info)) {
+        return;
+      }
+      $public_field_info->addSectionDefaults('data', array(
+        'type' => $property_info['type'],
+        'required' => $property_info['required'],
+      ));
+      $public_field_info->addSectionDefaults('info', array(
+        'label' => $property_info['label'],
+        'description' => $property_info['description'],
+      ));
+    }
   }
 
 }

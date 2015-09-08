@@ -24,8 +24,6 @@ use Drupal\restful\Exception\UnprocessableEntityException;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
 use Drupal\restful\Plugin\resource\Resource;
 use Drupal\restful\Plugin\resource\ResourceInterface;
-use Drupal\restful\Plugin\ResourcePluginManager;
-use Drupal\restful\Util\EntityFieldQuery;
 use Drupal\restful\Util\RelationalFilter;
 use Drupal\restful\Util\RelationalFilterInterface;
 
@@ -94,7 +92,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
       }
       /* @var ResourceFieldEntityInterface $value */
       $value->setEntityType($this->entityType);
-      if (!$value->getBundles()) {
+      if (!$value->getBundle()) {
         // If the field definition does not contain an array of bundles for that
         // field then assume that the field applies to all the bundles of the
         // resource.
@@ -104,8 +102,6 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
           $entity_info = entity_get_info($entity_type);
           $this->bundles = array_keys($entity_info['bundles']);
         }
-
-        $value->setBundles($this->bundles);
       }
     }
     $this->setResourcePath($resource_path);

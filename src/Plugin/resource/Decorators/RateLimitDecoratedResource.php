@@ -83,4 +83,11 @@ class RateLimitDecoratedResource extends ResourceDecoratorBase implements Resour
     $this->rateLimitManager->setAccount($account);
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function discover($path = NULL) {
+    return $this->subject->discover($path);
+  }
+
 }
