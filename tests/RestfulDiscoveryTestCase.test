@@ -64,7 +64,7 @@ class RestfulDiscoveryTestCase extends RestfulCurlBaseTestCase {
         'data' => array(
           'cardinality' => 1,
           'read_only' => TRUE,
-          'type' => 'int',
+          'type' => 'integer',
           'required' => FALSE,
         ),
         'form_element' => array(

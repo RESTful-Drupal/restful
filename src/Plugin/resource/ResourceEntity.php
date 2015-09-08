@@ -105,7 +105,7 @@ abstract class ResourceEntity extends Resource {
         ),
         // Describe the data.
         'data' => array(
-          'type' => 'int',
+          'type' => 'integer',
           'read_only' => TRUE,
         ),
       ),
