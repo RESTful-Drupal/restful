@@ -110,7 +110,7 @@ class PublicFieldInfoBase implements PublicFieldInfoInterface {
    * Validates the provided data for the section.
    *
    * @param string $section_name
-   *   The name of the categories. By default RESTful suports 'info',
+   *   The name of the categories. By default RESTful supports 'info',
    *   'form_element' and 'data'.
    * @param array $section_info
    *   The structured array with the section information.
@@ -134,7 +134,7 @@ class PublicFieldInfoBase implements PublicFieldInfoInterface {
    * Processes the provided data for the section.
    *
    * @param string $section_name
-   *   The name of the categories. By default RESTful suports 'info',
+   *   The name of the categories. By default RESTful supports 'info',
    *   'form_element' and 'data'.
    * @param array $section_info
    *   The structured array with the section information.
@@ -172,7 +172,7 @@ class PublicFieldInfoBase implements PublicFieldInfoInterface {
    */
   protected function validateInfo(array $section_info) {
     if (empty($section_info['label'])) {
-      throw new ServerConfigurationException(sprintf('The basic information is not valid for this field: %s.', $this->fieldName));
+      throw new ServerConfigurationException(sprintf('The label information is missing for this field: %s.', $this->fieldName));
     }
   }
 

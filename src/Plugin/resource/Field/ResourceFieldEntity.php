@@ -788,10 +788,9 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
 
     // If this is an options call, then introspect Entity API to add more data
     // to the public field information.
-    if ($this->getRequest()->getMethod() != RequestInterface::METHOD_OPTIONS) {
-      return;
+    if ($this->getRequest()->getMethod() == RequestInterface::METHOD_OPTIONS) {
+      $this->populatePublicInfoField();
     }
-    $this->populatePublicInfoField();
   }
 
   /**

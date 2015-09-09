@@ -250,14 +250,16 @@ abstract class DataProvider implements DataProviderInterface {
     // Alter the field definition by adding a callback to get the auto
     // discover information in render time.
     foreach ($this->fieldDefinitions as $public_field_name => $resouce_field) {
-      // If the given field does not have discovery information, provide the
-      // empty one instead of an error.
-      $callable = array('\Drupal\restful\Plugin\resource\Field\ResourceFieldBase::emptyDiscoveryInfo', array($public_field_name));
       /* @var ResourceFieldInterface $resource_field */
       if (method_exists($resouce_field, 'autoDiscovery')) {
         // Adding the autoDiscover method to the resource field class will allow
         // you to be smarter about the auto discovery information.
         $callable = array($resouce_field, 'autoDiscovery');
+      }
+      else {
+        // If the given field does not have discovery information, provide the
+        // empty one instead of an error.
+        $callable = array('\Drupal\restful\Plugin\resource\Field\ResourceFieldBase::emptyDiscoveryInfo', array($public_field_name));
       }
       $resouce_field->setCallback($callable);
     }
