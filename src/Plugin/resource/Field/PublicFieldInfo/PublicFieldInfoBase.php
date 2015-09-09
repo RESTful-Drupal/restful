@@ -12,7 +12,7 @@ use Drupal\restful\Exception\ServerConfigurationException;
 class PublicFieldInfoBase implements PublicFieldInfoInterface {
 
   /**
-   * Default sections for the field information.
+   * Default categories for the field information.
    *
    * @var array[]
    */
@@ -43,7 +43,7 @@ class PublicFieldInfoBase implements PublicFieldInfoInterface {
    *
    * @var array[]
    */
-  protected $sections = array();
+  protected $categories = array();
 
   /**
    * The name of the public field.
@@ -58,13 +58,13 @@ class PublicFieldInfoBase implements PublicFieldInfoInterface {
    * @param string $field_name
    *   The name of the field.
    * @param array[] $sections
-   *   The array of sections information.
+   *   The array of categories information.
    */
   public function __construct($field_name, array $sections = array()) {
     $this->fieldName = $field_name;
     $sections = drupal_array_merge_deep($this::$defaultSections, $sections);
     foreach ($sections as $section_name => $section_info) {
-      $this->addSection($section_name, $section_info);
+      $this->addCategory($section_name, $section_info);
     }
   }
 
@@ -72,17 +72,17 @@ class PublicFieldInfoBase implements PublicFieldInfoInterface {
    * {@inheritdoc}
    */
   public function prepare() {
-    return $this->sections;
+    return $this->categories;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function addSection($section_name, array $section_info) {
+  public function addCategory($category_name, array $section_info) {
     try {
-      $this->validate($section_name, $section_info);
+      $this->validate($category_name, $section_info);
       // Process the section info adding defaults if needed.
-      $this->sections[$section_name] = $this->process($section_name, $section_info);
+      $this->categories[$category_name] = $this->process($category_name, $section_info);
     }
     catch (ServerConfigurationException $e) {
       // If there are validation errors do not add the section.
@@ -93,14 +93,14 @@ class PublicFieldInfoBase implements PublicFieldInfoInterface {
    * {@inheritdoc}
    */
   public function getSection($section_name) {
-    return empty($this->sections[$section_name]) ? array() : $this->sections[$section_name];
+    return empty($this->categories[$section_name]) ? array() : $this->categories[$section_name];
   }
 
   /**
    * {@inheritdoc}
    */
   public function addSectionDefaults($section_name, array $section_info) {
-    $this->addSection($section_name, array_merge(
+    $this->addCategory($section_name, array_merge(
       $section_info,
       $this->getSection($section_name)
     ));
@@ -110,7 +110,7 @@ class PublicFieldInfoBase implements PublicFieldInfoInterface {
    * Validates the provided data for the section.
    *
    * @param string $section_name
-   *   The name of the sections. By default RESTful suports 'info',
+   *   The name of the categories. By default RESTful suports 'info',
    *   'form_element' and 'data'.
    * @param array $section_info
    *   The structured array with the section information.
@@ -134,7 +134,7 @@ class PublicFieldInfoBase implements PublicFieldInfoInterface {
    * Processes the provided data for the section.
    *
    * @param string $section_name
-   *   The name of the sections. By default RESTful suports 'info',
+   *   The name of the categories. By default RESTful suports 'info',
    *   'form_element' and 'data'.
    * @param array $section_info
    *   The structured array with the section information.
@@ -151,9 +151,9 @@ class PublicFieldInfoBase implements PublicFieldInfoInterface {
     elseif ($section_name == 'form_element') {
       // Default title and description to the ones in the 'info' section.
       if (empty($section_info['title'])) {
-        $section_info['title'] = empty($this->sections['info']['title']) ? $this->fieldName : $this->sections['info']['title'];
-        if (!empty($this->sections['info']['description'])) {
-          $section_info['description'] = $this->sections['info']['description'];
+        $section_info['title'] = empty($this->categories['info']['title']) ? $this->fieldName : $this->categories['info']['title'];
+        if (!empty($this->categories['info']['description'])) {
+          $section_info['description'] = $this->categories['info']['description'];
         }
       }
     }

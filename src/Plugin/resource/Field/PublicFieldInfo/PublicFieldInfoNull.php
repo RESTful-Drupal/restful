@@ -15,7 +15,7 @@ class PublicFieldInfoNull implements PublicFieldInfoInterface {
    * @param string $field_name
    *   The name of the field.
    * @param array[] $sections
-   *   The array of sections information.
+   *   The array of categories information.
    */
   public function __construct($field_name, array $sections = array()) {
     $this->fieldName = $field_name;
@@ -31,7 +31,7 @@ class PublicFieldInfoNull implements PublicFieldInfoInterface {
   /**
    * {@inheritdoc}
    */
-  public function addSection($section_name, array $section_info) {}
+  public function addCategory($category_name, array $section_info) {}
 
   /**
    * {@inheritdoc}

@@ -42,7 +42,7 @@ class PublicFieldInfoEntity extends PublicFieldInfoBase implements PublicFieldIn
    * @param string $bundle
    *   The bundle.
    * @param array[] $sections
-   *   The array of sections information.
+   *   The array of categories information.
    */
   public function __construct($field_name, $property, $entity_type, $bundle, array $sections = array()) {
     parent::__construct($field_name, $sections);
