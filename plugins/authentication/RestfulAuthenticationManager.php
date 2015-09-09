@@ -96,6 +96,9 @@ class RestfulAuthenticationManager extends \ArrayObject {
     if (!$account) {
 
       if ($this->count() && !$this->getIsOptional()) {
+        // Allow caching pages for anonymous users.
+        drupal_page_is_cacheable(variable_get('restful_page_cache', FALSE));
+
         // User didn't authenticate against any provider, so we throw an error.
         throw new \RestfulUnauthorizedException('Bad credentials');
       }
@@ -115,6 +118,11 @@ class RestfulAuthenticationManager extends \ArrayObject {
       $this->setAccount($account);
     }
 
+    // Disable page caching for security reasons so that an authenticated user
+    // response never gets into the page cache for anonymous users.
+    // This is necessary because the page cache system only looks at session
+    // cookies, but not at HTTP Basic Auth headers.
+    drupal_page_is_cacheable(!$account->uid && variable_get('restful_page_cache', FALSE));
     return $account;
   }
 
