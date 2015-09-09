@@ -109,6 +109,10 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
     if ($this->decorated) {
       $this->setRequest($request);
     }
+    if (empty($field['entityType'])) {
+      throw new ServerConfigurationException(sprintf('Unknown entity type for %s resource field.', __CLASS__));
+    }
+    $this->setEntityType($field['entityType']);
     $this->wrapperMethod = isset($field['wrapper_method']) ? $field['wrapper_method'] : $this->wrapperMethod;
     $this->subProperty = isset($field['sub_property']) ? $field['sub_property'] : $this->subProperty;
     $this->formatter = isset($field['formatter']) ? $field['formatter'] : $this->formatter;
@@ -117,7 +121,7 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
     $this->imageStyles = isset($field['image_styles']) ? $field['image_styles'] : $this->imageStyles;
     if (!empty($field['bundle'])) {
       // TODO: Document this usage.
-      $this->bundle = $field['bundle'];
+      $this->setBundle($field['bundle']);
     }
 
   }
@@ -470,7 +474,7 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
     }
 
     // Get values from the formatter.
-    $output = field_view_field($this->entityType, $wrapper->value(), $this->getProperty(), $this->getFormatter());
+    $output = field_view_field($this->getEntityType(), $wrapper->value(), $this->getProperty(), $this->getFormatter());
 
     // Unset the theme, as we just want to get the value from the formatter,
     // without the wrapping HTML.
@@ -746,12 +750,6 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
    */
   public function setEntityType($entity_type) {
     $this->entityType = $entity_type;
-
-    // If entity metadata wrapper methods were used, then return the appropriate
-    // entity property.
-    if ($this->isWrapperMethodOnEntity() && $this->getWrapperMethod()) {
-      $this->propertyOnEntity();
-    }
   }
 
   /**
@@ -762,11 +760,11 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
    */
   protected function entityTypeWrapper() {
     static $entity_wrappers = array();
-    if (isset($entity_wrappers[$this->entityType])) {
-      return $entity_wrappers[$this->entityType];
+    if (isset($entity_wrappers[$this->getEntityType()])) {
+      return $entity_wrappers[$this->getEntityType()];
     }
-    $entity_wrappers[$this->entityType] = entity_metadata_wrapper($this->entityType);
-    return $entity_wrappers[$this->entityType];
+    $entity_wrappers[$this->getEntityType()] = entity_metadata_wrapper($this->getEntityType());
+    return $entity_wrappers[$this->getEntityType()];
   }
 
   /**
@@ -802,6 +800,12 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
 
     // Set the defaults from the decorated.
     $this->setResource($this->decorated->getResource());
+
+    // If entity metadata wrapper methods were used, then return the appropriate
+    // entity property.
+    if ($this->isWrapperMethodOnEntity() && $this->getWrapperMethod()) {
+      $this->propertyOnEntity();
+    }
 
     // Set the Entity related defaults.
     if ($this->getProperty() && $field = field_info_field($this->getProperty())) {
@@ -1101,7 +1105,7 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
     // store the value in the decorated object.
     $property = NULL;
 
-    $entity_type = $this->entityType;
+    $entity_type = $this->getEntityType();
     $wrapper_method = $this->getWrapperMethod();
     $entity_info = entity_get_info($entity_type);
     if ($wrapper_method == 'label') {
@@ -1110,7 +1114,7 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
     }
     elseif ($wrapper_method == 'getBundle') {
       // Store the label key.
-      $this->decorated->setProperty($property);
+      $this->setProperty($property);
     }
     elseif ($wrapper_method == 'getIdentifier') {
       // Store the ID key.
@@ -1133,7 +1137,7 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
       }
     }
 
-    $this->decorated->setProperty($property);
+    $this->setProperty($property);
   }
 
   /**
