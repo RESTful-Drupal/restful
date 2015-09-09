@@ -192,4 +192,12 @@ interface DataProviderInterface extends CrudInterface {
    */
   public function getResourcePath();
 
+  /**
+   * Returns the metadata collection.
+   *
+   * @return ArrayCollection
+   *   The collection object.
+   */
+  public function getMetadata();
+
 }
