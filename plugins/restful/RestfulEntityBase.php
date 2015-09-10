@@ -391,6 +391,10 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     $method = $info['wrapper_method'];
     $resource = $info['resource'] ?: NULL;
 
+
+    $translatable = $this->getPluginKey('translatable') && field_is_translatable($this->entityType, field_info_field($info['property']));
+    $optional_languages = array_keys(language_list());
+
     if ($info['sub_property'] && $sub_wrapper->value()) {
       $sub_wrapper = $sub_wrapper->{$info['sub_property']};
     }
@@ -400,7 +404,16 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     }
     else {
       // Wrapper method.
-      $value = $sub_wrapper->{$method}();
+      if ($translatable) {
+        $value = array();
+        foreach ($optional_languages as $lang) {
+          $wrapper->language($lang);
+          $value[$lang] = $sub_wrapper->{$method}();
+        }
+      }
+      else {
+        $value = $sub_wrapper->{$method}();
+      }
     }
 
     return $value;
