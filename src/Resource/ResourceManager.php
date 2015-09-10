@@ -97,6 +97,19 @@ class ResourceManager implements ResourceManagerInterface {
   /**
    * {@inheritdoc}
    */
+  public function getPluginCopy($instance_id, RequestInterface $request = NULL) {
+    if (!$plugin = $this->pluginManager->createInstance($instance_id)) {
+      return NULL;
+    }
+    if ($request) {
+      $plugin->setRequest($request);
+    }
+    return $plugin;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function clearPluginCache($instance_id) {
     $this->plugins->remove($instance_id);
   }

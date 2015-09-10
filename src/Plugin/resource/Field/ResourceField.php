@@ -7,10 +7,10 @@
 
 namespace Drupal\restful\Plugin\resource\Field;
 
-use Drupal\restful\Exception\IncompatibleFieldDefinitionException;
 use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
+use Drupal\restful\Plugin\resource\Field\PublicFieldInfo\PublicFieldInfoBase;
 use Drupal\restful\Resource\ResourceManager;
 
 class ResourceField extends ResourceFieldBase implements ResourceFieldInterface {
@@ -39,6 +39,8 @@ class ResourceField extends ResourceFieldBase implements ResourceFieldInterface 
     // Store the definition, useful to access custom keys on custom resource
     // fields.
     $this->definition = $field;
+    $discovery_info = empty($field['discovery']) ? array() : $field['discovery'];
+    $this->setPublicFieldInfo(new PublicFieldInfoBase($this->getPublicName(), $discovery_info));
   }
 
   /**
@@ -103,27 +105,29 @@ class ResourceField extends ResourceFieldBase implements ResourceFieldInterface 
     // Almost all the defaults come are applied by the object's property
     // defaults.
 
-    $resources = $this->getResource();
-    foreach ($resources as &$resource) {
-      // Expand array to be verbose.
-      if (!is_array($resource)) {
-        $resource = array('name' => $resource);
-      }
-
-      // Set default value.
-      $resource += array(
-        'full_view' => TRUE,
-      );
-
-      // Set the default value for the version of the referenced resource.
-      if (empty($resource['majorVersion']) || empty($resource['minorVersion'])) {
-        list($major_version, $minor_version) = restful()
-          ->getResourceManager()
-          ->getResourceLastVersion($resource['name']);
-        $resource['majorVersion'] = $major_version;
-        $resource['minorVersion'] = $minor_version;
-      }
+    if (!$resource = $this->getResource()) {
+      return;
     }
+    // Expand array to be verbose.
+    if (!is_array($resource)) {
+      $resource = array('name' => $resource);
+    }
+
+    // Set default value.
+    $resource += array(
+      'full_view' => TRUE,
+    );
+
+    // Set the default value for the version of the referenced resource.
+    if (!isset($resource['majorVersion']) || !isset($resource['minorVersion'])) {
+      list($major_version, $minor_version) = restful()
+        ->getResourceManager()
+        ->getResourceLastVersion($resource['name']);
+      $resource['majorVersion'] = $major_version;
+      $resource['minorVersion'] = $minor_version;
+    }
+
+    $this->setResource($resource);
   }
 
   /**
@@ -193,4 +197,5 @@ class ResourceField extends ResourceFieldBase implements ResourceFieldInterface 
     // Default to cardinality of 1.
     return 1;
   }
+
 }

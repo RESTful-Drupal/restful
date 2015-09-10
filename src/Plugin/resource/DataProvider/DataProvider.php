@@ -8,12 +8,13 @@
 namespace Drupal\restful\Plugin\resource\DataProvider;
 
 use Drupal\restful\Exception\BadRequestException;
+use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Exception\ServiceUnavailableException;
 use Drupal\restful\Http\HttpHeader;
 use Drupal\restful\Http\RequestInterface;
+use Drupal\restful\Plugin\resource\Field\ResourceFieldCollection;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
-use Drupal\restful\Resource\ResourceManager;
 
 abstract class DataProvider implements DataProviderInterface {
 
@@ -95,6 +96,7 @@ abstract class DataProvider implements DataProviderInterface {
     // Make sure that we have the same amount of operators than values.
     if (!in_array(strtoupper($filter['operator'][0]), array(
         'IN',
+        'NOT IN',
         'BETWEEN',
       )) && count($filter['value']) != count($filter['operator'])
     ) {
@@ -240,6 +242,29 @@ abstract class DataProvider implements DataProviderInterface {
     }
 
     return $this->viewMultiple($ids);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function discover($path = NULL) {
+    // Alter the field definition by adding a callback to get the auto
+    // discover information in render time.
+    foreach ($this->fieldDefinitions as $public_field_name => $resouce_field) {
+      /* @var ResourceFieldInterface $resource_field */
+      if (method_exists($resouce_field, 'autoDiscovery')) {
+        // Adding the autoDiscover method to the resource field class will allow
+        // you to be smarter about the auto discovery information.
+        $callable = array($resouce_field, 'autoDiscovery');
+      }
+      else {
+        // If the given field does not have discovery information, provide the
+        // empty one instead of an error.
+        $callable = array('\Drupal\restful\Plugin\resource\Field\ResourceFieldBase::emptyDiscoveryInfo', array($public_field_name));
+      }
+      $resouce_field->setCallback($callable);
+    }
+    return $path ? $this->viewMultiple(array($path)) : $this->index();
   }
 
   /**
@@ -395,6 +420,7 @@ abstract class DataProvider implements DataProviderInterface {
       '<>',
       '!=',
       'IN',
+      'NOT IN',
       'BETWEEN',
     );
 

@@ -246,6 +246,7 @@ abstract class Resource extends PluginBase implements ResourceInterface {
         RequestInterface::METHOD_HEAD => 'index',
         // POST.
         RequestInterface::METHOD_POST => 'create',
+        RequestInterface::METHOD_OPTIONS => 'discover',
       ),
       // We don't know what the ID looks like, assume that everything is the ID.
       '^.*$' => array(
@@ -254,6 +255,7 @@ abstract class Resource extends PluginBase implements ResourceInterface {
         RequestInterface::METHOD_PUT => 'replace',
         RequestInterface::METHOD_PATCH => 'update',
         RequestInterface::METHOD_DELETE => 'remove',
+        RequestInterface::METHOD_OPTIONS => 'discover',
       ),
     );
   }
@@ -333,6 +335,13 @@ abstract class Resource extends PluginBase implements ResourceInterface {
   public function remove($path) {
     // TODO: Compare this with 1.x logic.
     $this->getDataProvider()->remove($path);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function discover($path = NULL) {
+    return $this->getDataProvider()->discover($path);
   }
 
   /**

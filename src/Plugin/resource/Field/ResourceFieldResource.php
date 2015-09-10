@@ -9,6 +9,7 @@ namespace Drupal\restful\Plugin\resource\Field;
 
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
+use Drupal\restful\Plugin\resource\Field\PublicFieldInfo\PublicFieldInfoInterface;
 use Drupal\restful\Plugin\resource\ResourceInterface;
 
 class ResourceFieldResource implements ResourceFieldResourceInterface {
@@ -333,6 +334,30 @@ class ResourceFieldResource implements ResourceFieldResourceInterface {
    */
   public function getDefinition() {
     return $this->decorated->getDefinition();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getPublicFieldInfo() {
+    return $this->decorated->getPublicFieldInfo();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setPublicFieldInfo(PublicFieldInfoInterface $public_field_info) {
+    $this->decorated->setPublicFieldInfo($public_field_info);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function autoDiscovery() {
+    if (method_exists($this->decorated, 'autoDiscovery')) {
+      return $this->decorated->autoDiscovery();
+    }
+    return ResourceFieldBase::emptyDiscoveryInfo($this->getPublicName());
   }
 
 }

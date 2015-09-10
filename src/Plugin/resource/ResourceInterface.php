@@ -16,6 +16,7 @@ use Drupal\restful\Exception\NotImplementedException;
 use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataProvider\DataProviderInterface;
+use Drupal\restful\Plugin\resource\Field\ResourceFieldCollection;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
 
 interface ResourceInterface extends PluginInspectionInterface, ConfigurablePluginInterface {
@@ -359,5 +360,16 @@ interface ResourceInterface extends PluginInspectionInterface, ConfigurablePlugi
    *   The URL address.
    */
   public function getUrl(array $options = array(), $keep_query = TRUE, RequestInterface $request = NULL);
+
+  /**
+   * Discovery controller callback.
+   *
+   * @param string $path
+   *   The requested path.
+   *
+   * @return array
+   *   The resource field collection with the discovery information.
+   */
+  public function discover($path = NULL);
 
 }

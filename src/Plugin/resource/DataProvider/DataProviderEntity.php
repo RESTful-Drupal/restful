@@ -24,8 +24,6 @@ use Drupal\restful\Exception\UnprocessableEntityException;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
 use Drupal\restful\Plugin\resource\Resource;
 use Drupal\restful\Plugin\resource\ResourceInterface;
-use Drupal\restful\Plugin\ResourcePluginManager;
-use Drupal\restful\Util\EntityFieldQuery;
 use Drupal\restful\Util\RelationalFilter;
 use Drupal\restful\Util\RelationalFilterInterface;
 
@@ -94,7 +92,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
       }
       /* @var ResourceFieldEntityInterface $value */
       $value->setEntityType($this->entityType);
-      if (!$value->getBundles()) {
+      if (!$value->getBundle()) {
         // If the field definition does not contain an array of bundles for that
         // field then assume that the field applies to all the bundles of the
         // resource.
@@ -104,8 +102,6 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
           $entity_info = entity_get_info($entity_type);
           $this->bundles = array_keys($entity_info['bundles']);
         }
-
-        $value->setBundles($this->bundles);
       }
     }
     $this->setResourcePath($resource_path);
@@ -621,7 +617,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
       }
 
       if (field_info_field($property_name)) {
-        if (in_array(strtoupper($filter['operator'][0]), array('IN', 'BETWEEN'))) {
+        if (in_array(strtoupper($filter['operator'][0]), array('IN', 'NOT IN', 'BETWEEN'))) {
           $query->fieldCondition($property_name, $resource_field->getColumn(), $this->getReferencedIds($filter['value'], $resource_field), $filter['operator'][0]);
           continue;
         }
@@ -633,7 +629,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
       }
       else {
         $column = $this->getColumnFromProperty($property_name);
-        if (in_array(strtoupper($filter['operator'][0]), array('IN', 'BETWEEN'))) {
+        if (in_array(strtoupper($filter['operator'][0]), array('IN', 'NOT IN', 'BETWEEN'))) {
           $query->propertyCondition($column, $this->getReferencedIds($filter['value'], $resource_field), $filter['operator'][0]);
           continue;
         }
@@ -813,7 +809,8 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     // Keeps a list of the fields that have been set.
     $processed_fields = array();
 
-    foreach ($this->fieldDefinitions as $public_field_name => $resource_field) {
+    $field_definitions = clone $this->fieldDefinitions;
+    foreach ($field_definitions as $public_field_name => $resource_field) {
       /* @var ResourceFieldEntityInterface $resource_field */
 
       if (!$this->methodAccess($resource_field)) {
@@ -1099,9 +1096,10 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     );
     $item['column'] = $item['type'] == RelationalFilterInterface::TYPE_FIELD ? $resource_field->getColumn() : NULL;
     $instance_id = sprintf('%s:%d.%d', $resource['name'], $resource['majorVersion'], $resource['minorVersion']);
-    $plugin_manager = ResourcePluginManager::create('cache', Request::create('', array(), RequestInterface::METHOD_GET));
     /* @var ResourceEntity $resource */
-    $resource = $plugin_manager->createInstance($instance_id);
+    $resource = restful()
+      ->getResourceManager()
+      ->getPluginCopy($instance_id, Request::create('', array(), RequestInterface::METHOD_GET));
 
     // Variables for the next iteration.
     $definitions = $resource->getFieldDefinitions();

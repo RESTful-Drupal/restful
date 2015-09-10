@@ -10,7 +10,6 @@ namespace Drupal\restful\Resource;
 use \Drupal\restful\Exception\RestfulException;
 use \Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Http\RequestInterface;
-use \Drupal\restful\Plugin\ResourcePluginManager;
 use \Drupal\restful\Plugin\resource\ResourceInterface;
 use \Drupal\Component\Plugin\Exception\PluginNotFoundException;
 
@@ -132,5 +131,24 @@ interface ResourceManagerInterface {
    *   The callback function to be executed.
    */
   public static function getPageCallback($path = NULL);
+
+  /**
+   * Get a copy of resource plugin instance by instance ID.
+   *
+   * This is useful when you have sub-requests, since you don't want to change
+   * state to other resources.
+   *
+   * @param string $instance_id
+   *   The instance ID.
+   * @param RequestInterface $request
+   *   The request object.
+   *
+   * @return ResourceInterface
+   *   The plugin.
+   *
+   * @throws PluginNotFoundException
+   *   If the plugin instance cannot be found.
+   */
+  public function getPluginCopy($instance_id, RequestInterface $request = NULL);
 
 }

@@ -100,7 +100,12 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
       }
       if ($resource = $this->getResource()) {
         $output['type'] = $resource->getResourceMachineName();
-        $output['id'] = (string) $data->getIdField()->value($data->getInterpreter());
+        $resource_id = $data->getIdField()->value($data->getInterpreter());
+        if (!is_array($resource_id)) {
+          // In some situations when making an OPTIONS call the $resource_id
+          // returns the array of discovery information instead of a real value.
+          $output['id'] = (string) $resource_id;
+        }
       }
       $interpreter = $data->getInterpreter();
       $value = $resource_field->render($interpreter);
@@ -139,7 +144,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
 
           $related_info = array(
             'data' => array('type' => $basic_info['type'], 'id' => $basic_info['id']),
-            'links' => $basic_info['links']
+            'links' => $basic_info['links'],
           );
           $output['relationships'][$public_field_name][] = $related_info;
           $included_item = is_array($value_item) ? $basic_info + $value_item : $basic_info;

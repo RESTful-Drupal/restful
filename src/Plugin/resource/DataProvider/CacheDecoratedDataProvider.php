@@ -60,6 +60,13 @@ class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface 
   /**
    * {@inheritdoc}
    */
+  public function discover($path = NULL) {
+    return $this->subject->discover($path);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getRange() {
     return $this->subject->getRange();
   }

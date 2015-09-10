@@ -88,14 +88,14 @@ interface ResourceFieldEntityInterface extends ResourceFieldInterface {
   public function setEntityType($entity_type);
 
   /**
-   * @return array
+   * @return string
    */
-  public function getBundles();
+  public function getBundle();
 
   /**
-   * @param array $bundles
+   * @param string $bundle
    */
-  public function setBundles($bundles);
+  public function setBundle($bundle);
   /**
    * Get the image URLs based on the configured image styles.
    *

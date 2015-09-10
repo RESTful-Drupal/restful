@@ -10,7 +10,9 @@ namespace Drupal\restful\Plugin\resource\Field;
 use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
-use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
+use Drupal\restful\Plugin\resource\Field\PublicFieldInfo\PublicFieldInfoBase;
+use Drupal\restful\Plugin\resource\Field\PublicFieldInfo\PublicFieldInfoInterface;
+use Drupal\restful\Plugin\resource\Field\PublicFieldInfo\PublicFieldInfoNull;
 use Drupal\restful\Resource\ResourceManager;
 
 abstract class ResourceFieldBase implements ResourceFieldInterface {
@@ -139,6 +141,13 @@ abstract class ResourceFieldBase implements ResourceFieldInterface {
    * @var array
    */
   protected $definition = array();
+
+  /**
+   * Information about the field.
+   *
+   * @var PublicFieldInfoInterface
+   */
+  protected $publicFieldInfo;
 
   /**
    * Get the request in the data provider.
@@ -359,6 +368,46 @@ abstract class ResourceFieldBase implements ResourceFieldInterface {
       $element = $element[$path_item];
     }
     return $element;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getPublicFieldInfo() {
+    return $this->publicFieldInfo;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setPublicFieldInfo(PublicFieldInfoInterface $public_field_info) {
+    $this->publicFieldInfo = $public_field_info;
+  }
+
+  /**
+   * Basic auto discovery information.
+   *
+   * @return array
+   *   The array of information ready to be encoded.
+   */
+  public function autoDiscovery() {
+    return $this
+      ->getPublicFieldInfo()
+      ->prepare();
+  }
+
+  /**
+   * Returns the basic discovery information for a given field.
+   *
+   * @param string $name
+   *   The name of the public field.
+   *
+   * @return array
+   *   The array of information ready to be encoded.
+   */
+  public static function emptyDiscoveryInfo($name) {
+    $info = new PublicFieldInfoNull($name);
+    return $info->prepare();
   }
 
 }

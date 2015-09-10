@@ -39,9 +39,10 @@ class ResourceFieldFileEntityReference extends ResourceFieldEntityReference impl
     // load by the entity id in that scenario will lead to a 404.
     // We'll load the plugin to get the idField configuration.
     $instance_id = sprintf('%s:%d.%d', $resource['name'], $resource['majorVersion'], $resource['minorVersion']);
-    $plugin_manager = ResourcePluginManager::create('cache', Request::create('', array(), RequestInterface::METHOD_GET));
     /* @var ResourceInterface $resource */
-    $resource = $plugin_manager->createInstance($instance_id);
+    $resource = restful()
+      ->getResourceManager()
+      ->getPluginCopy($instance_id, Request::create('', array(), RequestInterface::METHOD_GET));
     $plugin_definition = $resource->getPluginDefinition();
     if (empty($plugin_definition['dataProvider']['idField'])) {
       return $identifier;
