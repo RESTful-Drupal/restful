@@ -1289,6 +1289,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       }
     }
 
+    // Change the 'label' public field settings when a bundle use 'title_field'.
     if ($title_field) {
       $public_fields['label']['wrapper_method_on_entity'] = FALSE;
       $public_fields['label']['wrapper_method'] = 'value';
