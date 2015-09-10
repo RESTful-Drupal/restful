@@ -118,7 +118,7 @@ class PersistableCache implements PersistableCacheInterface {
     // Mark the key as loaded.
     $this->loaded[$key] = TRUE;
     if ($cache = cache_get($key, $this->cacheBin)) {
-      $this->data[$key] = $cache->value;
+      $this->data[$key] = $cache->data;
     }
   }
 
