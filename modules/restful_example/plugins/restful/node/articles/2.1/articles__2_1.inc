@@ -12,5 +12,4 @@ $plugin = array(
   'authentication_optional' => TRUE,
   'major_version' => 2,
   'minor_version' => 1,
-  'translatable' => TRUE,
 );
