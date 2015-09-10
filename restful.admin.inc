@@ -59,6 +59,13 @@ function restful_admin_settings($form_state) {
     ),
   );
 
+  $form['restful_allowed_origin'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Allowed origin'),
+    '#description' => t('When you make an XHR (AJAX) call to a resource under a different host, most modern browsers will make an initial OPTIONS request to the resource. The response to that can contain the Access-Control-Allow-Origin, if that includes the domain making the request the browser will allow the cross-domain request. The contents of this field will be used in that header. Use <em>*</em> to allow any origin.'),
+    '#default_value' => variable_get('restful_allowed_origin', ''),
+  );
+
   $form['restful_cache'] = array(
     '#type' => 'fieldset',
     '#title' => t('Cache'),

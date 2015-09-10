@@ -210,6 +210,23 @@ curl https://example.com/api/articles?autocomplete[string]=mystring
 
 See the [Consuming Your API](./docs/api_url.md) document for more details.
 
+## CORS
+
+RESTful provides support for preflight requests (see the
+[Wikipedia example](https://en.wikipedia.org/wiki/Cross-origin_resource_sharing#Preflight_example)
+for more details).
+
+To configure the allowed domains, you can:
+
+  - Go to `admin/config/services/restful` and set _CORS Preflight_ to the
+allowed domain. This will apply globally unless overridden with the method
+below.
+  - Set the `allowOrigin` key in your resource definition (in the annotation)
+to the allowed domain. This setting will only apply to this resource.
+
+Bear in mind that this check is only performed to the top-level resource.
+If you are composing resources with competing `allowOrigin` settings, the
+top-level resource will be applied.
 
 ## Documenting your API
 

@@ -78,32 +78,19 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
       throw new InternalServerErrorException('The entity type was not provided.');
     }
     $this->entityType = $options['entityType'];
-    if (isset($options['bundles'])) {
+    if (!empty($options['bundles'])) {
       $this->bundles = $options['bundles'];
+    }
+    else {
+      // If no bundles are passed, then assume all the bundles of the entity
+      // type.
+      $entity_info = entity_get_info($this->entityType);
+      $this->bundles = !empty($entity_info['bundles']) ? array_keys($entity_info['bundles']) : $entity_info['type'];
     }
     if (isset($options['EFQClass'])) {
       $this->EFQClass = $options['EFQClass'];
     }
 
-    foreach ($this->fieldDefinitions as $key => $value) {
-      // Set the entity type and bundles on the resource fields.
-      if (!($value instanceof ResourceFieldEntityInterface)) {
-        continue;
-      }
-      /* @var ResourceFieldEntityInterface $value */
-      $value->setEntityType($this->entityType);
-      if (!$value->getBundle()) {
-        // If the field definition does not contain an array of bundles for that
-        // field then assume that the field applies to all the bundles of the
-        // resource.
-        if (!$this->bundles && $entity_type = $this->entityType) {
-          // If no bundles are passed, then assume all the bundles of the entity
-          // type.
-          $entity_info = entity_get_info($entity_type);
-          $this->bundles = array_keys($entity_info['bundles']);
-        }
-      }
-    }
     $this->setResourcePath($resource_path);
     if (empty($this->options['urlParams'])) {
       $this->options['urlParams'] = array(

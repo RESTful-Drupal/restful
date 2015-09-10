@@ -97,7 +97,6 @@ class Main__1_7 extends Main__1_0 implements ResourceInterface {
    * {@inheritdoc}
    */
   protected function processPublicFields(array $field_definitions) {
-    $field_definitions = parent::processPublicFields($field_definitions);
     if (variable_get('restful_test_alternative_id_error', FALSE)) {
       // Single entity reference field with "resource" that does not load by
       // uuid.
@@ -111,8 +110,7 @@ class Main__1_7 extends Main__1_0 implements ResourceInterface {
         ),
       );
     }
-
-    return $field_definitions;
+    return parent::processPublicFields($field_definitions);
   }
 
 }

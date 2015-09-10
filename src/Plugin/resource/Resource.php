@@ -341,6 +341,7 @@ abstract class Resource extends PluginBase implements ResourceInterface {
    * {@inheritdoc}
    */
   public function discover($path = NULL) {
+    $this->preflight($path);
     return $this->getDataProvider()->discover($path);
   }
 
@@ -492,7 +493,7 @@ abstract class Resource extends PluginBase implements ResourceInterface {
   }
 
   /**
-   * Checks access based on the referer header and the allow_origin setting.
+   * Checks access based on the referer header and the allowOrigin setting.
    *
    * @return bool
    *   TRUE if the access is granted. FALSE otherwise.
@@ -567,4 +568,53 @@ abstract class Resource extends PluginBase implements ResourceInterface {
     }
   }
 
+  /**
+   * Adds the Allowed-Origin headers.
+   *
+   * @param string $path
+   *   The requested path.
+   */
+  protected function preflight($path) {
+    $plugin_definition = $this->getPluginDefinition();
+    $allowed_origin = empty($plugin_definition['allowOrigin']) ? variable_get('restful_allowed_origin', NULL) : $plugin_definition['allow_origin'];
+    // Always add the allow origin if configured.
+
+    if ($allowed_origin) {
+      $header_bag = restful()
+        ->getResponse()
+        ->getHeaders();
+      $header_bag
+        ->add(HttpHeader::create('Access-Control-Allow-Origin', check_plain($allowed_origin)));
+      // @see: https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS#Requests_with_credentials
+      $accepts_credentials = $allowed_origin == '*' ? 'false' : 'true';
+      $header_bag
+        ->add(HttpHeader::create('Access-Control-Allow-Credentials', $accepts_credentials));
+    }
+    // Make sure the Access-Control-Allow-Methods is populated.
+    $allowed_methods = array();
+    foreach ($this->getControllers() as $pattern => $controllers) {
+      // Find the controllers for the provided path.
+      if ($pattern == $path || ($pattern && preg_match('/' . $pattern . '/', $path))) {
+        foreach ($controllers as $method => $controller) {
+          if (is_array($controller)) {
+            // If there is a custom access method for this endpoint check it.
+            if (!empty($selected_controller['access callback']) && !ResourceManager::executeCallback(array($this, $selected_controller['access callback']), array($path))) {
+              // There is no access for this method.
+              continue;
+            }
+          }
+          $allowed_methods[] = $method;
+        }
+        restful()
+          ->getResponse()
+          ->getHeaders()
+          ->add(HttpHeader::create(
+            'Access-Control-Allow-Methods',
+            implode(',', $allowed_methods)
+          ));
+        break;
+      }
+    }
+
+  }
 }
