@@ -192,4 +192,16 @@ interface DataProviderInterface extends CrudInterface {
    */
   public function getResourcePath();
 
+  /**
+   * Returns the metadata collection.
+   *
+   * Data providers can add metadata reflecting the data gathering/setting
+   * process. This information is made available to formatters via the resource
+   * so extra metadata can be added to the output.
+   *
+   * @return \Doctrine\Common\Collections\ArrayCollection
+   *   The collection object.
+   */
+  public function getMetadata();
+
 }
