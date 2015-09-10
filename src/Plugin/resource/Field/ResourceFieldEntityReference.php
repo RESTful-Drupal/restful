@@ -272,7 +272,13 @@ class ResourceFieldEntityReference extends ResourceFieldEntity implements Resour
     if (!$this->referencedIdProperty) {
       return $identifier;
     }
-    return $identifier ? $property_wrapper->{$this->referencedIdProperty}->value() : NULL;
+    try {
+      return $identifier ? $property_wrapper->{$this->referencedIdProperty}->value() : NULL;
+    }
+    catch (\EntityMetadataWrapperException $e) {
+      // An exception will be raised for broken entity reference fields.
+      return NULL;
+    }
   }
 
   /**
