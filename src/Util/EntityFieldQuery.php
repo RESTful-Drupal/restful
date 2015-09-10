@@ -8,6 +8,7 @@
 namespace Drupal\restful\Util;
 
 use Drupal\restful\Exception\ServerConfigurationException;
+use SelectQuery;
 
 class EntityFieldQuery extends \EntityFieldQuery implements EntityFieldQueryRelationalConditionsInterface {
 
@@ -179,13 +180,13 @@ class EntityFieldQuery extends \EntityFieldQuery implements EntityFieldQueryRela
    *
    * @param string $table_name
    *   The name of the table.
-   * @param \SelectQuery $query
+   * @param SelectQuery $query
    *   The query.
    *
    * @return string
    *   The table alias.
    */
-  protected static function aliasJoinTable($table_name, \SelectQuery $query) {
+  protected static function aliasJoinTable($table_name, SelectQuery $query) {
     foreach ($query->getTables() as $table_info) {
       if ($table_info['table'] == $table_name) {
         $matches = array();
@@ -291,7 +292,7 @@ class EntityFieldQuery extends \EntityFieldQuery implements EntityFieldQueryRela
    *
    * @see field_sql_storage_field_storage_query()
    */
-  protected function fieldStorageQuery(\SelectQueryInterface $select_query) {
+  protected function fieldStorageQuery(SelectQuery $select_query) {
     if ($this->age == FIELD_LOAD_CURRENT) {
       $tablename_function = '_field_sql_storage_tablename';
       $id_key = 'entity_id';
@@ -388,7 +389,7 @@ class EntityFieldQuery extends \EntityFieldQuery implements EntityFieldQueryRela
   /**
    * Adds a join to the field table with the appropriate join type.
    *
-   * @param \SelectQueryInterface $select_query
+   * @param SelectQuery $select_query
    *   The select query to modify.
    * @param string $field_name
    *   The name of the field to join.
@@ -411,7 +412,7 @@ class EntityFieldQuery extends \EntityFieldQuery implements EntityFieldQueryRela
    * @return string
    *   The unique alias that was assigned for this table.
    */
-  protected function addFieldJoin(\SelectQueryInterface $select_query, $field_name, $table, $alias = NULL, $condition = NULL, $arguments = array()) {
+  protected function addFieldJoin(SelectQuery $select_query, $field_name, $table, $alias = NULL, $condition = NULL, $arguments = array()) {
     // Find if we need a left or inner join by inspecting the field conditions.
     $type = 'INNER';
     foreach ($this->fieldConditions as $field_condition) {
@@ -428,7 +429,7 @@ class EntityFieldQuery extends \EntityFieldQuery implements EntityFieldQueryRela
    *
    * This is a helper for hook_entity_query() and hook_field_storage_query().
    *
-   * @param \SelectQueryInterface $select_query
+   * @param SelectQuery $select_query
    *   A SelectQuery object.
    * @param string $sql_field
    *   The name of the field.
@@ -439,7 +440,7 @@ class EntityFieldQuery extends \EntityFieldQuery implements EntityFieldQueryRela
    *   HAVING or WHERE. This is necessary because SQL can't handle WHERE
    *   conditions on aliased columns.
    */
-  public function addCondition(\SelectQueryInterface $select_query, $sql_field, $condition, $having = FALSE) {
+  public function addCondition(SelectQuery $select_query, $sql_field, $condition, $having = FALSE) {
     $needs_or = !empty($condition['or']) || in_array($condition['operator'], static::$leftJoinOperators);
     if (
       in_array($condition['operator'], array('CONTAINS', 'STARTS_WITH')) ||
