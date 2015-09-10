@@ -306,7 +306,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
 
       if ($info['create_or_update_passthrough'] && empty($info['callback'])) {
         // The public field is a dummy one, meant only for passing data upon
-        // create or update, unless a specific callback was specified.
+        // create or update, unless a specific callback is used.
         continue;
       }
 
