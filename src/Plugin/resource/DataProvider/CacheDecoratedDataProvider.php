@@ -7,6 +7,7 @@
 
 namespace Drupal\restful\Plugin\resource\DataProvider;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use Drupal\restful\Exception\NotImplementedException;
 use Drupal\restful\Exception\UnauthorizedException;
 use Drupal\restful\Http\Request;
@@ -31,6 +32,14 @@ class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface 
   protected $cacheController;
 
   /**
+   * Array of metadata. Use this as a mean to pass info to the render layer.
+   *
+   * @var ArrayCollection
+   *   Key value store.
+   */
+  protected $metadata;
+
+  /**
    * Constructs a CacheDecoratedDataProvider object.
    *
    * @param DataProviderInterface $subject
@@ -41,6 +50,7 @@ class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface 
   public function __construct(DataProviderInterface $subject, \DrupalCacheInterface $cache_controller) {
     $this->subject = $subject;
     $this->cacheController = $cache_controller;
+    $this->metadata = new ArrayCollection();
   }
 
   /**
@@ -464,6 +474,13 @@ class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface 
    */
   public function getResourcePath() {
     return $this->subject->getResourcePath();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getMetadata() {
+    return $this->metadata;
   }
 
 }
