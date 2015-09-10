@@ -324,16 +324,40 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
         }
 
         if (empty($info['formatter'])) {
-          if ($sub_wrapper instanceof EntityListWrapper) {
-            // Multiple values.
-            foreach ($sub_wrapper as $item_wrapper) {
-              $value[] = $this->getValueFromProperty($wrapper, $item_wrapper, $info, $public_field_name);
+          $translatable = field_is_translatable($this->entityType, field_info_field($info['property']));
+          if ($translatable) {
+            $optional_languages = array_keys(language_list());
+
+            foreach ($optional_languages as $lang) {
+              $cloned_wrapper = clone $wrapper;
+              $cloned_wrapper->language($lang);
+              $sub_wrapper = $info['wrapper_method_on_entity'] ? $cloned_wrapper : $cloned_wrapper->{$property};
+              $sub_wrapper = clone $sub_wrapper;
+              if ($sub_wrapper instanceof EntityListWrapper) {
+                // Multiple values.
+                foreach ($sub_wrapper as $item_wrapper) {
+                  $value[$lang][] = $this->getValueFromProperty($cloned_wrapper, $item_wrapper, $info, $public_field_name);
+                }
+              }
+              else {
+                // Single value.
+                $value[$lang] = $this->getValueFromProperty($cloned_wrapper, $sub_wrapper, $info, $public_field_name);
+              }
             }
           }
           else {
-            // Single value.
-            $value = $this->getValueFromProperty($wrapper, $sub_wrapper, $info, $public_field_name);
+            if ($sub_wrapper instanceof EntityListWrapper) {
+              // Multiple values.
+              foreach ($sub_wrapper as $item_wrapper) {
+                $value[] = $this->getValueFromProperty($wrapper, $item_wrapper, $info, $public_field_name);
+              }
+            }
+            else {
+              // Single value.
+              $value = $this->getValueFromProperty($wrapper, $sub_wrapper, $info, $public_field_name);
+            }
           }
+
         }
         else {
           // Get value from field formatter.
@@ -391,10 +415,6 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     $method = $info['wrapper_method'];
     $resource = $info['resource'] ?: NULL;
 
-
-    $translatable = $this->getPluginKey('translatable') && field_is_translatable($this->entityType, field_info_field($info['property']));
-    $optional_languages = array_keys(language_list());
-
     if ($info['sub_property'] && $sub_wrapper->value()) {
       $sub_wrapper = $sub_wrapper->{$info['sub_property']};
     }
@@ -404,16 +424,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     }
     else {
       // Wrapper method.
-      if ($translatable) {
-        $value = array();
-        foreach ($optional_languages as $lang) {
-          $wrapper->language($lang);
-          $value[$lang] = $sub_wrapper->{$method}();
-        }
-      }
-      else {
-        $value = $sub_wrapper->{$method}();
-      }
+      $value = $sub_wrapper->{$method}();
     }
 
     return $value;
