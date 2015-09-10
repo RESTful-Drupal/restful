@@ -1269,7 +1269,21 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       return $public_fields;
     }
 
-    if (!empty($entity_info['entity keys']['label'])) {
+    // Determine if the current bundle use 'title_field'.
+    $title_field = FALSE;
+    if (module_exists('title')) {
+      $title_field_info = field_info_field('title_field');
+      if (!empty($title_field_info['bundles']) && in_array($this->getBundle(), $title_field_info['bundles'][$this->getEntityType()])) {
+        $title_field = $title_field_info['field_name'];
+      }
+    }
+
+    if ($title_field) {
+      $public_fields['label']['wrapper_method_on_entity'] = FALSE;
+      $public_fields['label']['wrapper_method'] = 'value';
+      $public_fields['label']['property'] = $title_field;
+    }
+    elseif (!empty($entity_info['entity keys']['label'])) {
       $public_fields['label']['property'] = $entity_info['entity keys']['label'];
     }
 
