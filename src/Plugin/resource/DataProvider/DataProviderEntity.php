@@ -617,7 +617,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
       }
 
       if (field_info_field($property_name)) {
-        if (in_array(strtoupper($filter['operator'][0]), array('IN', 'BETWEEN'))) {
+        if (in_array(strtoupper($filter['operator'][0]), array('IN', 'NOT IN', 'BETWEEN'))) {
           $query->fieldCondition($property_name, $resource_field->getColumn(), $this->getReferencedIds($filter['value'], $resource_field), $filter['operator'][0]);
           continue;
         }
@@ -629,7 +629,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
       }
       else {
         $column = $this->getColumnFromProperty($property_name);
-        if (in_array(strtoupper($filter['operator'][0]), array('IN', 'BETWEEN'))) {
+        if (in_array(strtoupper($filter['operator'][0]), array('IN', 'NOT IN', 'BETWEEN'))) {
           $query->propertyCondition($column, $this->getReferencedIds($filter['value'], $resource_field), $filter['operator'][0]);
           continue;
         }
