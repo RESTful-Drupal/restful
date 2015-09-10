@@ -303,12 +303,13 @@ class EntityFieldQuery extends \EntityFieldQuery implements EntityFieldQueryRela
     }
     $table_aliases = array();
     $query_tables = NULL;
+    $base_table = $this->metaData['base_table'];
+
     // Add tables for the fields used.
     foreach ($this->fields as $key => $field) {
       $tablename = $tablename_function($field);
       $table_alias = _field_sql_storage_tablealias($tablename, $key, $this);
       $table_aliases[$key] = $table_alias;
-      $base_table = $this->metaData['base_table'];
       $select_query->addMetaData('base_table', $base_table);
       $entity_id_key = $this->metaData['entity_id_key'];
       if ($key) {
@@ -379,7 +380,7 @@ class EntityFieldQuery extends \EntityFieldQuery implements EntityFieldQueryRela
         $select_query->orderBy($sql_field, $order['direction']);
       }
       elseif ($order['type'] == 'property') {
-        $select_query->orderBy("$entity_base_table." . $order['specifier'], $order['direction']);
+        $select_query->orderBy("$base_table." . $order['specifier'], $order['direction']);
       }
     }
 
