@@ -179,7 +179,7 @@ class RestfulManager {
     $response = Response::create();
     $resource_manager = new ResourceManager($request);
     $formatter_manager = new FormatterManager();
-    $persistable_cache = new PersistableCache('restful_cache');
+    $persistable_cache = new PersistableCache('cache_restful');
 
     return new static($request, $response, $resource_manager, $formatter_manager, $persistable_cache);
   }
