@@ -664,11 +664,10 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     static::cleanRequest($request);
     $save = FALSE;
     $original_request = $request;
-    // Set to FALSE if a callback or a pass through was used.
     $require_save = TRUE;
 
     foreach ($this->getPublicFields() as $public_field_name => $info) {
-      // If a callback is used, we do not necessary have to save.
+      // If a callback is used, we do not necessary need to save.
       $require_save = empty($info['callback']) ? $require_save : FALSE;
 
       if (!empty($info['create_or_update_passthrough'])) {
