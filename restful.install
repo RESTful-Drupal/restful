@@ -90,4 +90,6 @@ function restful_uninstall() {
 
   variable_del('restful_render_cache');
   variable_del('restful_skip_basic_auth');
+
+  variable_del('restful_allowed_origin');
 }

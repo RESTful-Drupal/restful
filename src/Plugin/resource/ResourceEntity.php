@@ -35,7 +35,6 @@ abstract class ResourceEntity extends Resource {
    * {@inheritdoc}
    */
   public function __construct(array $configuration, $plugin_id, $plugin_definition) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
     if (empty($plugin_definition['dataProvider']['entityType'])) {
       throw new InternalServerErrorException('The entity type was not provided.');
     }
@@ -43,6 +42,7 @@ abstract class ResourceEntity extends Resource {
     if (isset($plugin_definition['dataProvider']['bundles'])) {
       $this->bundles = $plugin_definition['dataProvider']['bundles'];
     }
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
   }
 
   /**
@@ -192,7 +192,7 @@ abstract class ResourceEntity extends Resource {
       if (!$class_name || is_subclass_of($class_name, $field_entity_class)) {
         $class_name = $field_entity_class;
       }
-      return $field_definition + array('class' => $class_name);
+      return $field_definition + array('class' => $class_name, 'entityType' => $this->getEntityType());
     }, $field_definitions);
 
     // If there is an alternate id field, use it instead of the entity id.
@@ -237,6 +237,7 @@ abstract class ResourceEntity extends Resource {
       $field_definitions[$public_field_name] = array(
         'property' => $field_name,
         'formatter' => $formatter_info,
+        'entityType' => $this->getEntityType(),
       );
     }
     return $field_definitions;

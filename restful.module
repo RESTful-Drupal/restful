@@ -339,7 +339,14 @@ function restful_delivery($var = NULL, $method = 'format') {
       ->getFormatterManager();
     $formatter_manager->setResource($resource);
     $plugin_definition = $resource->getPluginDefinition();
-    $formatter_name = isset($plugin_definition['formatter']) ? $plugin_definition['formatter'] : NULL;
+    if ($request->getMethod() == RequestInterface::METHOD_OPTIONS) {
+      // There is no guarantee that other formatters can process the
+      // auto-discovery output correctly.
+      $formatter_name = 'json';
+    }
+    else {
+      $formatter_name = isset($plugin_definition['formatter']) ? $plugin_definition['formatter'] : NULL;
+    }
     $output = call_user_func(array($formatter_manager, $method), $var, $formatter_name);
     $response->setContent($output);
   }

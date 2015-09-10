@@ -59,6 +59,20 @@ function restful_admin_settings($form_state) {
     ),
   );
 
+  $description  = 'When you make an XHR (AJAX) call to a resource under a ';
+  $description .= 'different host, most modern browsers will make an initial ';
+  $description .= 'OPTIONS request to the resource. The response to that can ';
+  $description .= 'contain the Access-Control-Allow-Origin, if that includes ';
+  $description .= 'the domain making the request the browser will allow the ';
+  $description .= 'cross-domain request. The contents of this field will be ';
+  $description .= 'used in that header.';
+  $form['restful_allowed_origin'] = array(
+    '#type' => 'textfield',
+    '#title' => t('CORS Preflight'),
+    '#description' => t($description),
+    '#default_value' => variable_get('restful_allowed_origin', ''),
+  );
+
   $form['restful_cache'] = array(
     '#type' => 'fieldset',
     '#title' => t('Cache'),
