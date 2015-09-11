@@ -124,11 +124,11 @@ class EntityFieldQuery extends \EntityFieldQuery implements EntityFieldQueryRela
       }
       elseif ($condition->getType() == RelationalFilterInterface::TYPE_PROPERTY) {
         if (in_array($relationship['operator'], array('IN', 'BETWEEN'))) {
-          $select_query->condition($entity_info['base table'] . '.' . $condition->getName(), $relationship['value'], $relationship['operator'][0]);
+          $select_query->condition($entity_table_alias . '.' . $condition->getName(), $relationship['value'], $relationship['operator'][0]);
         }
         else {
           for ($index = 0; $index < count($relationship['value']); $index++) {
-            $select_query->condition($entity_info['base table'] . '.' . $condition->getName(), $relationship['value'][$index], $relationship['operator'][$index]);
+            $select_query->condition($entity_table_alias . '.' . $condition->getName(), $relationship['value'][$index], $relationship['operator'][$index]);
           }
         }
       }
