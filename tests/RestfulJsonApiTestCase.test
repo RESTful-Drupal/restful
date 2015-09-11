@@ -114,8 +114,16 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
     $this->assertEqual($relationships['entity_reference_single_resource']['data']['id'], $wrapper->entity_reference_single->getIdentifier());
     $this->assertEqual($relationships['entity_reference_multiple_resource'][0]['data']['type'], 'main');
     $this->assertEqual($relationships['entity_reference_multiple_resource'][0]['data']['id'], $wrapper->entity_reference_multiple[0]->getIdentifier());
+    $this->assertEqual($relationships['entity_reference_multiple_resource'][0]['links'], array(
+      'self' => $this->handler->versionedUrl($wrapper->entity_reference_multiple[0]->getIdentifier()),
+      'related' => $this->handler->versionedUrl('', array('query' => array('filter' => array('entity_reference_multiple_resource' => $wrapper->entity_reference_multiple[0]->getIdentifier())))),
+    ));
     $this->assertEqual($relationships['entity_reference_multiple_resource'][1]['data']['type'], 'main');
     $this->assertEqual($relationships['entity_reference_multiple_resource'][1]['data']['id'], $wrapper->entity_reference_multiple[1]->getIdentifier());
+    $this->assertEqual($relationships['entity_reference_multiple_resource'][1]['links'], array(
+      'self' => $this->handler->versionedUrl($wrapper->entity_reference_multiple[1]->getIdentifier()),
+      'related' => $this->handler->versionedUrl('', array('query' => array('filter' => array('entity_reference_multiple_resource' => $wrapper->entity_reference_multiple[1]->getIdentifier())))),
+    ));
 
     // Make a request with the include query string.
     $this->handler->setRequest(Request::create('api/v1.1/main/' . $wrapper->getIdentifier(), array('include' => 'entity_reference_multiple_resource,entity_reference_single_resource')));
@@ -147,6 +155,7 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
               'type' => 'main',
             ),
             'links' => array(
+              'self' => $this->handler->versionedUrl($wrapper->entity_reference_single->entity_reference_single->getIdentifier()),
               'related' => $this->handler->versionedUrl('', array('query' => array('filter' => array('entity_reference_single_resource' => $wrapper->entity_reference_single->entity_reference_single->getIdentifier())))),
             ),
           ),
@@ -212,6 +221,7 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
               'type' => 'main',
             ),
             'links' => array(
+              'self' => $this->handler->versionedUrl($wrapper->entity_reference_single->entity_reference_single->getIdentifier()),
               'related' => $this->handler->versionedUrl('', array('query' => array('filter' => array('entity_reference_single_resource' => $wrapper->entity_reference_single->entity_reference_single->getIdentifier())))),
             ),
           ),
@@ -343,6 +353,7 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
               'type' => 'main',
             ),
             'links' => array(
+              'self' => $this->handler->versionedUrl($wrapper->entity_reference_single->entity_reference_single->getIdentifier()),
               'related' => $this->handler->versionedUrl('', array('query' => array('filter' => array('entity_reference_single_resource' => $wrapper->entity_reference_single->entity_reference_single->getIdentifier())))),
             ),
           ),
@@ -387,7 +398,7 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
     $result = drupal_json_decode($this->formatter->format($resource_field_collections));
     $links = $result['links'];
     $expected_links = array(
-      'self' => $this->handler->versionedUrl(''),
+      'self' => $this->handler->versionedUrl('', array('query' => array('range' => $range))),
       'first' => $this->handler->versionedUrl('', array('query' => array('range' => $range))),
       'last' => $this->handler->versionedUrl('', array('query' => array('range' => $range, 'page' => 5))),
       'next' => $this->handler->versionedUrl('', array('query' => array('range' => $range, 'page' => 2))),
@@ -403,7 +414,7 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
     $result = drupal_json_decode($this->formatter->format($resource_field_collections));
     $links = $result['links'];
     $expected_links = array(
-      'self' => $this->handler->versionedUrl(''),
+      'self' => $this->handler->versionedUrl('', array('query' => array('range' => $range, 'page' => 2))),
       'first' => $this->handler->versionedUrl('', array('query' => array('range' => $range))),
       'previous' => $this->handler->versionedUrl('', array('query' => array('range' => $range, 'page' => 1))),
       'last' => $this->handler->versionedUrl('', array('query' => array('range' => $range, 'page' => 5))),
@@ -420,7 +431,7 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
     $result = drupal_json_decode($this->formatter->format($resource_field_collections));
     $links = $result['links'];
     $expected_links = array(
-      'self' => $this->handler->versionedUrl(''),
+      'self' => $this->handler->versionedUrl('', array('query' => array('range' => $range, 'page' => 5))),
       'first' => $this->handler->versionedUrl('', array('query' => array('range' => $range))),
       'previous' => $this->handler->versionedUrl('', array('query' => array('range' => $range, 'page' => 4))),
       'last' => $this->handler->versionedUrl('', array('query' => array('range' => $range, 'page' => 5))),

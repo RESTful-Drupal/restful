@@ -127,6 +127,8 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
           $ids = array($ids);
         }
         $combined = $ids ? array_combine($ids, array_pad($value, count($ids), NULL)) : array();
+        // Set the resource for the reference to get HATEOAS from them.
+        $resource_plugin = $resource_field->getResourcePlugin();
         foreach ($combined as $id => $value_item) {
           $basic_info = array(
             'type' => $resource_field->getResourceMachineName(),
@@ -135,7 +137,8 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
           // If there is a resource plugin for the parent, set the related
           // links.
           if ($resource) {
-            $basic_info['links']['related'] = url($resource->versionedUrl(), array(
+            $basic_info['links']['self'] = $resource_plugin->versionedUrl($id);
+            $basic_info['links']['related'] = $resource->versionedUrl('', array(
               'absolute' => TRUE,
               'query' => array(
                 'filter' => array($resource_field->getPublicName() => $id),
@@ -149,8 +152,6 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
           );
           $output['relationships'][$public_field_name][] = $related_info;
           $included_item = is_array($value_item) ? $basic_info + $value_item : $basic_info;
-          // Set the resource for the reference to get HATEOAS from them.
-          $resource_plugin = $resource_field->getResourcePlugin();
           $this->addHateoas($included_item, $resource_plugin, $id);
 
           // We want to be able to include only the images in articles.images,
@@ -190,6 +191,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
    *   The resource path.
    */
   protected function addHateoas(array &$data, ResourceInterface $resource = NULL, $path = NULL) {
+    $top_level = empty($resource);
     $resource = $resource ?: $this->getResource();
     $path = isset($path) ? $path : $resource->getPath();
     if (!$resource) {
@@ -201,10 +203,12 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
       $data['links'] = array();
     }
 
-    // Get self link.
-    $data['links']['self'] = $resource->versionedUrl($path);
-
     $input = $original_input = $request->getParsedInput();
+
+    // Get self link.
+    $options = $top_level ? array('query' => $input) : array();
+    $data['links']['self'] = $resource->versionedUrl($path, $options);
+
     $data_provider = $resource->getDataProvider();
     $page = !empty($input['page']) ? $input['page'] : 1;
 
