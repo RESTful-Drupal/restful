@@ -1040,7 +1040,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
       $resource_field = $definitions->get($public_field_name);
       // Get the resource for the field, so we can get information for the next
       // iteration.
-      if (!$resource = $resource_field->getResource()) {
+      if (!$resource_field || !($resource = $resource_field->getResource())) {
         throw new ServerConfigurationException(sprintf('The nested field %s cannot be accessed because %s has no resource associated to it.', $name, $public_field_name));
       }
       list($item, $definitions) = $this->getFieldsFromPublicNameItem($resource_field);
