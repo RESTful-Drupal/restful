@@ -9,6 +9,7 @@ namespace Drupal\restful\Plugin\resource\Field;
 
 use Drupal\restful\Exception\ForbiddenException;
 use Drupal\restful\Exception\ServerConfigurationException;
+use Drupal\restful\Exception\UnprocessableEntityException;
 use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataProvider\DataProvider;
@@ -430,8 +431,12 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
       throw new ServerConfigurationException('Cannot get a value without an entity metadata wrapper data source.');
     }
     $property = $this->getProperty();
-    $property_wrapper = ($property && !$this->isWrapperMethodOnEntity()) ? $wrapper->{$property} : $wrapper;
-    return $property_wrapper;
+    try {
+      return ($property && !$this->isWrapperMethodOnEntity()) ? $wrapper->{$property} : $wrapper;
+    }
+    catch (\EntityMetadataWrapperException $e) {
+      throw new UnprocessableEntityException(sprintf('The property %s could not be found in %s:%s.', $property, $wrapper->type(), $wrapper->getBundle()));
+    }
   }
 
   /**
