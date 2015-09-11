@@ -68,6 +68,7 @@ class EntityFieldQuery extends \EntityFieldQuery implements EntityFieldQueryRela
       }
       // Pop the last item, since it is the one that has to match the filter and
       // will have the WHERE associated.
+      $condition = array_pop($relationship['relational_filters']);
       foreach ($relationship['relational_filters'] as $relational_filter) {
         /* @var RelationalFilterInterface $relational_filter */
         if ($relational_filter->getType() == RelationalFilterInterface::TYPE_FIELD) {
