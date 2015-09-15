@@ -339,7 +339,7 @@ abstract class DataProvider implements DataProviderInterface {
    * @see \RestfulEntityBase::getQueryForList
    */
   protected function parseRequestForListFilter() {
-    if (!$this->request->isListRequest($this->resourcePath)) {
+    if (!$this->request->isListRequest($this->getResourcePath())) {
       // Not a list request, so we don't need to filter.
       // We explicitly check this, as this function might be called from a
       // formatter plugin, after RESTful's error handling has finished, and an
