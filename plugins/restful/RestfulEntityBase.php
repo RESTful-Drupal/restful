@@ -714,7 +714,50 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       }
 
       $field_value = $this->propertyValuesPreprocess($property_name, $request[$public_field_name], $public_field_name);
-      $wrapper->{$property_name}->set($field_value);
+
+      $translatable = field_is_translatable($this->entityType, field_info_field($info['property']));
+      if ($translatable) {
+        // TODO: Add a logic when cardinality is higher than 1.
+        $single_value = count($field_value) == 1;
+
+        if (is_array($field_value)) {
+          $translatable_field_value = $field_value['value'];
+        }
+        else {
+          $translatable_field_value = $field_value;
+        }
+
+        $json = json_decode($translatable_field_value);
+        $optional_languages = array_keys(language_list());
+        foreach ($json as $current_language => $current_language_value) {
+
+          // Current language is not on option.
+          if (!in_array($current_language, $optional_languages)) {
+            throw new \RestfulBadRequestException(format_string('Language @language is not an option.', array('@language' => $current_language)));
+          }
+
+          // Make a copy of 'field_value' for each language since there are
+          // more elements on that array.
+          $field_value_by_language = $field_value;
+
+          // Set the value of the current language.
+          if (is_array($field_value_by_language)) {
+            $field_value_by_language['value'] = $current_language_value;
+          }
+          else {
+            $field_value_by_language = $current_language_value;
+          }
+
+          $wrapper->language($current_language);
+          $wrapper->{$property_name}->set($field_value_by_language);
+
+        }
+      }
+      else {
+        // Field is not translatable.
+        $wrapper->{$property_name}->set($field_value);
+
+      }
 
       // We check the property access only after setting the values, as the
       // access callback's response might change according to the field value.
