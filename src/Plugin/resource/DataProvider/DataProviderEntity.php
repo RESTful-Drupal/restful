@@ -724,7 +724,10 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
   protected function isValidEntity($op, $entity_id) {
     $entity_type = $this->entityType;
 
-    if (!$entity = entity_load_single($entity_type, $entity_id)) {
+    if (!ctype_digit((string) $entity_id) || !$entity = entity_load_single($entity_type, $entity_id)) {
+      // We need to check if the entity ID is numeric since if this is a uuid
+      // that starts by the number 4, and there is an entity with ID 4 that
+      // entity will be loaded incorrectly.
       throw new UnprocessableEntityException(sprintf('The entity ID %s does not exist.', $entity_id));
     }
 
