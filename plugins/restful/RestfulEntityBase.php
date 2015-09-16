@@ -689,6 +689,19 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     $save = FALSE;
     $original_request = $request;
 
+    $entity_info = $this->getEntityInfo();
+    $default_language = language_default();
+
+    // Determine if the current bundle use 'title_field'.
+    $title_field = FALSE;
+    if (module_exists('title')) {
+      $title_field_info = field_info_field('title_field');
+      if (!empty($title_field_info['bundles']) && in_array($this->getBundle(), $title_field_info['bundles'][$this->getEntityType()])) {
+        $title_field = $title_field_info['field_name'];
+        $original_title_property = $entity_info['entity keys']['label'];
+      }
+    }
+
     foreach ($this->getPublicFields() as $public_field_name => $info) {
       if (!empty($info['create_or_update_passthrough'])) {
         // Allow passing the value in the request.
@@ -727,9 +740,10 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
           $translatable_field_value = $field_value;
         }
 
-        $json = json_decode($translatable_field_value);
+        // Translatable field values should passed as an object.
+        $values = json_decode($translatable_field_value);
         $optional_languages = array_keys(language_list());
-        foreach ($json as $current_language => $current_language_value) {
+        foreach ($values as $current_language => $current_language_value) {
 
           // Current language is not on option.
           if (!in_array($current_language, $optional_languages)) {
@@ -749,6 +763,15 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
           }
 
           $wrapper->language($current_language);
+
+          // Special case when title is being set in default language, since
+          // the hook_node_presave on the 'title' module is syncing between the
+          // title property and the title field in the default language, hence
+          // we should set the original property as well.
+          if ($title_field == $property_name && $default_language->language == $current_language) {
+            $wrapper->{$original_title_property}->set($field_value_by_language);
+          }
+
           $wrapper->{$property_name}->set($field_value_by_language);
 
         }
