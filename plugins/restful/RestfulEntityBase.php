@@ -667,10 +667,9 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     $require_save = TRUE;
 
     foreach ($this->getPublicFields() as $public_field_name => $info) {
-      // If a callback is used, we do not necessary need to save.
-      $require_save = empty($info['callback']) ? $require_save : FALSE;
-
       if (!empty($info['create_or_update_passthrough'])) {
+        // If a callback is used, we do not necessary need to save.
+        $require_save = empty($info['callback']) ? $require_save : FALSE;
         // Allow passing the value in the request.
         unset($original_request[$public_field_name]);
         continue;
