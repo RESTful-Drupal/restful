@@ -671,6 +671,29 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
   }
 
   /**
+   * Determine if the current bundle use the `title` module.
+   *
+   * @return array
+   *  An array containing 'field_name' and the 'original_property' name of the
+   *  title if the `title` module is being used, otherwise returns an empty
+   *  array.
+   */
+  protected function getTitleField() {
+    $entity_info = $this->getEntityInfo();
+    $title_field = array();
+
+    if (module_exists('title')) {
+      $title_field_info = field_info_field('title_field');
+      if (!empty($title_field_info['bundles']) && in_array($this->getBundle(), $title_field_info['bundles'][$this->getEntityType()])) {
+        $title_field['field_name'] = $title_field_info['field_name'];
+        $title_field['original_property'] = $entity_info['entity keys']['label'];
+      }
+    }
+
+    return $title_field;
+  }
+
+  /**
    * Set properties of the entity based on the request, and save the entity.
    *
    * @param EntityMetadataWrapper $wrapper
@@ -689,18 +712,8 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     $save = FALSE;
     $original_request = $request;
 
-    $entity_info = $this->getEntityInfo();
     $default_language = language_default();
-
-    // Determine if the current bundle use 'title_field'.
-    $title_field = FALSE;
-    if (module_exists('title')) {
-      $title_field_info = field_info_field('title_field');
-      if (!empty($title_field_info['bundles']) && in_array($this->getBundle(), $title_field_info['bundles'][$this->getEntityType()])) {
-        $title_field = $title_field_info['field_name'];
-        $original_title_property = $entity_info['entity keys']['label'];
-      }
-    }
+    $title_field = $this->getTitleField();
 
     foreach ($this->getPublicFields() as $public_field_name => $info) {
       if (!empty($info['create_or_update_passthrough'])) {
@@ -768,8 +781,8 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
           // the hook_node_presave on the 'title' module is syncing between the
           // title property and the title field in the default language, hence
           // we should set the original property as well.
-          if ($title_field == $property_name && $default_language->language == $current_language) {
-            $wrapper->{$original_title_property}->set($field_value_by_language);
+          if (!empty($title_field) && $title_field['field_name'] == $property_name && $default_language->language == $current_language) {
+            $wrapper->{$title_field['original_property']}->set($field_value_by_language);
           }
 
           $wrapper->{$property_name}->set($field_value_by_language);
@@ -1346,20 +1359,14 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       return $public_fields;
     }
 
-    // Determine if the current bundle use 'title_field'.
-    $title_field = FALSE;
-    if (module_exists('title')) {
-      $title_field_info = field_info_field('title_field');
-      if (!empty($title_field_info['bundles']) && in_array($this->getBundle(), $title_field_info['bundles'][$this->getEntityType()])) {
-        $title_field = $title_field_info['field_name'];
-      }
-    }
+    $title_field = $this->getTitleField();
 
-    // Change the 'label' public field settings when a bundle use 'title_field'.
-    if ($title_field) {
+    // Change the 'label' public field settings when a bundle use 'title'
+    // module.
+    if (!empty($title_field)) {
       $public_fields['label']['wrapper_method_on_entity'] = FALSE;
       $public_fields['label']['wrapper_method'] = 'value';
-      $public_fields['label']['property'] = $title_field;
+      $public_fields['label']['property'] = $title_field['field_name'];
     }
     elseif (!empty($entity_info['entity keys']['label'])) {
       $public_fields['label']['property'] = $entity_info['entity keys']['label'];
