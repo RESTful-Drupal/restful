@@ -703,6 +703,20 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
   }
 
   /**
+   * Set the default language of the instance.
+   *
+   * @param \EntityMetadataWrapper $wrapper
+   *   The wrapped entity object, passed by reference.
+   */
+  protected function setInstanceDefaultLanguage(\EntityMetadataWrapper $wrapper) {
+    // Use the default language from the plugin if set, otherwise use the
+    // default language of the website.
+    $language = $this->getPluginKey('default_language');
+    $language = $language ?: language_default('language');
+    $wrapper->language->set($language);
+  }
+
+  /**
    * Set properties of the entity based on the request, and save the entity.
    *
    * @param EntityMetadataWrapper $wrapper
@@ -723,6 +737,12 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
 
     $default_language = language_default();
     $title_field = $this->getTitleField();
+
+    // Set the default language of a new instance if this bundle support
+    // field translation.
+    if ($this->getMethod() == \RestfulInterface::POST && entity_translation_node_supported_type($this->getBundle())) {
+      $this->setInstanceDefaultLanguage($wrapper);
+    }
 
     foreach ($this->getPublicFields() as $public_field_name => $info) {
       if (!empty($info['create_or_update_passthrough'])) {
