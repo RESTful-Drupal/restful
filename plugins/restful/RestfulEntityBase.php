@@ -749,9 +749,6 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       }
 
       if (field_is_translatable($this->entityType, field_info_field($info['property']))) {
-//         TODO: Add a logic when cardinality is higher than 1.
-//        $single_value = count($field_value) == 1;
-
         // Translatable field values should passed as an object.
         $values = drupal_json_decode($request[$public_field_name]);
 
