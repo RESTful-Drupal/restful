@@ -324,8 +324,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
         }
 
         if (empty($info['formatter'])) {
-          $translatable = field_is_translatable($this->entityType, field_info_field($info['property']));
-          if ($translatable) {
+          if (field_is_translatable($this->entityType, field_info_field($info['property']))) {
             $enabled_languages = array_keys(language_list());
 
             foreach ($enabled_languages as $language) {
@@ -737,22 +736,13 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
         continue;
       }
 
-      $field_value = $this->propertyValuesPreprocess($property_name, $request[$public_field_name], $public_field_name);
-
-      $translatable = field_is_translatable($this->entityType, field_info_field($info['property']));
-      if ($translatable) {
-        // TODO: Add a logic when cardinality is higher than 1.
-        $single_value = count($field_value) == 1;
-
-        if (is_array($field_value)) {
-          $translatable_field_value = $field_value['value'];
-        }
-        else {
-          $translatable_field_value = $field_value;
-        }
+      if (field_is_translatable($this->entityType, field_info_field($info['property']))) {
+//         TODO: Add a logic when cardinality is higher than 1.
+//        $single_value = count($field_value) == 1;
 
         // Translatable field values should passed as an object.
-        $values = drupal_json_decode($translatable_field_value);
+        $values = drupal_json_decode($request[$public_field_name]);
+
         $enabled_languages = array_keys(language_list());
         foreach ($values as $current_language => $current_language_value) {
 
@@ -761,17 +751,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
             throw new \RestfulBadRequestException(format_string('The language @language is not enabled.', array('@language' => $current_language)));
           }
 
-          // Make a copy of 'field_value' for each language since there are
-          // more elements on that array.
-          $field_value_by_language = $field_value;
-
-          // Set the value of the current language.
-          if (is_array($field_value_by_language)) {
-            $field_value_by_language['value'] = $current_language_value;
-          }
-          else {
-            $field_value_by_language = $current_language_value;
-          }
+          $field_value = $this->propertyValuesPreprocess($property_name, $current_language_value, $public_field_name);
 
           $wrapper->language($current_language);
 
@@ -780,14 +760,14 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
           // title property and the title field in the default language, hence
           // we should set the original property as well.
           if (!empty($title_field) && $title_field['field_name'] == $property_name && $default_language->language == $current_language) {
-            $wrapper->{$title_field['original_property']}->set($field_value_by_language);
+            $wrapper->{$title_field['original_property']}->set($field_value);
           }
 
-          $wrapper->{$property_name}->set($field_value_by_language);
-
+          $wrapper->{$property_name}->set($field_value);
         }
       }
       else {
+        $field_value = $this->propertyValuesPreprocess($property_name, $request[$public_field_name], $public_field_name);
         // Field is not translatable.
         $wrapper->{$property_name}->set($field_value);
 
