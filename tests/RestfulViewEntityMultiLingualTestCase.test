@@ -147,8 +147,8 @@ class RestfulViewEntityMultiLingualTestCase extends RestfulCurlBaseTestCase {
     $response = $handler->get($id);
     $result = $response[0];
 
-    $this->assertEqual(trim(strip_tags($result['text_single'])), $text1, 'Entity view has correct result for "text_single" in language "' . $langcode . '".');
-    $this->assertEqual(trim(strip_tags($result['text_multiple'][0])), $text1, 'Entity view has correct result for the first value of "text_multiple" in language "' . $langcode . '".');
-    $this->assertEqual(trim(strip_tags($result['text_multiple'][1])), $text2, 'Entity view has correct result for the second value of "text_multiple" in language "' . $langcode . '".');
+    $this->assertEqual(trim(strip_tags($result['text_single'][$langcode])), $text1, 'Entity view has correct result for "text_single" in language "' . $langcode . '".');
+    $this->assertEqual(trim(strip_tags($result['text_multiple'][$langcode][0])), $text1, 'Entity view has correct result for the first value of "text_multiple" in language "' . $langcode . '".');
+    $this->assertEqual(trim(strip_tags($result['text_multiple'][$langcode][1])), $text2, 'Entity view has correct result for the second value of "text_multiple" in language "' . $langcode . '".');
   }
 }
