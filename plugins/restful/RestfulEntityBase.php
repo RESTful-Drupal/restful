@@ -772,6 +772,11 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
         // Translatable field values should passed as an object.
         $values = drupal_json_decode($request[$public_field_name]);
 
+        // When the data that has been passed to the request isn't compatible.
+        if (empty($values)) {
+          throw new \RestfulBadRequestException(format_string('Invalid data has been passed to the translatable field \'@field\'.', array('@field' => $public_field_name)));
+        }
+
         $enabled_languages = array_keys(language_list());
         foreach ($values as $current_language => $current_language_value) {
 
