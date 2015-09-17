@@ -746,7 +746,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
         $enabled_languages = array_keys(language_list());
         foreach ($values as $current_language => $current_language_value) {
 
-          // Current language is not on option.
+          // Current language is not enabled.
           if (!in_array($current_language, $enabled_languages)) {
             throw new \RestfulBadRequestException(format_string('The language @language is not enabled.', array('@language' => $current_language)));
           }
