@@ -275,6 +275,37 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
   }
 
   /**
+   * Get value by a wrapper.
+   *
+   * @param EntityMetadataWrapper $wrapper
+   *   The wrapped entity.
+   * @param EntityMetadataWrapper $sub_wrapper
+   *   The wrapped property.
+   * @param array $info
+   *   The public field info array.
+   * @param $public_field_name
+   *   The field name.
+   *
+   * @return mixed
+   *   A single or multiple values.
+   */
+  protected function getValueByWrapper(\EntityMetadataWrapper $wrapper, \EntityMetadataWrapper $sub_wrapper, array $info, $public_field_name) {
+    $value = NULL;
+    if ($sub_wrapper instanceof EntityListWrapper) {
+      // Multiple values.
+      foreach ($sub_wrapper as $item_wrapper) {
+        $value[] = $this->getValueFromProperty($wrapper, $item_wrapper, $info, $public_field_name);
+      }
+    }
+    else {
+      // Single value.
+      $value = $this->getValueFromProperty($wrapper, $sub_wrapper, $info, $public_field_name);
+    }
+
+    return $value;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function viewEntity($id) {
@@ -330,31 +361,12 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
             foreach ($enabled_languages as $language) {
               $wrapper->language($language);
               $sub_wrapper = $info['wrapper_method_on_entity'] ? $wrapper : $wrapper->{$property};
-              if ($sub_wrapper instanceof EntityListWrapper) {
-                // Multiple values.
-                foreach ($sub_wrapper as $item_wrapper) {
-                  $value[$language][] = $this->getValueFromProperty($wrapper, $item_wrapper, $info, $public_field_name);
-                }
-              }
-              else {
-                // Single value.
-                $value[$language] = $this->getValueFromProperty($wrapper, $sub_wrapper, $info, $public_field_name);
-              }
+              $value[$language] = $this->getValueByWrapper($wrapper, $sub_wrapper, $info, $public_field_name);
             }
           }
           else {
-            if ($sub_wrapper instanceof EntityListWrapper) {
-              // Multiple values.
-              foreach ($sub_wrapper as $item_wrapper) {
-                $value[] = $this->getValueFromProperty($wrapper, $item_wrapper, $info, $public_field_name);
-              }
-            }
-            else {
-              // Single value.
-              $value = $this->getValueFromProperty($wrapper, $sub_wrapper, $info, $public_field_name);
-            }
+            $value = $this->getValueByWrapper($wrapper, $sub_wrapper, $info, $public_field_name);
           }
-
         }
         else {
           // Get value from field formatter.
