@@ -312,7 +312,7 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
       ), $embedded_identifier);
 
       $metadata = $this->getMetadata($wrapper->getIdentifier());
-      $metadata ?: array();
+      $metadata = $metadata ?: array();
       $metadata[] = $this->buildResourceMetadataItem($property_wrapper);
       $this->addMetadata($wrapper->getIdentifier(), $metadata);
       try {

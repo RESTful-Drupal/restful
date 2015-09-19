@@ -332,7 +332,7 @@ abstract class ResourceFieldBase implements ResourceFieldInterface {
    */
   public function executeProcessCallbacks($value) {
     $process_callbacks = $this->getProcessCallbacks();
-    if (!$value || empty($process_callbacks)) {
+    if (!isset($value) || empty($process_callbacks)) {
       return $value;
     }
     foreach ($process_callbacks as $process_callback) {
