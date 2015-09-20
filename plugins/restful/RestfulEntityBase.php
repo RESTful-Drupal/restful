@@ -769,8 +769,12 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       }
 
       if (field_is_translatable($this->entityType, field_info_field($info['property']))) {
-        // Translatable field values should passed as an object.
-        $values = drupal_json_decode($request[$public_field_name]);
+        $values = $request[$public_field_name];
+
+        // Parse values in case it still not an array.
+        if (!is_array($values)) {
+          $values = drupal_json_decode($values);
+        }
 
         // When the data that has been passed to the request isn't compatible.
         if (empty($values)) {
