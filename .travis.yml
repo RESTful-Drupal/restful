@@ -28,7 +28,7 @@ before_script:
   # reference and enable restful in build site
   - ln -s $(readlink -e $(cd -)) restful/drupal/sites/all/modules/restful
   - cd restful/drupal
-  - drush --yes pm-enable restful restful_token_auth restful_test
+  - drush --yes pm-enable restful restful_token_auth restful_test entity_translation
 
   # Download entity validator.
   - drush dl entity_validator --dev --yes
