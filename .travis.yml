@@ -35,6 +35,7 @@ before_script:
 
   # Download entity translation.
   - drush dl entity_translation --yes
+  - drush en entity_translation --yes
 
   # Patch Entity API.
   - cd sites/all/modules/entity
