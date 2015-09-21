@@ -186,7 +186,7 @@ abstract class ResourceEntity extends Resource {
     // The fields that only contain a property need to be set to be
     // ResourceFieldEntity. Otherwise they will be considered regular
     // ResourceField.
-    $field_definitions = array_map(function ($field_definition) {
+    return array_map(function ($field_definition) {
       $field_entity_class = '\Drupal\restful\Plugin\resource\Field\ResourceFieldEntity';
       $class_name = ResourceFieldEntity::fieldClassName($field_definition);
       if (!$class_name || is_subclass_of($class_name, $field_entity_class)) {
@@ -194,18 +194,6 @@ abstract class ResourceEntity extends Resource {
       }
       return $field_definition + array('class' => $class_name, 'entityType' => $this->getEntityType());
     }, $field_definitions);
-
-    // If there is an alternate id field, use it instead of the entity id.
-    $plugin_definition = $this->getPluginDefinition();
-    if (!empty($plugin_definition['dataProvider']['idField'])) {
-      // Remove the 'id' field.
-      unset($field_definitions['id']);
-    }
-    if (empty($field_definitions['id']) && empty($plugin_definition['dataProvider']['idField'])) {
-      throw new ServerConfigurationException('You need to have a field that identifies your entity. Do not unset the "id" field, if you want to hide it use the HTTP "methods" access control and set it to an empty array');
-    }
-
-    return $field_definitions;
   }
 
   /**
