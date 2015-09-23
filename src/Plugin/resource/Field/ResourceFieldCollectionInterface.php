@@ -7,6 +7,7 @@
 
 namespace Drupal\restful\Plugin\resource\Field;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
 
@@ -113,5 +114,15 @@ interface ResourceFieldCollectionInterface extends \Iterator, \Countable {
    *   TRUE if the collection matches the filter. FALSE otherwise.
    */
   public function evalFilter(array $filter);
+
+  /**
+   * Sets a context for the group of fields.
+   *
+   * @param string $context_id
+   *   The context identifier. Ex: 'cache_tags'.
+   * @param ArrayCollection $context
+   *   The context.
+   */
+  public function setContext($context_id, ArrayCollection $context);
 
 }

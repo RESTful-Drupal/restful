@@ -64,7 +64,7 @@ abstract class ResourceEntity extends Resource {
     if (!class_exists($class_name)) {
       throw new ServerConfigurationException(sprintf('The DataProvider could be found for this resource: %s.', $this->getResourceMachineName()));
     }
-    return new $class_name($this->getRequest(), $field_definitions, $this->getAccount(), $this->getPath(), $plugin_definition['dataProvider']);
+    return new $class_name($this->getRequest(), $field_definitions, $this->getAccount(), $this->getPluginId(), $this->getPath(), $plugin_definition['dataProvider']);
   }
 
   /**

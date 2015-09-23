@@ -8,6 +8,7 @@
 namespace Drupal\restful\Plugin\resource\DataProvider;
 
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
+use Doctrine\Common\Collections\ArrayCollection;
 use Drupal\restful\Exception\ForbiddenException;
 use Drupal\restful\Exception\InternalServerErrorException;
 use Drupal\restful\Exception\ServerConfigurationException;
@@ -61,6 +62,8 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
    *   The field definitions.
    * @param object $account
    *   The account object.
+   * @param string $plugin_id
+   *   The resource ID.
    * @param string $resource_path
    *   The resource path.
    * @param array $options
@@ -73,8 +76,8 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
    * @throws ServerConfigurationException
    *   If the field mappings are not for entities.
    */
-  public function __construct(RequestInterface $request, ResourceFieldCollectionInterface $field_definitions, $account, $resource_path, array $options, $langcode = NULL) {
-    parent::__construct($request, $field_definitions, $account, $resource_path, $options, $langcode);
+  public function __construct(RequestInterface $request, ResourceFieldCollectionInterface $field_definitions, $account, $plugin_id, $resource_path, array $options, $langcode = NULL) {
+    parent::__construct($request, $field_definitions, $account, $plugin_id, $resource_path, $options, $langcode);
     if (empty($options['entityType'])) {
       // Entity type is mandatory.
       throw new InternalServerErrorException('The entity type was not provided.');
@@ -107,15 +110,16 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
   /**
    * {@inheritdoc}
    */
-  public function getContext($identifier) {
+  public function getCacheTags($identifier) {
     if (is_array($identifier)) {
       // Like in https://example.org/api/articles/1,2,3.
       $identifier = implode(ResourceInterface::IDS_SEPARATOR, $identifier);
     }
-    return array(
-      'et' => $this->entityType,
-      'ei' => $identifier,
-    );
+    return new ArrayCollection(array(
+      'resource' => $this->pluginId,
+      'entity_type' => $this->entityType,
+      'id' => $identifier,
+    ));
   }
 
   /**

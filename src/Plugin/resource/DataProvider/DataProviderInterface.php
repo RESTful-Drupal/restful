@@ -136,7 +136,7 @@ interface DataProviderInterface extends CrudInterface {
    * @param mixed $identifier
    *   The ID.
    */
-  public function getContext($identifier);
+  public function getCacheTags($identifier);
 
   /**
    * Generates the canonical path for a given path.

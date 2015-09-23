@@ -45,6 +45,8 @@ class DataProviderResource extends DataProvider implements DataProviderResourceI
    *   The field definitions.
    * @param object $account
    *   The authenticated account.
+   * @param string $plugin_id
+   *   The resource ID.
    * @param string $resource_path
    *   The resource path.
    * @param array $options
@@ -54,11 +56,11 @@ class DataProviderResource extends DataProvider implements DataProviderResourceI
    * @param ResourceInterface $resource
    *   The referenced resource.
    */
-  public function __construct(RequestInterface $request, ResourceFieldCollectionInterface $field_definitions, $account, $resource_path, array $options, $langcode = NULL, ResourceInterface $resource = NULL) {
+  public function __construct(RequestInterface $request, ResourceFieldCollectionInterface $field_definitions, $account, $plugin_id, $resource_path, array $options, $langcode = NULL, ResourceInterface $resource = NULL) {
     $resource->setRequest($request);
     $this->resource = $resource;
     $this->referencedDataProvider = $resource->getDataProvider();
-    parent::__construct($request, $field_definitions, $account, $resource_path, $options, $langcode);
+    parent::__construct($request, $field_definitions, $account, $plugin_id, $resource_path, $options, $langcode);
   }
 
   /**

@@ -7,6 +7,7 @@
 
 namespace Drupal\restful\Plugin\resource\Field;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
 
@@ -34,6 +35,13 @@ class ResourceFieldCollection implements ResourceFieldCollectionInterface {
    * @var ResourceFieldInterface $idField;
    */
   protected $idField;
+
+  /**
+   * The contexts for the field collection.
+   *
+   * @var ArrayCollection[]
+   */
+  protected $context = array();
 
   /**
    * Constructor.
@@ -256,6 +264,13 @@ class ResourceFieldCollection implements ResourceFieldCollectionInterface {
       }
     }
     return $match;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setContext($context_id, ArrayCollection $context) {
+    $this->context[$context_id] = $context;
   }
 
   /**

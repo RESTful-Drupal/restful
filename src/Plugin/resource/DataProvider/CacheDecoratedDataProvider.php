@@ -12,6 +12,7 @@ use Drupal\restful\Exception\NotImplementedException;
 use Drupal\restful\Exception\UnauthorizedException;
 use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
+use Drupal\restful\Plugin\resource\Field\ResourceFieldCollection;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
 use Drupal\restful\Plugin\resource\ResourceInterface;
 
@@ -147,8 +148,8 @@ class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface 
   /**
    * {@inheritdoc}
    */
-  public function getContext($identifier) {
-    return $this->subject->getContext($identifier);
+  public function getCacheTags($identifier) {
+    return $this->subject->getCacheTags($identifier);
   }
 
   /**
@@ -186,15 +187,10 @@ class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface 
    * {@inheritdoc}
    */
   public function view($identifier) {
-    $context = $this->getContext($identifier);
-    $cached_data = $this->getRenderedCache($context);
-    if (!empty($cached_data->data)) {
-      return $cached_data->data;
-    }
-    $output = $this->subject->view($identifier);
+    $resource_field_collection = $this->subject->view($identifier);
 
-    $this->setRenderedCache($output, $context);
-    return $output;
+    $resource_field_collection->setContext('cache_tags', $this->getCacheTags($identifier));
+    return $resource_field_collection;
   }
 
   /**
@@ -217,7 +213,7 @@ class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface 
    * {@inheritdoc}
    */
   public function update($identifier, $object, $replace = TRUE) {
-    $this->clearRenderedCache($this->getContext($identifier));
+    $this->clearRenderedCache($this->getCacheTags($identifier));
     return $this->subject->update($identifier, $object, $replace);
   }
 
@@ -225,7 +221,7 @@ class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface 
    * {@inheritdoc}
    */
   public function remove($identifier) {
-    $this->clearRenderedCache($this->getContext($identifier));
+    $this->clearRenderedCache($this->getCacheTags($identifier));
     $this->subject->remove($identifier);
   }
 

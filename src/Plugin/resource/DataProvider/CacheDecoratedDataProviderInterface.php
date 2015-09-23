@@ -34,11 +34,11 @@ interface CacheDecoratedDataProviderInterface extends DataProviderInterface {
    *
    * @param array $context
    *   The context array like the one returned from
-   *   DataProviderInterface::getContext()
+   *   DataProviderInterface::getCacheTags()
    * @return string
    *   The cache ID.
    *
-   * @see DataProviderInterface::getContext()
+   * @see DataProviderInterface::getCacheTags()
    */
   public function generateCacheId(array $context = array());
 

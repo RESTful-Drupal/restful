@@ -7,6 +7,7 @@
 
 namespace Drupal\restful\Plugin\resource\DataProvider;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use Drupal\restful\Exception\BadRequestException;
 
 use Drupal\restful\Exception\ServerConfigurationException;
@@ -50,8 +51,8 @@ class DataProviderDbQuery extends DataProvider implements DataProviderDbQueryInt
   /**
    * {@inheritdoc}
    */
-  public function __construct(RequestInterface $request, ResourceFieldCollectionInterface $field_definitions, $account, $resource_path = NULL, array $options = array(), $langcode = NULL) {
-    parent::__construct($request, $field_definitions, $account, $resource_path, $options, $langcode);
+  public function __construct(RequestInterface $request, ResourceFieldCollectionInterface $field_definitions, $account, $plugin_id, $resource_path = NULL, array $options = array(), $langcode = NULL) {
+    parent::__construct($request, $field_definitions, $account, $plugin_id, $resource_path, $options, $langcode);
     // Validate keys exist in the plugin's "data provider options".
     $required_keys = array(
       'tableName',
@@ -99,16 +100,17 @@ class DataProviderDbQuery extends DataProvider implements DataProviderDbQueryInt
   /**
    * {@inheritdoc}
    */
-  public function getContext($identifier) {
+  public function getCacheTags($identifier) {
     if (is_array($identifier)) {
       // Like in https://example.org/api/articles/1,2,3.
       $identifier = implode(ResourceInterface::IDS_SEPARATOR, $identifier);
     }
-    return array(
-      'tb' => $this->getTableName(),
-      'cl' => implode(',', $this->getIdColumn()),
+    return new ArrayCollection(array(
+      'resource' => $this->pluginId,
+      'table_name' => $this->getTableName(),
+      'column' => implode(',', $this->getIdColumn()),
       'id' => $identifier,
-    );
+    ));
   }
 
   /**
