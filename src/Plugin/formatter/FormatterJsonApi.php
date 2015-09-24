@@ -80,6 +80,8 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
    * @param array $included
    *   An array to hold the external references to have them in the top-level.
    *
+   * @TODO: This method NEEDS to be refactored and split in smaller methods.
+   *
    * @return array[]
    *   The array of prepared data.
    *
@@ -87,6 +89,9 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
    */
   protected function extractFieldValues($data, &$included, array $parents = array()) {
     $output = array();
+    if ($this->isCacheEnabled($data) && ($cache = $this->getCachedData($data))) {
+      return $cache->data;
+    }
     foreach ($data as $public_field_name => $resource_field) {
       if (!$resource_field instanceof ResourceFieldInterface) {
         // If $resource_field is not a ResourceFieldInterface it means that we
@@ -192,6 +197,9 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
       else {
         $output['attributes'][$public_field_name] = $value;
       }
+    }
+    if ($this->isCacheEnabled($data)) {
+      $this->setCachedData($data, $output);
     }
     return $output;
   }

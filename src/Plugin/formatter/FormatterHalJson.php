@@ -175,6 +175,9 @@ class FormatterHalJson extends Formatter implements FormatterInterface {
    */
   protected function extractFieldValues($rows) {
     $output = array();
+    if ($this->isCacheEnabled($rows) && ($cache = $this->getCachedData($rows))) {
+      return $cache->data;
+    }
     foreach ($rows as $public_field_name => $resource_field) {
       if (!$resource_field instanceof ResourceFieldInterface) {
         // If $resource_field is not a ResourceFieldInterface it means that we
@@ -198,6 +201,9 @@ class FormatterHalJson extends Formatter implements FormatterInterface {
         continue;
       }
       $output[$public_field_name] = $value;
+    }
+    if ($this->isCacheEnabled($rows)) {
+      $this->setCachedData($rows, $output);
     }
     return $output;
   }

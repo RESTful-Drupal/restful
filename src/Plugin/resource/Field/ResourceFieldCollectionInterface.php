@@ -125,4 +125,12 @@ interface ResourceFieldCollectionInterface extends \Iterator, \Countable {
    */
   public function setContext($context_id, ArrayCollection $context);
 
+  /**
+   * Gets a context for the group of fields.
+   *
+   * @return ArrayCollection
+   *   The context.
+   */
+  public function getContext();
+
 }

@@ -274,6 +274,13 @@ class ResourceFieldCollection implements ResourceFieldCollectionInterface {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function getContext() {
+    return $this->context;
+  }
+
+  /**
    * Evaluate a simple expression.
    *
    * @param mixed $value1

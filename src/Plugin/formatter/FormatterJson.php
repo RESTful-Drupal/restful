@@ -76,6 +76,9 @@ class FormatterJson extends Formatter implements FormatterInterface {
    */
   protected function extractFieldValues($data) {
     $output = array();
+    if ($this->isCacheEnabled($data) && ($cache = $this->getCachedData($data))) {
+      return $cache->data;
+    }
     foreach ($data as $public_field_name => $resource_field) {
       if (!$resource_field instanceof ResourceFieldInterface) {
         // If $resource_field is not a ResourceFieldInterface it means that we
@@ -97,6 +100,9 @@ class FormatterJson extends Formatter implements FormatterInterface {
         $value = $this->extractFieldValues($value);
       }
       $output[$public_field_name] = $value;
+    }
+    if ($this->isCacheEnabled($data)) {
+      $this->setCachedData($data, $output);
     }
     return $output;
   }

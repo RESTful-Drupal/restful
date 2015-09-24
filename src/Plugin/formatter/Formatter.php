@@ -9,6 +9,7 @@ namespace Drupal\restful\Plugin\formatter;
 
 use Drupal\Component\Plugin\PluginBase;
 use Drupal\restful\Plugin\ConfigurablePluginTrait;
+use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
 use Drupal\restful\Plugin\resource\ResourceInterface;
 
 abstract class Formatter extends PluginBase implements FormatterInterface {
@@ -79,6 +80,63 @@ abstract class Formatter extends PluginBase implements FormatterInterface {
    */
   protected static function isIterable($input) {
     return is_array($input) || $input instanceof \Traversable || $input instanceof \stdClass;
+  }
+
+  /**
+   * Checks if the passed in data to be rendered can be cached.
+   *
+   * @param mixed $data
+   *   The data to be prepared and rendered.
+   *
+   * @return bool
+   *   TRUE if the data can be cached.
+   */
+  protected function isCacheEnabled($data) {
+    // We are only caching field collections, but you could cache at different
+    // layers too.
+    if (!$data instanceof ResourceFieldCollectionInterface) {
+      return FALSE;
+    }
+    return $data->getContext()->containsKey('cache_tags');
+  }
+
+  /**
+   * Gets the cached computed value for the fields to be rendered.
+   *
+   * @param mixed $data
+   *   The data to be rendered.
+   */
+  protected function getCachedData($data) {
+    return $this->createCacheController($data)->get();
+  }
+
+  /**
+   * Gets the cached computed value for the fields to be rendered.
+   *
+   * @param mixed $data
+   *   The data to be rendered.
+   * @param mixed $output
+   *   The rendered data to output.
+   */
+  protected function setCachedData($data, $output) {
+    $this->createCacheController($data)->set($output);
+  }
+
+  /**
+   * Gets a cache controller based on the data to be rendered.
+   *
+   * @param mixed $data
+   *   The data to be rendered.
+   *
+   * @return RenderCacheControllerInterface
+   *   The cache controller.
+   */
+  protected function createCacheController($data) {
+    if (!$cache_tags = $data->getContext()->get('cache_tags')) {
+      return NULL;
+    }
+    $cache_controller = RenderCacheManager::create($cache_tags);
+    return $cache_controller;
   }
 
 }

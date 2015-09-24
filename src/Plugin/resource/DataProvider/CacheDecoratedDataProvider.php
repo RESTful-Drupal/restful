@@ -12,7 +12,7 @@ use Drupal\restful\Exception\NotImplementedException;
 use Drupal\restful\Exception\UnauthorizedException;
 use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
-use Drupal\restful\Plugin\resource\Field\ResourceFieldCollection;
+use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
 use Drupal\restful\Plugin\resource\ResourceInterface;
 
@@ -187,6 +187,7 @@ class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface 
    * {@inheritdoc}
    */
   public function view($identifier) {
+    /* @var ResourceFieldCollectionInterface $resource_field_collection */
     $resource_field_collection = $this->subject->view($identifier);
 
     $resource_field_collection->setContext('cache_tags', $this->getCacheTags($identifier));
