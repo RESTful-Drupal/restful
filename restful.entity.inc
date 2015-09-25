@@ -29,11 +29,11 @@ function restful_entity_info() {
     'module' => 'restful',
     'entity cache' => module_exists('entitycache'),
   );
-  $items['cache_tag'] = array(
-    'label' => t('Cache tag'),
-    'entity class' => '\\Drupal\\restful\\RenderCache\\Entity\\CacheTag',
-    'controller class' => '\\Drupal\\restful\\RenderCache\\Entity\\CacheTagController',
-    'base table' => 'restful_cache_tag',
+  $items['cache_fragment'] = array(
+    'label' => t('Cache fragment'),
+    'entity class' => '\\Drupal\\restful\\RenderCache\\Entity\\CacheFragment',
+    'controller class' => '\\Drupal\\restful\\RenderCache\\Entity\\CacheFragmentController',
+    'base table' => 'restful_cache_fragment',
     'fieldable' => FALSE,
     'entity keys' => array(
       'id' => 'tid',

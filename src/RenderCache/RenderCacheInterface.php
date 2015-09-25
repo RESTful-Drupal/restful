@@ -15,13 +15,13 @@ interface RenderCacheInterface {
   /**
    * Factory function to create a new RenderCacheInterface object.
    *
-   * @param ArrayCollection $cache_tags
+   * @param ArrayCollection $cache_fragments
    *   The tags collection.
    *
    * @return RenderCacheInterface
    *   The cache controller.
    */
-  public static function create(ArrayCollection $cache_tags);
+  public static function create(ArrayCollection $cache_fragments);
 
   /**
    * Get the cache.

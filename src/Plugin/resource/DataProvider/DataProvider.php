@@ -242,7 +242,7 @@ abstract class DataProvider implements DataProviderInterface {
   /**
    * {@inheritdoc}
    */
-  public function getCacheTags($identifier) {
+  public function getCacheFragments($identifier) {
     // If we are trying to get the context for multiple ids, join them.
     if (is_array($identifier)) {
       $identifier = implode(',', $identifier);

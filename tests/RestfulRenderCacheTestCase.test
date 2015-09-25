@@ -150,7 +150,7 @@ class RestfulRenderCacheTestCase extends \RestfulCurlBaseTestCase {
     // Testing invalidateEntityCache.
     /* @var Drupal\restful\Plugin\resource\DataProvider\CacheDecoratedDataProviderInterface $data_provider */
     $data_provider = $handler->getDataProvider();
-    $cid = $data_provider->generateCacheId($data_provider->getCacheTags($node->nid));
+    $cid = $data_provider->generateCacheId($data_provider->getCacheFragments($node->nid));
     // Remove the version and uid variations from the cache id to clean all
     // caches for the entity.
     $string_context = preg_replace('/v.*::pa/', 'pa', $cid);

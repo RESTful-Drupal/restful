@@ -2,12 +2,12 @@
 
 /**
  * @file
- * Contains \Drupal\restful\RenderCache\Entity\CacheTag.
+ * Contains \Drupal\restful\RenderCache\Entity\CacheFragment.
  */
 
 namespace Drupal\restful\RenderCache\Entity;
 
-class CacheTag extends \Entity {
+class CacheFragment extends \Entity {
 
   /**
    * The identifier hash for the tag.

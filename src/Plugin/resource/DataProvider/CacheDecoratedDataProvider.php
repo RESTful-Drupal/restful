@@ -148,8 +148,8 @@ class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface 
   /**
    * {@inheritdoc}
    */
-  public function getCacheTags($identifier) {
-    return $this->subject->getCacheTags($identifier);
+  public function getCacheFragments($identifier) {
+    return $this->subject->getCacheFragments($identifier);
   }
 
   /**
@@ -190,7 +190,7 @@ class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface 
     /* @var ResourceFieldCollectionInterface $resource_field_collection */
     $resource_field_collection = $this->subject->view($identifier);
 
-    $resource_field_collection->setContext('cache_tags', $this->getCacheTags($identifier));
+    $resource_field_collection->setContext('cache_fragments', $this->getCacheFragments($identifier));
     return $resource_field_collection;
   }
 
@@ -214,7 +214,7 @@ class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface 
    * {@inheritdoc}
    */
   public function update($identifier, $object, $replace = TRUE) {
-    $this->clearRenderedCache($this->getCacheTags($identifier));
+    $this->clearRenderedCache($this->getCacheFragments($identifier));
     return $this->subject->update($identifier, $object, $replace);
   }
 
@@ -222,7 +222,7 @@ class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface 
    * {@inheritdoc}
    */
   public function remove($identifier) {
-    $this->clearRenderedCache($this->getCacheTags($identifier));
+    $this->clearRenderedCache($this->getCacheFragments($identifier));
     $this->subject->remove($identifier);
   }
 

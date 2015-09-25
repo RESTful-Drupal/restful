@@ -119,7 +119,7 @@ interface ResourceFieldCollectionInterface extends \Iterator, \Countable {
    * Sets a context for the group of fields.
    *
    * @param string $context_id
-   *   The context identifier. Ex: 'cache_tags'.
+   *   The context identifier. Ex: 'cache_fragments'.
    * @param ArrayCollection $context
    *   The context.
    */

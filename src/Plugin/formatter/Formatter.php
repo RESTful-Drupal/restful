@@ -102,7 +102,7 @@ abstract class Formatter extends PluginBase implements FormatterInterface {
     if (!$context = $data->getContext()) {
       return FALSE;
     }
-    return !empty($context['cache_tags']);
+    return !empty($context['cache_fragments']);
   }
 
   /**
@@ -141,10 +141,10 @@ abstract class Formatter extends PluginBase implements FormatterInterface {
    */
   protected function createCacheController($data) {
     $context = $data->getContext();
-    if (!$cache_tags = $context['cache_tags']) {
+    if (!$cache_fragments = $context['cache_fragments']) {
       return NULL;
     }
-    return RenderCache::create($cache_tags);
+    return RenderCache::create($cache_fragments);
   }
 
 }

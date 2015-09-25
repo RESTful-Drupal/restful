@@ -8,33 +8,40 @@
 namespace Drupal\restful\RenderCache;
 
 use Doctrine\Common\Collections\ArrayCollection;
-use Drupal\restful\RenderCache\Entity\CacheTagController;
+use Drupal\Component\Plugin\PluginBase;
+use Drupal\restful\RenderCache\Entity\CacheFragmentController;
 
 class RenderCache implements RenderCacheInterface {
 
   /**
-   * {@inheritdoc}
+   * The hash for the cache id.
    */
   protected $hash;
 
+  /**
+   * The cache fragments.
+   *
+   * @var ArrayCollection
+   */
+  protected $cacheFragments;
   /**
    * Create an object of type RenderCache.
    *
    * @param string $hash
    *   The hash for the cache object.
    */
-  public function __construct($hash) {
-    $this->hash = $hash;
+  public function __construct(ArrayCollection $cache_fragments, $hash) {
+    $this->hash = $hash ?: entity_get_controller('cache_fragment')
+      ->generateCacheHash($cache_fragments);
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function create(ArrayCollection $cache_tags) {
-    /* @var CacheTagController $controller */
-    $controller = entity_get_controller('cache_tag');
-    $tags = $controller->createCacheTags($cache_tags);
-    return new static($controller->generateCacheHash($cache_tags), $tags);
+  public static function create(ArrayCollection $cache_fragments) {
+    /* @var CacheFragmentController $controller */
+    $controller = entity_get_controller('cache_fragment');
+    return new static($cache_fragments, $controller->generateCacheHash($cache_fragments));
   }
 
   /**
@@ -48,7 +55,11 @@ class RenderCache implements RenderCacheInterface {
    * {@inheritdoc}
    */
   public function set($value) {
-    _cache_get_object('cache_restful')->set($this->hash, $value);
+    /* @var CacheFragmentController $controller */
+    $controller = entity_get_controller('cache_fragment');
+    $tags = $controller->createCacheFragments($this->cacheFragments);
+    $cid = $this->hash . PluginBase::DERIVATIVE_SEPARATOR . implode(',', $tags);
+    _cache_get_object('cache_restful')->set($cid, $value);
   }
 
 }
