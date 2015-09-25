@@ -128,7 +128,7 @@ interface ResourceFieldCollectionInterface extends \Iterator, \Countable {
   /**
    * Gets a context for the group of fields.
    *
-   * @return ArrayCollection
+   * @return ArrayCollection[]
    *   The context.
    */
   public function getContext();

@@ -11,6 +11,8 @@ use Drupal\Component\Plugin\PluginBase;
 use Drupal\restful\Plugin\ConfigurablePluginTrait;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
 use Drupal\restful\Plugin\resource\ResourceInterface;
+use Drupal\restful\RenderCache\RenderCache;
+use Drupal\restful\RenderCache\RenderCacheInterface;
 
 abstract class Formatter extends PluginBase implements FormatterInterface {
 
@@ -97,7 +99,10 @@ abstract class Formatter extends PluginBase implements FormatterInterface {
     if (!$data instanceof ResourceFieldCollectionInterface) {
       return FALSE;
     }
-    return $data->getContext()->containsKey('cache_tags');
+    if (!$context = $data->getContext()) {
+      return FALSE;
+    }
+    return !empty($context['cache_tags']);
   }
 
   /**
@@ -105,6 +110,9 @@ abstract class Formatter extends PluginBase implements FormatterInterface {
    *
    * @param mixed $data
    *   The data to be rendered.
+   *
+   * @return mixed
+   *   The cached data.
    */
   protected function getCachedData($data) {
     return $this->createCacheController($data)->get();
@@ -128,15 +136,15 @@ abstract class Formatter extends PluginBase implements FormatterInterface {
    * @param mixed $data
    *   The data to be rendered.
    *
-   * @return RenderCacheControllerInterface
+   * @return RenderCacheInterface
    *   The cache controller.
    */
   protected function createCacheController($data) {
-    if (!$cache_tags = $data->getContext()->get('cache_tags')) {
+    $context = $data->getContext();
+    if (!$cache_tags = $context['cache_tags']) {
       return NULL;
     }
-    $cache_controller = RenderCacheManager::create($cache_tags);
-    return $cache_controller;
+    return RenderCache::create($cache_tags);
   }
 
 }

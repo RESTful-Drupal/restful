@@ -41,7 +41,7 @@ class ResourceFieldCollection implements ResourceFieldCollectionInterface {
    *
    * @var ArrayCollection[]
    */
-  protected $context = array();
+  protected $context;
 
   /**
    * Constructor.

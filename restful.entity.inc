@@ -29,6 +29,24 @@ function restful_entity_info() {
     'module' => 'restful',
     'entity cache' => module_exists('entitycache'),
   );
+  $items['cache_tag'] = array(
+    'label' => t('Cache tag'),
+    'entity class' => '\\Drupal\\restful\\RenderCache\\Entity\\CacheTag',
+    'controller class' => '\\Drupal\\restful\\RenderCache\\Entity\\CacheTagController',
+    'base table' => 'restful_cache_tag',
+    'fieldable' => FALSE,
+    'entity keys' => array(
+      'id' => 'tid',
+      'label' => 'identifier',
+      'bundle' => 'type',
+    ),
+    'bundles' => array(),
+    'bundle keys' => array(
+      'bundle' => 'type',
+    ),
+    'module' => 'restful',
+    'entity cache' => module_exists('entitycache'),
+  );
 
   return $items;
 }

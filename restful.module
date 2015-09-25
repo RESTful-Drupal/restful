@@ -520,8 +520,7 @@ function restful_restful_resource_alter(ResourceInterface &$resource) {
   $plugin_definition = $resource->getPluginDefinition();
   // Check for the rate limit configuration.
   if (!empty($plugin_definition['renderCache']['render'])) {
-    // NOTE: Disabled cache for now. It needs to be moved to the Render layer.
-    // $resource = new CacheDecoratedResource($resource);
+     $resource = new CacheDecoratedResource($resource);
   }
   // Check for the rate limit configuration.
   if (!empty($plugin_definition['rateLimit']) || variable_get('restful_global_rate_limit', 0)) {
