@@ -74,7 +74,7 @@ class DataProviderResource extends DataProvider implements DataProviderResourceI
       ->getPluginCopy($instance_id, Request::create('', array(), RequestInterface::METHOD_GET));
     $plugin_definition = $resource->getPluginDefinition();
     $resource->setPath($resource_path);
-    return new static($request, $resource->getFieldDefinitions(), $resource->getAccount(), $resource->getPath(), $plugin_definition['dataProvider'], static::getLanguage(), $resource);
+    return new static($request, $resource->getFieldDefinitions(), $resource->getAccount(), $resource->getPluginId(), $resource->getPath(), $plugin_definition['dataProvider'], static::getLanguage(), $resource);
   }
 
   /**
