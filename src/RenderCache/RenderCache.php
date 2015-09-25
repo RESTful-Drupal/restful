@@ -9,6 +9,7 @@ namespace Drupal\restful\RenderCache;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Drupal\Component\Plugin\PluginBase;
+use Drupal\restful\RenderCache\Entity\CacheFragment;
 use Drupal\restful\RenderCache\Entity\CacheFragmentController;
 
 class RenderCache implements RenderCacheInterface {
@@ -24,6 +25,21 @@ class RenderCache implements RenderCacheInterface {
    * @var ArrayCollection
    */
   protected $cacheFragments;
+
+  /**
+   * The cache object.
+   *
+   * @var \DrupalCacheInterface
+   */
+  protected $cacheObject;
+
+  /**
+   * Stores the default cache bin.
+   *
+   * @var string
+   */
+  protected static $cacheBin = 'cache_restful';
+
   /**
    * Create an object of type RenderCache.
    *
@@ -31,8 +47,10 @@ class RenderCache implements RenderCacheInterface {
    *   The hash for the cache object.
    */
   public function __construct(ArrayCollection $cache_fragments, $hash) {
+    $this->cacheFragments = $cache_fragments;
     $this->hash = $hash ?: entity_get_controller('cache_fragment')
       ->generateCacheHash($cache_fragments);
+    $this->cacheObject = _cache_get_object($this::$cacheBin);
   }
 
   /**
@@ -48,7 +66,7 @@ class RenderCache implements RenderCacheInterface {
    * {@inheritdoc}
    */
   public function get() {
-    return _cache_get_object('cache_restful')->get($this->hash);
+    return $this->cacheObject->get($this->hash);
   }
 
   /**
@@ -57,9 +75,20 @@ class RenderCache implements RenderCacheInterface {
   public function set($value) {
     /* @var CacheFragmentController $controller */
     $controller = entity_get_controller('cache_fragment');
-    $tags = $controller->createCacheFragments($this->cacheFragments);
-    $cid = $this->hash . PluginBase::DERIVATIVE_SEPARATOR . implode(',', $tags);
-    _cache_get_object('cache_restful')->set($cid, $value);
+    if (!$controller->createCacheFragments($this->cacheFragments)) {
+      return;
+    }
+    $this->cacheObject->set($this->generateCacheId(), $value);
+  }
+
+  /**
+   * Generates the cache id based on the hash and the fragment IDs.
+   *
+   * @return string
+   *   The cid.
+   */
+  protected function generateCacheId() {
+    return $this->hash;
   }
 
 }

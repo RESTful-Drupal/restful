@@ -53,6 +53,7 @@ class CacheFragmentController extends \EntityAPIController {
    * Removes all the cache fragments.
    */
   public function wipe() {
+    // We are not truncating the entity table so hooks are fired.
     $query = new \EntityFieldQuery();
     $results = $query
       ->entityCondition('entity_type', 'cache_fragment')

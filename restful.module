@@ -548,7 +548,7 @@ function restful_restful_resource_alter(ResourceInterface &$resource) {
  */
 function restful_flush_caches() {
   // Delete all the cache fragments.
-  $controller = entity_get_controller('entity_fragment');
+  $controller = entity_get_controller('cache_fragment');
   $controller->wipe();
   return array('cache_restful');
 }
