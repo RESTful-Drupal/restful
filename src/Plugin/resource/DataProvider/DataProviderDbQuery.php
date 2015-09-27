@@ -205,7 +205,8 @@ class DataProviderDbQuery extends DataProvider implements DataProviderDbQueryInt
     $query = db_select($table)
       ->fields($table);
     foreach ($this->getIdColumn() as $index => $column) {
-      $query->condition($this->getTableName() . '.' . $column, current($this->getColumnFromIds(array($identifier), $index)));
+      $identifier = is_array($identifier) ? $identifier : array($identifier);
+      $query->condition($this->getTableName() . '.' . $column, current($this->getColumnFromIds($identifier, $index)));
     }
     $this->addExtraInfoToQuery($query);
     $result = $query
@@ -364,7 +365,16 @@ class DataProviderDbQuery extends DataProvider implements DataProviderDbQueryInt
    * {@inheritdoc}
    */
   public function getIndexIds() {
-    throw new ServerConfigurationException(sprintf('This method is not implemented: %s', __METHOD__));
+    $results = $this
+      ->getQueryForList()
+      ->execute();
+    $ids = array();
+    foreach ($results as $result) {
+      $ids[] = array_map(function ($id_column) use ($result) {
+        return $result->{$id_column};
+      }, $this->getIdColumn());
+    }
+    return $ids;
   }
 
   /**
