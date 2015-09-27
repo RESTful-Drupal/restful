@@ -122,7 +122,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
       'entity_id' => (int) $this->getEntityIdByFieldId($identifier),
     ));
     if ($uid = $this->getAccount()->uid) {
-      $fragments->set('user_id', $uid);
+      $fragments->set('user_id', (int) $uid);
     }
     return $fragments;
   }

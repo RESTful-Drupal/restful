@@ -5,7 +5,7 @@
  * Contains entity related code.
  */
 
-use Drupal\restful\Plugin\resource\DataProvider\CacheDecoratedDataProvider;
+use Drupal\restful\RenderCache\Entity\CacheFragmentController;
 use Drupal\restful\RenderCache\RenderCache;
 
 /**
@@ -65,7 +65,7 @@ function _restful_entity_cache_hashes($entity, $type) {
     ->entityCondition('entity_type', 'cache_fragment')
     ->propertyCondition('type', 'entity_type')
     ->propertyCondition('value', $type);
-  if (!$hashes = RenderCache::lookUpHashes($query)) {
+  if (!$hashes = CacheFragmentController::lookUpHashes($query)) {
     return array();
   }
 
@@ -77,7 +77,7 @@ function _restful_entity_cache_hashes($entity, $type) {
     ->propertyCondition('type', 'entity_id')
     ->propertyCondition('value', $entity_id)
     ->propertyCondition('hash', $hashes, 'IN');
-  return RenderCache::lookUpHashes($query);
+  return CacheFragmentController::lookUpHashes($query);
 }
 
 /**
@@ -85,7 +85,7 @@ function _restful_entity_cache_hashes($entity, $type) {
  */
 function restful_entity_update($entity, $type) {
   foreach (_restful_entity_cache_hashes($entity, $type) as $hash) {
-    cache_clear_all($hash, 'cache_restful');
+    cache_clear_all($hash, RenderCache::CACHE_BIN);
   }
 }
 
@@ -94,7 +94,7 @@ function restful_entity_update($entity, $type) {
  */
 function restful_entity_delete($entity, $type) {
   foreach (_restful_entity_cache_hashes($entity, $type) as $hash) {
-    cache_clear_all($hash, 'cache_restful');
+    cache_clear_all($hash, RenderCache::CACHE_BIN);
   }
 }
 
@@ -108,7 +108,7 @@ function restful_user_update(&$edit, $account, $category) {
     ->entityCondition('entity_type', 'cache_fragment')
     ->propertyCondition('type', 'user_id')
     ->propertyCondition('value', $account->uid);
-  return RenderCache::lookUpHashes($query);
+  return CacheFragmentController::lookUpHashes($query);
 }
 
 /**
@@ -121,5 +121,5 @@ function restful_user_delete($account) {
     ->entityCondition('entity_type', 'cache_fragment')
     ->propertyCondition('type', 'user_id')
     ->propertyCondition('value', $account->uid);
-  return RenderCache::lookUpHashes($query);
+  return CacheFragmentController::lookUpHashes($query);
 }

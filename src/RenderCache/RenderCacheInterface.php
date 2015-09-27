@@ -8,6 +8,7 @@
 namespace Drupal\restful\RenderCache;
 
 use Doctrine\Common\Collections\ArrayCollection;
+use Drupal\restful\RenderCache\Entity\CacheFragmentController;
 
 interface RenderCacheInterface {
 
@@ -38,4 +39,10 @@ interface RenderCacheInterface {
    *   The value to cache.
    */
   public function set($value);
+
+  /**
+   * Clears the cache for the given cache object.
+   */
+  public function clear();
+
 }

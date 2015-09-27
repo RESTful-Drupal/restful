@@ -252,7 +252,7 @@ abstract class DataProvider implements DataProviderInterface {
       'id' => (int) $identifier,
     ));
     if ($uid = $this->getAccount()->uid) {
-      $fragments->set('user_id', $uid);
+      $fragments->set('user_id', (int) $uid);
     }
     return $fragments;
   }

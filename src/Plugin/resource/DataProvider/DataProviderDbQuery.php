@@ -112,7 +112,7 @@ class DataProviderDbQuery extends DataProvider implements DataProviderDbQueryInt
       'id' => (int) $identifier,
     ));
     if ($uid = $this->getAccount()->uid) {
-      $fragments->set('user_id', $uid);
+      $fragments->set('user_id', (int) $uid);
     }
     return $fragments;
   }

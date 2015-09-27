@@ -8,11 +8,16 @@
 namespace Drupal\restful\RenderCache;
 
 use Doctrine\Common\Collections\ArrayCollection;
-use Drupal\Component\Plugin\PluginBase;
-use Drupal\restful\RenderCache\Entity\CacheFragment;
 use Drupal\restful\RenderCache\Entity\CacheFragmentController;
 
 class RenderCache implements RenderCacheInterface {
+
+  /**
+   * Stores the default cache bin.
+   *
+   * @var string
+   */
+  const CACHE_BIN = 'cache_restful';
 
   /**
    * The hash for the cache id.
@@ -34,13 +39,6 @@ class RenderCache implements RenderCacheInterface {
   protected $cacheObject;
 
   /**
-   * Stores the default cache bin.
-   *
-   * @var string
-   */
-  protected static $cacheBin = 'cache_restful';
-
-  /**
    * Create an object of type RenderCache.
    *
    * @param string $hash
@@ -48,9 +46,10 @@ class RenderCache implements RenderCacheInterface {
    */
   public function __construct(ArrayCollection $cache_fragments, $hash) {
     $this->cacheFragments = $cache_fragments;
-    $this->hash = $hash ?: entity_get_controller('cache_fragment')
-      ->generateCacheHash($cache_fragments);
-    $this->cacheObject = _cache_get_object($this::$cacheBin);
+    /* @var CacheFragmentController $controller */
+    $controller = entity_get_controller('cache_fragment');
+    $this->hash = $hash ?: $controller->generateCacheHash($cache_fragments);
+    $this->cacheObject = _cache_get_object(static::CACHE_BIN);
   }
 
   /**
@@ -82,6 +81,25 @@ class RenderCache implements RenderCacheInterface {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function clear() {
+    // Remove the cache.
+    $this->cacheObject->clear($this->generateCacheId());
+    // Delete all cache fragments for that hash.
+    $query = new \EntityFieldQuery();
+    $results = $query
+      ->entityCondition('entity_type', 'cache_fragment')
+      ->propertyCondition('hash', $this->hash)
+      ->execute();
+    if (empty($results['cache_fragment'])) {
+      return;
+    }
+    // Delete the actual entities.
+    entity_delete_multiple('cache_fragment', array_keys($results['cache_fragment']));
+  }
+
+  /**
    * Generates the cache id based on the hash and the fragment IDs.
    *
    * @return string
@@ -89,32 +107,6 @@ class RenderCache implements RenderCacheInterface {
    */
   protected function generateCacheId() {
     return $this->hash;
-  }
-
-  /**
-   * Gets the hashes for an EFQ.
-   *
-   * @param \EntityFieldQuery $query
-   *   The EFQ.
-   *
-   * @return string[]
-   *   The hashes that meet the conditions.
-   */
-  public static function lookUpHashes(\EntityFieldQuery $query) {
-    $results = $query->execute();
-    if (empty($results['cache_fragment'])) {
-      return array();
-    }
-    $fragment_ids = array_keys($results['cache_fragment']);
-
-    // Get the hashes from the base table.
-    $info = entity_get_info('cache_fragment');
-    $entity_table = $info['base table'];
-    $entity_id_key = $info['entity keys']['id'];
-    $hashes = db_query("SELECT hash FROM {$entity_table} WHERE $entity_id_key IN (:ids)", array(
-      ':ids' => $fragment_ids,
-    ))->fetchCol();
-    return $hashes;
   }
 
 }
