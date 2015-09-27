@@ -6,7 +6,7 @@
  */
 
 use Drupal\restful\RenderCache\Entity\CacheFragmentController;
-use Drupal\restful\RenderCache\RenderCache;
+use Drupal\restful\Plugin\resource\Decorators\CacheDecoratedResourceInterface;
 
 /**
  * Implements hook_entity_info().
@@ -84,8 +84,15 @@ function _restful_entity_cache_hashes($entity, $type) {
  * Implements hook_entity_update().
  */
 function restful_entity_update($entity, $type) {
+  $resource_manager = restful()->getResourceManager();
   foreach (_restful_entity_cache_hashes($entity, $type) as $hash) {
-    cache_clear_all($hash, RenderCache::CACHE_BIN);
+    $handler = $resource_manager->getPlugin(CacheFragmentController::resourceIdFromHash($hash));
+    if (!$handler instanceof CacheDecoratedResourceInterface) {
+      return;
+    }
+    $handler
+      ->getCacheController()
+      ->clear($hash);
   }
 }
 
@@ -93,8 +100,15 @@ function restful_entity_update($entity, $type) {
  * Implements hook_entity_delete().
  */
 function restful_entity_delete($entity, $type) {
+  $resource_manager = restful()->getResourceManager();
   foreach (_restful_entity_cache_hashes($entity, $type) as $hash) {
-    cache_clear_all($hash, RenderCache::CACHE_BIN);
+    $handler = $resource_manager->getPlugin(CacheFragmentController::resourceIdFromHash($hash));
+    if (!$handler instanceof CacheDecoratedResourceInterface) {
+      return;
+    }
+    $handler
+      ->getCacheController()
+      ->clear($hash);
   }
 }
 

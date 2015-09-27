@@ -295,7 +295,7 @@ class CacheDecoratedResource extends ResourceDecoratorBase implements CacheDecor
       ->propertyCondition('value', $id)
       ->propertyCondition('hash', $hashes, 'IN');
     foreach (CacheFragmentController::lookUpHashes($query) as $hash) {
-      cache_clear_all($hash, RenderCache::CACHE_BIN);
+      $this->getCacheController()->clear($hash);
     }
   }
 

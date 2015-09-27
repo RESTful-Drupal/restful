@@ -90,4 +90,28 @@ class CacheFragmentController extends \EntityAPIController {
     $this->delete(array_keys($results['cache_fragment']));
   }
 
+  /**
+   * Get the resource ID for the selected hash.
+   *
+   * @param string $hash
+   *   The unique hash for the cache fragments.
+   *
+   * @return string
+   *   The resource ID.
+   */
+  public static function resourceIdFromHash($hash) {
+    $query = new \EntityFieldQuery();
+    $results = $query
+      ->entityCondition('entity_type', 'cache_fragment')
+      ->propertyCondition('type', 'resource')
+      ->propertyCondition('hash', $hash)
+      ->range(0, 1)
+      ->execute();
+    if (empty($results['cache_fragment'])) {
+      return NULL;
+    }
+    $cache_fragment = entity_load_single('cache_fragment', key($results['cache_fragment']));
+    return $cache_fragment->value;
+  }
+
 }
