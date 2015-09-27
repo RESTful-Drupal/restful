@@ -91,4 +91,30 @@ class RenderCache implements RenderCacheInterface {
     return $this->hash;
   }
 
+  /**
+   * Gets the hashes for an EFQ.
+   *
+   * @param \EntityFieldQuery $query
+   *   The EFQ.
+   *
+   * @return string[]
+   *   The hashes that meet the conditions.
+   */
+  public static function lookUpHashes(\EntityFieldQuery $query) {
+    $results = $query->execute();
+    if (empty($results['cache_fragment'])) {
+      return array();
+    }
+    $fragment_ids = array_keys($results['cache_fragment']);
+
+    // Get the hashes from the base table.
+    $info = entity_get_info('cache_fragment');
+    $entity_table = $info['base table'];
+    $entity_id_key = $info['entity keys']['id'];
+    $hashes = db_query("SELECT hash FROM {$entity_table} WHERE $entity_id_key IN (:ids)", array(
+      ':ids' => $fragment_ids,
+    ))->fetchCol();
+    return $hashes;
+  }
+
 }

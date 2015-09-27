@@ -115,11 +115,16 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
       // Like in https://example.org/api/articles/1,2,3.
       $identifier = implode(ResourceInterface::IDS_SEPARATOR, $identifier);
     }
-    return new ArrayCollection(array(
+    $fragments = new ArrayCollection(array(
       'resource' => $this->pluginId,
       'entity_type' => $this->entityType,
-      'id' => $identifier,
+      'id' => (int) $identifier,
+      'entity_id' => (int) $this->getEntityIdByFieldId($identifier),
     ));
+    if ($uid = $this->getAccount()->uid) {
+      $fragments->set('user_id', $uid);
+    }
+    return $fragments;
   }
 
   /**
@@ -235,18 +240,17 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     $id_field_name = empty($this->options['idField']) ? 'id' : $this->options['idField'];
     $resource_field_collection->setIdField($this->fieldDefinitions->get($id_field_name));
 
+    // Defer sparse fieldsets to the formatter. That way we can minimize cache
+    // fragmentation because we have a unique cache record for all the sparse
+    // fieldsets combinations.
     $input = $this->getRequest()->getParsedInput();
     $limit_fields = !empty($input['fields']) ? explode(',', $input['fields']) : array();
+    $resource_field_collection->setLimitFields($limit_fields);
 
     foreach ($this->fieldDefinitions as $resource_field_name => $resource_field) {
       // Create an empty field collection and populate it with the appropriate
       // resource fields.
       /* @var ResourceFieldEntityInterface $resource_field */
-
-      if ($limit_fields && !in_array($resource_field_name, $limit_fields)) {
-        // Limit fields doesn't include this property.
-        continue;
-      }
 
       if (!$this->methodAccess($resource_field) || !$resource_field->access('view', $interpreter)) {
         // The field does not apply to the current method or has denied access.

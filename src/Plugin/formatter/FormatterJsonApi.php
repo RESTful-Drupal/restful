@@ -90,7 +90,8 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
   protected function extractFieldValues($data, &$included, array $parents = array()) {
     $output = array();
     if ($this->isCacheEnabled($data) && ($cache = $this->getCachedData($data))) {
-      return $cache->data;
+      /* @var ResourceFieldCollectionInterface $data */
+      return $this->limitFields($data->getLimitFields(), $cache->data);
     }
     foreach ($data as $public_field_name => $resource_field) {
       if (!$resource_field instanceof ResourceFieldInterface) {
@@ -103,6 +104,21 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
       }
       if (!$data instanceof ResourceFieldCollectionInterface) {
         throw new InternalServerErrorException('Inconsistent output.');
+      }
+
+      // This feels a bit awkward, but if the result is going to be cached, it
+      // pays off the extra effort of generating the whole resource entity. That
+      // way we can get a different field set with the previously cached entity.
+      // If the entity is not going to be cached, then avoid generating the
+      // field data altogether.
+      $limit_fields = $data->getLimitFields();
+      if (
+        $this->isCacheEnabled($data) &&
+        $limit_fields &&
+        !in_array($resource_field->getPublicName(), $limit_fields)
+      ) {
+        // We are not going to cache this and this field is not in the output.
+        continue;
       }
       if ($resource = $this->getResource()) {
         $output['type'] = $resource->getResourceMachineName();
@@ -200,6 +216,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
     }
     if ($this->isCacheEnabled($data)) {
       $this->setCachedData($data, $output);
+      $output = $this->limitFields($data->getLimitFields(), $output);
     }
     return $output;
   }

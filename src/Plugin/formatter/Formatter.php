@@ -144,7 +144,34 @@ abstract class Formatter extends PluginBase implements FormatterInterface {
     if (!$cache_fragments = $context['cache_fragments']) {
       return NULL;
     }
+    // Add the formatter fragment because every formatter may prepare the data
+    // differently.
+    /* @var \Doctrine\Common\Collections\ArrayCollection $cache_fragments */
+    $cache_fragments->set('formatter', $this->getPluginId());
     return RenderCache::create($cache_fragments);
+  }
+
+  /**
+   * Remove the unnecessary fields from the response.
+   *
+   * @param string[] $limit_fields
+   *   The list of fields.
+   * @param array $output
+   *   The prepared output.
+   *
+   * @return array
+   *   The filtered contents.
+   */
+  public function limitFields($limit_fields, array $output) {
+    if (!$limit_fields) {
+      return $output;
+    }
+    foreach ($output as $field_name => $field_contents) {
+      if (!in_array($field_name, $limit_fields)) {
+        unset($output[$field_name]);
+      }
+    }
+    return $output;
   }
 
 }

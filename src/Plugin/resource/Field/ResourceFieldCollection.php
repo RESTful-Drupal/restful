@@ -44,6 +44,13 @@ class ResourceFieldCollection implements ResourceFieldCollectionInterface {
   protected $context;
 
   /**
+   * List of fields that are allowed in the output.
+   *
+   * @var string[]
+   */
+  protected $limitFields = array();
+
+  /**
    * Constructor.
    *
    * Creates the collection and each one of the field resource fields in it
@@ -278,6 +285,20 @@ class ResourceFieldCollection implements ResourceFieldCollectionInterface {
    */
   public function getContext() {
     return $this->context;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getLimitFields() {
+    return $this->limitFields;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setLimitFields($limit_fields) {
+    $this->limitFields = $limit_fields;
   }
 
   /**

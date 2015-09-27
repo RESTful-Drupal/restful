@@ -105,12 +105,16 @@ class DataProviderDbQuery extends DataProvider implements DataProviderDbQueryInt
       // Like in https://example.org/api/articles/1,2,3.
       $identifier = implode(ResourceInterface::IDS_SEPARATOR, $identifier);
     }
-    return new ArrayCollection(array(
+    $fragments = new ArrayCollection(array(
       'resource' => $this->pluginId,
       'table_name' => $this->getTableName(),
       'column' => implode(',', $this->getIdColumn()),
-      'id' => $identifier,
+      'id' => (int) $identifier,
     ));
+    if ($uid = $this->getAccount()->uid) {
+      $fragments->set('user_id', $uid);
+    }
+    return $fragments;
   }
 
   /**

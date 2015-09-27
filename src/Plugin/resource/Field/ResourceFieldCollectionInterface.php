@@ -133,4 +133,20 @@ interface ResourceFieldCollectionInterface extends \Iterator, \Countable {
    */
   public function getContext();
 
+  /**
+   * Get the list of fields.
+   *
+   * @return string[]
+   *   The fields.
+   */
+  public function getLimitFields();
+
+  /**
+   * Set the limit fields.
+   *
+   * @param string[] $limit_fields
+   *   The list of fields to set.
+   */
+  public function setLimitFields($limit_fields);
+
 }

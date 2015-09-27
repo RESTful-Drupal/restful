@@ -247,10 +247,14 @@ abstract class DataProvider implements DataProviderInterface {
     if (is_array($identifier)) {
       $identifier = implode(',', $identifier);
     }
-    return new ArrayCollection(array(
+    $fragments = new ArrayCollection(array(
       'resource' => $this->pluginId,
-      'id' => $identifier,
+      'id' => (int) $identifier,
     ));
+    if ($uid = $this->getAccount()->uid) {
+      $fragments->set('user_id', $uid);
+    }
+    return $fragments;
   }
 
   /**

@@ -211,18 +211,6 @@ class CacheDecoratedResource extends ResourceDecoratorBase implements CacheDecor
   /**
    * {@inheritdoc}
    */
-  public function invalidateResourceCache() {
-    $version = $this->getVersion();
-    $cid = 'v' . $version['major'] . '.' . $version['minor'] . '::' . $this->getResourceMachineName();
-    $data_provider = $this->getDataProvider();
-    if (method_exists($data_provider, 'cacheInvalidate')) {
-      $data_provider->cacheInvalidate($cid);
-    }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function getResourceMachineName() {
     return $this->subject->getResourceMachineName();
   }

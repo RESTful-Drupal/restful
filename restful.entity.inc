@@ -6,6 +6,7 @@
  */
 
 use Drupal\restful\Plugin\resource\DataProvider\CacheDecoratedDataProvider;
+use Drupal\restful\RenderCache\RenderCache;
 
 /**
  * Implements hook_entity_info().
@@ -52,37 +53,73 @@ function restful_entity_info() {
 }
 
 /**
+ * Helper function that extract cache hashes from an entity.
+ */
+function _restful_entity_cache_hashes($entity, $type) {
+  if ($type == 'cache_fragment') {
+    return array();
+  }
+  // Limit to the fragments for our entity type.
+  $query = new \EntityFieldQuery();
+  $query
+    ->entityCondition('entity_type', 'cache_fragment')
+    ->propertyCondition('type', 'entity_type')
+    ->propertyCondition('value', $type);
+  if (!$hashes = RenderCache::lookUpHashes($query)) {
+    return array();
+  }
+
+  // Search for all the cache fragments with our entity id.
+  list($entity_id,,) = entity_extract_ids($type, $entity);
+  $query = new \EntityFieldQuery();
+  $query
+    ->entityCondition('entity_type', 'cache_fragment')
+    ->propertyCondition('type', 'entity_id')
+    ->propertyCondition('value', $entity_id)
+    ->propertyCondition('hash', $hashes, 'IN');
+  return RenderCache::lookUpHashes($query);
+}
+
+/**
  * Implements hook_entity_update().
  */
 function restful_entity_update($entity, $type) {
-  list($entity_id) = entity_extract_ids($type, $entity);
-  $cid = 'paet:' . $type . '::ei:' . $entity_id;
-  CacheDecoratedDataProvider::invalidateEntityCache($cid);
+  foreach (_restful_entity_cache_hashes($entity, $type) as $hash) {
+    cache_clear_all($hash, 'cache_restful');
+  }
 }
 
 /**
  * Implements hook_entity_delete().
  */
 function restful_entity_delete($entity, $type) {
-  list($entity_id) = entity_extract_ids($type, $entity);
-  $cid = 'paet:' . $type . '::ei:' . $entity_id;
-  CacheDecoratedDataProvider::invalidateEntityCache($cid);
+  foreach (_restful_entity_cache_hashes($entity, $type) as $hash) {
+    cache_clear_all($hash, 'cache_restful');
+  }
 }
 
 /**
  * Implements hook_user_update().
  */
 function restful_user_update(&$edit, $account, $category) {
-  // Due to the limitations for cid matching on clearing caches, we need to
-  // clear all the bin. We cannot do $cid = '%::uu' . $account->uid . '::pa';
-  CacheDecoratedDataProvider::invalidateEntityCache('*');
+  // Search for all the cache fragments with our entity id.
+  $query = new \EntityFieldQuery();
+  $query
+    ->entityCondition('entity_type', 'cache_fragment')
+    ->propertyCondition('type', 'user_id')
+    ->propertyCondition('value', $account->uid);
+  return RenderCache::lookUpHashes($query);
 }
 
 /**
  * Implements hook_user_delete().
  */
 function restful_user_delete($account) {
-  // Due to the limitations for cid matching on clearing caches, we need to
-  // clear all the bin. We cannot do $cid = '%::uu' . $account->uid . '::pa';
-  CacheDecoratedDataProvider::invalidateEntityCache('*');
+  // Search for all the cache fragments with our entity id.
+  $query = new \EntityFieldQuery();
+  $query
+    ->entityCondition('entity_type', 'cache_fragment')
+    ->propertyCondition('type', 'user_id')
+    ->propertyCondition('value', $account->uid);
+  return RenderCache::lookUpHashes($query);
 }
