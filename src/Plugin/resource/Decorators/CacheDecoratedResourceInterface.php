@@ -19,4 +19,12 @@ interface CacheDecoratedResourceInterface extends ResourceDecoratorInterface {
    */
   public function getCacheController();
 
+  /**
+   * Checks if simple invalidation is enabled for this resource.
+   *
+   * @return bool
+   *   TRUE if simple invalidation is needed.
+   */
+  public function hasSimpleInvalidation();
+
 }

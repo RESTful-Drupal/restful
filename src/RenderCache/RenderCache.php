@@ -41,24 +41,28 @@ class RenderCache implements RenderCacheInterface {
   /**
    * Create an object of type RenderCache.
    *
+   * @param ArrayCollection $cache_fragments
+   *   The cache fragments.
    * @param string $hash
    *   The hash for the cache object.
+   * @param \DrupalCacheInterface $cache_object
+   *   The cache backend to use with this object.
    */
-  public function __construct(ArrayCollection $cache_fragments, $hash) {
+  public function __construct(ArrayCollection $cache_fragments, $hash, \DrupalCacheInterface $cache_object) {
     $this->cacheFragments = $cache_fragments;
     /* @var CacheFragmentController $controller */
     $controller = entity_get_controller('cache_fragment');
     $this->hash = $hash ?: $controller->generateCacheHash($cache_fragments);
-    $this->cacheObject = _cache_get_object(static::CACHE_BIN);
+    $this->cacheObject = $cache_object;
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function create(ArrayCollection $cache_fragments) {
+  public static function create(ArrayCollection $cache_fragments, \DrupalCacheInterface $cache_object) {
     /* @var CacheFragmentController $controller */
     $controller = entity_get_controller('cache_fragment');
-    return new static($cache_fragments, $controller->generateCacheHash($cache_fragments));
+    return new static($cache_fragments, $controller->generateCacheHash($cache_fragments), $cache_object);
   }
 
   /**

@@ -111,8 +111,16 @@ class DataProviderDbQuery extends DataProvider implements DataProviderDbQueryInt
       'column' => implode(',', $this->getIdColumn()),
       'id' => (int) $identifier,
     ));
-    if ($uid = $this->getAccount()->uid) {
-      $fragments->set('user_id', (int) $uid);
+    $options = $this->getOptions();
+    switch ($options['renderCache']['granularity']) {
+      case DRUPAL_CACHE_PER_USER:
+        if ($uid = $this->getAccount()->uid) {
+          $fragments->set('user_id', (int) $uid);
+        }
+        break;
+      case DRUPAL_CACHE_PER_ROLE:
+        $fragments->set('user_role', implode(',', $this->getAccount()->roles));
+        break;
     }
     return $fragments;
   }

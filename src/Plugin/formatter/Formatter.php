@@ -115,7 +115,10 @@ abstract class Formatter extends PluginBase implements FormatterInterface {
    *   The cached data.
    */
   protected function getCachedData($data) {
-    return $this->createCacheController($data)->get();
+    if (!$render_cache = $this->createCacheController($data)) {
+      return NULL;
+    }
+    return $render_cache->get();
   }
 
   /**
@@ -127,7 +130,10 @@ abstract class Formatter extends PluginBase implements FormatterInterface {
    *   The rendered data to output.
    */
   protected function setCachedData($data, $output) {
-    $this->createCacheController($data)->set($output);
+    if (!$render_cache = $this->createCacheController($data)) {
+      return;
+    }
+    $render_cache->set($output);
   }
 
   /**
@@ -148,7 +154,11 @@ abstract class Formatter extends PluginBase implements FormatterInterface {
     // differently.
     /* @var \Doctrine\Common\Collections\ArrayCollection $cache_fragments */
     $cache_fragments->set('formatter', $this->getPluginId());
-    return RenderCache::create($cache_fragments);
+    /* @var \Drupal\restful\Plugin\resource\Decorators\CacheDecoratedResource $cached_resource */
+    if (!$cached_resource = $this->getResource()) {
+      return NULL;
+    }
+    return RenderCache::create($cache_fragments, $cached_resource->getCacheController());
   }
 
   /**

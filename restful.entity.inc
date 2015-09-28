@@ -5,8 +5,11 @@
  * Contains entity related code.
  */
 
-use Drupal\restful\RenderCache\Entity\CacheFragmentController;
 use Drupal\restful\Plugin\resource\Decorators\CacheDecoratedResourceInterface;
+use Drupal\restful\RenderCache\Entity\CacheFragmentController;
+use Drupal\restful\RenderCache\RenderCache;
+use Drupal\Component\Plugin\Exception\PluginNotFoundException;
+use Doctrine\Common\Collections\ArrayCollection;
 
 /**
  * Implements hook_entity_info().
@@ -90,6 +93,9 @@ function restful_entity_update($entity, $type) {
     if (!$handler instanceof CacheDecoratedResourceInterface) {
       return;
     }
+    if (!$handler->hasSimpleInvalidation()) {
+      return;
+    }
     $handler
       ->getCacheController()
       ->clear($hash);
@@ -104,6 +110,9 @@ function restful_entity_delete($entity, $type) {
   foreach (_restful_entity_cache_hashes($entity, $type) as $hash) {
     $handler = $resource_manager->getPlugin(CacheFragmentController::resourceIdFromHash($hash));
     if (!$handler instanceof CacheDecoratedResourceInterface) {
+      return;
+    }
+    if (!$handler->hasSimpleInvalidation()) {
       return;
     }
     $handler
@@ -122,7 +131,29 @@ function restful_user_update(&$edit, $account, $category) {
     ->entityCondition('entity_type', 'cache_fragment')
     ->propertyCondition('type', 'user_id')
     ->propertyCondition('value', $account->uid);
-  return CacheFragmentController::lookUpHashes($query);
+  $resource_manager = restful()->getResourceManager();
+  foreach (CacheFragmentController::lookUpHashes($query) as $hash) {
+    if (!$plugin_id = CacheFragmentController::resourceIdFromHash($hash)) {
+      continue;
+    }
+    try {
+      $handler = $resource_manager->getPlugin($plugin_id);
+    }
+    catch (PluginNotFoundException $e) {
+      continue;
+    }
+    if (!$handler instanceof CacheDecoratedResourceInterface) {
+      return;
+    }
+    if (!$handler->hasSimpleInvalidation()) {
+      return;
+    }
+    // You can get away without the fragments for a clear.
+    $cache_object = new RenderCache(new ArrayCollection(), $hash, $handler->getCacheController());
+    // Do a clear with the RenderCache object to also remove the cache fragment
+    // entities.
+    $cache_object->clear();
+  }
 }
 
 /**
@@ -135,5 +166,19 @@ function restful_user_delete($account) {
     ->entityCondition('entity_type', 'cache_fragment')
     ->propertyCondition('type', 'user_id')
     ->propertyCondition('value', $account->uid);
-  return CacheFragmentController::lookUpHashes($query);
+  $resource_manager = restful()->getResourceManager();
+  foreach (CacheFragmentController::lookUpHashes($query) as $hash) {
+    $handler = $resource_manager->getPlugin(CacheFragmentController::resourceIdFromHash($hash));
+    if (!$handler instanceof CacheDecoratedResourceInterface) {
+      return;
+    }
+    if (!$handler->hasSimpleInvalidation()) {
+      return;
+    }
+    // You can get away without the fragments for a clear.
+    $cache_object = new RenderCache(NULL, $hash, $handler->getCacheController());
+    // Do a clear with the RenderCache object to also remove the cache fragment
+    // entities.
+    $cache_object->clear();
+  }
 }

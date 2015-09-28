@@ -18,22 +18,48 @@ class CacheFragmentController extends \EntityAPIController {
    *   The collection of tags.
    *
    * @return CacheFragment[]
-   *   An array of tag ID.
+   *   An array of fragments.
    */
   public function createCacheFragments(ArrayCollection $cache_fragments) {
     $hash = $this->generateCacheHash($cache_fragments);
-    $tags = array();
+    if ($fragments = $this->existingFragments($hash)) {
+      return $fragments;
+    }
     foreach ($cache_fragments as $tag_type => $tag_value) {
       $cache_fragment = new CacheFragment(array(
         'value' => $tag_value,
         'type' => $tag_type,
         'hash' => $hash,
       ), 'cache_fragment');
-      if ($id = $this->save($cache_fragment)) {
-        $tags[] = $cache_fragment;
+      try {
+        if ($id = $this->save($cache_fragment)) {
+          $fragments[] = $cache_fragment;
+        }
+      }
+      catch (\Exception $e) {
+        // Log the exception. It's probably a duplicate fragment.
+        watchdog_exception('restful', $e);
       }
     }
-    return $tags;
+    return $fragments;
+  }
+
+  /**
+   * Gets the existing fragments for a given hash.
+   *
+   * @param string $hash
+   *   The hash.
+   *
+   * @return CacheFragment[]
+   *   An array of fragments.
+   */
+  protected function existingFragments($hash) {
+    $query = new \EntityFieldQuery();
+    $results = $query
+      ->entityCondition('entity_type', 'cache_fragment')
+      ->propertyCondition('hash', $hash)
+      ->execute();
+    return empty($results['cache_fragment']) ? array() : $this->load(array_keys($results['cache_fragment']));
   }
 
   /**

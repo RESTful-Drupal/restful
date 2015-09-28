@@ -18,11 +18,13 @@ interface RenderCacheInterface {
    *
    * @param ArrayCollection $cache_fragments
    *   The tags collection.
+   * @param \DrupalCacheInterface $cache_object
+   *   The cache backend to use.
    *
    * @return RenderCacheInterface
    *   The cache controller.
    */
-  public static function create(ArrayCollection $cache_fragments);
+  public static function create(ArrayCollection $cache_fragments, \DrupalCacheInterface $cache_object);
 
   /**
    * Get the cache.

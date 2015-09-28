@@ -5,8 +5,11 @@
  * Contains RestfulRenderCacheTestCase
  */
 
+use Doctrine\Common\Collections\ArrayCollection;
 use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
+use Drupal\restful\RenderCache\RenderCache;
+use Drupal\restful\RenderCache\Entity\CacheFragmentController;
 
 class RestfulRenderCacheTestCase extends \RestfulCurlBaseTestCase {
 
@@ -23,7 +26,7 @@ class RestfulRenderCacheTestCase extends \RestfulCurlBaseTestCase {
   }
 
   /**
-   * Test Render Cache
+   * Test Render Cache.
    */
   public function testRenderCache() {
     $resource_manager = restful()->getResourceManager();
@@ -56,25 +59,34 @@ class RestfulRenderCacheTestCase extends \RestfulCurlBaseTestCase {
     drupal_static_reset('Drupal\restful\Resource\ResourceManager::getVersionFromRequest');
     $handler->setRequest(Request::create(''));
     $handler->setPath('');
-    $pre_cache_results = drupal_json_decode(restful()
+    $formatter = restful()
       ->getFormatterManager()
-      ->format($handler->process()));
+      ->negotiateFormatter(NULL, 'json');
+    $formatter->setResource($handler);
+    $pre_cache_results = drupal_json_decode($formatter->format($handler->process()));
     $pre_cache_results = $pre_cache_results['data'];
     // Make sure some cache entries are generated.
     $this->assertFalse($cache->isEmpty(), 'Cache render is being populated.');
     // Get the cached results.
     $handler->setRequest(Request::create(''));
     $handler->setPath('');
-    $post_cache_results = drupal_json_decode(restful()
-      ->getFormatterManager()
-      ->format($handler->process()));
+    $formatter->setResource($handler);
+    $post_cache_results = drupal_json_decode($formatter->format($handler->process()));
     $post_cache_results = $post_cache_results['data'];
     // Make sure the cached results are the same as the non-cached results.
     $this->assertEqual($pre_cache_results[0], $post_cache_results[0], 'Cached data is consistent.');
     // Get a cached result directly from the cache backend.
     $node = reset($nodes);
-    $cid = 'v1.1::test_articles::uu' . $account->uid . '::pa' . 'et:node::ei:' . $node->nid;
-    $record = $cache->get($cid);
+    $fragments = new ArrayCollection(array(
+      'resource' => $handler->getResourceName(),
+      'entity_type' => 'node',
+      'id' => (int) $node->nid,
+      'entity_id' => (int) $node->nid,
+      'user_id' => (int) $account->uid,
+      'formatter' => 'json',
+    ));
+    $cache_object = RenderCache::create($fragments, $handler->getCacheController());
+    $record = $cache_object->get();
     $this->assertEqual($pre_cache_results[0], $record->data, 'Data in cache bins is correct.');
 
     // Test that invalidation is clearing cache records.
@@ -84,14 +96,10 @@ class RestfulRenderCacheTestCase extends \RestfulCurlBaseTestCase {
     $handler->setRequest(Request::create('', $input));
     $handler->setPath('');
     restful()->getFormatterManager()->format($handler->process(), 'json');
-    $cid_w_request = $cid . '::fi:id,label';
-    $this->assertTrue($cache_info['simple_invalidate'], 'Cache render simple invalidation is activated');
+    $this->assertTrue($cache_info['simpleInvalidate'], 'Cache render simple invalidation is activated');
     $node->title .= ' updated';
     node_save($node);
-    $record = $cache->get($cid);
-    $this->assertFalse($record, 'Cache record cleared correctly.');
-    $record = $cache->get($cid_w_request);
-    $this->assertFalse($record, 'Cache record cleared correctly with request params.');
+    $this->assertFalse($cache_object->get(), 'Cache record cleared correctly.');
     $this->assertFalse($cache->isEmpty(), 'Remaining cache items are intact after updating entity.');
     // Regenerate cache for $node.
     $handler->setRequest(Request::create($node->nid));
@@ -100,42 +108,43 @@ class RestfulRenderCacheTestCase extends \RestfulCurlBaseTestCase {
     $handler->setRequest(Request::create('', $input));
     $handler->setPath($node->nid);
     restful()->getFormatterManager()->format($handler->process(), 'json');
-    $record = $cache->get($cid);
-    $this->assertNotNull($record->data, 'Cache is being generated for non-list requests.');
-    $record = $cache->get($cid_w_request);
-    $this->assertNotNull($record->data, 'Cache is being generated for non-list requests with request params.');
+    $this->assertNotNull($cache_object->get(), 'Cache is being generated for non-list requests.');
     // 2. Update the user account. All cache records should be invalidated.
     $account->name .= ' updated';
     user_save($account);
-    $this->assertTrue($cache->isEmpty(), 'Cache bin is emptied after updating a user.');
+    $this->assertFalse($cache_object->get(), 'Cache object has been cleared after updating a user.');
+    // Make sure that the cache fragment entities have been deleted.
+    $query = new \EntityFieldQuery();
+    /* @var CacheFragmentController $controller */
+    $controller = entity_get_controller('cache_fragment');
+    $results = $query
+      ->entityCondition('entity_type', 'cache_fragment')
+      ->propertyCondition('hash', $controller->generateCacheHash($fragments))
+      ->count()
+      ->execute();
+    $this->assertEqual($results, 0, 'The cache fragment entities were deleted correctly.');
 
-    // Test cache segmentation with request params.
+    // Test cache with request params.
     // Rebuild caches.
     $cache->clear('*', TRUE);
-    $handler->setRequest(Request::create(''));
-    $handler->setPath('');
-    $results_wo_request = drupal_json_decode(restful()
-      ->getFormatterManager()
-      ->format($handler->process()));
-    $results_wo_request = $results_wo_request['data'];
-
 
     $handler->setRequest(Request::create('', $input));
     $handler->setPath('');
-    $results_w_request = drupal_json_decode(restful()
-      ->getFormatterManager()
-      ->format($handler->process()));
+    $formatter->setResource($handler);
+    $results_w_request = drupal_json_decode($formatter->format($handler->process()));
     $results_w_request = $results_w_request['data'];
-    // Check that the cached results for the entity without request array are
-    // different than with the request array.
-    $cid_wo_request = $cid;
-    $record = $cache->get($cid_w_request);
-    // Check that the stored data for both cache ids exists and is different.
-    $this->assertNotEqual($record->data, $cache->get($cid_wo_request)->data, 'Cache with request params is different.');
-    // Make sure that we are not storing the same data than before.
-    $this->assertNotEqual($results_wo_request[0], $record->data, 'Cache with request is not overwritten.');
-    // Assure that the stored cache corresponds to the returned rendered entity.
-    $this->assertEqual($results_w_request[0], $record->data, 'Cache with request is correctly stored.');
+    $cached_w_request = $cache_object->get()->data;
+    // Check that the results with sparse fieldsets only contain the selected
+    // fields, but the cache contains all fields.
+    $this->assertEqual(array_keys($results_w_request[0]), array(
+      'id',
+      'label',
+    ), 'Response contains only the selected fields.');
+    $this->assertEqual(array_keys($cached_w_request), array(
+      'id',
+      'label',
+      'self',
+    ), 'Cached object contains all the selected fields.');
 
     // Test helper functions.
     foreach ($nodes as $nid => $entity) {
@@ -147,28 +156,23 @@ class RestfulRenderCacheTestCase extends \RestfulCurlBaseTestCase {
       $handler->setPath($nid);
       restful()->getFormatterManager()->format($handler->process(), 'json');
     }
-    // Testing invalidateEntityCache.
-    /* @var Drupal\restful\Plugin\resource\DataProvider\CacheDecoratedDataProviderInterface $data_provider */
-    $data_provider = $handler->getDataProvider();
-    $cid = $data_provider->generateCacheId($data_provider->getCacheFragments($node->nid));
-    // Remove the version and uid variations from the cache id to clean all
-    // caches for the entity.
-    $string_context = preg_replace('/v.*::pa/', 'pa', $cid);
-    $data_provider->invalidateEntityCache($string_context, $handler->getRequest());
-    $record = $cache->get($cid);
-    $this->assertFalse($record, 'The entity cache for the current resource has been deleted.');
-    $record = $cache->get($cid_w_request);
-    $this->assertFalse($record, 'The entity cache for the current resource has been deleted.');
-    $this->assertFalse($cache->isEmpty(), 'Other entities keep the cache.');
-    // Testing invalidateResourceCache.
-    $handler->invalidateResourceCache();
-    foreach ($nodes as $nid => $entity) {
-      $cid = 'v1.1::test_articles::uu' . $account->uid . '::pa' . 'et:node::ei:' . $nid;
-      $record = $cache->get($cid);
-      $this->assertFalse($record, 'The entity cache for the current resource has been deleted.');
-      $cid_w_request = $cid . '::fi:id,label';
-      $record = $cache->get($cid_w_request);
-      $this->assertFalse($record, 'The entity cache for the current resource has been deleted.');
+    // Make sure that every node creates 6 cache fragment entities.
+    $fragment_types = array(
+      'resource',
+      'entity_type',
+      'id',
+      'entity_id',
+      'user_id',
+      'formatter',
+    );
+    foreach ($fragment_types as $fragment_type) {
+      $query = new \EntityFieldQuery();
+      $results = $query
+        ->entityCondition('entity_type', 'cache_fragment')
+        ->propertyCondition('type', $fragment_type)
+        ->count()
+        ->execute();
+      $this->assertEqual($results, count($nodes));
     }
 
     // Test PER_ROLE granularity.
@@ -185,9 +189,15 @@ class RestfulRenderCacheTestCase extends \RestfulCurlBaseTestCase {
     $handler->setRequest(Request::create(''));
     $handler->setPath('');
     restful()->getFormatterManager()->format($handler->process(), 'json');
-    $role_cid = 'v1.1::test_articles::ur' . implode(',', array_keys($account->roles)) . '::pa' . 'et:node::ei:' . $node->nid;
-    $record = $cache->get($role_cid);
-    $this->assertTrue($record->data, 'Cache key contains role information.');
+    $role_fragments = new ArrayCollection(array(
+      'resource' => $handler->getResourceName(),
+      'entity_type' => 'node',
+      'id' => (int) $node->nid,
+      'entity_id' => (int) $node->nid,
+      'user_role' => 'anonymous user,authenticated user',
+      'formatter' => 'json',
+    ));
+    $this->assertTrue($cache->get($controller->generateCacheHash($role_fragments)), 'Cache key contains role information.');
   }
 
   /**

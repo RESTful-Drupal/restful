@@ -12,7 +12,6 @@ use Drupal\restful\Plugin\resource\DataProvider\CacheDecoratedDataProvider;
 use Drupal\restful\Plugin\resource\DataProvider\DataProviderInterface;
 use Drupal\restful\Plugin\resource\ResourceInterface;
 use Drupal\restful\RenderCache\Entity\CacheFragmentController;
-use Drupal\restful\RenderCache\RenderCache;
 use Drupal\restful\Resource\ResourceManager;
 
 class CacheDecoratedResource extends ResourceDecoratorBase implements CacheDecoratedResourceInterface {
@@ -221,7 +220,7 @@ class CacheDecoratedResource extends ResourceDecoratorBase implements CacheDecor
       'class' => NULL,
       'bin' => 'cache_restful',
       'expire' => CACHE_PERMANENT,
-      'simple_invalidate' => TRUE,
+      'simpleInvalidate' => TRUE,
       'granularity' => DRUPAL_CACHE_PER_USER,
     );
     return $cache_info;
@@ -270,6 +269,16 @@ class CacheDecoratedResource extends ResourceDecoratorBase implements CacheDecor
    */
   public function discover($path = NULL) {
     return $this->subject->discover($path);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function hasSimpleInvalidation() {
+    $data_provider = $this->getDataProvider();
+    $options = $data_provider->getOptions();
+    $cache_info = $options['renderCache'];
+    return !empty($cache_info['simpleInvalidate']);
   }
 
   /**

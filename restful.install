@@ -100,6 +100,9 @@ function restful_schema() {
     'indexes' => array(
       'cache_fragment_hash' => array('hash'),
     ),
+    'unique keys' => array(
+      'hash_key_val' => array('type', 'value', 'hash'),
+    ),
     'primary key' => array('tid'),
   );
   return $schema;
