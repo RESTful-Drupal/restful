@@ -341,7 +341,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
         }
       }
 
-      if ($value !== null && $info['process_callbacks']) {
+      if (isset($value) && $info['process_callbacks']) {
         foreach ($info['process_callbacks'] as $process_callback) {
           $value = static::executeCallback($process_callback, array($value));
         }
