@@ -23,6 +23,17 @@ class RestfulEntityBaseNode extends RestfulEntityBase {
   }
 
   /**
+    * Overrides RestfulEntityBase::getQueryCount().
+    *
+    * Expose only published nodes.
+    */
+  public function getQueryCount() {
+    $query = parent::getQueryCount();
+    $query->propertyCondition('status', NODE_PUBLISHED);
+    return $query;
+  }
+
+  /**
    * Overrides RestfulEntityBase::entityPreSave().
    *
    * Set the node author and other defaults.
