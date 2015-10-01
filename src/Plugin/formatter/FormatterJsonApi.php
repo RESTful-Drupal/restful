@@ -113,7 +113,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
       // field data altogether.
       $limit_fields = $data->getLimitFields();
       if (
-        $this->isCacheEnabled($data) &&
+        !$this->isCacheEnabled($data) &&
         $limit_fields &&
         !in_array($resource_field->getPublicName(), $limit_fields)
       ) {
