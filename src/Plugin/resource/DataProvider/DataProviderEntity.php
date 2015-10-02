@@ -307,7 +307,14 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
       $this->setHttpHeader('Location', $url);
     }
 
-    return array($this->view($wrapper->getIdentifier()));
+    // The access calls use the request method. Fake the view to be a GET.
+    $old_request = $this->getRequest();
+    $this->getRequest()->setMethod(RequestInterface::METHOD_GET);
+    $output = array($this->view($wrapper->getIdentifier()));
+    // Put the original request back to a PUT/PATCH.
+    $this->request = $old_request;
+
+    return $output;
   }
 
   /**
