@@ -140,7 +140,6 @@ class RestfulReferenceTestCase extends RestfulCurlBaseTestCase {
       ->set('entity_reference_single_resource', $resource_field);
 
     // Clear cache.
-    CacheDecoratedDataProvider::invalidateEntityCache('*');
     $handler->setRequest(Request::create('api/v1.6/main/' . $entity1->pid));
     $handler->setPath($entity1->pid);
     $result = drupal_json_decode(restful()
