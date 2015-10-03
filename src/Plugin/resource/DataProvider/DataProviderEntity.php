@@ -7,11 +7,13 @@
 
 namespace Drupal\restful\Plugin\resource\DataProvider;
 
+use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\restful\Exception\ForbiddenException;
 use Drupal\restful\Exception\InternalServerErrorException;
 use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
+use Drupal\restful\Plugin\resource\Field\ResourceFieldResourceInterface;
 use Drupal\restful\Plugin\resource\ResourceEntity;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterEMW;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
@@ -918,49 +920,43 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
    */
   protected function getReferencedId($value, ResourceFieldInterface $resource_field) {
     $field_definition = $resource_field->getDefinition();
-    if (empty($field_definition['referencedIdProperty'])) {
+    if (
+      empty($field_definition['referencedIdProperty']) ||
+      !$resource_field instanceof ResourceFieldResourceInterface ||
+      !($resource_info = $resource_field->getResource())
+    ) {
       return $value;
     }
-    $id_property = $field_definition['referencedIdProperty'];
-    // Get information about the the Drupal field to see what entity type we are
-    // dealing with.
-    $field_info = field_info_field($resource_field->getProperty());
-    // We support:
-    // - Entity Reference.
-    // - Taxonomy Term.
-    // - File & Image field.
-    // If you need to support other types, you can create a custom data provider
-    // that overrides this method.
+
     $target_entity_type = NULL;
-    $bundles = array();
-    $query = $this->EFQObject();
-    if ($field_info['type'] == 'entityreference') {
-      $target_entity_type = $field_info['settings']['target_type'];
-      $bundles = empty($field_info['settings']['handler_settings']['target_bundles']) ? array() : $field_info['settings']['handler_settings']['target_bundles'];
-    }
-    elseif ($field_info['type'] == 'file') {
-      $target_entity_type = 'file';
-    }
-    elseif ($field_info['type'] == 'taxonomy_term_reference') {
-      $target_entity_type = 'taxonomy_term';
-      // Narrow down with the vocabulary information. Very useful if there are
-      // multiple terms with the same name in different vocabularies.
-      foreach ($field_info['settings']['allowed_values'] as $allowed_value) {
-        $bundles[] = $allowed_value['vocabulary'];
+    // TODO: Have a ResourceFieldResourceInterface->getResourceId helper method.
+    $instance_id = sprintf('%s:%d.%d', $resource_info['name'], $resource_info['majorVersion'], $resource_info['minorVersion']);
+    try {
+      $handler = restful()->getResourceManager()->getPlugin($instance_id);
+      if (!$handler instanceof ResourceEntity) {
+        // This is only valid for referenced entity resources.
+        return $value;
       }
+      $target_entity_type = $handler->getEntityType();
+      $bundles = $handler->getBundles();
     }
-    if (empty($target_entity_type)) {
+    catch (PluginNotFoundException $e) {
+      // If the referenced plugin cannot be found, fallback to the original
+      // value.
       return $value;
     }
 
     // Now we have the entity type and bundles to look for the entity based on
     // the contents of the field or the entity property.
+    $query = $this->EFQObject();
     $query->entityCondition('entity_type', $target_entity_type);
     if (!empty($bundles)) {
       // Narrow down for bundles.
       $query->entityCondition('bundle', $bundles, 'IN');
     }
-    // Check if the $id_property is a field or a property.
+
+    // Check if the referencedIdProperty is a field or a property.
+    $id_property = $field_definition['referencedIdProperty'];
     if (field_info_field($id_property)) {
       $query->fieldCondition($id_property, $resource_field->getColumn(), $value);
     }

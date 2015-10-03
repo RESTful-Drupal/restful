@@ -129,15 +129,18 @@ class EntityFieldQuery extends \EntityFieldQuery implements EntityFieldQueryRela
           ));
         }
         elseif ($relational_filter->getType() == RelationalFilterInterface::TYPE_PROPERTY) {
-          // We only know about the uid in this scenario.
-          if ($relational_filter->getName() == 'uid') {
-            $user_table_alias = $this::aliasJoinTable('users', $select_query);
-            $select_query->addJoin('INNER', 'users', $user_table_alias, sprintf('%s.uid = %s.uid',
-              $entity_table,
-              $user_table_alias
-            ));
-          }
-          throw new ServerConfigurationException(sprintf('Unsupported nested filter on property %s', $relational_filter->getName()));
+          // In this scenario we want to join with the new table entity. This
+          // will only work if the property contains the referenced entity ID
+          // (which is not unreasonable).
+          $host_entity_table = $entity_table;
+          $entity_info = entity_get_info($relational_filter->getEntityType());
+          $entity_table_alias = $this->aliasJoinTable($entity_info['base table'], $select_query);
+          $select_query->addJoin('INNER', $entity_info['base table'], $entity_table_alias, sprintf('%s.%s = %s.%s',
+            $host_entity_table,
+            $relational_filter->getName(),
+            $entity_table_alias,
+            $entity_info['entity keys']['id']
+          ));
         }
       }
       /* @var RelationalFilterInterface $condition */
