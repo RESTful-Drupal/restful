@@ -920,29 +920,61 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
    */
   protected function getReferencedId($value, ResourceFieldInterface $resource_field) {
     $field_definition = $resource_field->getDefinition();
-    if (
-      empty($field_definition['referencedIdProperty']) ||
-      !$resource_field instanceof ResourceFieldResourceInterface ||
-      !($resource_info = $resource_field->getResource())
-    ) {
+    if (empty($field_definition['referencedIdProperty'])) {
       return $value;
     }
-
+    // Get information about the the Drupal field to see what entity type we are
+    // dealing with.
+    $field_info = field_info_field($resource_field->getProperty());
+    // We support:
+    // - Entity Reference.
+    // - Taxonomy Term.
+    // - File & Image field.
+    // - uid property.
+    // - vid property.
+    // If you need to support other types, you can create a custom data provider
+    // that overrides this method.
     $target_entity_type = NULL;
-    // TODO: Have a ResourceFieldResourceInterface->getResourceId helper method.
-    $instance_id = sprintf('%s:%d.%d', $resource_info['name'], $resource_info['majorVersion'], $resource_info['minorVersion']);
-    try {
-      $handler = restful()->getResourceManager()->getPlugin($instance_id);
-      if (!$handler instanceof ResourceEntity) {
-        // This is only valid for referenced entity resources.
-        return $value;
+    $bundles = array();
+    if (!$field_info) {
+      if ($resource_field->getPublicName() == 'uid') {
+        // We make a special case for the user id.
+        $target_entity_type = 'user';
       }
-      $target_entity_type = $handler->getEntityType();
-      $bundles = $handler->getBundles();
+      elseif ($resource_field->getPublicName() == 'vid') {
+        // We make a special case for the vocabulary id.
+        $target_entity_type = 'taxonomy_vocabulary';
+      }
     }
-    catch (PluginNotFoundException $e) {
-      // If the referenced plugin cannot be found, fallback to the original
-      // value.
+    elseif (!empty($field_info['type']) && $field_info['type'] == 'entityreference') {
+      $target_entity_type = $field_info['settings']['target_type'];
+      $bundles = empty($field_info['settings']['handler_settings']['target_bundles']) ? array() : $field_info['settings']['handler_settings']['target_bundles'];
+    }
+    elseif (!empty($field_info['type']) && $field_info['type'] == 'file') {
+      $target_entity_type = 'file';
+    }
+    elseif (!empty($field_info['type']) && $field_info['type'] == 'taxonomy_term_reference') {
+      $target_entity_type = 'taxonomy_term';
+      // Narrow down with the vocabulary information. Very useful if there are
+      // multiple terms with the same name in different vocabularies.
+      foreach ($field_info['settings']['allowed_values'] as $allowed_value) {
+        $bundles[] = $allowed_value['vocabulary'];
+      }
+    }
+    elseif ($resource_field instanceof ResourceFieldResourceInterface && ($resource_info = $resource_field->getResource())) {
+      $instance_id = sprintf('%s:%d.%d', $resource_info['name'], $resource_info['majorVersion'], $resource_info['minorVersion']);
+      try {
+        $handler = restful()->getResourceManager()->getPlugin($instance_id);
+        if ($handler instanceof ResourceEntity) {
+          $target_entity_type = $handler->getEntityType();
+          $bundles = $handler->getBundles();
+        }
+      }
+      catch (PluginNotFoundException $e) {
+        // Do nothing.
+      }
+    }
+    if (empty($target_entity_type)) {
       return $value;
     }
 
