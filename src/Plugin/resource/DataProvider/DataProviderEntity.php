@@ -7,6 +7,7 @@
 
 namespace Drupal\restful\Plugin\resource\DataProvider;
 
+use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\restful\Exception\ForbiddenException;
 use Drupal\restful\Exception\InternalServerErrorException;
 use Drupal\restful\Exception\ServerConfigurationException;
@@ -26,6 +27,7 @@ use Drupal\restful\Plugin\resource\Resource;
 use Drupal\restful\Plugin\resource\ResourceInterface;
 use Drupal\restful\Util\RelationalFilter;
 use Drupal\restful\Util\RelationalFilterInterface;
+use Drupal\entity_validator\ValidatorPluginManager;
 
 class DataProviderEntity extends DataProvider implements DataProviderEntityInterface {
 
@@ -329,31 +331,34 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
       return;
     }
 
-    if (!$handler = entity_validator_get_validator_handler($wrapper->type(), $wrapper->getBundle())) {
+    try {
+      $validator_handler = ValidatorPluginManager::EntityValidator($wrapper->type(), $wrapper->getBundle());
+    }
+    catch (PluginNotFoundException $e) {
       // Entity validator handler doesn't exist for the entity.
       return;
     }
 
-    if ($handler->validate($wrapper->value(), TRUE)) {
+    if ($validator_handler->validate($wrapper->value(), TRUE)) {
       // Entity is valid.
       return;
     }
 
-    $errors = $handler->getErrors(FALSE);
+    $errors = $validator_handler->getErrors(FALSE);
 
     $map = array();
     foreach ($this->fieldDefinitions as $resource_field_name => $resource_field) {
-      /* @var ResourceFieldInterface */
-      if ($property = $resource_field->getProperty()) {
+      if (!$property = $resource_field->getProperty()) {
         continue;
       }
 
-      if (empty($errors[$property])) {
+      $public_name = $resource_field->getPublicName();
+      if (empty($errors[$public_name])) {
         // Field validated.
         continue;
       }
 
-      $map[$property] = $resource_field_name;
+      $map[$public_name] = $resource_field_name;
       $params['@fields'][] = $resource_field_name;
     }
 
