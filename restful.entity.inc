@@ -49,7 +49,7 @@ function restful_entity_info() {
       'bundle' => 'type',
     ),
     'module' => 'restful',
-    'entity cache' => module_exists('entitycache'),
+    'entity cache' => FALSE,
   );
 
   return $items;

@@ -139,6 +139,6 @@ function restful_uninstall() {
  * Create the cache fragments schema.
  */
 function restful_update_7200() {
-  $table_schema = drupal_get_schema('restful_cache_fragment');
+  $table_schema = drupal_get_schema('restful_cache_fragment', TRUE);
   db_create_table('restful_cache_fragment', $table_schema);
 }
