@@ -59,7 +59,6 @@ class RestfulRefreshTokenAuthentication extends \RestfulTokenAuthenticationBase 
 
     if (!empty($access_token_reference['restful_token_auth'])) {
       $access_token = key($access_token_reference['restful_token_auth']);
-      entity_delete('access_token', $refresh_token->id);
       entity_delete('restful_token_auth', $access_token);
     }
 
