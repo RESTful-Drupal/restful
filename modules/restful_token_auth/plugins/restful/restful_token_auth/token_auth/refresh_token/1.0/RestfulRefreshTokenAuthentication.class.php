@@ -47,6 +47,22 @@ class RestfulRefreshTokenAuthentication extends \RestfulTokenAuthenticationBase 
     // Remove the refresh token once used.
     $refresh_token = entity_load_single('restful_token_auth', key($results['restful_token_auth']));
     $uid = $refresh_token->uid;
+
+    // Get the access token linked to this refresh token then do some cleanup.
+    $accessTokenQuery = new EntityFieldQuery();
+    $accessTokenReference = $accessTokenQuery
+      ->entityCondition('entity_type', 'restful_token_auth')
+      ->entityCondition('bundle', 'access_token')
+      ->fieldCondition('refresh_token_reference', 'target_id', $refresh_token->id)
+      ->range(0, 1)
+      ->execute();
+
+    if (!empty($accessTokenReference['restful_token_auth'])) {
+      $access_token = key($accessTokenReference['restful_token_auth']);
+      entity_delete('access_token', $refresh_token->id);
+      entity_delete('restful_token_auth', $access_token);
+    }
+
     $refresh_token->delete();
 
     // Create the new access token and return it.
