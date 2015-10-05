@@ -178,7 +178,7 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
         }
         for ($index = 0; $index < count($filter['value']); $index++) {
           $query->fieldCondition($public_fields[$filter['public_field']]['property'], $public_fields[$filter['public_field']]['column'], $filter['value'][$index], $filter['operator'][$index]);
-          $query->fieldLanguageCondition($public_fields[$filter['public_field']]['property'], array($this->langcode, 'und'), 'IN', $index);
+          $query->fieldLanguageCondition($public_fields[$filter['public_field']]['property'], array($this->langcode, 'und'), 'IN');
         }
       }
       else {
