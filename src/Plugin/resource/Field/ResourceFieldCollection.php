@@ -299,6 +299,12 @@ class ResourceFieldCollection implements ResourceFieldCollectionInterface {
    */
   public function setLimitFields($limit_fields) {
     $this->limitFields = $limit_fields;
+    // Make sure that the nested fields are added appropriately.
+    foreach ($limit_fields as $limit_field) {
+      $parts = explode('.', $limit_field);
+      $this->limitFields[] = $parts[0];
+    }
+    $this->limitFields = array_unique($this->limitFields);
   }
 
   /**

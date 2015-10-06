@@ -176,9 +176,14 @@ abstract class Formatter extends PluginBase implements FormatterInterface {
     if (!$limit_fields) {
       return $output;
     }
-    foreach ($output as $field_name => $field_contents) {
-      if (!in_array($field_name, $limit_fields)) {
-        unset($output[$field_name]);
+    foreach (array('attributes', 'relationships') as $section) {
+      if (empty($output[$section])) {
+        continue;
+      }
+      foreach (array_keys($output[$section]) as $field_name) {
+        if (!in_array($field_name, $limit_fields)) {
+          unset($output[$section][$field_name]);
+        }
       }
     }
     return $output;
