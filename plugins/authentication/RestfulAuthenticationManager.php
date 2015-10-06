@@ -123,6 +123,10 @@ class RestfulAuthenticationManager extends \ArrayObject {
     // This is necessary because the page cache system only looks at session
     // cookies, but not at HTTP Basic Auth headers.
     drupal_page_is_cacheable(!$account->uid && variable_get('restful_page_cache', FALSE));
+
+    // Record the access time of this request.
+    $this->setAccessTime($account);
+
     return $account;
   }
 
@@ -205,5 +209,20 @@ class RestfulAuthenticationManager extends \ArrayObject {
     return $this->originalUserSession;
   }
 
-
+  /**
+   * Set the user's last access time.
+   *
+   * @param object $user
+   *   A drupal user account.
+   *
+   * @see _drupal_session_write()
+   */
+  protected function setAccessTime($user) {
+    // This logic is pulled directly from _drupal_session_write().
+    if ($user->uid && REQUEST_TIME - $user->access > variable_get('session_write_interval', 180)) {
+      db_update('users')->fields(array(
+        'access' => REQUEST_TIME,
+      ))->condition('uid', $user->uid)->execute();
+    }
+  }
 }
