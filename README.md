@@ -245,7 +245,7 @@ documentation:
       "required": false
     },
     "form_element": {
-      "type": "texfield",
+      "type": "textfield",
       "default_value": "",
       "placeholder": "",
       "size": 255,

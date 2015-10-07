@@ -1236,7 +1236,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
           ),
           // Information about the form element.
           'form_element' => array(
-            'type' => 'texfield',
+            'type' => 'textfield',
             'size' => 255,
           ),
         ),
