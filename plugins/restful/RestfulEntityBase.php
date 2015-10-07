@@ -682,7 +682,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       $property_name = $info['property'];
 
       if (!array_key_exists($public_field_name, $request)) {
-        if ($null_missing_fields) {
+        if ($null_missing_fields && $this->checkPropertyAccess('edit', $public_field_name, $wrapper->{$property_name}, $wrapper)) {
           $field_value = NULL;
         }
         else {
