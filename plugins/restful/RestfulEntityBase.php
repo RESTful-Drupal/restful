@@ -680,16 +680,19 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       }
 
       $property_name = $info['property'];
-      if (!isset($request[$public_field_name])) {
-        // No property to set in the request.
-        if ($null_missing_fields && $this->checkPropertyAccess('edit', $public_field_name, $wrapper->{$property_name}, $wrapper)) {
-          // We need to set the value to NULL.
-          $wrapper->{$property_name}->set(NULL);
+
+      if (!array_key_exists($public_field_name, $request)) {
+        if ($null_missing_fields) {
+          $field_value = NULL;
         }
-        continue;
+        else {
+          continue;
+        }
+      }
+      else {
+        $field_value = $this->propertyValuesPreprocess($property_name, $request[$public_field_name], $public_field_name);
       }
 
-      $field_value = $this->propertyValuesPreprocess($property_name, $request[$public_field_name], $public_field_name);
       $wrapper->{$property_name}->set($field_value);
 
       // We check the property access only after setting the values, as the
@@ -736,6 +739,11 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    *   The value to set using the wrapped property.
    */
   public function propertyValuesPreprocess($property_name, $value, $public_field_name) {
+    // If value is NULL, just return.
+    if (!isset($value)) {
+      return NULL;
+    }
+
     // Get the field info.
     $field_info = field_info_field($property_name);
 
