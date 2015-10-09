@@ -48,7 +48,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
 
     $extracted = $this->extractFieldValues($data);
     $included = array();
-    $output = array('data' => $this->tmp2($extracted, $included));
+    $output = array('data' => $this->decompress($extracted, $included));
     $output = $this->populateIncludes($output, $included);
 
     if ($resource = $this->getResource()) {
@@ -132,8 +132,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
         $this->addHateoas($output, $resource, $resource_id);
       }
       $interpreter = $data->getInterpreter();
-      $value = $resource_field->render($interpreter);
-      $output['__fields'][$public_field_name] = $this->tmp($value, $resource_field, $interpreter, $parents);
+      $output['__fields'][$public_field_name] = $this->embedField($resource_field, $interpreter, $parents);
     }
     if ($this->isCacheEnabled($data)) {
       $this->setCachedData($data, $output);
@@ -232,6 +231,11 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
   /**
    * Move the embedded resources to the included key.
    *
+   * Change the data structure from an auto-contained hierarchical tree to the
+   * final JSON API structure. The auto-contained tree has redundant information
+   * because every branch contains all the information that is embedded in there
+   * and can be used as stand alone.
+   *
    * @param array $output
    *   The output array to modify to include the compounded documents.
    * @param array $included
@@ -242,7 +246,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
    *
    * @throws \Drupal\restful\Exception\InternalServerErrorException
    */
-  protected function tmp2(array $output, array &$included) {
+  protected function decompress(array $output, array &$included) {
     static $depth = -1;
     $depth++;
     if (!is_array($output)) {
@@ -253,7 +257,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
     $result = array();
     if (ResourceFieldBase::isArrayNumeric($output)) {
       foreach ($output as $item) {
-        $result[] = $this->tmp2($item, $included);
+        $result[] = $this->decompress($item, $included);
       }
       $depth--;
       return $result;
@@ -266,7 +270,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
     }
     if (empty($output['__fields'])) {
       $depth--;
-      return $this->tmp2($output, $included);
+      return $this->decompress($output, $included);
     }
     foreach ($output['__fields'] as $field_name => $field_contents) {
       if (empty($field_contents['__relationship__info'])) {
@@ -278,7 +282,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
         $field_path = $field_contents['__relationship__field_path'];
         unset($field_contents['__relationship__field_path']);
         $include_key = $field_contents['__resource__name'] . '--' . $field_contents['__resource__id'];
-        $included[$field_path][$include_key] = $this->tmp2($field_contents, $included) + array('links' => $rel['links']);
+        $included[$field_path][$include_key] = $this->decompress($field_contents, $included) + array('links' => $rel['links']);
         // Only place the relationship info.
         $result['relationships'][$field_name] = $rel;
       }
@@ -338,11 +342,27 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
   }
 
   /**
-   * TMP code
+   * Embeds the final contents of a field.
+   *
+   * If the field is a relationship to another resource, it embeds the resource.
+   *
+   * @param ResourceFieldInterface $resource_field
+   *   The resource field being processed. If it is a related resource, this is
+   *   used to extract the contents of the resource. If not, it's used to
+   *   extract the simple value.
+   * @param DataInterpreterInterface $interpreter
+   *   The context for the $resource_field.
+   * @param array $parents
+   *   Tracks the parents of the field to construct the dot notation for the
+   *   field name.
+   *
+   * @return array
+   *   The contents for the JSON API attribute or relationship.
    */
-  private function tmp($value, ResourceFieldInterface $resource_field, DataInterpreterInterface $interpreter, array &$parents) {
+  protected function embedField(ResourceFieldInterface $resource_field, DataInterpreterInterface $interpreter, array &$parents) {
     // If the field points to a resource that can be included, include it
     // right away.
+    $value = $resource_field->render($interpreter);
     $public_field_name = $resource_field->getPublicName();
     if (
       empty($value) ||
