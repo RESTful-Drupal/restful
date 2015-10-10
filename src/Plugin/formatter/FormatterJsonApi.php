@@ -273,18 +273,26 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
       return $this->decompress($output, $included);
     }
     foreach ($output['__fields'] as $field_name => $field_contents) {
-      if (empty($field_contents['__relationship__info'])) {
+      if (empty($field_contents['__embedded'])) {
         $result['attributes'][$field_name] = $field_contents;
       }
       else {
-        $rel = $field_contents['__relationship__info'];
-        unset($field_contents['__relationship__info']);
-        $field_path = $field_contents['__relationship__field_path'];
-        unset($field_contents['__relationship__field_path']);
-        $include_key = $field_contents['__resource__name'] . '--' . $field_contents['__resource__id'];
-        $included[$field_path][$include_key] = $this->decompress($field_contents, $included) + array('links' => $rel['links']);
+        // Handle single and multiple relationships.
+        $rel = array();
+        $single_item = $field_contents['__cardinality'] == 1;
+        unset($field_contents['__embedded']);
+        unset($field_contents['__cardinality']);
+        foreach ($field_contents as $field_item) {
+          $element = $field_item['__relationship__info'];
+          unset($field_item['__relationship__info']);
+          $field_path = $field_item['__relationship__field_path'];
+          unset($field_item['__relationship__field_path']);
+          $include_key = $field_item['__resource__name'] . '--' . $field_item['__resource__id'];
+          $included[$field_path][$include_key] = $this->decompress($field_item, $included) + array('links' => $element['links']);
+          $rel[] = $element;
+        }
         // Only place the relationship info.
-        $result['relationships'][$field_name] = $rel;
+        $result['relationships'][$field_name] = $single_item ? reset($rel) : $rel;
       }
     }
 
@@ -363,7 +371,6 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
     // If the field points to a resource that can be included, include it
     // right away.
     $value = $resource_field->render($interpreter);
-    $public_field_name = $resource_field->getPublicName();
     if (
       empty($value) ||
       !static::isIterable($value) ||
@@ -371,6 +378,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
     ) {
       return $value;
     }
+    $public_field_name = $resource_field->getPublicName();
     // At this point we are dealing with an embed.
     $output = array();
     $new_parents = $parents;
@@ -444,11 +452,10 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
       ) + $value_item;
       $output[] = $item;
     }
-    if ($cardinality == 1) {
-      // Make them single items.
-      $output = reset($output);
-    }
-    return $output;
+    return $output + array(
+      '__embedded' => TRUE,
+      '__cardinality' => $cardinality,
+    );
   }
 
 }
