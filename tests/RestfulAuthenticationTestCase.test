@@ -138,4 +138,52 @@ class RestfulAuthenticationTestCase extends RestfulCurlBaseTestCase {
 
     $this->assertEqual($user->uid, 0, 'Global user is the correct one after an API call that switches the user.');
   }
+
+  /**
+   * Test recording of access time.
+   */
+  function testAccessTime() {
+    global $user;
+
+    $user1 = $this->drupalCreateUser();
+    $user2 = $this->drupalCreateUser();
+
+    $handler = restful_get_restful_handler('main', 1, 5);
+
+    // Case 1. Ensure that access time is recorded for cookie auth.
+    $user = $user1;
+    $cookie_provider = restful_get_authentication_handler('cookie');
+
+    // Make a request.
+    $handler->getAccount()->uid;
+
+    $user1_access_time = db_query('SELECT access FROM {users} WHERE uid = :d', array(':d' => $user1->uid))->fetchObject();
+    $this->assertEqual($user1_access_time->access, REQUEST_TIME, 'Cookie authenticated user access time is updated.');
+
+    // Case 2. Ensure that access time is recorded for basic auth.
+    $user = $user2;
+    $basic_auth_provider = restful_get_authentication_handler('basic_auth');
+
+    $_SERVER['PHP_AUTH_USER'] = $user2->name;
+    $_SERVER['PHP_AUTH_PW'] = $user2->pass_raw;
+    $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] = NULL;
+    $handler = restful_get_restful_handler('articles');
+
+    // Make a request.
+    $handler->getAccount()->uid;
+
+    $user2_access_time = db_query('SELECT access FROM {users} WHERE uid = :d', array(':d' => $user2->uid))->fetchObject();
+    $this->assertEqual($user2_access_time->access, REQUEST_TIME, 'Basic authenticated user access time is updated.');
+
+    // Case 3. Upon re-request, access time isn't updated if it is within the
+    // configured time limit.
+    // $user = $user1;
+
+    // Make a request.
+    // $handler->getAccount()->uid;
+
+    // $user1_access_time = db_query('SELECT access FROM {users} WHERE uid = :d', array(':d' => $user1->uid))->fetchObject();
+    // $this->assertEqual($user1_access_time->access, REQUEST_TIME, 'Basic authenticated user access time is updated.');
+
+  }
 }
