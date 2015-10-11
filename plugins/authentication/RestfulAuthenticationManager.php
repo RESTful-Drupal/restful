@@ -212,17 +212,17 @@ class RestfulAuthenticationManager extends \ArrayObject {
   /**
    * Set the user's last access time.
    *
-   * @param object $user
-   *   A drupal user account.
+   * @param object $account
+   *   A user account.
    *
    * @see _drupal_session_write()
    */
-  protected function setAccessTime($user) {
+  protected function setAccessTime($account) {
     // This logic is pulled directly from _drupal_session_write().
-    if ($user->uid && REQUEST_TIME - $user->access > variable_get('session_write_interval', 180)) {
+    if ($account->uid && REQUEST_TIME - $account->access > variable_get('session_write_interval', 180)) {
       db_update('users')->fields(array(
         'access' => REQUEST_TIME,
-      ))->condition('uid', $user->uid)->execute();
+      ))->condition('uid', $account->uid)->execute();
     }
   }
 }
