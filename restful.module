@@ -519,7 +519,10 @@ function restful_restful_resource_alter(ResourceInterface &$resource) {
   }
 
   $plugin_definition = $resource->getPluginDefinition();
-  // Check for the rate limit configuration.
+
+  // If render cache is enabled for the current resource, or there is no render
+  // cache information for the resource but render cache is enabled globally,
+  // then decorate the resource with cache capabilities.
   if (
     !empty($plugin_definition['renderCache']['render']) ||
     (!isset($plugin_definition['renderCache']['render']) && variable_get('restful_render_cache', FALSE))

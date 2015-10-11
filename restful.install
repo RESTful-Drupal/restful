@@ -76,7 +76,7 @@ function restful_schema() {
         'not null' => TRUE,
       ),
       'type' => array(
-        'description' => 'The tag type. Example: entity_id.',
+        'description' => 'The type of the cache fragment, e.g "entity_id".',
         'type' => 'varchar',
         'length' => 64,
         'not null' => TRUE,

@@ -73,7 +73,7 @@ function _restful_entity_cache_hashes($entity, $type) {
   }
 
   // Search for all the cache fragments with our entity id.
-  list($entity_id,,) = entity_extract_ids($type, $entity);
+  list($entity_id) = entity_extract_ids($type, $entity);
   $query = new \EntityFieldQuery();
   $query
     ->entityCondition('entity_type', 'cache_fragment')
@@ -110,11 +110,13 @@ function restful_entity_delete($entity, $type) {
   foreach (_restful_entity_cache_hashes($entity, $type) as $hash) {
     $handler = $resource_manager->getPlugin(CacheFragmentController::resourceIdFromHash($hash));
     if (!$handler instanceof CacheDecoratedResourceInterface) {
+      // Resource isn't using a cache decorator.
       return;
     }
     if (!$handler->hasSimpleInvalidation()) {
       return;
     }
+    // Resource takes care of its own invalidation.
     $handler
       ->getCacheController()
       ->clear($hash);
