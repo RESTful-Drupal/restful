@@ -48,7 +48,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
 
     $extracted = $this->extractFieldValues($data);
     $included = array();
-    $output = array('data' => $this->decompress($extracted, $included));
+    $output = array('data' => $this->renormalize($extracted, $included));
     $output = $this->populateIncludes($output, $included);
 
     if ($resource = $this->getResource()) {
@@ -246,7 +246,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
    *
    * @throws \Drupal\restful\Exception\InternalServerErrorException
    */
-  protected function decompress(array $output, array &$included) {
+  protected function renormalize(array $output, array &$included) {
     static $depth = -1;
     $depth++;
     if (!is_array($output)) {
@@ -257,7 +257,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
     $result = array();
     if (ResourceFieldBase::isArrayNumeric($output)) {
       foreach ($output as $item) {
-        $result[] = $this->decompress($item, $included);
+        $result[] = $this->renormalize($item, $included);
       }
       $depth--;
       return $result;
@@ -270,7 +270,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
     }
     if (empty($output['__fields'])) {
       $depth--;
-      return $this->decompress($output, $included);
+      return $this->renormalize($output, $included);
     }
     foreach ($output['__fields'] as $field_name => $field_contents) {
       if (empty($field_contents['__embedded'])) {
@@ -288,7 +288,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
           $field_path = $field_item['__relationship__field_path'];
           unset($field_item['__relationship__field_path']);
           $include_key = $field_item['__resource__name'] . '--' . $field_item['__resource__id'];
-          $included[$field_path][$include_key] = $this->decompress($field_item, $included) + array('links' => $element['links']);
+          $included[$field_path][$include_key] = $this->renormalize($field_item, $included) + array('links' => $element['links']);
           $rel[] = $element;
         }
         // Only place the relationship info.
