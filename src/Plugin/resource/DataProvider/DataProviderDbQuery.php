@@ -9,7 +9,6 @@ namespace Drupal\restful\Plugin\resource\DataProvider;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Drupal\restful\Exception\BadRequestException;
-
 use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Exception\ServiceUnavailableException;
 use Drupal\restful\Http\RequestInterface;
@@ -231,6 +230,8 @@ class DataProviderDbQuery extends DataProvider implements DataProviderDbQueryInt
     $resource_field_collection = new ResourceFieldCollection(array(), $this->getRequest());
     $interpreter = new DataInterpreterArray($this->getAccount(), new ArrayWrapper((array) $row));
     $resource_field_collection->setInterpreter($interpreter);
+    $id_field_name = empty($this->options['idField']) ? 'id' : $this->options['idField'];
+    $resource_field_collection->setIdField($this->fieldDefinitions->get($id_field_name));
 
     // Loop over all the defined public fields.
     foreach ($this->fieldDefinitions as $public_field_name => $resource_field) {
@@ -240,21 +241,6 @@ class DataProviderDbQuery extends DataProvider implements DataProviderDbQueryInt
         // Allow passing the value in the request.
         continue;
       }
-//      // If there is a callback defined execute it instead of a direct mapping.
-//      if ($callback = $resource_field->getCallback()) {
-//        $value = ResourceManager::executeCallback($callback, array($row));
-//      }
-//      // Map row names to public properties.
-//      elseif ($property = $resource_field->getProperty()) {
-//        $value = $row->{$property};
-//      }
-//      // Execute the process callbacks.
-//      $process_callbacks = $resource_field->getProcessCallbacks();
-//      if ($value && $process_callbacks) {
-//        foreach ($process_callbacks as $process_callback) {
-//          $value = ResourceManager::executeCallback($process_callback, array($value));
-//        }
-//      }
       $resource_field_collection->set($resource_field->id(), $resource_field);
     }
     return $resource_field_collection;
@@ -433,7 +419,10 @@ class DataProviderDbQuery extends DataProvider implements DataProviderDbQueryInt
     $sorts = $this->parseRequestForListSort();
     $sorts = $sorts ? $sorts : $this->defaultSortInfo();
     foreach ($sorts as $sort => $direction) {
-      $query->orderBy($this->fieldDefinitions->get($sort)->getColumnForQuery(), $direction);
+      /* @var ResourceFieldDbColumnInterface $sort_field */
+      if ($sort_field = $this->fieldDefinitions->get($sort)) {
+        $query->orderBy($sort_field->getColumnForQuery(), $direction);
+      }
     }
   }
 
@@ -449,7 +438,11 @@ class DataProviderDbQuery extends DataProvider implements DataProviderDbQueryInt
    */
   protected function queryForListFilter(\SelectQuery $query) {
     foreach ($this->parseRequestForListFilter() as $filter) {
-      $column_name = $this->fieldDefinitions->get($filter['public_field'])->getColumnForQuery();
+      /* @var ResourceFieldDbColumnInterface $filter_field */
+      if (!$filter_field = $this->fieldDefinitions->get($filter['public_field'])) {
+        continue;
+      }
+      $column_name = $filter_field->getColumnForQuery();
       if (in_array(strtoupper($filter['operator'][0]), array('IN', 'NOT IN', 'BETWEEN'))) {
         $query->condition($column_name, $filter['value'], $filter['operator'][0]);
         continue;

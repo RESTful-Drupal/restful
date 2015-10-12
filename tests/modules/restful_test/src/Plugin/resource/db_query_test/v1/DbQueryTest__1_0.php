@@ -23,6 +23,7 @@ use Drupal\restful\Plugin\resource\ResourceInterface;
  *     "tableName": "restful_test_db_query",
  *     "idColumn": "id",
  *     "primary": "id",
+ *     "idField": "id",
  *   },
  *   authenticationTypes = TRUE,
  *   authenticationOptional = TRUE,
