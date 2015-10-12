@@ -77,12 +77,12 @@ class RestfulDbQueryTestCase extends DrupalWebTestCase {
       ->value($collection->getInterpreter()), $mock_data['serialized_field'], 'The record was retrieved successfully.');
 
     // Testing JSON API formatter.
-    $result = drupal_json_decode(restful()
-      ->getFormatterManager()
-      ->format($handler->process(), 'json_api'));
-    $this->assertEqual($result['data'][0]['attributes']['string'], $mock_data['str_field'], 'The record was retrieved successfully.');
-    $this->assertEqual($result['data'][0]['attributes']['integer'], $mock_data['int_field'], 'The record was retrieved successfully.');
-    $this->assertEqual($result['data'][0]['attributes']['serialized'], $mock_data['serialized_field'], 'The record was retrieved successfully.');
+    $formatter_manager = restful()->getFormatterManager();
+    $formatter_manager->setResource($handler);
+    $result = drupal_json_decode($formatter_manager->format($handler->process(), 'json_api'));
+    $this->assertEqual($result['data']['attributes']['string'], $mock_data['str_field'], 'The record was retrieved successfully.');
+    $this->assertEqual($result['data']['attributes']['integer'], $mock_data['int_field'], 'The record was retrieved successfully.');
+    $this->assertEqual($result['data']['attributes']['serialized'], $mock_data['serialized_field'], 'The record was retrieved successfully.');
 
     // Testing update context.
     $mock_data2 = array(
