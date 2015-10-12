@@ -251,6 +251,12 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     // Defer sparse fieldsets to the formatter. That way we can minimize cache
     // fragmentation because we have a unique cache record for all the sparse
     // fieldsets combinations.
+    // When caching is enabled and we get a cache MISS we want to generate
+    // output for the cache entry for the whole entity. That way we can use that
+    // cache record independently of the sparse fieldset.
+    // On the other hand, if cache is not enabled we don't want to output for
+    // the whole entity, only the bits that we are going to need. For
+    // performance reasons.
     $input = $this->getRequest()->getParsedInput();
     $limit_fields = !empty($input['fields']) ? explode(',', $input['fields']) : array();
     $resource_field_collection->setLimitFields($limit_fields);
