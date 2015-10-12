@@ -152,38 +152,29 @@ class RestfulAuthenticationTestCase extends RestfulCurlBaseTestCase {
 
     // Case 1. Ensure that access time is recorded for cookie auth.
     $user = $user1;
-    $cookie_provider = restful_get_authentication_handler('cookie');
 
-    // Make a request.
-    $handler->getAccount()->uid;
+    $user1_access_time_before = db_query('SELECT access FROM {users} WHERE uid = :d', array(':d' => $user1->uid))->fetchObject();
+
+    // Perform request authentication.
+    $handler->getAccount();
 
     $user1_access_time = db_query('SELECT access FROM {users} WHERE uid = :d', array(':d' => $user1->uid))->fetchObject();
     $this->assertEqual($user1_access_time->access, REQUEST_TIME, 'Cookie authenticated user access time is updated.');
 
+    $this->assertNotEqual($user1_access_time_before->access, $user1_access_time->access, 'Access time before and after request are equal.');
+
     // Case 2. Ensure that access time is recorded for basic auth.
     $user = $user2;
-    $basic_auth_provider = restful_get_authentication_handler('basic_auth');
 
     $_SERVER['PHP_AUTH_USER'] = $user2->name;
     $_SERVER['PHP_AUTH_PW'] = $user2->pass_raw;
     $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] = NULL;
     $handler = restful_get_restful_handler('articles');
 
-    // Make a request.
-    $handler->getAccount()->uid;
+    // Perform request authentication.
+    $handler->getAccount();
 
     $user2_access_time = db_query('SELECT access FROM {users} WHERE uid = :d', array(':d' => $user2->uid))->fetchObject();
     $this->assertEqual($user2_access_time->access, REQUEST_TIME, 'Basic authenticated user access time is updated.');
-
-    // Case 3. Upon re-request, access time isn't updated if it is within the
-    // configured time limit.
-    // $user = $user1;
-
-    // Make a request.
-    // $handler->getAccount()->uid;
-
-    // $user1_access_time = db_query('SELECT access FROM {users} WHERE uid = :d', array(':d' => $user1->uid))->fetchObject();
-    // $this->assertEqual($user1_access_time->access, REQUEST_TIME, 'Basic authenticated user access time is updated.');
-
   }
 }
