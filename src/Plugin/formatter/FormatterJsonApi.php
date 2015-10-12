@@ -334,7 +334,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
    * @return array
    *   The filtered contents.
    */
-  public function limitFields($limit_fields, array $output) {
+  public function limitFields(array $limit_fields, array $output) {
     if (!$limit_fields) {
       return $output;
     }
