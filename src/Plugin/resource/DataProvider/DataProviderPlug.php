@@ -24,8 +24,8 @@ class DataProviderPlug extends DataProvider implements DataProviderInterface {
   /**
    * {@inheritdoc}
    */
-  public function __construct(RequestInterface $request, ResourceFieldCollectionInterface $field_definitions, $account, $resource_path = NULL, array $options = array(), $langcode = NULL) {
-    parent::__construct($request, $field_definitions, $account, $resource_path, $options, $langcode);
+  public function __construct(RequestInterface $request, ResourceFieldCollectionInterface $field_definitions, $account, $plugin_id, $resource_path = NULL, array $options = array(), $langcode = NULL) {
+    parent::__construct($request, $field_definitions, $account, $plugin_id, $resource_path, $options, $langcode);
     if (empty($this->options['urlParams'])) {
       $this->options['urlParams'] = array(
         'filter' => TRUE,

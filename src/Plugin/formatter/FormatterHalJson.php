@@ -175,6 +175,10 @@ class FormatterHalJson extends Formatter implements FormatterInterface {
    */
   protected function extractFieldValues($rows) {
     $output = array();
+    if ($this->isCacheEnabled($rows) && ($cache = $this->getCachedData($rows))) {
+      /* @var ResourceFieldCollectionInterface $data */
+      return $this->limitFields($data->getLimitFields(), $cache->data);
+    }
     foreach ($rows as $public_field_name => $resource_field) {
       if (!$resource_field instanceof ResourceFieldInterface) {
         // If $resource_field is not a ResourceFieldInterface it means that we
@@ -185,6 +189,21 @@ class FormatterHalJson extends Formatter implements FormatterInterface {
       }
       if (!$rows instanceof ResourceFieldCollectionInterface) {
         throw new InternalServerErrorException('Inconsistent output.');
+      }
+
+      // This feels a bit awkward, but if the result is going to be cached, it
+      // pays off the extra effort of generating the whole resource entity. That
+      // way we can get a different field set with the previously cached entity.
+      // If the entity is not going to be cached, then avoid generating the
+      // field data altogether.
+      $limit_fields = $rows->getLimitFields();
+      if (
+        $this->isCacheEnabled($rows) &&
+        $limit_fields &&
+        !in_array($resource_field->getPublicName(), $limit_fields)
+      ) {
+        // We are not going to cache this and this field is not in the output.
+        continue;
       }
       $value = $resource_field->render($rows->getInterpreter());
       // If the field points to a resource that can be included, include it
@@ -198,6 +217,10 @@ class FormatterHalJson extends Formatter implements FormatterInterface {
         continue;
       }
       $output[$public_field_name] = $value;
+    }
+    if ($this->isCacheEnabled($rows)) {
+      $this->setCachedData($rows, $output);
+      $output = $this->limitFields($rows->getLimitFields(), $output);
     }
     return $output;
   }

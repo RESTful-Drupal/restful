@@ -8,6 +8,7 @@
 namespace Drupal\restful\Plugin\resource\DataProvider;
 
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
+use Doctrine\Common\Collections\ArrayCollection;
 use Drupal\restful\Exception\ForbiddenException;
 use Drupal\restful\Exception\InternalServerErrorException;
 use Drupal\restful\Exception\ServerConfigurationException;
@@ -61,6 +62,8 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
    *   The field definitions.
    * @param object $account
    *   The account object.
+   * @param string $plugin_id
+   *   The resource ID.
    * @param string $resource_path
    *   The resource path.
    * @param array $options
@@ -73,8 +76,8 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
    * @throws ServerConfigurationException
    *   If the field mappings are not for entities.
    */
-  public function __construct(RequestInterface $request, ResourceFieldCollectionInterface $field_definitions, $account, $resource_path, array $options, $langcode = NULL) {
-    parent::__construct($request, $field_definitions, $account, $resource_path, $options, $langcode);
+  public function __construct(RequestInterface $request, ResourceFieldCollectionInterface $field_definitions, $account, $plugin_id, $resource_path, array $options, $langcode = NULL) {
+    parent::__construct($request, $field_definitions, $account, $plugin_id, $resource_path, $options, $langcode);
     if (empty($options['entityType'])) {
       // Entity type is mandatory.
       throw new InternalServerErrorException('The entity type was not provided.');
@@ -107,15 +110,29 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
   /**
    * {@inheritdoc}
    */
-  public function getContext($identifier) {
+  public function getCacheFragments($identifier) {
     if (is_array($identifier)) {
       // Like in https://example.org/api/articles/1,2,3.
       $identifier = implode(ResourceInterface::IDS_SEPARATOR, $identifier);
     }
-    return array(
-      'et' => $this->entityType,
-      'ei' => $identifier,
-    );
+    $fragments = new ArrayCollection(array(
+      'resource' => $this->pluginId,
+      'entity_type' => $this->entityType,
+      'id' => (int) $identifier,
+      'entity_id' => (int) $this->getEntityIdByFieldId($identifier),
+    ));
+    $options = $this->getOptions();
+    switch ($options['renderCache']['granularity']) {
+      case DRUPAL_CACHE_PER_USER:
+        if ($uid = $this->getAccount()->uid) {
+          $fragments->set('user_id', (int) $uid);
+        }
+        break;
+      case DRUPAL_CACHE_PER_ROLE:
+        $fragments->set('user_role', implode(',', $this->getAccount()->roles));
+        break;
+    }
+    return $fragments;
   }
 
   /**
@@ -231,18 +248,23 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     $id_field_name = empty($this->options['idField']) ? 'id' : $this->options['idField'];
     $resource_field_collection->setIdField($this->fieldDefinitions->get($id_field_name));
 
+    // Defer sparse fieldsets to the formatter. That way we can minimize cache
+    // fragmentation because we have a unique cache record for all the sparse
+    // fieldsets combinations.
+    // When caching is enabled and we get a cache MISS we want to generate
+    // output for the cache entry for the whole entity. That way we can use that
+    // cache record independently of the sparse fieldset.
+    // On the other hand, if cache is not enabled we don't want to output for
+    // the whole entity, only the bits that we are going to need. For
+    // performance reasons.
     $input = $this->getRequest()->getParsedInput();
     $limit_fields = !empty($input['fields']) ? explode(',', $input['fields']) : array();
+    $resource_field_collection->setLimitFields($limit_fields);
 
     foreach ($this->fieldDefinitions as $resource_field_name => $resource_field) {
       // Create an empty field collection and populate it with the appropriate
       // resource fields.
       /* @var ResourceFieldEntityInterface $resource_field */
-
-      if ($limit_fields && !in_array($resource_field_name, $limit_fields)) {
-        // Limit fields doesn't include this property.
-        continue;
-      }
 
       if (!$this->methodAccess($resource_field) || !$resource_field->access('view', $interpreter)) {
         // The field does not apply to the current method or has denied access.
@@ -291,7 +313,14 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
       $this->setHttpHeader('Location', $url);
     }
 
-    return array($this->view($wrapper->getIdentifier()));
+    // The access calls use the request method. Fake the view to be a GET.
+    $old_request = $this->getRequest();
+    $this->getRequest()->setMethod(RequestInterface::METHOD_GET);
+    $output = array($this->view($wrapper->getIdentifier()));
+    // Put the original request back to a PUT/PATCH.
+    $this->request = $old_request;
+
+    return $output;
   }
 
   /**

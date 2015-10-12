@@ -102,8 +102,8 @@ abstract class DataProviderDecorator implements DataProviderInterface {
   /**
    * {@inheritdoc}
    */
-  public function getContext($identifier) {
-    $this->decorated->getContext($identifier);
+  public function getCacheFragments($identifier) {
+    $this->decorated->getCacheFragments($identifier);
   }
 
   /**

@@ -52,7 +52,7 @@ function restful_menu() {
       // Add the version string to the arguments.
       $item['access arguments'][] = 1;
       $item['page arguments'][] = 1;
-        // Ex: api/v1.2/articles
+      // Ex: api/v1.2/articles
       $items[$base_path . '/v' . $plugin_definition['majorVersion'] . '.' . $plugin_definition['minorVersion'] . '/' . $plugin_definition['resource']] = $item;
       // Ex: api/v1/articles will use the latest minor version.
       $items[$base_path . '/v' . $plugin_definition['majorVersion'] . '/' . $plugin_definition['resource']] = $item;
@@ -92,7 +92,7 @@ function restful_menu() {
 }
 
 /**
- *  Implements hook_permission().
+ * Implements hook_permission().
  */
 function restful_permission() {
   return array(
@@ -108,15 +108,16 @@ function restful_permission() {
 }
 
 /**
- *  Implements hook_help().
+ * Implements hook_help().
  */
 function restful_help($path, $arg) {
   switch ($path) {
     case 'admin/structure/block':
     case 'admin/help#restful':
-      return '<p>' . t('This module is managed in GitHub. Please make sure to read the docs in the !link page for more help.', array(
-        '!link' => l('README.md', 'https://github.com/Gizra/restful/blob/7.x-1.x/README.md'),
-      )) . '</p>';
+      $message = t('This module is managed in GitHub. Please make sure to read the docs in the !link page for more help.', array(
+        '!link' => l(t('README.md'), 'https://github.com/Gizra/restful/blob/7.x-1.x/README.md'),
+      ));
+      return '<p>' . $message . '</p>';
   }
 }
 
@@ -144,7 +145,7 @@ function restful() {
  * @param string $resource_name
  *   The name of the resource (e.g. "articles").
  *
- * @param $version_string
+ * @param string $version_string
  *   The version array.
  *
  * @return bool
@@ -187,9 +188,9 @@ function restful_menu_access_callback($resource_name, $version_string = NULL) {
 /**
  * Page callback; Return the response for an API call.
  *
- * @param $resource_name
+ * @param string $resource_name
  *   The name of the resource (e.g. "articles").
- * @param $version
+ * @param string $version
  *   The version, prefixed with v (e.g. v1, v2.2).
  *
  * @throws ServiceUnavailableException
@@ -518,10 +519,15 @@ function restful_restful_resource_alter(ResourceInterface &$resource) {
   }
 
   $plugin_definition = $resource->getPluginDefinition();
-  // Check for the rate limit configuration.
-  if (!empty($plugin_definition['renderCache']['render'])) {
-    // NOTE: Disabled cache for now. It needs to be moved to the Render layer.
-    // $resource = new CacheDecoratedResource($resource);
+
+  // If render cache is enabled for the current resource, or there is no render
+  // cache information for the resource but render cache is enabled globally,
+  // then decorate the resource with cache capabilities.
+  if (
+    !empty($plugin_definition['renderCache']['render']) ||
+    (!isset($plugin_definition['renderCache']['render']) && variable_get('restful_render_cache', FALSE))
+  ) {
+    $resource = new CacheDecoratedResource($resource);
   }
   // Check for the rate limit configuration.
   if (!empty($plugin_definition['rateLimit']) || variable_get('restful_global_rate_limit', 0)) {
@@ -541,4 +547,14 @@ function restful_restful_resource_alter(ResourceInterface &$resource) {
   ) {
     $resource->disable();
   }
+}
+
+/**
+ * Implements hook_flush_caches().
+ */
+function restful_flush_caches() {
+  // Delete all the cache fragments.
+  $controller = entity_get_controller('cache_fragment');
+  $controller->wipe();
+  return array('cache_restful');
 }

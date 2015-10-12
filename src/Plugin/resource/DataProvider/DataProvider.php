@@ -72,9 +72,15 @@ abstract class DataProvider implements DataProviderInterface {
    * Array of metadata. Use this as a mean to pass info to the render layer.
    *
    * @var ArrayCollection
-   *   Key value store.
    */
   protected $metadata;
+
+  /**
+   * Resource identifier.
+   *
+   * @var string
+   */
+  protected $pluginId;
 
   /**
    * {@inheritdoc}
@@ -132,6 +138,8 @@ abstract class DataProvider implements DataProviderInterface {
    *   The field definitions.
    * @param object $account
    *   The authenticated account.
+   * @param string $plugin_id
+   *   The resource ID.
    * @param string $resource_path
    *   The resource path.
    * @param array $options
@@ -139,10 +147,11 @@ abstract class DataProvider implements DataProviderInterface {
    * @param string $langcode
    *   (Optional) The entity language code.
    */
-  public function __construct(RequestInterface $request, ResourceFieldCollectionInterface $field_definitions, $account, $resource_path = NULL, array $options = array(), $langcode = NULL) {
+  public function __construct(RequestInterface $request, ResourceFieldCollectionInterface $field_definitions, $account, $plugin_id, $resource_path = NULL, array $options = array(), $langcode = NULL) {
     $this->request = $request;
     $this->fieldDefinitions = $field_definitions;
     $this->account = $account;
+    $this->pluginId = $plugin_id;
     $this->options = $options;
     $this->resourcePath = $resource_path;
     if (!empty($options['range'])) {
@@ -233,14 +242,27 @@ abstract class DataProvider implements DataProviderInterface {
   /**
    * {@inheritdoc}
    */
-  public function getContext($identifier) {
+  public function getCacheFragments($identifier) {
     // If we are trying to get the context for multiple ids, join them.
     if (is_array($identifier)) {
       $identifier = implode(',', $identifier);
     }
-    return array(
-      'id' => $identifier,
-    );
+    $fragments = new ArrayCollection(array(
+      'resource' => $this->pluginId,
+      'id' => (int) $identifier,
+    ));
+    $options = $this->getOptions();
+    switch ($options['renderCache']['granularity']) {
+      case DRUPAL_CACHE_PER_USER:
+        if ($uid = $this->getAccount()->uid) {
+          $fragments->set('user_id', (int) $uid);
+        }
+        break;
+      case DRUPAL_CACHE_PER_ROLE:
+        $fragments->set('user_role', implode(',', $this->getAccount()->roles));
+        break;
+    }
+    return $fragments;
   }
 
   /**

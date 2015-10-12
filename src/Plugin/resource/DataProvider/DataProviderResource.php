@@ -45,6 +45,8 @@ class DataProviderResource extends DataProvider implements DataProviderResourceI
    *   The field definitions.
    * @param object $account
    *   The authenticated account.
+   * @param string $plugin_id
+   *   The resource ID.
    * @param string $resource_path
    *   The resource path.
    * @param array $options
@@ -54,11 +56,11 @@ class DataProviderResource extends DataProvider implements DataProviderResourceI
    * @param ResourceInterface $resource
    *   The referenced resource.
    */
-  public function __construct(RequestInterface $request, ResourceFieldCollectionInterface $field_definitions, $account, $resource_path, array $options, $langcode = NULL, ResourceInterface $resource = NULL) {
+  public function __construct(RequestInterface $request, ResourceFieldCollectionInterface $field_definitions, $account, $plugin_id, $resource_path, array $options, $langcode = NULL, ResourceInterface $resource = NULL) {
     $resource->setRequest($request);
     $this->resource = $resource;
     $this->referencedDataProvider = $resource->getDataProvider();
-    parent::__construct($request, $field_definitions, $account, $resource_path, $options, $langcode);
+    parent::__construct($request, $field_definitions, $account, $plugin_id, $resource_path, $options, $langcode);
   }
 
   /**
@@ -72,7 +74,7 @@ class DataProviderResource extends DataProvider implements DataProviderResourceI
       ->getPluginCopy($instance_id, Request::create('', array(), RequestInterface::METHOD_GET));
     $plugin_definition = $resource->getPluginDefinition();
     $resource->setPath($resource_path);
-    return new static($request, $resource->getFieldDefinitions(), $resource->getAccount(), $resource->getPath(), $plugin_definition['dataProvider'], static::getLanguage(), $resource);
+    return new static($request, $resource->getFieldDefinitions(), $resource->getAccount(), $resource->getPluginId(), $resource->getPath(), $plugin_definition['dataProvider'], static::getLanguage(), $resource);
   }
 
   /**
