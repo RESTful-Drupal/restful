@@ -182,7 +182,7 @@ class RestfulAuthenticationTestCase extends RestfulCurlBaseTestCase {
 
     // To begin, we'll set the timestamp for user1 back a little bit.
     $num_updated = db_update('users')
-      ->fields(array('access' => 1000)
+      ->fields(array('access' => 1000))
       ->condition('uid', $user1->uid)
       ->execute();
 
