@@ -176,5 +176,23 @@ class RestfulAuthenticationTestCase extends RestfulCurlBaseTestCase {
 
     $user2_access_time = db_query('SELECT access FROM {users} WHERE uid = :d', array(':d' => $user2->uid))->fetchObject();
     $this->assertEqual($user2_access_time->access, REQUEST_TIME, 'Basic authenticated user access time is updated.');
+
+    // Case 3. Ensure that the timestamp gets updated.
+    $user = $user1;
+
+    // To begin, we'll set the timestamp for user1 back a little bit.
+    $num_updated = db_update('users')
+      ->fields(['access' => 1000])
+      ->condition('uid', $user1->uid)
+      ->execute();
+
+    $user1_pre_access_time = db_query('SELECT access FROM {users} WHERE uid = :d', array(':d' => $user1->uid))->fetchObject();
+    $this->assertEqual($user1_pre_access_time->access, 1000, 'Set user1 access time to a time in the past.');
+
+    // Perform request authentication.
+    $handler->getAccount();
+
+    $user1_post_access_time = db_query('SELECT access FROM {users} WHERE uid = :d', array(':d' => $user1->uid))->fetchObject();
   }
+
 }
