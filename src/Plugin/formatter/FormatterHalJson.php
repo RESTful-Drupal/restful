@@ -55,6 +55,7 @@ class FormatterHalJson extends Formatter implements FormatterInterface {
     $is_list_request = $resource->getRequest()->isListRequest($resource->getPath());
 
     $values = $this->extractFieldValues($data);
+    $values = $this->limitFields($values);
     if ($is_list_request) {
       // If this is a listing, move everything into the _embedded.
       $curies_resource = $this->withCurie($resource->getResourceMachineName());
@@ -165,7 +166,7 @@ class FormatterHalJson extends Formatter implements FormatterInterface {
   /**
    * Extracts the actual values from the resource fields.
    *
-   * @param array|\Traversable|\stdClass $rows
+   * @param array|\Traversable|\stdClass $data
    *   The array of rows.
    *
    * @return array[]
@@ -173,21 +174,24 @@ class FormatterHalJson extends Formatter implements FormatterInterface {
    *
    * @throws \Drupal\restful\Exception\InternalServerErrorException
    */
-  protected function extractFieldValues($rows) {
+  protected function extractFieldValues($data, array $parents = array(), array &$parent_hashes = array()) {
     $output = array();
-    if ($this->isCacheEnabled($rows) && ($cache = $this->getCachedData($rows))) {
-      /* @var ResourceFieldCollectionInterface $data */
-      return $this->limitFields($data->getLimitFields(), $cache->data);
+    if ($this->isCacheEnabled($data)) {
+      $parent_hashes[] = $this->getCacheHash($data);
+      if ($cache = $this->getCachedData($data)) {
+        return $cache->data;
+      }
     }
-    foreach ($rows as $public_field_name => $resource_field) {
+    foreach ($data as $public_field_name => $resource_field) {
       if (!$resource_field instanceof ResourceFieldInterface) {
         // If $resource_field is not a ResourceFieldInterface it means that we
         // are dealing with a nested structure of some sort. If it is an array
         // we process it as a set of rows, if not then use the value directly.
-        $output[$public_field_name] = static::isIterable($resource_field) ? $this->extractFieldValues($resource_field) : $resource_field;
+        $parents[] = $public_field_name;
+        $output[$public_field_name] = static::isIterable($resource_field) ? $this->extractFieldValues($resource_field, $parents, $parent_hashes) : $resource_field;
         continue;
       }
-      if (!$rows instanceof ResourceFieldCollectionInterface) {
+      if (!$data instanceof ResourceFieldCollectionInterface) {
         throw new InternalServerErrorException('Inconsistent output.');
       }
 
@@ -196,16 +200,16 @@ class FormatterHalJson extends Formatter implements FormatterInterface {
       // way we can get a different field set with the previously cached entity.
       // If the entity is not going to be cached, then avoid generating the
       // field data altogether.
-      $limit_fields = $rows->getLimitFields();
+      $limit_fields = $data->getLimitFields();
       if (
-        $this->isCacheEnabled($rows) &&
+        $this->isCacheEnabled($data) &&
         $limit_fields &&
         !in_array($resource_field->getPublicName(), $limit_fields)
       ) {
         // We are not going to cache this and this field is not in the output.
         continue;
       }
-      $value = $resource_field->render($rows->getInterpreter());
+      $value = $resource_field->render($data->getInterpreter());
       // If the field points to a resource that can be included, include it
       // right away.
       if (
@@ -213,14 +217,13 @@ class FormatterHalJson extends Formatter implements FormatterInterface {
         && $resource_field instanceof ResourceFieldResourceInterface
       ) {
         $output += array('_embedded' => array());
-        $output['_embedded'][$this->withCurie($public_field_name)] = $this->extractFieldValues($value);
+        $output['_embedded'][$this->withCurie($public_field_name)] = $this->extractFieldValues($value, $parents, $parent_hashes);
         continue;
       }
       $output[$public_field_name] = $value;
     }
-    if ($this->isCacheEnabled($rows)) {
-      $this->setCachedData($rows, $output);
-      $output = $this->limitFields($rows->getLimitFields(), $output);
+    if ($this->isCacheEnabled($data)) {
+      $this->setCachedData($data, $output, $parent_hashes);
     }
     return $output;
   }

@@ -102,9 +102,11 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
    *
    * @param array $field
    *   Contains the field values.
-   *
    * @param RequestInterface $request
    *   The request.
+   *
+   * @throws ServerConfigurationException
+   *   If the entity type is empty.
    */
   public function __construct(array $field, RequestInterface $request) {
     if ($this->decorated) {
@@ -304,20 +306,22 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
         'filter' => $this->nestedDottedChildren('filter'),
       );
       $request = Request::create('', array_filter($parsed_input), RequestInterface::METHOD_GET);
-      // Remove the $_GET options for the sub-request.
-      // TODO: Get version automatically to avoid setting it in the plugin definition. Ideally we would fill this when processing the plugin definition defaults.
-      $resource_data_provider = DataProviderResource::init($request, $resource['name'], array(
-        $resource['majorVersion'],
-        $resource['minorVersion'],
-      ), $embedded_identifier);
 
+      // Get a plugin (that can be altered with decorators.
+      $embedded_resource = restful()->getResourceManager()->getPluginCopy(sprintf('%s:%d.%d', $resource['name'], $resource['majorVersion'], $resource['minorVersion']));
+      // Configure the plugin copy with the sub-request and sub-path.
+      $embedded_resource->setPath($embedded_identifier);
+      $embedded_resource->setRequest($request);
       $metadata = $this->getMetadata($wrapper->getIdentifier());
       $metadata = $metadata ?: array();
       $metadata[] = $this->buildResourceMetadataItem($property_wrapper);
       $this->addMetadata($wrapper->getIdentifier(), $metadata);
       try {
+        // Get the contents to embed in place of the reference ID.
         /* @var ResourceFieldCollection $embedded_entity */
-        $embedded_entity = $resource_data_provider->view($embedded_identifier);
+        $embedded_entity = $embedded_resource
+          ->getDataProvider()
+          ->view($embedded_identifier);
       }
       catch (ForbiddenException $e) {
         // If you don't have access to the embedded entity is like not having

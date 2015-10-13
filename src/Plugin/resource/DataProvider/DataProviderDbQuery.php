@@ -14,6 +14,7 @@ use Drupal\restful\Exception\ServiceUnavailableException;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataInterpreter\ArrayWrapper;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterArray;
+use Drupal\restful\Plugin\resource\Decorators\CacheDecoratedResource;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollection;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldDbColumnInterface;
@@ -105,10 +106,9 @@ class DataProviderDbQuery extends DataProvider implements DataProviderDbQueryInt
       $identifier = implode(ResourceInterface::IDS_SEPARATOR, $identifier);
     }
     $fragments = new ArrayCollection(array(
-      'resource' => $this->pluginId,
+      'resource' => CacheDecoratedResource::serializeKeyValue($this->pluginId, $this->canonicalPath($identifier)),
       'table_name' => $this->getTableName(),
       'column' => implode(',', $this->getIdColumn()),
-      'id' => (int) $identifier,
     ));
     $options = $this->getOptions();
     switch ($options['renderCache']['granularity']) {
@@ -232,6 +232,7 @@ class DataProviderDbQuery extends DataProvider implements DataProviderDbQueryInt
     $resource_field_collection->setInterpreter($interpreter);
     $id_field_name = empty($this->options['idField']) ? 'id' : $this->options['idField'];
     $resource_field_collection->setIdField($this->fieldDefinitions->get($id_field_name));
+    $resource_field_collection->setResourceId($this->pluginId);
 
     // Loop over all the defined public fields.
     foreach ($this->fieldDefinitions as $public_field_name => $resource_field) {

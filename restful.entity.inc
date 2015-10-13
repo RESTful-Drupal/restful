@@ -5,6 +5,7 @@
  * Contains entity related code.
  */
 
+use Drupal\restful\Plugin\resource\Decorators\CacheDecoratedResource;
 use Drupal\restful\Plugin\resource\Decorators\CacheDecoratedResourceInterface;
 use Drupal\restful\RenderCache\Entity\CacheFragmentController;
 use Drupal\restful\RenderCache\RenderCache;
@@ -63,23 +64,12 @@ function _restful_entity_cache_hashes($entity, $type) {
     return array();
   }
   // Limit to the fragments for our entity type.
-  $query = new \EntityFieldQuery();
-  $query
-    ->entityCondition('entity_type', 'cache_fragment')
-    ->propertyCondition('type', 'entity_type')
-    ->propertyCondition('value', $type);
-  if (!$hashes = CacheFragmentController::lookUpHashes($query)) {
-    return array();
-  }
-
-  // Search for all the cache fragments with our entity id.
   list($entity_id) = entity_extract_ids($type, $entity);
   $query = new \EntityFieldQuery();
   $query
     ->entityCondition('entity_type', 'cache_fragment')
-    ->propertyCondition('type', 'entity_id')
-    ->propertyCondition('value', $entity_id)
-    ->propertyCondition('hash', $hashes, 'IN');
+    ->propertyCondition('type', 'entity')
+    ->propertyCondition('value', CacheDecoratedResource::serializeKeyValue($type, $entity_id));
   return CacheFragmentController::lookUpHashes($query);
 }
 

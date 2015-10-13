@@ -7,12 +7,16 @@
 
 namespace Drupal\restful\Plugin\formatter;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use Drupal\Component\Plugin\PluginBase;
 use Drupal\restful\Plugin\ConfigurablePluginTrait;
+use Drupal\restful\Plugin\resource\Field\ResourceFieldBase;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
 use Drupal\restful\Plugin\resource\ResourceInterface;
+use Drupal\restful\RenderCache\Entity\CacheFragment;
 use Drupal\restful\RenderCache\RenderCache;
 use Drupal\restful\RenderCache\RenderCacheInterface;
+use Symfony\Component\Validator\Constraints\Null;
 
 abstract class Formatter extends PluginBase implements FormatterInterface {
 
@@ -126,14 +130,53 @@ abstract class Formatter extends PluginBase implements FormatterInterface {
    *
    * @param mixed $data
    *   The data to be rendered.
+   *
+   * @return string
+   *   The cache hash.
+   */
+  protected function getCacheHash($data) {
+    if (!$render_cache = $this->createCacheController($data)) {
+      return NULL;
+    }
+    return $render_cache->getCid();
+  }
+
+  /**
+   * Gets the cached computed value for the fields to be rendered.
+   *
+   * @param mixed $data
+   *   The data to be rendered.
    * @param mixed $output
    *   The rendered data to output.
+   * @param string[] $parent_hashes
+   *   An array that holds the name of the parent cache hashes that lead to the
+   *   current data structure.
    */
-  protected function setCachedData($data, $output) {
+  protected function setCachedData($data, $output, array $parent_hashes = array()) {
     if (!$render_cache = $this->createCacheController($data)) {
       return;
     }
     $render_cache->set($output);
+    // After setting the cache for the current object, mark all parent hashes
+    // with the current cache fragments. That will have the effect of allowing
+    // to clear the parent caches based on the children fragments.
+    $fragments = $this->cacheFragments($data);
+    foreach ($parent_hashes as $parent_hash) {
+      foreach ($fragments as $tag_type => $tag_value) {
+        $cache_fragment = new CacheFragment(array(
+          'value' => $tag_value,
+          'type' => $tag_type,
+          'hash' => $parent_hash,
+        ), 'cache_fragment');
+        try {
+          $cache_fragment->save();
+        }
+        catch (\Exception $e) {
+          // Log the exception. It's probably a duplicate fragment.
+          watchdog_exception('restful', $e);
+        }
+      }
+    }
   }
 
   /**
@@ -146,8 +189,7 @@ abstract class Formatter extends PluginBase implements FormatterInterface {
    *   The cache controller.
    */
   protected function createCacheController($data) {
-    $context = $data->getContext();
-    if (!$cache_fragments = $context['cache_fragments']) {
+    if (!$cache_fragments = $this->cacheFragments($data)) {
       return NULL;
     }
     // Add the formatter fragment because every formatter may prepare the data
@@ -162,26 +204,81 @@ abstract class Formatter extends PluginBase implements FormatterInterface {
   }
 
   /**
-   * Remove the unnecessary fields from the response.
+   * Gets a cache fragments based on the data to be rendered.
    *
-   * @param string[] $limit_fields
-   *   The list of fields.
-   * @param array $output
-   *   The prepared output.
+   * @param mixed $data
+   *   The data to be rendered.
    *
-   * @return array
-   *   The filtered contents.
+   * @return ArrayCollection
+   *   The cache controller.
    */
-  public function limitFields(array $limit_fields, array $output) {
-    if (!$limit_fields) {
+  protected static function cacheFragments($data) {
+    $context = $data->getContext();
+    if (!$cache_fragments = $context['cache_fragments']) {
+      return NULL;
+    }
+    return $cache_fragments;
+  }
+
+  /**
+   * Returns only the allowed fields by filtering out the other ones.
+   *
+   * @param mixed $output
+   *   The data structure to filter.
+   * @param bool|string[] $allowed_fields
+   *   FALSE to allow all fields. An array of allowed values otherwise.
+   *
+   * @return mixed
+   *   The filtered output.
+   */
+  protected function limitFields($output, $allowed_fields = NULL) {
+    if (!isset($allowed_fields)) {
+      $request = ($resource = $this->getResource()) ? $resource->getRequest() : restful()->getRequest();
+      $input = $request->getParsedInput();
+      // Set the field limits to false if there are no limits.
+      $allowed_fields = empty($input['fields']) ? FALSE : explode(',', $input['fields']);
+    }
+    if (!is_array($output)) {
+      // $output is a simple value.
       return $output;
     }
-    foreach (array_keys($output) as $field_name) {
-      if (!in_array($field_name, $limit_fields)) {
-        unset($output[$field_name]);
+    $result = array();
+    if (ResourceFieldBase::isArrayNumeric($output)) {
+      foreach ($output as $item) {
+        $result[] = $this->limitFields($item, $allowed_fields);
       }
+      return $result;
     }
-    return $output;
+    foreach ($output as $field_name => $field_contents) {
+      if ($allowed_fields !== FALSE && !in_array($field_name, $allowed_fields)) {
+        continue;
+      }
+      $result[$field_name] = $this->limitFields($field_contents, $this->unprefixAllowedFields($allowed_fields, $field_name));
+    }
+    return $result;
+  }
+
+  /**
+   * Given a prefix, return the allowed fields that apply removing the prefix.
+   *
+   * @param array $allowed_fields
+   *   The list of allowed fields in dot notation.
+   * @param string $prefix
+   *   The prefix used to select the fields and to remove from the front.
+   *
+   * @return array
+   *   The new allowed fields for the nested sub-request.
+   */
+  protected static function unprefixAllowedFields(array $allowed_fields, $prefix) {
+    $closure_unprefix = function ($field_limit) use ($prefix) {
+      if ($field_limit == $prefix) {
+        return NULL;
+      }
+      $pos = strpos($field_limit, $prefix . '.');
+      // Remove the prefix from the $field_limit.
+      return $pos === 0 ? substr($field_limit, strlen($prefix . '.')) : NULL;
+    };
+    return array_filter(array_map($closure_unprefix, $allowed_fields));
   }
 
 }

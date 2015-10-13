@@ -78,10 +78,8 @@ class RestfulRenderCacheTestCase extends \RestfulCurlBaseTestCase {
     // Get a cached result directly from the cache backend.
     $node = reset($nodes);
     $fragments = new ArrayCollection(array(
-      'resource' => $handler->getResourceName(),
-      'entity_type' => 'node',
-      'id' => (int) $node->nid,
-      'entity_id' => (int) $node->nid,
+      'resource' => $handler->getResourceName() . '#' . $node->nid,
+      'entity' => 'node#' . $node->nid,
       'user_id' => (int) $account->uid,
       'formatter' => 'json',
     ));
@@ -156,12 +154,10 @@ class RestfulRenderCacheTestCase extends \RestfulCurlBaseTestCase {
       $handler->setPath($nid);
       restful()->getFormatterManager()->format($handler->process(), 'json');
     }
-    // Make sure that every node creates 6 cache fragment entities.
+    // Make sure that every node creates 4 cache fragment entities.
     $fragment_types = array(
       'resource',
-      'entity_type',
-      'id',
-      'entity_id',
+      'entity',
       'user_id',
       'formatter',
     );
@@ -190,10 +186,8 @@ class RestfulRenderCacheTestCase extends \RestfulCurlBaseTestCase {
     $handler->setPath('');
     restful()->getFormatterManager()->format($handler->process(), 'json');
     $role_fragments = new ArrayCollection(array(
-      'resource' => $handler->getResourceName(),
-      'entity_type' => 'node',
-      'id' => (int) $node->nid,
-      'entity_id' => (int) $node->nid,
+      'resource' => $handler->getResourceName() . '#' . $node->nid,
+      'entity' => 'node#' . $node->nid,
       'user_role' => 'anonymous user,authenticated user',
       'formatter' => 'json',
     ));

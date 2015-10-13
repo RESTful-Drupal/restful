@@ -14,6 +14,7 @@ use Drupal\restful\Exception\InternalServerErrorException;
 use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
+use Drupal\restful\Plugin\resource\Decorators\CacheDecoratedResource;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldResourceInterface;
 use Drupal\restful\Plugin\resource\ResourceEntity;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterEMW;
@@ -116,10 +117,8 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
       $identifier = implode(ResourceInterface::IDS_SEPARATOR, $identifier);
     }
     $fragments = new ArrayCollection(array(
-      'resource' => $this->pluginId,
-      'entity_type' => $this->entityType,
-      'id' => (int) $identifier,
-      'entity_id' => (int) $this->getEntityIdByFieldId($identifier),
+      'resource' => CacheDecoratedResource::serializeKeyValue($this->pluginId, $this->canonicalPath($identifier)),
+      'entity' => CacheDecoratedResource::serializeKeyValue($this->entityType, $this->getEntityIdByFieldId($identifier)),
     ));
     $options = $this->getOptions();
     switch ($options['renderCache']['granularity']) {
@@ -247,6 +246,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     $resource_field_collection->setInterpreter($interpreter);
     $id_field_name = empty($this->options['idField']) ? 'id' : $this->options['idField'];
     $resource_field_collection->setIdField($this->fieldDefinitions->get($id_field_name));
+    $resource_field_collection->setResourceId($this->pluginId);
 
     // Defer sparse fieldsets to the formatter. That way we can minimize cache
     // fragmentation because we have a unique cache record for all the sparse

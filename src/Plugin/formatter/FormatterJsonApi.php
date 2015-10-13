@@ -80,19 +80,25 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
    *
    * @param array[]|ResourceFieldCollectionInterface $data
    *   The array of rows or a ResourceFieldCollection.
-   * @param array $included
-   *   An array to hold the external references to have them in the top-level.
+   * @param string[] $parents
+   *   An array that holds the name of the parent fields that lead to the
+   *   current data structure.
+   * @param string[] $parent_hashes
+   *   An array that holds the name of the parent cache hashes that lead to the
+   *   current data structure.
    *
    * @return array[]
    *   The array of prepared data.
    *
    * @throws InternalServerErrorException
    */
-  protected function extractFieldValues($data, array $parents = array()) {
+  protected function extractFieldValues($data, array $parents = array(), array &$parent_hashes = array()) {
     $output = array();
-    if ($this->isCacheEnabled($data) && ($cache = $this->getCachedData($data))) {
-      /* @var ResourceFieldCollectionInterface $data */
-      return $this->limitFields($data->getLimitFields(), $cache->data);
+    if ($this->isCacheEnabled($data)) {
+      $parent_hashes[] = $this->getCacheHash($data);
+      if ($cache = $this->getCachedData($data)) {
+        return $cache->data;
+      }
     }
     foreach ($data as $public_field_name => $resource_field) {
       if (!$resource_field instanceof ResourceFieldInterface) {
@@ -100,7 +106,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
         // are dealing with a nested structure of some sort. If it is an array
         // we process it as a set of rows, if not then use the value directly.
         $parents[] = $public_field_name;
-        $output[$public_field_name] = static::isIterable($resource_field) ? $this->extractFieldValues($resource_field, $parents) : $resource_field;
+        $output[$public_field_name] = static::isIterable($resource_field) ? $this->extractFieldValues($resource_field, $parents, $parent_hashes) : $resource_field;
         continue;
       }
       if (!$data instanceof ResourceFieldCollectionInterface) {
@@ -121,22 +127,26 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
         // We are not going to cache this and this field is not in the output.
         continue;
       }
-      if ($resource = $this->getResource()) {
-        $output['__resource__name'] = $resource->getResourceMachineName();
-        $resource_id = $data->getIdField()->value($data->getInterpreter());
-        if (!is_array($resource_id)) {
-          // In some situations when making an OPTIONS call the $resource_id
-          // returns the array of discovery information instead of a real value.
-          $output['__resource__id'] = (string) $resource_id;
-        }
-        $this->addHateoas($output, $resource, $resource_id);
-      }
       $interpreter = $data->getInterpreter();
-      $output['__fields'][$public_field_name] = $this->embedField($resource_field, $interpreter, $parents);
+      $output['__fields'][$public_field_name] = $this->embedField($resource_field, $interpreter, $parents, $parent_hashes);
+    }
+
+    if ($data instanceof ResourceFieldCollectionInterface) {
+      $output['__resource__name'] = $data->getResourceName();
+      $resource_id = $data->getIdField()->render($data->getInterpreter());
+      if (!is_array($resource_id)) {
+        // In some situations when making an OPTIONS call the $resource_id
+        // returns the array of discovery information instead of a real value.
+        $output['__resource__id'] = (string) $resource_id;
+        $self = restful()
+          ->getResourceManager()
+          ->getPlugin($data->getResourceId())
+          ->versionedUrl($resource_id);
+        $output['links'] = array('self' => $self);
+      }
     }
     if ($this->isCacheEnabled($data)) {
-      $this->setCachedData($data, $output);
-      $output = $this->limitFields($data->getLimitFields(), $output);
+      $this->setCachedData($data, $output, $parent_hashes);
     }
     return $output;
   }
@@ -240,15 +250,21 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
    *   The output array to modify to include the compounded documents.
    * @param array $included
    *   Pool of documents to compound.
+   * @param mixed $allowed_fields
+   *   The sparse fieldset information. FALSE to select all fields.
    *
    * @return array
    *   The processed data.
-   *
-   * @throws \Drupal\restful\Exception\InternalServerErrorException
    */
-  protected function renormalize(array $output, array &$included) {
+  protected function renormalize(array $output, array &$included, $allowed_fields = NULL) {
     static $depth = -1;
     $depth++;
+    if (!isset($allowed_fields)) {
+      $request = ($resource = $this->getResource()) ? $resource->getRequest() : restful()->getRequest();
+      $input = $request->getParsedInput();
+      // Set the field limits to false if there are no limits.
+      $allowed_fields = empty($input['fields']) ? FALSE : explode(',', $input['fields']);
+    }
     if (!is_array($output)) {
       // $output is a simple value.
       $depth--;
@@ -257,7 +273,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
     $result = array();
     if (ResourceFieldBase::isArrayNumeric($output)) {
       foreach ($output as $item) {
-        $result[] = $this->renormalize($item, $included);
+        $result[] = $this->renormalize($item, $included, $allowed_fields);
       }
       $depth--;
       return $result;
@@ -270,9 +286,12 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
     }
     if (empty($output['__fields'])) {
       $depth--;
-      return $this->renormalize($output, $included);
+      return $this->renormalize($output, $included, $allowed_fields);
     }
     foreach ($output['__fields'] as $field_name => $field_contents) {
+      if ($allowed_fields !== FALSE && !in_array($field_name, $allowed_fields)) {
+        continue;
+      }
       if (empty($field_contents['__embedded'])) {
         $result['attributes'][$field_name] = $field_contents;
       }
@@ -288,7 +307,11 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
           $field_path = $field_item['__relationship__field_path'];
           unset($field_item['__relationship__field_path']);
           $include_key = $field_item['__resource__name'] . '--' . $field_item['__resource__id'];
-          $included[$field_path][$include_key] = $this->renormalize($field_item, $included) + array('links' => $element['links']);
+          $nested_allowed_fields = $this->unprefixAllowedFields($allowed_fields, $field_name);
+          // If we get here is because the relationship is included in the
+          // sparse fieldset. That means that in this context, empty field
+          // limits mean all the fields.
+          $included[$field_path][$include_key] = $this->renormalize($field_item, $included, $nested_allowed_fields) + array('links' => $element['links']);
           $rel[] = $element;
         }
         // Only place the relationship info.
@@ -324,32 +347,6 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
   }
 
   /**
-   * Remove the unnecessary fields from the response.
-   *
-   * @param string[] $limit_fields
-   *   The list of fields.
-   * @param array $output
-   *   The prepared output.
-   *
-   * @return array
-   *   The filtered contents.
-   */
-  public function limitFields(array $limit_fields, array $output) {
-    if (!$limit_fields) {
-      return $output;
-    }
-    if (empty($output['__fields'])) {
-      return $output;
-    }
-    foreach (array_keys($output['__fields']) as $field_name) {
-      if (!in_array($field_name, $limit_fields)) {
-        unset($output['__fields'][$field_name]);
-      }
-    }
-    return $output;
-  }
-
-  /**
    * Embeds the final contents of a field.
    *
    * If the field is a relationship to another resource, it embeds the resource.
@@ -363,11 +360,14 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
    * @param array $parents
    *   Tracks the parents of the field to construct the dot notation for the
    *   field name.
+   * @param string[] $parent_hashes
+   *   An array that holds the name of the parent cache hashes that lead to the
+   *   current data structure.
    *
    * @return array
    *   The contents for the JSON API attribute or relationship.
    */
-  protected function embedField(ResourceFieldInterface $resource_field, DataInterpreterInterface $interpreter, array &$parents) {
+  protected function embedField(ResourceFieldInterface $resource_field, DataInterpreterInterface $interpreter, array &$parents, array &$parent_hashes) {
     // If the field points to a resource that can be included, include it
     // right away.
     $value = $resource_field->render($interpreter);
@@ -383,7 +383,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
     $output = array();
     $new_parents = $parents;
     $new_parents[] = $public_field_name;
-    $value = $this->extractFieldValues($value, $new_parents);
+    $value = $this->extractFieldValues($value, $new_parents, $parent_hashes);
     $ids = $resource_field->compoundDocumentId($interpreter);
     $cardinality = $resource_field->cardinality();
     if ($cardinality == 1) {
