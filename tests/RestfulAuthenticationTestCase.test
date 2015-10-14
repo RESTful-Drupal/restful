@@ -180,19 +180,26 @@ class RestfulAuthenticationTestCase extends RestfulCurlBaseTestCase {
     // Case 3. Ensure that the timestamp gets updated.
     $user = $user1;
 
+    // Get a timestamp that is in the past.
+    $the_past = REQUEST_TIME - variable_get('session_write_interval');
+
     // To begin, we'll set the timestamp for user1 back a little bit.
     $num_updated = db_update('users')
-      ->fields(array('access' => 1000))
+      ->fields(array('access' => $the_past))
       ->condition('uid', $user1->uid)
       ->execute();
 
     $user1_pre_access_time = db_query('SELECT access FROM {users} WHERE uid = :d', array(':d' => $user1->uid))->fetchObject();
-    $this->assertEqual($user1_pre_access_time->access, 1000, 'Set user1 access time to a time in the past.');
+    $this->assertEqual($user1_pre_access_time->access, $the_past, 'Set user1 access time to a time in the past.');
 
-    // Perform request authentication.
-    $handler->getAccount();
+    // Perform an authenticated request.
+    $this->drupalGet('/api/v1.5/main', array(), array(
+      'Authorization' => 'Basic ' . base64_encode($user1->name . ':' . $user1->pass_raw))
+    );
 
     $user1_post_access_time = db_query('SELECT access FROM {users} WHERE uid = :d', array(':d' => $user1->uid))->fetchObject();
+
+    $this->assertEqual($user1_post_access_time->access, REQUEST_TIME, 'Basic authenticated user access time is updated.');
   }
 
 }
