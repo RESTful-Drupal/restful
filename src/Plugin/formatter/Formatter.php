@@ -261,15 +261,18 @@ abstract class Formatter extends PluginBase implements FormatterInterface {
   /**
    * Given a prefix, return the allowed fields that apply removing the prefix.
    *
-   * @param array $allowed_fields
+   * @param bool|string[] $allowed_fields
    *   The list of allowed fields in dot notation.
    * @param string $prefix
    *   The prefix used to select the fields and to remove from the front.
    *
-   * @return array
+   * @return bool|string[]
    *   The new allowed fields for the nested sub-request.
    */
-  protected static function unprefixAllowedFields(array $allowed_fields, $prefix) {
+  protected static function unprefixAllowedFields($allowed_fields, $prefix) {
+    if ($allowed_fields === FALSE) {
+      return FALSE;
+    }
     $closure_unprefix = function ($field_limit) use ($prefix) {
       if ($field_limit == $prefix) {
         return NULL;

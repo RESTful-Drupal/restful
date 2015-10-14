@@ -250,7 +250,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
    *   The output array to modify to include the compounded documents.
    * @param array $included
    *   Pool of documents to compound.
-   * @param mixed $allowed_fields
+   * @param bool|string[] $allowed_fields
    *   The sparse fieldset information. FALSE to select all fields.
    *
    * @return array
