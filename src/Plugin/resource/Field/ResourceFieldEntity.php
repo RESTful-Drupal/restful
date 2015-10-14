@@ -1186,7 +1186,6 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
       }
       $public_field_info->addSectionDefaults('data', array(
         'type' => $property_info['type'],
-        'required' => $property_info['required'],
       ));
       $public_field_info->addSectionDefaults('info', array(
         'label' => $property_info['label'],
