@@ -154,22 +154,6 @@ class RestfulRenderCacheTestCase extends \RestfulCurlBaseTestCase {
       $handler->setPath($nid);
       restful()->getFormatterManager()->format($handler->process(), 'json');
     }
-    // Make sure that every node creates 4 cache fragment entities.
-    $fragment_types = array(
-      'resource',
-      'entity',
-      'user_id',
-      'formatter',
-    );
-    foreach ($fragment_types as $fragment_type) {
-      $query = new \EntityFieldQuery();
-      $results = $query
-        ->entityCondition('entity_type', 'cache_fragment')
-        ->propertyCondition('type', $fragment_type)
-        ->count()
-        ->execute();
-      $this->assertEqual($results, count($nodes));
-    }
 
     // Test PER_ROLE granularity.
     $cache->clear('*', TRUE);
