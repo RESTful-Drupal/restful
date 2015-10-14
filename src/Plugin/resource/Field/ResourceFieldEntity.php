@@ -1170,11 +1170,6 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
         'label' => $field_instance['label'],
         'description' => $field_instance['description'],
       ));
-      $field_info = field_info_field($this->getProperty());
-      $public_field_info->addSectionDefaults('info', array(
-        'label' => $field_info['label'],
-        'description' => $field_info['description'],
-      ));
       $allowed_values = $public_field_info instanceof PublicFieldInfoEntityInterface ? $public_field_info->getFormSchemaAllowedValues() : NULL;
       $public_field_info->addSectionDefaults('form_element', array(
         'default_value' => isset($field_instance['default_value']) ? $field_instance['default_value'] : NULL,
