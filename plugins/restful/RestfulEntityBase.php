@@ -663,12 +663,12 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
 
     static::cleanRequest($request);
     $save = FALSE;
-    $original_request = $request;
+    $unprocessed_fields = $request;
 
     foreach ($this->getPublicFields() as $public_field_name => $info) {
       if (!empty($info['create_or_update_passthrough'])) {
         // Allow passing the value in the request.
-        unset($original_request[$public_field_name]);
+        unset($unprocessed_fields[$public_field_name]);
         continue;
       }
 
@@ -686,6 +686,12 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
           // We need to set the value to NULL.
           $wrapper->{$property_name}->set(NULL);
         }
+        
+        // Allow passing a NULL value in the request.
+        if ($unprocessed_fields[$public_field_name] === NULL) {
+          unset($unprocessed_fields[$public_field_name]);
+        }
+
         continue;
       }
 
@@ -698,7 +704,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
         throw new \RestfulBadRequestException(format_string('Property @name cannot be set.', array('@name' => $public_field_name)));
       }
 
-      unset($original_request[$public_field_name]);
+      unset($unprocessed_fields[$public_field_name]);
       $save = TRUE;
     }
 
@@ -707,9 +713,9 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       throw new \RestfulBadRequestException('No values were sent with the request');
     }
 
-    if ($original_request) {
+    if ($unprocessed_fields) {
       // Request had illegal values.
-      $error_message = format_plural(count($original_request), 'Property @names is invalid.', 'Property @names are invalid.', array('@names' => implode(', ', array_keys($original_request))));
+      $error_message = format_plural(count($unprocessed_fields), 'Property @names is invalid.', 'Property @names are invalid.', array('@names' => implode(', ', array_keys($unprocessed_fields))));
       throw new RestfulBadRequestException($error_message);
     }
 
