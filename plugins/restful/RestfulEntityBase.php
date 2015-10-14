@@ -652,9 +652,9 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    * @param EntityMetadataWrapper $wrapper
    *   The wrapped entity object, passed by reference.
    * @param bool $null_missing_fields
-   *   Determine if properties that are missing form the request array should
+   *   Determine if properties that are missing from the request array should
    *   be treated as NULL, or should be skipped. Defaults to FALSE, which will
-   *   set the fields to NULL.
+   *   skip, instead of setting the fields to NULL.
    *
    * @throws RestfulBadRequestException
    */
