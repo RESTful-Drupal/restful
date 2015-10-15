@@ -501,7 +501,7 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
     variable_set('restful_test_alternative_id_error', TRUE);
     $resource_manager->clearPluginCache('main:1.7');
     $handler = $resource_manager->getPlugin('main:1.7');
-    $handler->setRequest(Request::create('api/main/v1.7/' . $entities[2]->uuid));
+    $handler->setRequest(Request::create('api/main/v1.7/' . $entities[2]->uuid, array('include' => 'entity_reference_resource_error')));
     $handler->setPath($entities[2]->uuid);
     $format_manager->setResource($handler);
     try {
