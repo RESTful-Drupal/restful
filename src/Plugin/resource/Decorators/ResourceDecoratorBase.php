@@ -309,4 +309,11 @@ abstract class ResourceDecoratorBase extends PluginBase implements ResourceDecor
     return $this->subject->getUrl($options, $keep_query, $request);
   }
 
+  /**
+   * If any method not declared, then defer it to the decorated field.
+   */
+  public function __call($name, $arguments) {
+    return call_user_func_array(array($this->subject, $name), $arguments);
+  }
+
 }
