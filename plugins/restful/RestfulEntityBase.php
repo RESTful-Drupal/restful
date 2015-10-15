@@ -693,7 +693,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
 
     if (module_exists('title')) {
       $title_field_info = field_info_field('title_field');
-      if (!empty($title_field_info['bundles']) && in_array($this->getBundle(), $title_field_info['bundles'][$this->getEntityType()])) {
+      if (!empty($title_field_info['bundles'][$this->getEntityType()]) && in_array($this->getBundle(), $title_field_info['bundles'][$this->getEntityType()])) {
         $title_field['field_name'] = $title_field_info['field_name'];
         $title_field['original_property'] = $entity_info['entity keys']['label'];
       }
