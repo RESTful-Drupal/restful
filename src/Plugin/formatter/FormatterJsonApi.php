@@ -128,17 +128,17 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
         continue;
       }
       $interpreter = $data->getInterpreter();
-      $output['__fields'][$public_field_name] = $this->embedField($resource_field, $interpreter, $parents, $parent_hashes);
+      $output['#fields'][$public_field_name] = $this->embedField($resource_field, $interpreter, $parents, $parent_hashes);
     }
 
     if ($data instanceof ResourceFieldCollectionInterface) {
-      $output['__resource__name'] = $data->getResourceName();
-      $output['__resource__plugin'] = $data->getResourceId();
+      $output['#resource_name'] = $data->getResourceName();
+      $output['#resource_plugin'] = $data->getResourceId();
       $resource_id = $data->getIdField()->render($data->getInterpreter());
       if (!is_array($resource_id)) {
         // In some situations when making an OPTIONS call the $resource_id
         // returns the array of discovery information instead of a real value.
-        $output['__resource__id'] = (string) $resource_id;
+        $output['#resource_id'] = (string) $resource_id;
         $self = restful()
           ->getResourceManager()
           ->getPlugin($data->getResourceId())
@@ -279,37 +279,37 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
       $depth--;
       return $result;
     }
-    if (!empty($output['__resource__name'])) {
-      $result['type'] = $output['__resource__name'];
+    if (!empty($output['#resource_name'])) {
+      $result['type'] = $output['#resource_name'];
     }
-    if (!empty($output['__resource__id'])) {
-      $result['id'] = $output['__resource__id'];
+    if (!empty($output['#resource_id'])) {
+      $result['id'] = $output['#resource_id'];
     }
-    if (!isset($output['__fields'])) {
+    if (!isset($output['#fields'])) {
       $depth--;
       return $this->renormalize($output, $included, $allowed_fields);
     }
-    foreach ($output['__fields'] as $field_name => $field_contents) {
+    foreach ($output['#fields'] as $field_name => $field_contents) {
       if ($allowed_fields !== FALSE && !in_array($field_name, $allowed_fields)) {
         continue;
       }
-      if (empty($field_contents['__embedded'])) {
+      if (empty($field_contents['#embedded'])) {
         $result['attributes'][$field_name] = $field_contents;
       }
       else {
         // Handle single and multiple relationships.
         $rel = array();
-        $single_item = $field_contents['__cardinality'] == 1;
-        unset($field_contents['__embedded']);
-        unset($field_contents['__cardinality']);
+        $single_item = $field_contents['#cardinality'] == 1;
+        unset($field_contents['#embedded']);
+        unset($field_contents['#cardinality']);
         foreach ($field_contents as $field_item) {
           $field_item = $this->populateCachePlaceholder($field_item);
-          unset($field_item['__cache_placeholder']);
-          $element = $field_item['__relationship__info'];
-          unset($field_item['__relationship__info']);
-          $field_path = $field_item['__relationship__field_path'];
-          unset($field_item['__relationship__field_path']);
-          $include_key = $field_item['__resource__plugin'] . '--' . $field_item['__resource__id'];
+          unset($field_item['#cache_placeholder']);
+          $element = $field_item['#relationship_info'];
+          unset($field_item['#relationship_info']);
+          $field_path = $field_item['#relationship_field_path'];
+          unset($field_item['#relationship_field_path']);
+          $include_key = $field_item['#resource_plugin'] . '--' . $field_item['#resource_id'];
           $nested_allowed_fields = $this->unprefixInputOptions($allowed_fields, $field_name);
           // If we get here is because the relationship is included in the
           // sparse fieldset. That means that in this context, empty field
@@ -387,9 +387,9 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
     $ids = $cardinality == 1 ? $ids = array($ids) : $ids;
     $value = array();
     $empty_value = array(
-      '__fields' => array(),
-      '__embedded' => TRUE,
-      '__cache_placeholder' => array(
+      '#fields' => array(),
+      '#embedded' => TRUE,
+      '#cache_placeholder' => array(
         'parents' => array_merge($parents, array($resource_field->getPublicName())),
         'parent_hashes' => $parent_hashes,
       ),
@@ -412,10 +412,10 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
       // in the relationship.
       $filter_invalid_ids = function ($resource_id) use ($value) {
         foreach ($value as $info) {
-          if (empty($info['__resource__id'])) {
+          if (empty($info['#resource_id'])) {
             return FALSE;
           }
-          if ($info['__resource__id'] == $resource_id) {
+          if ($info['#resource_id'] == $resource_id) {
             return TRUE;
           }
         }
@@ -450,11 +450,11 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
       // including the parents.
       $include_path = $this->buildIncludePath($parents, $public_field_name);
       $item = array(
-        '__resource__name' => $basic_info['type'],
-        '__resource__plugin' => $resource_plugin->getPluginId(),
-        '__resource__id' => $basic_info['id'],
-        '__relationship__field_path' => $include_path,
-        '__relationship__info' => array(
+        '#resource_name' => $basic_info['type'],
+        '#resource_plugin' => $resource_plugin->getPluginId(),
+        '#resource_id' => $basic_info['id'],
+        '#relationship_field_path' => $include_path,
+        '#relationship_info' => array(
           'data' => array(
             'type' => $basic_info['type'],
             'id' => $basic_info['id'],
@@ -465,8 +465,8 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
       $output[] = $item;
     }
     return $output + array(
-      '__embedded' => TRUE,
-      '__cardinality' => $cardinality,
+      '#embedded' => TRUE,
+      '#cardinality' => $cardinality,
     );
   }
 
@@ -514,33 +514,39 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
   }
 
   /**
-   * @param $field_item
+   * Given a field item that contains a cache placeholder render and cache it.
+   *
+   * @param array $field_item
+   *   The output to render.
+   *
    * @return array
+   *   The rendered embedded field item.
+   *
    * @throws \Drupal\restful\Exception\InternalServerErrorException
    */
-  protected function populateCachePlaceholder($field_item) {
-    if (empty($field_item['__cache_placeholder']) || empty($field_item['__resource__id'])) {
+  protected function populateCachePlaceholder(array $field_item) {
+    if (empty($field_item['#cache_placeholder']) || empty($field_item['#resource_id'])) {
       return $field_item;
     }
     $embedded_resource = restful()
       ->getResourceManager()
-      ->getPluginCopy($field_item['__resource__plugin']);
+      ->getPluginCopy($field_item['#resource_plugin']);
     $request = clone $this->getRequest();
     $input = $request->getParsedInput();
     $new_input = $input + array('include' => '', 'fields' => '');
     // If the field is not supposed to be included, then bail.
-    if (!in_array($field_item['__relationship__field_path'], explode(',', $new_input['include']))) {
+    if (!in_array($field_item['#relationship_field_path'], explode(',', $new_input['include']))) {
       return $field_item;
     }
-    $new_input['fields'] = implode(',', $this->unprefixInputOptions(explode(',', $new_input['fields']), $field_item['__relationship__field_path']));
-    $new_input['include'] = implode(',', $this->unprefixInputOptions(explode(',', $new_input['include']), $field_item['__relationship__field_path']));
+    $new_input['fields'] = implode(',', $this->unprefixInputOptions(explode(',', $new_input['fields']), $field_item['#relationship_field_path']));
+    $new_input['include'] = implode(',', $this->unprefixInputOptions(explode(',', $new_input['include']), $field_item['#relationship_field_path']));
     $request->setParsedInput(array_filter($new_input));
     $embedded_resource->setRequest($request);
     $data = $embedded_resource->getDataProvider()
-      ->view($field_item['__resource__id']);
+      ->view($field_item['#resource_id']);
     return array_merge(
       $field_item,
-      $this->extractFieldValues($data, $field_item['__cache_placeholder']['parents'], $field_item['__cache_placeholder']['parent_hashes'])
+      $this->extractFieldValues($data, $field_item['#cache_placeholder']['parents'], $field_item['#cache_placeholder']['parent_hashes'])
     );
   }
 
