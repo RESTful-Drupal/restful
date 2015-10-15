@@ -63,10 +63,6 @@ class RestfulUpdateEntityTestCase extends DrupalWebTestCase {
     $new_label = $this->randomName();
     $new_body = $this->randomName();
 
-    // Wrapping the body text with a <p> tag and line break, to imitate the way
-    // drupal treats plain text in the body field.
-    $new_body = "<p>$new_body</p>\n";
-
     $request = array(
       'label' => $new_label,
       'body' => $new_body
@@ -74,7 +70,7 @@ class RestfulUpdateEntityTestCase extends DrupalWebTestCase {
     // Setting new value for 'body'.
     $result = $handler->put($id, $request);
     // Making sure the new body has been set.
-    $this->assertEqual($result[0]['body'], $new_body);
+    $this->assertEqual(trim(strip_tags($result[0]['body'])), $new_body);
 
     // Removing the body value.
     $request = array(
@@ -129,15 +125,11 @@ class RestfulUpdateEntityTestCase extends DrupalWebTestCase {
 
     $new_body = $this->randomName();
 
-    // Wrapping the body text with a <p> tag and line break, to imitate the way
-    // drupal treats plain text in the body field.
-    $new_body = "<p>$new_body</p>\n";
-
     $request = array('body' => $new_body);
     // Setting new value for 'body'.
     $result = $handler->patch($id, $request);
     // Making sure the new body has been set.
-    $this->assertEqual($result[0]['body'], $new_body);
+    $this->assertEqual(trim(strip_tags($result[0]['body'])), $new_body);
 
     // Removing the body value.
     $request = array('body' => NULL);
