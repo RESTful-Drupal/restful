@@ -13,7 +13,6 @@ use Drupal\restful\Exception\UnprocessableEntityException;
 use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataProvider\DataProvider;
-use Drupal\restful\Plugin\resource\DataProvider\DataProviderResource;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
 use Drupal\restful\Plugin\resource\Field\PublicFieldInfo\PublicFieldInfoEntity;
 use Drupal\restful\Plugin\resource\Field\PublicFieldInfo\PublicFieldInfoEntityInterface;

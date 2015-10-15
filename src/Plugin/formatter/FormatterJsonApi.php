@@ -483,7 +483,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
    */
   protected function needsIncluding(ResourceFieldResourceInterface $resource_field, $parents) {
     $input = $this->getRequest()->getParsedInput();
-    $includes = explode(',', $input['include']);
+    $includes = empty($input['include']) ? array() : explode(',', $input['include']);
     return in_array($this->buildIncludePath($parents, $resource_field->getPublicName()), $includes);
   }
 
