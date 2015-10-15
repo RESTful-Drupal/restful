@@ -525,7 +525,11 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
    * @throws \Drupal\restful\Exception\InternalServerErrorException
    */
   protected function populateCachePlaceholder(array $field_item) {
-    if (empty($field_item['#cache_placeholder']) || empty($field_item['#resource_id'])) {
+    if (
+      empty($field_item['#cache_placeholder']) ||
+      empty($field_item['#resource_id']) ||
+      empty($field_item['#resource_plugin'])
+    ) {
       return $field_item;
     }
     $embedded_resource = restful()
