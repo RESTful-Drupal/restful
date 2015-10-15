@@ -253,7 +253,7 @@ abstract class Formatter extends PluginBase implements FormatterInterface {
       if ($allowed_fields !== FALSE && !in_array($field_name, $allowed_fields)) {
         continue;
       }
-      $result[$field_name] = $this->limitFields($field_contents, $this->unprefixAllowedFields($allowed_fields, $field_name));
+      $result[$field_name] = $this->limitFields($field_contents, $this->unprefixInputOptions($allowed_fields, $field_name));
     }
     return $result;
   }
@@ -269,7 +269,7 @@ abstract class Formatter extends PluginBase implements FormatterInterface {
    * @return bool|string[]
    *   The new allowed fields for the nested sub-request.
    */
-  protected static function unprefixAllowedFields($allowed_fields, $prefix) {
+  protected static function unprefixInputOptions($allowed_fields, $prefix) {
     if ($allowed_fields === FALSE) {
       return FALSE;
     }

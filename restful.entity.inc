@@ -86,9 +86,11 @@ function restful_entity_update($entity, $type) {
     if (!$handler->hasSimpleInvalidation()) {
       return;
     }
-    $handler
-      ->getCacheController()
-      ->clear($hash);
+    // You can get away without the fragments for a clear.
+    $cache_object = new RenderCache(new ArrayCollection(), $hash, $handler->getCacheController());
+    // Do a clear with the RenderCache object to also remove the cache fragment
+    // entities.
+    $cache_object->clear();
   }
 }
 
@@ -106,10 +108,11 @@ function restful_entity_delete($entity, $type) {
     if (!$handler->hasSimpleInvalidation()) {
       return;
     }
-    // Resource takes care of its own invalidation.
-    $handler
-      ->getCacheController()
-      ->clear($hash);
+    // You can get away without the fragments for a clear.
+    $cache_object = new RenderCache(new ArrayCollection(), $hash, $handler->getCacheController());
+    // Do a clear with the RenderCache object to also remove the cache fragment
+    // entities.
+    $cache_object->clear();
   }
 }
 

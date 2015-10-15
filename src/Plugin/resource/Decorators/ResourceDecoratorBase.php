@@ -309,4 +309,11 @@ abstract class ResourceDecoratorBase extends PluginBase implements ResourceDecor
     return $this->subject->getUrl($options, $keep_query, $request);
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getPluginId() {
+    return $this->subject->getPluginId();
+  }
+
 }

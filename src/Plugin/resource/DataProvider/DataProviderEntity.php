@@ -1106,7 +1106,9 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
       list($item, $definitions) = $this->getFieldsFromPublicNameItem($resource_field);
       $fields[] = $item;
     }
-    $resource_field = $definitions->get($last_public_field_name);
+    if (!$resource_field = $definitions->get($last_public_field_name)) {
+      throw new BadRequestException(sprintf('Invalid nested field provided %s', $last_public_field_name));
+    }
     $property = $resource_field->getProperty();
     $item = array(
       'name' => $property,
