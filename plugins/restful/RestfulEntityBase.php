@@ -652,7 +652,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    * @param EntityMetadataWrapper $wrapper
    *   The wrapped entity object, passed by reference.
    * @param bool $null_missing_fields
-   *   Determine if properties that are missing form the request array should
+   *   Determine if properties that are missing from the request array should
    *   be treated as NULL, or should be skipped. Defaults to FALSE, which will
    *   set the fields to NULL.
    *
@@ -682,14 +682,19 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       $property_name = $info['property'];
 
       if (!array_key_exists($public_field_name, $request)) {
+        // No property to set in the request.
         if ($null_missing_fields && $this->checkPropertyAccess('edit', $public_field_name, $wrapper->{$property_name}, $wrapper)) {
+          // We need to set the value to NULL.
           $field_value = NULL;
         }
         else {
+          // Either we shouldn't set missing fields as NULL or access is denied
+          // for the current property, hence we skip.
           continue;
         }
       }
       else {
+        // Property is set in the request.
         $field_value = $this->propertyValuesPreprocess($property_name, $request[$public_field_name], $public_field_name);
       }
 
