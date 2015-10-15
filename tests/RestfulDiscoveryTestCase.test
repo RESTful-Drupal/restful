@@ -87,7 +87,7 @@ class RestfulDiscoveryTestCase extends RestfulCurlBaseTestCase {
         ),
         'form_element' => array (
           'allowed_values' => NULL,
-          'type' => 'texfield',
+          'type' => 'textfield',
           'default_value' => '',
           'placeholder' => '',
           'size' => 255,

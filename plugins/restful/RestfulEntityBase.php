@@ -722,7 +722,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    * @param EntityMetadataWrapper $wrapper
    *   The wrapped entity object, passed by reference.
    * @param bool $null_missing_fields
-   *   Determine if properties that are missing form the request array should
+   *   Determine if properties that are missing from the request array should
    *   be treated as NULL, or should be skipped. Defaults to FALSE, which will
    *   set the fields to NULL.
    *
@@ -759,57 +759,65 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       }
 
       $property_name = $info['property'];
-      if (!isset($request[$public_field_name])) {
+
+      if (!array_key_exists($public_field_name, $request)) {
         // No property to set in the request.
         if ($null_missing_fields && $this->checkPropertyAccess('edit', $public_field_name, $wrapper->{$property_name}, $wrapper)) {
           // We need to set the value to NULL.
-          $wrapper->{$property_name}->set(NULL);
+          $field_value = NULL;
         }
-        continue;
-      }
-
-      if (field_is_translatable($this->entityType, field_info_field($info['property']))) {
-        $values = $request[$public_field_name];
-
-        // Parse values in case it still not an array.
-        if (!is_array($values)) {
-          $values = drupal_json_decode($values);
-        }
-
-        // When the data that has been passed to the request isn't compatible.
-        if (empty($values)) {
-          throw new \RestfulBadRequestException(format_string('Invalid data has been passed to the translatable field \'@field\'.', array('@field' => $public_field_name)));
-        }
-
-        $enabled_languages = array_keys(language_list());
-        foreach ($values as $current_language => $current_language_value) {
-
-          // Current language is not enabled.
-          if (!in_array($current_language, $enabled_languages)) {
-            throw new \RestfulBadRequestException(format_string('The language @language is not enabled.', array('@language' => $current_language)));
-          }
-
-          $field_value = $this->propertyValuesPreprocess($property_name, $current_language_value, $public_field_name);
-
-          $wrapper->language($current_language);
-
-          // Special case when title is being set in default language, since
-          // the hook_node_presave on the 'title' module is syncing between the
-          // title property and the title field in the default language, hence
-          // we should set the original property as well.
-          if (!empty($title_field) && $title_field['field_name'] == $property_name && $default_language->language == $current_language) {
-            $wrapper->{$title_field['original_property']}->set($field_value);
-          }
-
-          $wrapper->{$property_name}->set($field_value);
+        else {
+          // Either we shouldn't set missing fields as NULL or access is denied
+          // for the current property, hence we skip.
+          continue;
         }
       }
       else {
-        $field_value = $this->propertyValuesPreprocess($property_name, $request[$public_field_name], $public_field_name);
-        // Field is not translatable.
-        $wrapper->{$property_name}->set($field_value);
+        // Property is set in the request.
 
+        if (field_is_translatable($this->entityType, field_info_field($info['property']))) {
+          $values = $request[$public_field_name];
+
+          // Parse values in case it still not an array.
+          if (!is_array($values)) {
+            $values = drupal_json_decode($values);
+          }
+
+          // When the data that has been passed to the request isn't compatible.
+          if (empty($values)) {
+            throw new \RestfulBadRequestException(format_string('Invalid data has been passed to the translatable field \'@field\'.', array('@field' => $public_field_name)));
+          }
+
+          $enabled_languages = array_keys(language_list());
+          foreach ($values as $current_language => $current_language_value) {
+
+            // Current language is not enabled.
+            if (!in_array($current_language, $enabled_languages)) {
+              throw new \RestfulBadRequestException(format_string('The language @language is not enabled.', array('@language' => $current_language)));
+            }
+
+            $field_value = $this->propertyValuesPreprocess($property_name, $current_language_value, $public_field_name);
+
+            $wrapper->language($current_language);
+
+            // Special case when title is being set in default language, since
+            // the hook_node_presave on the 'title' module is syncing between the
+            // title property and the title field in the default language, hence
+            // we should set the original property as well.
+            if (!empty($title_field) && $title_field['field_name'] == $property_name && $default_language->language == $current_language) {
+              $wrapper->{$title_field['original_property']}->set($field_value);
+            }
+
+            $wrapper->{$property_name}->set($field_value);
+          }
+        }
+        else {
+          // Field is not translatable.
+          $field_value = $this->propertyValuesPreprocess($property_name, $request[$public_field_name], $public_field_name);
+        }
       }
+
+      $wrapper->{$property_name}->set($field_value);
 
       // We check the property access only after setting the values, as the
       // access callback's response might change according to the field value.
@@ -855,6 +863,11 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    *   The value to set using the wrapped property.
    */
   public function propertyValuesPreprocess($property_name, $value, $public_field_name) {
+    // If value is NULL, just return.
+    if (!isset($value)) {
+      return NULL;
+    }
+
     // Get the field info.
     $field_info = field_info_field($property_name);
 
@@ -1355,7 +1368,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
           ),
           // Information about the form element.
           'form_element' => array(
-            'type' => 'texfield',
+            'type' => 'textfield',
             'size' => 255,
           ),
         ),
