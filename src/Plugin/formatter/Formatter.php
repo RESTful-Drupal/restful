@@ -73,6 +73,9 @@ abstract class Formatter extends PluginBase implements FormatterInterface {
    */
   public function setResource(ResourceInterface $resource) {
     $this->resource = $resource;
+    $this->setConfiguration(array(
+      'resource' => $resource,
+    ));
   }
 
   /**
