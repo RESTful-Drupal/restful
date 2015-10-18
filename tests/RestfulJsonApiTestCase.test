@@ -111,7 +111,7 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
     // Make sure that the entity_reference_*_resource are included as
     // relationships.
     $this->assertEqual($relationships['entity_reference_multiple_resource']['links'], array(
-      'self' => $this->handler->versionedUrl($wrapper->getIdentifier() . '/relationships/entity_reference_single_resource'),
+      'self' => $this->handler->versionedUrl($wrapper->getIdentifier() . '/relationships/entity_reference_multiple_resource'),
       'related' => $this->handler->versionedUrl('', array('query' => array('filter' => array('entity_reference_multiple_resource' => $wrapper->entity_reference_multiple[0]->getIdentifier())))),
     ));
     $this->assertEqual($relationships['entity_reference_single_resource']['data']['type'], 'main');
