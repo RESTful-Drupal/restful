@@ -177,9 +177,7 @@ function restful_menu_access_callback($resource_name, $version_string = NULL) {
     // be negotiated.
   }
   catch (\Drupal\Component\Plugin\Exception\PluginNotFoundException $e) {
-    drupal_add_http_header('Status', 404);
-    restful_deliver_menu_not_found(MENU_NOT_FOUND);
-    drupal_page_footer();
+    restful_delivery(MENU_NOT_FOUND);
     exit();
   }
   return FALSE;
@@ -247,24 +245,7 @@ function restful_menu_process_callback($resource_name, $version = NULL) {
     return $resource->process();
   }
   catch (RestfulException $e) {
-    $result = array(
-      'type' => $e->getType(),
-      'title' => $e->getMessage(),
-      'status' => $e->getCode(),
-      'detail' => $e->getDescription(),
-    );
-
-    if ($instance = $e->getInstance()) {
-      $result['instance'] = $instance;
-    }
-
-    if ($errors = $e->getFieldErrors()) {
-      $result['errors'] = $errors;
-    }
-
-    foreach ($e->getHeaders() as $header_name => $header_value) {
-      drupal_add_http_header($header_name, $header_value);
-    }
+    $result = _restful_build_http_api_error($e);
   }
   catch (Exception $e) {
     $result = array(
@@ -300,10 +281,6 @@ function restful_delivery($var = NULL, $method = 'format') {
   if (!empty($var['status'])) {
     $response->setStatusCode($var['status']);
   }
-  // Adhere to the API Problem draft proposal.
-  $response
-    ->getHeaders()
-    ->add(HttpHeader::create('Content-Type', 'application/problem+json; charset=utf-8'));
   if (is_int($var)) {
     _restful_get_data_from_menu_status($var);
     if (!empty($var['status'])) {
@@ -353,8 +330,9 @@ function restful_delivery($var = NULL, $method = 'format') {
   }
   catch (RestfulException $e) {
     // Handle if the formatter does not exist.
-    drupal_add_http_header('Status', $e->getCode());
-    echo $e->getMessage();
+    $output = _restful_build_http_api_error($e);
+    $response->setContent(drupal_json_encode($output));
+    $response->send();
     return;
   }
 
@@ -415,23 +393,42 @@ function _restful_get_data_from_menu_status(&$var) {
       $message = 'Unknown exception';
   }
 
-  /* @var RestfulException $e */
-  $e = new $class_name($message);
+  $var = _restful_build_http_api_error(new $class_name($message));
+}
 
-  $var = array(
-    'type' => $e->getType(),
-    'title' => $e->getMessage(),
-    'status' => $e->getCode(),
-    'detail' => $e->getDescription(),
+/**
+ * Helper function to build the structured array for the error output.
+ *
+ * @param RestfulException $exception
+ *   The exception.
+ *
+ * @return array
+ *   The structured output.
+ */
+function _restful_build_http_api_error(RestfulException $exception) {
+  // Adhere to the API Problem draft proposal.
+  $exception->setHeader('Content-Type', 'application/problem+json; charset=utf-8');
+  $result = array(
+    'type' => $exception->getType(),
+    'title' => $exception->getMessage(),
+    'status' => $exception->getCode(),
+    'detail' => $exception->getDescription(),
   );
 
-  if ($instance = $e->getInstance()) {
-    $var['instance'] = $instance;
+  if ($instance = $exception->getInstance()) {
+    $result['instance'] = $instance;
   }
 
-  if ($errors = $e->getFieldErrors()) {
-    $var['errors'] = $errors;
+  if ($errors = $exception->getFieldErrors()) {
+    $result['errors'] = $errors;
   }
+
+  $headers = restful()->getResponse()->getHeaders();
+  foreach ($exception->getHeaders() as $header_name => $header_value) {
+    $headers->add(HttpHeader::create('Content-Type', 'application/problem+json; charset=utf-8'));
+  }
+  drupal_page_is_cacheable(FALSE);
+  return $result;
 }
 
 /**
