@@ -150,7 +150,7 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
               'type' => 'main',
             ),
             'links' => array(
-              'self' => $this->handler->versionedUrl($wrapper->entity_reference_single->entity_reference_single->getIdentifier()),
+              'self' => $this->handler->versionedUrl($wrapper->entity_reference_multiple[0]->getIdentifier() . '/relationships/entity_reference_single_resource'),
               'related' => $this->handler->versionedUrl('', array('query' => array('filter' => array('entity_reference_single_resource' => $wrapper->entity_reference_single->entity_reference_single->getIdentifier())))),
             ),
           ),
@@ -214,7 +214,7 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
               'type' => 'main',
             ),
             'links' => array(
-              'self' => $this->handler->versionedUrl($wrapper->entity_reference_single->entity_reference_single->getIdentifier()),
+              'self' => $this->handler->versionedUrl($wrapper->entity_reference_multiple[0]->getIdentifier() . '/relationships/entity_reference_single_resource'),
               'related' => $this->handler->versionedUrl('', array('query' => array('filter' => array('entity_reference_single_resource' => $wrapper->entity_reference_single->entity_reference_single->getIdentifier())))),
             ),
           ),
@@ -343,7 +343,7 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
               'type' => 'main',
             ),
             'links' => array(
-              'self' => $this->handler->versionedUrl($wrapper->entity_reference_single->entity_reference_single->getIdentifier()),
+              'self' => $this->handler->versionedUrl($wrapper->entity_reference_single->getIdentifier() . '/relationships/entity_reference_single_resource'),
               'related' => $this->handler->versionedUrl('', array('query' => array('filter' => array('entity_reference_single_resource' => $wrapper->entity_reference_single->entity_reference_single->getIdentifier())))),
             ),
           ),

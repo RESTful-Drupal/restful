@@ -470,13 +470,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
           'filter' => array($public_field_name => reset($ids)),
         ),
       ));
-      // The self link will be different depending on the cardinality.
-      if ($cardinality == 1) {
-        $links['self'] = $resource_plugin->versionedUrl(reset($ids));
-      }
-      else {
-        $links['self'] = $resource_plugin->versionedUrl($parent_id . '/relationships/' . $public_field_name);
-      }
+      $links['self'] = $resource_plugin->versionedUrl($parent_id . '/relationships/' . $public_field_name);
     }
 
     return $output + array(
