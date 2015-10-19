@@ -140,7 +140,6 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
         ),
         'id' => $wrapper->entity_reference_multiple[0]->getIdentifier(),
         'links' => array(
-          'related' => $this->handler->versionedUrl('', array('query' => array('filter' => array('entity_reference_multiple_resource' => $wrapper->entity_reference_multiple[0]->getIdentifier())))),
           'self' => $this->handler->versionedUrl($wrapper->entity_reference_multiple[0]->getIdentifier()),
         ),
         'type' => 'main',
@@ -165,7 +164,6 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
         ),
         'id' => $wrapper->entity_reference_multiple[1]->getIdentifier(),
         'links' => array(
-          'related' => $this->handler->versionedUrl('', array('query' => array('filter' => array('entity_reference_multiple_resource' => $wrapper->entity_reference_multiple[1]->getIdentifier())))),
           'self' => $this->handler->versionedUrl($wrapper->entity_reference_multiple[1]->getIdentifier()),
         ),
         'type' => 'main',
@@ -206,7 +204,6 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
         ),
         'id' => $wrapper->entity_reference_multiple[0]->getIdentifier(),
         'links' => array(
-          'related' => $this->handler->versionedUrl('', array('query' => array('filter' => array('entity_reference_single_resource' => $wrapper->entity_reference_multiple[0]->getIdentifier())))),
           'self' => $this->handler->versionedUrl($wrapper->entity_reference_multiple[0]->getIdentifier()),
         ),
         'type' => 'main',
@@ -231,7 +228,6 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
         ),
         'id' => $wrapper->entity_reference_multiple[1]->getIdentifier(),
         'links' => array(
-          'related' => $this->handler->versionedUrl('', array('query' => array('filter' => array('entity_reference_single_resource' => $wrapper->entity_reference_multiple[1]->getIdentifier())))),
           'self' => $this->handler->versionedUrl($wrapper->entity_reference_multiple[1]->getIdentifier()),
         ),
         'type' => 'main',
@@ -320,7 +316,6 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
         'type' => 'main',
         'id' => (string) $wrapper->entity_reference_single->entity_reference_single->getIdentifier(),
         'links' => array(
-          'related' => $this->handler->versionedUrl('', array('query' => array('filter' => array('entity_reference_single_resource' => $wrapper->entity_reference_single->entity_reference_single->getIdentifier())))),
           'self' => $this->handler->versionedUrl($wrapper->entity_reference_single->entity_reference_single->getIdentifier()),
         ),
         'attributes' => array(
@@ -333,7 +328,6 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
         'type' => 'main',
         'id' => (string) $wrapper->entity_reference_single->getIdentifier(),
         'links' => array(
-          'related' => $this->handler->versionedUrl('', array('query' => array('filter' => array('entity_reference_single_resource' => $wrapper->entity_reference_single->getIdentifier())))),
           'self' => $this->handler->versionedUrl($wrapper->entity_reference_single->getIdentifier()),
         ),
         'attributes' => array(

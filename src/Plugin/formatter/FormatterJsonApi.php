@@ -139,11 +139,6 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
         // In some situations when making an OPTIONS call the $resource_id
         // returns the array of discovery information instead of a real value.
         $output['#resource_id'] = (string) $resource_id;
-        $self = restful()
-          ->getResourceManager()
-          ->getPlugin($data->getResourceId())
-          ->versionedUrl($resource_id);
-        $output['links'] = array('self' => $self);
       }
     }
     if ($this->isCacheEnabled($data)) {
@@ -300,11 +295,13 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
         // Handle single and multiple relationships.
         $rel = array();
         $single_item = $field_contents['#cardinality'] == 1;
-        $links = $field_contents['#relationship_links'];
+        $relationship_links = empty($field_contents['#relationship_links']) ? NULL : $field_contents['#relationship_links'];
         unset($field_contents['#embedded']);
         unset($field_contents['#cardinality']);
         unset($field_contents['#relationship_links']);
         foreach ($field_contents as $field_item) {
+          $include_links = empty($field_item['#include_links']) ? NULL : $field_item['#include_links'];
+          unset($field_contents['#include_links']);
           $field_item = $this->populateCachePlaceholder($field_item);
           unset($field_item['#cache_placeholder']);
           $element = $field_item['#relationship_info'];
@@ -317,14 +314,15 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
           // sparse fieldset. That means that in this context, empty field
           // limits mean all the fields.
           $included[$field_path][$include_key] = $this->renormalize($field_item, $included, $nested_allowed_fields);
+          $included[$field_path][$include_key] += $include_links ? array('links' => $include_links) : array();
           $rel[] = $element;
         }
         // Only place the relationship info.
         $result['relationships'][$field_name] = array(
           'data' => $single_item ? reset($rel) : $rel,
         );
-        if (!empty($links)) {
-          $result['relationships'][$field_name]['links'] = $links;
+        if (!empty($relationship_links)) {
+          $result['relationships'][$field_name]['links'] = $relationship_links;
         }
       }
     }
@@ -452,6 +450,9 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
         '#resource_plugin' => $resource_plugin->getPluginId(),
         '#resource_id' => $basic_info['id'],
         '#relationship_field_path' => $include_path,
+        '#include_links' => array(
+          'self' => $resource_plugin->versionedUrl($basic_info['id']),
+        ),
         '#relationship_info' => array(
           'type' => $basic_info['type'],
           'id' => $basic_info['id'],
