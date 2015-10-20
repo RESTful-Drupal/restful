@@ -210,7 +210,7 @@ function restful_angular_example_page($example) {
   if ($example == 'form') {
     // Pass info via Drupal.settings.
     $settings['restfulExample'] = array(
-      'basePath' => url('', array('absolute' => TRUE)),
+      'basePath' => url('', array('absolute' => TRUE)) . '/',
       'csrfToken' => drupal_get_token(\RestfulInterface::TOKEN_VALUE),
       'data' => array(
         'article' => array(
@@ -235,7 +235,7 @@ function restful_angular_example_page($example) {
     // Theme function simply declares the angular app, and ng-includes the app's
     // view.
     $app_path = drupal_get_path('module', 'restful_angular_example') . '/components/restful-app/dist';
-    $url = url($app_path . '/views/form.html', array('absolute' => TRUE));
+    $url = url($app_path . '/views/form.html', array('absolute' => TRUE, 'language' => LANGUAGE_NONE));
 
     // Add the library.
     drupal_add_library('restful_angular_example', 'restful-angular-form');
@@ -264,7 +264,7 @@ function restful_angular_example_page($example) {
     // Theme function simply declares the angular app, and ng-includes the app's
     // view.
     $app_path = drupal_get_path('module', 'restful_angular_example') . '/components/restful-app/dist';
-    $url = url($app_path . '/views/admin.html', array('absolute' => TRUE));
+    $url = url($app_path . '/views/admin.html', array('absolute' => TRUE, 'language' => LANGUAGE_NONE));
 
     // Add the library.
     drupal_add_library('restful_angular_example', 'restful-angular-admin');
