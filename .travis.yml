@@ -63,10 +63,7 @@ script:
 
   # Download and enable module and its dependencies
   - drush --yes dl registry_autoload
-  # Revert this when entity_validator has merged fixes and released 2.x to d.o
-  # - drush --yes dl entity_validator --dev
-  - git clone git@github.com:e0ipso/entity_validator.git $TRAVIS_BUILD_DIR/../drupal/sites/all/modules/entity_validator
-  - git co 2.x-refactor-and-fix-example
+  - drush --yes dl entity_validator-7.x-2.x
   - drush --yes dl plug
   - drush --yes dl entity
   - drush --yes dl entityreference
