@@ -313,7 +313,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
           // If the list of the child allowed fields is empty, but the parent is
           // part of the includes, it means that the consumer meant to include
           // all the fields in the children.
-          if (empty($nested_allowed_fields) && in_array($field_name, $allowed_fields)) {
+          if (is_array($allowed_fields) && empty($nested_allowed_fields) && in_array($field_name, $allowed_fields)) {
             $nested_allowed_fields = FALSE;
           }
           // If we get here is because the relationship is included in the
