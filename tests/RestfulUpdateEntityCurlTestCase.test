@@ -65,6 +65,7 @@ class RestfulUpdateEntityCurlTestCase extends RestfulCurlBaseTestCase {
 
     $expected_result = array(
       'data' => array(array(
+        'id' => '1',
         'label' => $new_label,
         'self' => url('api/v1.2/test_articles/' . $id, array('absolute' => TRUE)),
         'body' => NULL,
@@ -104,6 +105,7 @@ class RestfulUpdateEntityCurlTestCase extends RestfulCurlBaseTestCase {
     ));
     $expected_result = array(
       'data' => array(array(
+        'id' => '2',
         'label' => $new_label,
         'self' => url('api/v1.2/test_articles/' . $id, array('absolute' => TRUE)),
         'body' => $text,

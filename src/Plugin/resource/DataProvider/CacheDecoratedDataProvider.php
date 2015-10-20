@@ -8,12 +8,9 @@
 namespace Drupal\restful\Plugin\resource\DataProvider;
 
 use Doctrine\Common\Collections\ArrayCollection;
-use Drupal\restful\Exception\NotImplementedException;
-use Drupal\restful\Exception\UnauthorizedException;
-use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
+use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
-use Drupal\restful\Plugin\resource\ResourceInterface;
 
 class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface {
 
@@ -147,8 +144,8 @@ class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface 
   /**
    * {@inheritdoc}
    */
-  public function getContext($identifier) {
-    return $this->subject->getContext($identifier);
+  public function getCacheFragments($identifier) {
+    return $this->subject->getCacheFragments($identifier);
   }
 
   /**
@@ -186,15 +183,11 @@ class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface 
    * {@inheritdoc}
    */
   public function view($identifier) {
-    $context = $this->getContext($identifier);
-    $cached_data = $this->getRenderedCache($context);
-    if (!empty($cached_data->data)) {
-      return $cached_data->data;
-    }
-    $output = $this->subject->view($identifier);
+    /* @var ResourceFieldCollectionInterface $resource_field_collection */
+    $resource_field_collection = $this->subject->view($identifier);
 
-    $this->setRenderedCache($output, $context);
-    return $output;
+    $resource_field_collection->setContext('cache_fragments', $this->getCacheFragments($identifier));
+    return $resource_field_collection;
   }
 
   /**
@@ -217,7 +210,7 @@ class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface 
    * {@inheritdoc}
    */
   public function update($identifier, $object, $replace = TRUE) {
-    $this->clearRenderedCache($this->getContext($identifier));
+    $this->clearRenderedCache($this->getCacheFragments($identifier));
     return $this->subject->update($identifier, $object, $replace);
   }
 
@@ -225,7 +218,7 @@ class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface 
    * {@inheritdoc}
    */
   public function remove($identifier) {
-    $this->clearRenderedCache($this->getContext($identifier));
+    $this->clearRenderedCache($this->getCacheFragments($identifier));
     $this->subject->remove($identifier);
   }
 
@@ -241,218 +234,6 @@ class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface 
    */
   public function canonicalPath($path) {
     return $this->subject->canonicalPath($path);
-  }
-
-  /**
-   * Get an entry from the rendered cache.
-   *
-   * @param array $context
-   *   An associative array with additional information to build the cache ID.
-   *
-   * @return object
-   *   The cache with rendered entity as returned by DataProviderEntity::view().
-   *
-   * @see DataProviderEntity::view()
-   */
-  protected function getRenderedCache(array $context = array()) {
-    if (!$this->isCacheEnabled()) {
-      return NULL;
-    }
-
-    $cid = $this->generateCacheId($context);
-    return $this->cacheController->get($cid);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function generateCacheId(array $context = array()) {
-    // Get the cache ID from the selected params. We will use a complex cache
-    // ID for smarter invalidation. The cache id will be like:
-    // v<major version>.<minor version>::uu<user uid>::pa<params array>
-    // The code before every bit is a 2 letter representation of the label.
-    // For instance, the params array will be something like:
-    // fi:id,title::re:admin
-    // When the request has ?fields=id,title&restrict=admin
-    $options = $this->getOptions();
-
-    // TODO: Pass in the resource information needed here. I know, I know, …
-    $version = $options['resource']['version'];
-    $account = $this->getAccount();
-
-    $cache_info = $options['renderCache'];
-    if ($cache_info['granularity'] == DRUPAL_CACHE_PER_USER) {
-      $account_cid = '::uu' . $account->uid;
-    }
-    elseif ($cache_info['granularity'] == DRUPAL_CACHE_PER_ROLE) {
-      // Instead of encoding the user ID in the cache ID add the role ids.
-      $account_cid = '::ur' . implode(',', array_keys($account->roles));
-    }
-    else {
-      throw new NotImplementedException(sprintf('The selected cache granularity (%s) is not supported.', $cache_info['granularity']));
-    }
-    $base_cid = 'v' . $version['major'] . '.' . $version['minor'] . '::' . $options['resource']['name'] . $account_cid . '::pa';
-
-    // Now add the context part to the cid.
-    $cid_params = static::addCidParams($context);
-    if (Request::isReadMethod($this->getRequest()->getMethod())) {
-      // We don't want to split the cache with the body data on write requests.
-      $this->getRequest()->clearApplicationData();
-      $cid_params = array_merge($cid_params, static::addCidParams($this->getRequest()->getParsedInput()));
-    }
-
-    return $base_cid . implode('::', $cid_params);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function invalidateEntityCache($cid, RequestInterface $request = NULL) {
-    $plugins = restful()
-      ->getResourceManager()
-      ->getPlugins();
-    $request = $request ?: restful()->getRequest();
-    foreach ($plugins->getInstanceIds() as $instance_id) {
-      try {
-        $plugin = $plugins->get($instance_id);
-        if (!$plugin instanceof ResourceInterface) {
-          continue;
-        }
-        $data_provider = $plugin->getDataProvider();
-      }
-      catch (UnauthorizedException $e) {
-        // If the user cannot be authorized we don't need to worry about
-        // invalidating cache entries, since they won't be there.
-        continue;
-      }
-      $plugin->setRequest($request);
-      if (method_exists($data_provider, 'cacheInvalidate')) {
-        $version = $plugin->getVersion();
-        // Get the uid for the invalidation.
-        try {
-          $uid = $plugin->getAccount(FALSE)->uid;
-        }
-        catch (UnauthorizedException $e) {
-          // If no user could be found using the handler default to the logged
-          // in user.
-          $uid = $GLOBALS['user']->uid;
-        }
-        $version_cid = 'v' . $version['major'] . '.' . $version['minor'] . '::' . $plugin->getResourceMachineName() . '::uu' . $uid;
-        $data_provider->cacheInvalidate($version_cid . '::' . $cid);
-      }
-    }
-  }
-
-  /**
-   * {@inheritdoc}
-   *
-   * @see https://api.drupal.org/api/drupal/includes%21cache.inc/function/DrupalCacheInterface%3A%3Aclear/7
-   */
-  public function cacheInvalidate($cid) {
-    $options = $this->getOptions();
-    $cache_info = $options['renderCache'];
-
-    if (!$cache_info['simple_invalidate']) {
-      // Simple invalidation is disabled. This means it is up to the
-      // implementing module to take care of the invalidation.
-      return;
-    }
-    // If the $cid is not '*' then remove the asterisk since it can mess with
-    // dynamically built wildcards.
-    if ($cid != '*') {
-      $pos = strpos($cid, '*');
-      if ($pos !== FALSE) {
-        $cid = substr($cid, 0, $pos);
-      }
-    }
-    $this->cacheController->clear($cid, TRUE);
-  }
-
-  /**
-   * Get the cache id parameters based on the keys.
-   *
-   * @param array $keys
-   *   Keys to turn into cache id parameters.
-   *
-   * @return array
-   *   The cache id parameters.
-   */
-  protected static function addCidParams(array $keys) {
-    $cid_params = array();
-    foreach ($keys as $param => $value) {
-      // Some request parameters don't affect how the resource is rendered, this
-      // means that we should skip them for the cache ID generation.
-      if (in_array($param, array(
-        'filter',
-        'loadByFieldName',
-        'page',
-        'q',
-        'range',
-        'sort',
-      ))) {
-        continue;
-      }
-      // Make sure that ?fields=title,id and ?fields=id,title hit the same cache
-      // identifier.
-      $values = explode(',', $value);
-      sort($values);
-      $value = implode(',', $values);
-
-      $cid_params[] = substr($param, 0, 2) . ':' . $value;
-    }
-    return $cid_params;
-  }
-
-  /**
-   * Store an entry in the rendered cache.
-   *
-   * @param mixed $data
-   *   The data to be stored into the cache generated by
-   *   DataProviderEntity::view().
-   * @param array $context
-   *   An associative array with additional information to build the cache ID.
-   *
-   * @return array
-   *   The rendered entity as returned by DataProviderEntity::view().
-   *
-   * @see static::view()
-   */
-  protected function setRenderedCache($data, array $context = array()) {
-    if (!$this->isCacheEnabled()) {
-      return;
-    }
-
-    $cid = $this->generateCacheId($context);
-    $this->cacheController->set($cid, $data, $this->getOptions()['renderCache']['expire']);
-  }
-
-  /**
-   * Clear an entry from the rendered cache.
-   *
-   * @param array $context
-   *   An associative array with additional information to build the cache ID.
-   *
-   * @see static::view()
-   */
-  protected function clearRenderedCache(array $context = array()) {
-    if (!$this->isCacheEnabled()) {
-      return;
-    }
-
-    $cid = $this->generateCacheId($context);
-    $this->cacheController->clear($cid);
-  }
-
-  /**
-   * Helper function that checks if cache is enabled.
-   *
-   * @return bool
-   *   TRUE if the resource has cache enabled.
-   */
-  protected function isCacheEnabled() {
-    $options = $this->getOptions();
-    $cache_info = $options['renderCache'];
-    return isset($cache_info['render']);
   }
 
   /**

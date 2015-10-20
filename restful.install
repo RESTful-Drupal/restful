@@ -64,6 +64,47 @@ function restful_schema() {
     ),
     'primary key' => array('rlid'),
   );
+
+  // Cache fragment entity base table.
+  $schema['restful_cache_fragment'] = array(
+    'description' => 'Cache fragment base table',
+    'fields' => array(
+      'tid' => array(
+        'description' => 'The cache fragment unique ID.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'type' => array(
+        'description' => 'The type of the cache fragment, e.g "entity_id".',
+        'type' => 'varchar',
+        'length' => 64,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'value' => array(
+        'description' => 'The value for the tag. Example: 182.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'hash' => array(
+        'description' => 'The hash used as a cache ID.',
+        'type' => 'char',
+        'length' => 40,
+        'not null' => FALSE,
+        'default' => NULL,
+      ),
+    ),
+    'indexes' => array(
+      'cache_fragment_hash' => array('hash'),
+    ),
+    'unique keys' => array(
+      'hash_key_val' => array('type', 'value', 'hash'),
+    ),
+    'primary key' => array('tid'),
+  );
   return $schema;
 }
 
@@ -92,4 +133,12 @@ function restful_uninstall() {
   variable_del('restful_skip_basic_auth');
 
   variable_del('restful_allowed_origin');
+}
+
+/**
+ * Create the cache fragments schema.
+ */
+function restful_update_7200() {
+  $table_schema = drupal_get_schema('restful_cache_fragment', TRUE);
+  db_create_table('restful_cache_fragment', $table_schema);
 }

@@ -10,8 +10,8 @@ namespace Drupal\restful\Plugin\resource\Decorators;
 use Drupal\restful\Http\HttpHeader;
 use Drupal\restful\Plugin\resource\DataProvider\CacheDecoratedDataProvider;
 use Drupal\restful\Plugin\resource\DataProvider\DataProviderInterface;
-use Drupal\restful\Plugin\resource\Field\ResourceFieldCollection;
 use Drupal\restful\Plugin\resource\ResourceInterface;
+use Drupal\restful\RenderCache\Entity\CacheFragmentController;
 use Drupal\restful\Resource\ResourceManager;
 
 class CacheDecoratedResource extends ResourceDecoratorBase implements CacheDecoratedResourceInterface {
@@ -189,6 +189,24 @@ class CacheDecoratedResource extends ResourceDecoratorBase implements CacheDecor
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function update($path) {
+    $this->invalidateResourceCache($path);
+    // Update according to the decorated.
+    return $this->subject->update($path);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function replace($path) {
+    $this->invalidateResourceCache($path);
+    // Update according to the decorated.
+    return $this->subject->replace($path);
+  }
+
+  /**
    * Gets the default cache info.
    *
    * @return array
@@ -202,22 +220,10 @@ class CacheDecoratedResource extends ResourceDecoratorBase implements CacheDecor
       'class' => NULL,
       'bin' => 'cache_restful',
       'expire' => CACHE_PERMANENT,
-      'simple_invalidate' => TRUE,
+      'simpleInvalidate' => TRUE,
       'granularity' => DRUPAL_CACHE_PER_USER,
     );
     return $cache_info;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function invalidateResourceCache() {
-    $version = $this->getVersion();
-    $cid = 'v' . $version['major'] . '.' . $version['minor'] . '::' . $this->getResourceMachineName();
-    $data_provider = $this->getDataProvider();
-    if (method_exists($data_provider, 'cacheInvalidate')) {
-      $data_provider->cacheInvalidate($cid);
-    }
   }
 
   /**
@@ -263,6 +269,43 @@ class CacheDecoratedResource extends ResourceDecoratorBase implements CacheDecor
    */
   public function discover($path = NULL) {
     return $this->subject->discover($path);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function hasSimpleInvalidation() {
+    $data_provider = $this->getDataProvider();
+    $options = $data_provider->getOptions();
+    $cache_info = $options['renderCache'];
+    return !empty($cache_info['simpleInvalidate']);
+  }
+
+  /**
+   * Invalidates the resource cache for the given resource on the provided id.
+   *
+   * @param string $id
+   *   The id.
+   */
+  protected function invalidateResourceCache($id) {
+    // Invalidate the render cache for this resource.
+    $query = new \EntityFieldQuery();
+    $query
+      ->entityCondition('entity_type', 'cache_fragment')
+      ->propertyCondition('type', 'resource')
+      ->propertyCondition('value', $this->getResourceName());
+    if (!$hashes = CacheFragmentController::lookUpHashes($query)) {
+      return;
+    }
+    $query = new \EntityFieldQuery();
+    $query
+      ->entityCondition('entity_type', 'cache_fragment')
+      ->propertyCondition('type', 'id')
+      ->propertyCondition('value', $id)
+      ->propertyCondition('hash', $hashes, 'IN');
+    foreach (CacheFragmentController::lookUpHashes($query) as $hash) {
+      $this->getCacheController()->clear($hash);
+    }
   }
 
 }

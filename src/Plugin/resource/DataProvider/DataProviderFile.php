@@ -18,8 +18,8 @@ class DataProviderFile extends DataProviderEntity implements DataProviderInterfa
   /**
    * Constructs a DataProviderFile object.
    */
-  public function __construct(RequestInterface $request, ResourceFieldCollectionInterface $field_definitions, $account, $resource_path, array $options, $langcode = NULL) {
-    parent::__construct($request, $field_definitions, $account, $resource_path, $options, $langcode);
+  public function __construct(RequestInterface $request, ResourceFieldCollectionInterface $field_definitions, $account, $plugin_id, $resource_path, array $options, $langcode = NULL) {
+    parent::__construct($request, $field_definitions, $account, $plugin_id, $resource_path, $options, $langcode);
 
     $file_options = empty($this->options['options']) ? array() : $this->options['options'];
     $default_values = array(

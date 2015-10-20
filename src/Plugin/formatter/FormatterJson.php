@@ -76,6 +76,10 @@ class FormatterJson extends Formatter implements FormatterInterface {
    */
   protected function extractFieldValues($data) {
     $output = array();
+    if ($this->isCacheEnabled($data) && ($cache = $this->getCachedData($data))) {
+      /* @var ResourceFieldCollectionInterface $data */
+      return $this->limitFields($data->getLimitFields(), $cache->data);
+    }
     foreach ($data as $public_field_name => $resource_field) {
       if (!$resource_field instanceof ResourceFieldInterface) {
         // If $resource_field is not a ResourceFieldInterface it means that we
@@ -86,6 +90,21 @@ class FormatterJson extends Formatter implements FormatterInterface {
       }
       if (!$data instanceof ResourceFieldCollectionInterface) {
         throw new InternalServerErrorException('Inconsistent output.');
+      }
+
+      // This feels a bit awkward, but if the result is going to be cached, it
+      // pays off the extra effort of generating the whole resource entity. That
+      // way we can get a different field set with the previously cached entity.
+      // If the entity is not going to be cached, then avoid generating the
+      // field data altogether.
+      $limit_fields = $data->getLimitFields();
+      if (
+        !$this->isCacheEnabled($data) &&
+        $limit_fields &&
+        !in_array($resource_field->getPublicName(), $limit_fields)
+      ) {
+        // We are not going to cache this and this field is not in the output.
+        continue;
       }
       $value = $resource_field->render($data->getInterpreter());
       // If the field points to a resource that can be included, include it
@@ -98,13 +117,17 @@ class FormatterJson extends Formatter implements FormatterInterface {
       }
       $output[$public_field_name] = $value;
     }
+    if ($this->isCacheEnabled($data)) {
+      $this->setCachedData($data, $output);
+      $output = $this->limitFields($data->getLimitFields(), $output);
+    }
     return $output;
   }
 
   /**
    * Add HATEOAS links to list of item.
    *
-   * @param $data
+   * @param array $data
    *   The data array after initial massaging.
    */
   protected function addHateoas(array &$data) {
