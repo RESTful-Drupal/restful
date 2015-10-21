@@ -84,15 +84,12 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
 
     // v1.0 - Simple entity view (id, label, self).
     $handler = $resource_manager->getPlugin('main:1.0');
-    $request = Request::create('api/main/v1.0/' . $id);
-    $handler->setRequest($request);
     $base_expected_result['self'] = $handler->versionedUrl($id);
     $expected_result = $base_expected_result;
 
-    $handler->setPath($id);
     $response = drupal_json_decode(restful()
       ->getFormatterManager()
-      ->format($handler->process(), 'json'));
+      ->format($handler->doGet($id), 'json'));
     $response = $response['data'];
     $result = $response[0];
     $this->assertEqual($result, $expected_result, 'Entity view has expected result for "main" resource v1');
@@ -165,7 +162,7 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
     ksort($expected_result);
     $this->assertFalse(drupal_array_diff_assoc_recursive($result, $stripped_result), 'Entity view has correct result for "main" resource v1.1');
 
-    // Test the "full_view" property on a referenced entity.
+    // Test the "fullView" property on a referenced entity.
     // We change the definition via the handler instead of creating another
     // plugin.
     $field_definitions = $handler->getFieldDefinitions();
@@ -173,7 +170,7 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
     $reference_field = $field_definitions->get('entity_reference_single_resource');
     $reference_field->setResource(array(
       'name' => 'main',
-      'full_view' => FALSE,
+      'fullView' => FALSE,
     ));
     $field_definitions->set('entity_reference_single_resource', $reference_field);
     $handler->setFieldDefinitions($field_definitions);
@@ -185,7 +182,7 @@ class RestfulViewEntityTestCase extends RestfulCurlBaseTestCase {
       ->getFormatterManager()
       ->format($handler->process(), 'json'));
     $result = $result['data'];
-    $this->assertEqual($result[0]['entity_reference_single_resource'], $entity1->pid, '"full_view" property is working properly.');
+    $this->assertEqual($result[0]['entity_reference_single_resource'], $entity1->pid, '"fullView" property is working properly.');
 
     // Empty the text and entity reference fields.
     $wrapper->text_single->set(NULL);

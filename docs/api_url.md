@@ -72,8 +72,8 @@ for examples of the types of information returned by such a request.
 ## Returning specific fields
 Using the ``?fields`` query string, you can declare which fields should be
 returned.  Note that you can only return fields already being returned by
-`publicFieldsInfo()`.  This is used, for example, if you have many fields
-in `publicFieldsInfo()`, but your client only needs a few specific ones.
+`publicFields()`.  This is used, for example, if you have many fields
+in `publicFields()`, but your client only needs a few specific ones.
 
 ```shell
 # Handler v1.0
