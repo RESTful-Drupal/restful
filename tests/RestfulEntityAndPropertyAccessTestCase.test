@@ -234,6 +234,7 @@ class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
    *   "Allow" or "Deny" if user has access to the property.
    */
   public static function publicFieldAccessFalse($op, $public_field_name, \EntityMetadataWrapper $property_wrapper, \EntityMetadataWrapper $wrapper) {
-    return $wrapper->label() == 'access' ? \RestfulInterface::ACCESS_ALLOW : \RestfulInterface::ACCESS_DENY;
+    return $wrapper->label() == 'access' ? \Drupal\restful\Plugin\resource\Field\ResourceFieldBase::ACCESS_ALLOW : \Drupal\restful\Plugin\resource\Field\ResourceFieldBase::ACCESS_DENY;
   }
+
 }

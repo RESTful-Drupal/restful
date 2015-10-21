@@ -14,6 +14,7 @@ use Drupal\restful\Exception\ForbiddenException;
 use Drupal\restful\Exception\GoneException;
 use Drupal\restful\Exception\NotImplementedException;
 use Drupal\restful\Exception\ServerConfigurationException;
+use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataProvider\DataProviderInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollection;
@@ -371,5 +372,72 @@ interface ResourceInterface extends PluginInspectionInterface, ConfigurablePlugi
    *   The resource field collection with the discovery information.
    */
   public function discover($path = NULL);
+
+  /**
+   * Shorthand method to perform a quick GET request.
+   *
+   * @param string $path
+   *   The resource path.
+   * @param array $query
+   *   The parsed query string.
+   *
+   * @return array
+   *   The array ready for the formatter.
+   */
+  public function doGet($path = '', array $query = array());
+
+  /**
+   * Shorthand method to perform a quick POST request.
+   *
+   * @param array $parsed_body
+   *   The parsed body.
+   *
+   * @return array
+   *   The array ready for the formatter.
+   */
+  public function doPost(array $parsed_body);
+
+  /**
+   * Shorthand method to perform a quick PATCH request.
+   *
+   * @param string $path
+   *   The resource path.
+   * @param array $parsed_body
+   *   The parsed body.
+   *
+   * @throws \Drupal\restful\Exception\BadRequestException
+   *   When the path is not present.
+   *
+   * @return array
+   *   The array ready for the formatter.
+   */
+  public function doPatch($path, array $parsed_body);
+
+  /**
+   * Shorthand method to perform a quick PUT request.
+   *
+   * @param string $path
+   *   The resource path.
+   * @param array $parsed_body
+   *   The parsed body.
+   *
+   * @throws \Drupal\restful\Exception\BadRequestException
+   *   When the path is not present.
+   *
+   * @return array
+   *   The array ready for the formatter.
+   */
+  public function doPut($path, array $parsed_body);
+
+  /**
+   * Shorthand method to perform a quick DELETE request.
+   *
+   * @param string $path
+   *   The resource path.
+   *
+   * @throws \Drupal\restful\Exception\BadRequestException
+   *   When the path is not present.
+   */
+  public function doDelete($path);
 
 }

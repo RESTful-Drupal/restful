@@ -225,8 +225,8 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
       // ID.
       $identifier = $this->referencedId($property_wrapper);
       $resource = $this->getResource();
-      // TODO: Make sure we still want to support full_view.
-      if (!$resource || !$identifier || (isset($resource['full_view']) && $resource['full_view'] === FALSE)) {
+      // TODO: Make sure we still want to support fullView.
+      if (!$resource || !$identifier || (isset($resource['fullView']) && $resource['fullView'] === FALSE)) {
         return $identifier;
       }
       // If there is a resource that we are pointing to, we need to use the id
@@ -292,7 +292,7 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
       if (empty($embedded_identifier) && $embedded_identifier !== 0) {
         return NULL;
       }
-      if (isset($resource['full_view']) && $resource['full_view'] === FALSE) {
+      if (isset($resource['fullView']) && $resource['fullView'] === FALSE) {
         return $embedded_identifier;
       }
       // We support dot notation for the sparse fieldsets. That means that

@@ -101,7 +101,7 @@ class ResourceFieldCollection implements ResourceFieldCollectionInterface {
    *     ignored.
    *     It is also possible to pass an array as the value, with:
    *     - "name": The resource name.
-   *     - "full_view": Determines if the referenced resource should be rendered
+   *     - "fullView": Determines if the referenced resource should be rendered
    *     or just the referenced ID(s) to appear. Defaults to TRUE.
    *     array(
    *       // Shorthand.
@@ -109,7 +109,7 @@ class ResourceFieldCollection implements ResourceFieldCollectionInterface {
    *       // Verbose
    *       'page' => array(
    *         'name' => 'pages',
-   *         'full_view' => FALSE,
+   *         'fullView' => FALSE,
    *       ),
    *     );
    *   - "create_or_update_passthrough": Determines if a public field that isn't

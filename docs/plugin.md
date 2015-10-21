@@ -3,20 +3,20 @@
 ## Defining the exposed fields
 By default the RESTful module will expose the ID, label and URL of the entity.
 You probably want to expose more than that. To do so you will need to implement
-the `publicFieldsInfo` method defining the names in the output array and how
+the `publicFields` method defining the names in the output array and how
 those are mapped to the queried entity. For instance the following example will
 retrieve the basic fields plus the body, tags and images from an article node.
 The RESTful module will know to use the `MyArticlesResource` class because your
 plugin definition will say so.
 
 ```php
-class MyArticlesResource extends \RestfulEntityBase {
+class MyArticles__1_0 extends ResourceEntity {
 
   /**
-   * Overrides \RestfulEntityBase::publicFieldsInfo().
+   * Overrides ResourceEntity::publicFields().
    */
-  public function publicFieldsInfo() {
-    $public_fields = parent::publicFieldsInfo();
+  public function publicFields() {
+    $public_fields = parent::publicFields();
 
     $public_fields['body'] = array(
       'property' => 'body',
@@ -46,7 +46,7 @@ class MyArticlesResource extends \RestfulEntityBase {
 ```
 
 See [the inline documentation](https://github.com/RESTful-Drupal/restful/blob/7.x-1.x/plugins/restful/RestfulEntityBase.php)
-for `publicFieldsInfo` to get more details on exposing field data to your
+for `publicFields` to get more details on exposing field data to your
 resource.
 
 If you need even more flexibility, you can use the `'callback'` key to name a
@@ -59,10 +59,10 @@ resource with RESTful. All you need is to set up a view mode that renders the
 output you want to expose and tell RESTful to use it. This simplifies the
 workflow of exposing your resource a lot, since you don't even need to create a
 resource class, but it also offers you less features that are configured in the
-`publicFieldsInfo` method.
+`publicFields` method.
 
 Use this method when you don't need any of the extra features that are added via
-`publicFieldsInfo` (like the discovery metadata, image styles for images,
+`publicFields` (like the discovery metadata, image styles for images,
 process callbacks, custom access callbacks for properties, etc.). This is also a
 good way to stub a resource really quick and then move to the more fine grained
 method.
@@ -112,7 +112,7 @@ You can also define default sort fields in your plugin, by overriding
 `defaultSortInfo()` in your class definition.
 
 This method should return an associative array, with each element having a key
-that matches a field from `publicFieldsInfo()`, and a value of either 'ASC' or
+that matches a field from `publicFields()`, and a value of either 'ASC' or
 'DESC'. Bear in mind that for entity based resources, only those fields with a
 `'property'` (matching to an entity property or a Field API field) can be used
 for sorting.
@@ -176,8 +176,8 @@ reference or taxonomy term reference) or a reference property (e.g. the ``uid``
 property on the node entity) to the resource it belongs to.
 
 ```php
-public function publicFieldsInfo() {
-  $public_fields = parent::publicFieldsInfo();
+public function publicFields() {
+  $public_fields = parent::publicFields();
   // ...
   $public_fields['user'] = array(
     'property' => 'author',
@@ -187,7 +187,7 @@ public function publicFieldsInfo() {
       // The name of the resource to map to.
       'name' => 'users',
       // Determines if the entire resource should appear, or only the ID.
-      'full_view' => TRUE,
+      'fullView' => TRUE,
     ),
   );
   // ...

@@ -57,11 +57,9 @@ class RestfulUpdateEntityTestCase extends DrupalWebTestCase {
     $handler->setAccount($this->account);
     $request = array('label' => $new_label);
 
-    $handler->setRequest(Request::create('api/test_articles/v1.2/' . $id, array(), RequestInterface::METHOD_PUT, NULL, FALSE, NULL, array(), array(), array(), $request));
-    $handler->setPath($id);
     $result = drupal_json_decode(restful()
       ->getFormatterManager()
-      ->format($handler->process(), 'json'));
+      ->format($handler->doPut($id, $request), 'json'));
     $result = $result['data'];
     $expected_result = array(
       array(
@@ -69,7 +67,7 @@ class RestfulUpdateEntityTestCase extends DrupalWebTestCase {
         'label' => $new_label,
         'self' => $handler->versionedUrl($id),
         'body' => NULL,
-      )
+      ),
     );
 
     $this->assertEqual($result, $expected_result);
@@ -111,11 +109,9 @@ class RestfulUpdateEntityTestCase extends DrupalWebTestCase {
     $handler->setAccount($this->account);
     $request = array('label' => $new_label);
 
-    $handler->setRequest(Request::create('api/test_articles/v1.2/' . $id, array(), RequestInterface::METHOD_PATCH, NULL, FALSE, NULL, array(), array(), array(), $request));
-    $handler->setPath($id);
     $result = drupal_json_decode(restful()
       ->getFormatterManager()
-      ->format($handler->process(), 'json'));
+      ->format($handler->doPatch($id, $request), 'json'));
     $result = $result['data'];
     $expected_result = array(
       array(
@@ -123,7 +119,7 @@ class RestfulUpdateEntityTestCase extends DrupalWebTestCase {
         'label' => $new_label,
         'self' => $handler->versionedUrl($id),
         'body' => $text,
-      )
+      ),
     );
 
     $result[0]['body'] = trim(strip_tags($result[0]['body']));
