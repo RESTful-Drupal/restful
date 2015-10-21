@@ -121,6 +121,23 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
     $this->assertEqual($relationships['entity_reference_multiple_resource']['data'][1]['type'], 'main');
     $this->assertEqual($relationships['entity_reference_multiple_resource']['data'][1]['id'], $wrapper->entity_reference_multiple[1]->getIdentifier());
 
+    // Make sure that using fields + includes lists all the fields in the
+    // embedded entity if there is no subfield added.
+    $this->handler->setRequest(Request::create('api/v1.1/main/' . $wrapper->getIdentifier(), array('include' => 'entity_reference_multiple_resource,entity_reference_single_resource', 'fields' => 'entity_reference_multiple_resource,entity_reference_single_resource')));
+    $this->handler->setPath($wrapper->getIdentifier());
+    $this->formatter->setResource($this->handler);
+    $resource_field_collections = $this->handler->process();
+    $result = drupal_json_decode($this->formatter->format($resource_field_collections));
+    $this->assertEqual(count($result['included'][0]['attributes']), 16);
+
+    // Now make sure that including fields only lists those fields.
+    $this->handler->setRequest(Request::create('api/v1.1/main/' . $wrapper->getIdentifier(), array('include' => 'entity_reference_single_resource', 'fields' => 'entity_reference_single_resource.label')));
+    $this->handler->setPath($wrapper->getIdentifier());
+    $this->formatter->setResource($this->handler);
+    $resource_field_collections = $this->handler->process();
+    $result = drupal_json_decode($this->formatter->format($resource_field_collections));
+    $this->assertEqual(count($result['included'][0]['attributes']), 1);
+
     // Make a request with the include query string.
     $this->handler->setRequest(Request::create('api/v1.1/main/' . $wrapper->getIdentifier(), array('include' => 'entity_reference_multiple_resource,entity_reference_single_resource')));
     $this->handler->setPath($wrapper->getIdentifier());
