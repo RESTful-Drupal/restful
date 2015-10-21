@@ -42,7 +42,8 @@ class FormatterJson extends Formatter implements FormatterInterface {
       return $data;
     }
 
-    $output = array('data' => $this->extractFieldValues($data));
+    $extracted = $this->extractFieldValues($data);
+    $output = array('data' => $this->limitFields($extracted));
 
     if ($resource = $this->getResource()) {
       $request = $resource->getRequest();
@@ -68,24 +69,33 @@ class FormatterJson extends Formatter implements FormatterInterface {
    *
    * @param array[]|ResourceFieldCollectionInterface $data
    *   The array of rows or a ResourceFieldCollection.
+   * @param string[] $parents
+   *   An array that holds the name of the parent fields that lead to the
+   *   current data structure.
+   * @param string[] $parent_hashes
+   *   An array that holds the name of the parent cache hashes that lead to the
+   *   current data structure.
    *
    * @return array[]
    *   The array of prepared data.
    *
    * @throws InternalServerErrorException
    */
-  protected function extractFieldValues($data) {
+  protected function extractFieldValues($data, array $parents = array(), array &$parent_hashes = array()) {
     $output = array();
-    if ($this->isCacheEnabled($data) && ($cache = $this->getCachedData($data))) {
-      /* @var ResourceFieldCollectionInterface $data */
-      return $this->limitFields($data->getLimitFields(), $cache->data);
+    if ($this->isCacheEnabled($data)) {
+      $parent_hashes[] = $this->getCacheHash($data);
+      if ($cache = $this->getCachedData($data)) {
+        return $cache->data;
+      }
     }
     foreach ($data as $public_field_name => $resource_field) {
       if (!$resource_field instanceof ResourceFieldInterface) {
         // If $resource_field is not a ResourceFieldInterface it means that we
         // are dealing with a nested structure of some sort. If it is an array
         // we process it as a set of rows, if not then use the value directly.
-        $output[$public_field_name] = static::isIterable($resource_field) ? $this->extractFieldValues($resource_field) : $resource_field;
+        $parents[] = $public_field_name;
+        $output[$public_field_name] = static::isIterable($resource_field) ? $this->extractFieldValues($resource_field, $parents, $parent_hashes) : $resource_field;
         continue;
       }
       if (!$data instanceof ResourceFieldCollectionInterface) {
@@ -113,13 +123,12 @@ class FormatterJson extends Formatter implements FormatterInterface {
         static::isIterable($value) &&
         $resource_field instanceof ResourceFieldResourceInterface
       ) {
-        $value = $this->extractFieldValues($value);
+        $value = $this->extractFieldValues($value, $parents, $parent_hashes);
       }
       $output[$public_field_name] = $value;
     }
     if ($this->isCacheEnabled($data)) {
-      $this->setCachedData($data, $output);
-      $output = $this->limitFields($data->getLimitFields(), $output);
+      $this->setCachedData($data, $output, $parent_hashes);
     }
     return $output;
   }

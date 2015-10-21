@@ -47,4 +47,12 @@ interface RenderCacheInterface {
    */
   public function clear();
 
+  /**
+   * Get the cache ID (aka cache hash).
+   *
+   * @return string
+   *   The cache ID.
+   */
+  public function getCid();
+
 }

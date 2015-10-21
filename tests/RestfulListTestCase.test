@@ -174,18 +174,22 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
       array(
         'id' => $node->nid,
         'label' => 'abc',
+        'self' => $handler->versionedUrl($node->nid),
       ),
       array(
         'id' => $nodes['abc'],
         'label' => 'abc',
+        'self' => $handler->versionedUrl($nodes['abc']),
       ),
       array(
         'id' => $nodes['efg'],
         'label' => 'efg',
+        'self' => $handler->versionedUrl($nodes['efg']),
       ),
       array(
         'id' => $nodes['xyz'],
         'label' => 'xyz',
+        'self' => $handler->versionedUrl($nodes['xyz']),
       ),
     );
     $this->assertEqual($result, $expected_result, 'Default sort by ID and by label.');
@@ -202,18 +206,22 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
       array(
         'id' => $nodes['abc'],
         'label' => 'abc',
+        'self' => $handler->versionedUrl($nodes['abc']),
       ),
       array(
         'id' => $nodes['xyz'],
         'label' => 'xyz',
+        'self' => $handler->versionedUrl($nodes['xyz']),
       ),
       array(
         'id' => $nodes['efg'],
         'label' => 'efg',
+        'self' => $handler->versionedUrl($nodes['efg']),
       ),
       array(
         'id' => $node->nid,
         'label' => 'abc',
+        'self' => $handler->versionedUrl($node->nid),
       ),
     );
     $this->assertEqual($result, $expected_result, 'Sort by ID, overriding default sort.');

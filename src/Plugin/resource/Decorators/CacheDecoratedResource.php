@@ -17,6 +17,11 @@ use Drupal\restful\Resource\ResourceManager;
 class CacheDecoratedResource extends ResourceDecoratorBase implements CacheDecoratedResourceInterface {
 
   /**
+   * Separator string for cache fragment key value pairs.
+   */
+  const CACHE_PAIR_SEPARATOR = '#';
+
+  /**
    * Cache controller object.
    *
    * @var \DrupalCacheInterface
@@ -207,6 +212,14 @@ class CacheDecoratedResource extends ResourceDecoratorBase implements CacheDecor
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function remove($path) {
+    $this->invalidateResourceCache($path);
+    $this->subject->remove($path);
+  }
+
+  /**
    * Gets the default cache info.
    *
    * @return array
@@ -290,22 +303,21 @@ class CacheDecoratedResource extends ResourceDecoratorBase implements CacheDecor
   protected function invalidateResourceCache($id) {
     // Invalidate the render cache for this resource.
     $query = new \EntityFieldQuery();
+    $canonical_id = $this->getDataProvider()->canonicalPath($id);
     $query
       ->entityCondition('entity_type', 'cache_fragment')
       ->propertyCondition('type', 'resource')
-      ->propertyCondition('value', $this->getResourceName());
-    if (!$hashes = CacheFragmentController::lookUpHashes($query)) {
-      return;
-    }
-    $query = new \EntityFieldQuery();
-    $query
-      ->entityCondition('entity_type', 'cache_fragment')
-      ->propertyCondition('type', 'id')
-      ->propertyCondition('value', $id)
-      ->propertyCondition('hash', $hashes, 'IN');
+      ->propertyCondition('value', $this::serializeKeyValue($this->getResourceName(), $canonical_id));
     foreach (CacheFragmentController::lookUpHashes($query) as $hash) {
       $this->getCacheController()->clear($hash);
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function serializeKeyValue($key, $value) {
+    return sprintf('%s%s%d', $key, static::CACHE_PAIR_SEPARATOR, $value);
   }
 
 }

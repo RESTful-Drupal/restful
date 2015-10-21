@@ -5,6 +5,7 @@
  * Contains entity related code.
  */
 
+use Drupal\restful\Plugin\resource\Decorators\CacheDecoratedResource;
 use Drupal\restful\Plugin\resource\Decorators\CacheDecoratedResourceInterface;
 use Drupal\restful\RenderCache\Entity\CacheFragmentController;
 use Drupal\restful\RenderCache\RenderCache;
@@ -63,23 +64,12 @@ function _restful_entity_cache_hashes($entity, $type) {
     return array();
   }
   // Limit to the fragments for our entity type.
-  $query = new \EntityFieldQuery();
-  $query
-    ->entityCondition('entity_type', 'cache_fragment')
-    ->propertyCondition('type', 'entity_type')
-    ->propertyCondition('value', $type);
-  if (!$hashes = CacheFragmentController::lookUpHashes($query)) {
-    return array();
-  }
-
-  // Search for all the cache fragments with our entity id.
   list($entity_id) = entity_extract_ids($type, $entity);
   $query = new \EntityFieldQuery();
   $query
     ->entityCondition('entity_type', 'cache_fragment')
-    ->propertyCondition('type', 'entity_id')
-    ->propertyCondition('value', $entity_id)
-    ->propertyCondition('hash', $hashes, 'IN');
+    ->propertyCondition('type', 'entity')
+    ->propertyCondition('value', CacheDecoratedResource::serializeKeyValue($type, $entity_id));
   return CacheFragmentController::lookUpHashes($query);
 }
 
@@ -96,9 +86,11 @@ function restful_entity_update($entity, $type) {
     if (!$handler->hasSimpleInvalidation()) {
       return;
     }
-    $handler
-      ->getCacheController()
-      ->clear($hash);
+    // You can get away without the fragments for a clear.
+    $cache_object = new RenderCache(new ArrayCollection(), $hash, $handler->getCacheController());
+    // Do a clear with the RenderCache object to also remove the cache fragment
+    // entities.
+    $cache_object->clear();
   }
 }
 
@@ -116,10 +108,11 @@ function restful_entity_delete($entity, $type) {
     if (!$handler->hasSimpleInvalidation()) {
       return;
     }
-    // Resource takes care of its own invalidation.
-    $handler
-      ->getCacheController()
-      ->clear($hash);
+    // You can get away without the fragments for a clear.
+    $cache_object = new RenderCache(new ArrayCollection(), $hash, $handler->getCacheController());
+    // Do a clear with the RenderCache object to also remove the cache fragment
+    // entities.
+    $cache_object->clear();
   }
 }
 
