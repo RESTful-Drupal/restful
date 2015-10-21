@@ -17,6 +17,9 @@ class RestfulUpdateEntityTestCase extends DrupalWebTestCase {
    */
   protected $account;
 
+  /**
+   * {@inheritdoc}
+   */
   public static function getInfo() {
     return array(
       'name' => 'Update entity',
@@ -25,6 +28,9 @@ class RestfulUpdateEntityTestCase extends DrupalWebTestCase {
     );
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function setUp() {
     parent::setUp('restful_test');
     $this->account = $this->drupalCreateUser(array(

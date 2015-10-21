@@ -324,7 +324,7 @@ abstract class ResourceDecoratorBase extends PluginBase implements ResourceDecor
    * {@inheritdoc}
    */
   public function doPost(array $parsed_body) {
-    return $this->doWrite(RequestInterface::METHOD_PUT, '', $parsed_body);
+    return $this->doWrite(RequestInterface::METHOD_POST, '', $parsed_body);
   }
 
   /**
@@ -334,7 +334,7 @@ abstract class ResourceDecoratorBase extends PluginBase implements ResourceDecor
     if (!$path) {
       throw new BadRequestException('PATCH requires a path. None given.');
     }
-    return $this->doWrite(RequestInterface::METHOD_PUT, $path, $parsed_body);
+    return $this->doWrite(RequestInterface::METHOD_PATCH, $path, $parsed_body);
   }
 
   /**

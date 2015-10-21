@@ -249,7 +249,7 @@ abstract class Resource extends PluginBase implements ResourceInterface {
    * {@inheritdoc}
    */
   public function doPost(array $parsed_body) {
-    return $this->doWrite(RequestInterface::METHOD_PUT, '', $parsed_body);
+    return $this->doWrite(RequestInterface::METHOD_POST, '', $parsed_body);
   }
 
   /**
@@ -259,7 +259,7 @@ abstract class Resource extends PluginBase implements ResourceInterface {
     if (!$path) {
       throw new BadRequestException('PATCH requires a path. None given.');
     }
-    return $this->doWrite(RequestInterface::METHOD_PUT, $path, $parsed_body);
+    return $this->doWrite(RequestInterface::METHOD_PATCH, $path, $parsed_body);
   }
 
   /**
