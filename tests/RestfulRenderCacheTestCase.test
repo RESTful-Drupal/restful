@@ -239,7 +239,7 @@ class RestfulRenderCacheTestCase extends \RestfulCurlBaseTestCase {
     $this->assertEqual($response['code'], 403, 'Access denied for anonymous user.');
     if (!drupal_is_cli()) {
       // Make sure that there is not a page cache entry.
-      $this->assertTrue($cache->get($url), 'A page cache entry was created for an anonymous user.');
+      $this->assertFalse($cache->get($url), 'A page cache entry was created for an anonymous user.');
     }
     // Remove the cache entry.
     $cache->clear($url);

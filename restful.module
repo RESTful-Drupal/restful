@@ -12,6 +12,7 @@ use Drupal\restful\Exception\RestfulException;
 use Drupal\restful\Exception\ServiceUnavailableException;
 use Drupal\restful\Http\HttpHeader;
 use Drupal\restful\Http\RequestInterface;
+use Drupal\restful\Http\ResponseInterface;
 use Drupal\restful\Plugin\resource\Decorators\CacheDecoratedResource;
 use Drupal\restful\Plugin\resource\Decorators\RateLimitDecoratedResource;
 use Drupal\restful\Plugin\resource\ResourceInterface;
@@ -302,7 +303,11 @@ function restful_delivery($var = NULL, $method = 'format') {
     }
     catch (RestfulException $e) {
       // If there is an exception during delivery, just JSON encode this.
-      echo drupal_json_encode($var);
+      $output = _restful_build_http_api_error($e, $response);
+      $response->setStatusCode($e->getCode());
+      $response->setContent(drupal_json_encode($output));
+      $response->send();
+      return;
     }
     return;
   }
@@ -330,7 +335,8 @@ function restful_delivery($var = NULL, $method = 'format') {
   }
   catch (RestfulException $e) {
     // Handle if the formatter does not exist.
-    $output = _restful_build_http_api_error($e);
+    $output = _restful_build_http_api_error($e, $response);
+    $response->setStatusCode($e->getCode());
     $response->setContent(drupal_json_encode($output));
     $response->send();
     return;
@@ -401,11 +407,14 @@ function _restful_get_data_from_menu_status(&$var) {
  *
  * @param RestfulException $exception
  *   The exception.
+ * @param ResponseInterface $response
+ *   The response object to alter.
  *
  * @return array
  *   The structured output.
  */
-function _restful_build_http_api_error(RestfulException $exception) {
+function _restful_build_http_api_error(RestfulException $exception, ResponseInterface $response = NULL) {
+  $response = $response ?: restful()->getResponse();
   // Adhere to the API Problem draft proposal.
   $exception->setHeader('Content-Type', 'application/problem+json; charset=utf-8');
   $result = array(
@@ -423,9 +432,9 @@ function _restful_build_http_api_error(RestfulException $exception) {
     $result['errors'] = $errors;
   }
 
-  $headers = restful()->getResponse()->getHeaders();
+  $headers = $response->getHeaders();
   foreach ($exception->getHeaders() as $header_name => $header_value) {
-    $headers->add(HttpHeader::create('Content-Type', 'application/problem+json; charset=utf-8'));
+    $headers->add(HttpHeader::create($header_name, $header_value));
   }
   drupal_page_is_cacheable(FALSE);
   return $result;
