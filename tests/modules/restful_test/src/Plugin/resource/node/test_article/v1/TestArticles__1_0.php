@@ -41,6 +41,9 @@ class TestArticles__1_0 extends ResourceNode implements ResourceInterface {
   protected function publicFields() {
     $public_fields = parent::publicFields();
 
+    if (!module_exists('entity_validator')) {
+      return $public_fields;
+    }
     $public_fields['title'] = $public_fields['label'];
     $public_fields['body'] = array(
       'property' => 'body',
