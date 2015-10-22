@@ -63,7 +63,7 @@ script:
 
   # Download and enable module and its dependencies
   - drush --yes dl registry_autoload
-  - drush --yes dl entity_validator --dev
+  - drush --yes dl entity_validator-7.x-2.0
   - drush --yes dl plug
   - drush --yes dl entity
   - drush --yes dl entityreference

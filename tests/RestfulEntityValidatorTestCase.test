@@ -6,9 +6,14 @@
  */
 
 use Drupal\restful\Exception\BadRequestException;
+use Drupal\restful\Http\Request;
+use Drupal\restful\Http\RequestInterface;
 
 class RestfulEntityValidatorTestCase extends RestfulCurlBaseTestCase {
 
+  /**
+   * {@inheritdoc}
+   */
   public static function getInfo() {
     return array(
       'name' => 'Entity validator',
@@ -17,41 +22,51 @@ class RestfulEntityValidatorTestCase extends RestfulCurlBaseTestCase {
     );
   }
 
-  function setUp() {
+  /**
+   * {@inheritdoc}
+   */
+  public function setUp() {
     parent::setUp('restful_test', 'entity_validator_example');
   }
 
   /**
    * Test entity validator.
    */
-  function testEntityValidator() {
+  public function testEntityValidator() {
     $user1 = $this->drupalCreateUser(array('create article content'));
     $this->drupalLogin($user1);
 
-    $handler = restful_get_restful_handler('test_articles');
+    $handler = restful()
+      ->getResourceManager()
+      ->getPlugin('test_articles:1.0');
     $handler->setAccount($user1);
 
-    $request = array('label' => 'no', 'body' => 'Text with Drupal');
+    $parsed_body = array('label' => 'no', 'body' => 'Text with Drupal');
 
     try {
-      $handler->post('', $request);
+      $request = Request::create('', $parsed_body, RequestInterface::METHOD_POST, NULL, FALSE, NULL, array(), array(), array(), $parsed_body);
+      $handler->setRequest($request);
+      $handler->process();
       $this->fail('Too short title did not cause a "Bad request" error.');
     }
     catch (BadRequestException $e) {
       $field_errors = $e->getFieldErrors();
-      $this->pass('Too short title did not caused a "Bad request" error.');
+      $expected_result = array(
+        'title' => array(
+          'The title should be at least 3 characters long.',
+        ),
+      );
+
+      $this->assertEqual($field_errors, $expected_result, 'Correct error message passed in the JSON');
     }
 
-    $expected_result = array(
-      'label' => array(
-        'The label should be at least 3 characters long.',
-      ),
-    );
-
-    $this->assertEqual($field_errors, $expected_result, 'Correct error message passed in the JSON');
-
-    $request['label'] = 'yes';
-    $result = $handler->post('', $request);
-    $this->assertTrue($result[0]['id'], 'Entity with proper title length passed validation and was created.');
+    $parsed_body['label'] = 'yes';
+    $request = Request::create('', $parsed_body, RequestInterface::METHOD_POST, NULL, FALSE, NULL, array(), array(), array(), $parsed_body);
+    $handler->setRequest($request);
+    $result = restful()
+      ->getFormatterManager()
+      ->negotiateFormatter(NULL, 'json')
+      ->prepare($handler->process());
+    $this->assertTrue($result['data'][0]['id'], 'Entity with proper title length passed validation and was created.');
   }
 }
