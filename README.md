@@ -5,7 +5,6 @@
 This module allows Drupal to be operated via RESTful HTTP requests, using best
 practices for security, performance, and usability.
 
-
 ## Concept
 Here are the differences between RESTful and other modules, such as RestWs and
 Services Entity:
@@ -82,10 +81,10 @@ namespace Drupal\restful_custom\Plugin\resource;
 class Custom__1_0 extends ResourceEntity implements ResourceInterface {
 
   /**
-   * Overrides RestfulEntityBaseNode::publicFieldsInfo().
+   * Overrides EntityNode::publicFields().
    */
-  public function publicFieldsInfo() {
-    $public_fields = parent::publicFieldsInfo();
+  public function publicFields() {
+    $public_fields = parent::publicFields();
 
     $public_fields['body'] = array(
       'property' => 'body',
@@ -110,39 +109,36 @@ See the [Defining a RESTful Plugin](./docs/plugin.md) document for more details.
 The following examples use the _articles_ resource from the _restful\_example_
 module.
 
-#### Getting the default RESTful handler for a resource
-
-```php
-// Get handler v1.0
-$handler = restful_get_restful_handler('articles');
-```
-
-
 #### Getting a specific version of a RESTful handler for a resource
 
 ```php
 // Get handler v1.1
-$handler = restful_get_restful_handler('articles', 1, 1);
+$handler = restful()->getResourceManager()->getPlugin('articles:1.1');
 ```
-
 
 #### Create and update an entity
 ```php
-$handler = restful_get_restful_handler('articles');
+$handler = restful()
+  ->getResourceManager()
+  ->getPlugin('articles:1.0');
 // POST method, to create.
-$result = $handler->post('', array('label' => 'example title'));
+$result = restful()
+  ->getFormatterManager()
+  ->format($handler->doPost(array('label' => 'example title')));
 $id = $result['id'];
 
 // PATCH method to update only the title.
 $request['label'] = 'new title';
-$handler->patch($id, $request);
+restful()
+  ->getFormatterManager()
+  ->format($handler->doPatch($id, $request));
 ```
-
 
 #### List entities
 ```php
-$handler = restful_get_restful_handler('articles');
-$result = $handler->get();
+$handler = restful()->getResourceManager()->getPlugin('articles:1.0');
+$handler->setRequest(Request::create(''));
+$result = restful()->getFormatterManager()->format($handler->process(), 'json');
 
 // Output:
 array(
@@ -161,15 +157,11 @@ array(
 );
 ```
 
-
 ### Sort, Filter, Range, and Sub Requests
-
 See the [Using your API within drupal](./docs/api_drupal.md) documentation for
 more details.
 
-
 ## Consuming your API
-
 The following examples use the _articles_ resource from the _restful\_example_
 module.
 
@@ -190,7 +182,6 @@ curl https://example.com/api/v1.1/articles/1
 
 
 #### View multiple articles at once
-
 ```shell
 # Handler v1.1
 curl https://example.com/api/articles/1,2 \
@@ -199,18 +190,15 @@ curl https://example.com/api/articles/1,2 \
 
 
 #### Returning autocomplete results
-
 ```shell
 curl https://example.com/api/articles?autocomplete[string]=mystring
 ```
 
 
 #### URL Query strings, HTTP headers, and HTTP requests
-
 See the [Consuming Your API](./docs/api_url.md) document for more details.
 
 ## CORS
-
 RESTful provides support for preflight requests (see the
 [Wikipedia example](https://en.wikipedia.org/wiki/Cross-origin_resource_sharing#Preflight_example)
 for more details).
@@ -228,7 +216,6 @@ If you are composing resources with competing `allowOrigin` settings, the
 top-level resource will be applied.
 
 ## Documenting your API
-
 Clients can access documentation about a resource by making an `OPTIONS` HTTP
 request to its root URL. The resource will respond with the field information
 in the body, and the information about the available output formats and the
@@ -236,7 +223,6 @@ permitted HTTP methods will be contained in the headers.
 
 
 ### Automatic documentation
-
 If your resource is an entity, then it will be partially self-documented,
 without you needing to do anything else. This information is automatically
 derived from the Entity API and Field API.
@@ -269,7 +255,7 @@ documentation:
 }
 ```
 
-Each field you've defined in `publicFieldsInfo` will output an object similar
+Each field you've defined in `publicFields` will output an object similar
 to the one listed above.
 
 
@@ -285,6 +271,5 @@ with a robust entity validation
 
 
 ## Credits
-
 * [Gizra](http://gizra.com)
 * [Mateu Aguiló Bosch](https://github.com/mateu-aguilo-bosch)

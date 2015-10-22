@@ -13,7 +13,7 @@ use Drupal\restful\Plugin\resource\ResourceInterface;
 abstract class TokenAuthenticationBase extends ResourceEntity implements ResourceInterface {
 
   /**
-   * Overrides RestfulEntityBase::publicFieldsInfo().
+   * Overrides ResourceEntity::publicFields().
    *
    * @see http://tools.ietf.org/html/rfc6750#section-4
    */

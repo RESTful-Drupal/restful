@@ -36,7 +36,7 @@ use Drupal\restful\Plugin\resource\ResourceNode;
 class TestArticles__1_2 extends ResourceNode implements ResourceInterface {
 
   /**
-   * Overrides \RestfulEntityBase::publicFieldsInfo().
+   * Overrides ResourceEntity::publicFields().
    */
   public function publicFields() {
     $public_fields = parent::publicFields();

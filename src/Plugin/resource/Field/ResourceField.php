@@ -115,7 +115,7 @@ class ResourceField extends ResourceFieldBase implements ResourceFieldInterface 
 
     // Set default value.
     $resource += array(
-      'full_view' => TRUE,
+      'fullView' => TRUE,
     );
 
     // Set the default value for the version of the referenced resource.

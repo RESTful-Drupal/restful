@@ -81,7 +81,7 @@ class Articles__1_5 extends ResourceNode implements ResourceInterface {
         // The name of the resource to map to.
         'name' => 'users',
         // Determines if the entire resource should appear, or only the ID.
-        'full_view' => TRUE,
+        'fullView' => TRUE,
         'majorVersion' => 1,
         'minorVersion' => 0,
       ),

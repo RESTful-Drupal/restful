@@ -9,6 +9,8 @@ namespace Drupal\restful\Plugin\resource\Decorators;
 
 
 use Drupal\Component\Plugin\PluginBase;
+use Drupal\restful\Exception\BadRequestException;
+use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataProvider\DataProviderInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
@@ -307,6 +309,63 @@ abstract class ResourceDecoratorBase extends PluginBase implements ResourceDecor
    */
   public function getUrl(array $options = array(), $keep_query = TRUE, RequestInterface $request = NULL) {
     return $this->subject->getUrl($options, $keep_query, $request);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function doGet($path = '', array $query = array()) {
+    $this->setPath($path);
+    $this->setRequest(Request::create($this->versionedUrl($path, array('absolute' => FALSE)), $query, RequestInterface::METHOD_GET));
+    return $this->process();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function doPost(array $parsed_body) {
+    return $this->doWrite(RequestInterface::METHOD_POST, '', $parsed_body);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function doPatch($path, array $parsed_body) {
+    if (!$path) {
+      throw new BadRequestException('PATCH requires a path. None given.');
+    }
+    return $this->doWrite(RequestInterface::METHOD_PATCH, $path, $parsed_body);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function doPut($path, array $parsed_body) {
+    if (!$path) {
+      throw new BadRequestException('PUT requires a path. None given.');
+    }
+    return $this->doWrite(RequestInterface::METHOD_PUT, $path, $parsed_body);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  private function doWrite($method, $path, array $parsed_body) {
+    $this->setPath($path);
+    $this->setRequest(Request::create($this->versionedUrl($path, array('absolute' => FALSE)), array(), $method, NULL, FALSE, NULL, array(), array(), array(), $parsed_body));
+    return $this->process();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function doDelete($path) {
+    if (!$path) {
+      throw new BadRequestException('DELETE requires a path. None given.');
+    }
+    $this->setPath($path);
+    $this->setRequest(Request::create($this->versionedUrl($path, array('absolute' => FALSE)), array(), RequestInterface::METHOD_DELETE));
+    return $this->process();
   }
 
   /**

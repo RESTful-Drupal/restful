@@ -128,13 +128,13 @@ class RestfulReferenceTestCase extends RestfulCurlBaseTestCase {
 
     $this->assertEqual($result[0]['entity_reference_multiple_resource'], $expected_result, 'Multiple reference with resource of another entity has correct response.');
 
-    // Test the "full_view" property on a referenced entity.
+    // Test the "fullView" property on a referenced entity.
     // We change the definition via the handler instead of creating another
     // plugin.
     $resource_field = $handler->getFieldDefinitions()
       ->get('entity_reference_single_resource');
     $resource_info = $resource_field->getResource();
-    $resource_info['full_view'] = FALSE;
+    $resource_info['fullView'] = FALSE;
     $resource_field->setResource($resource_info);
     $handler->getFieldDefinitions()
       ->set('entity_reference_single_resource', $resource_field);
@@ -146,6 +146,6 @@ class RestfulReferenceTestCase extends RestfulCurlBaseTestCase {
       ->getFormatterManager()
       ->format($handler->process(), 'json'));
     $result = $result['data'];
-    $this->assertEqual($result[0]['entity_reference_single_resource'], $node1->nid, '"full_view" disabled is showing only the entity ID.');
+    $this->assertEqual($result[0]['entity_reference_single_resource'], $node1->nid, '"fullView" disabled is showing only the entity ID.');
   }
 }
