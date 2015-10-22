@@ -212,9 +212,9 @@ class FormatterManager implements FormatterManagerInterface {
   protected function getPluginByName($name) {
     /* @var FormatterInterface $formatter */
     $formatter = $this->plugins->get($name);
-    $formatter->setConfiguration(array(
-      'resource' => $this->resource,
-    ));
+    if ($this->resource) {
+      $formatter->setResource($this->resource);
+    }
     return $formatter;
   }
 

@@ -104,6 +104,10 @@ class ResourceManager implements ResourceManagerInterface {
     if ($request) {
       $plugin->setRequest($request);
     }
+    // Allow altering the resource, this way we can read the resource's
+    // definition to return a different class that is using composition.
+    drupal_alter('restful_resource', $plugin);
+    $plugin = $plugin->isEnabled() ? $plugin : NULL;
     return $plugin;
   }
 

@@ -149,4 +149,28 @@ interface ResourceFieldCollectionInterface extends \Iterator, \Countable {
    */
   public function setLimitFields($limit_fields);
 
+  /**
+   * Gets the resource name.
+   *
+   * @return string
+   *   The resource name.
+   */
+  public function getResourceName();
+
+  /**
+   * Gets the resource ID.
+   *
+   * @return string
+   *   The resource ID.
+   */
+  public function getResourceId();
+
+  /**
+   * Sets the resource ID.
+   *
+   * @param string $resource_id
+   *   The resource ID.
+   */
+  public function setResourceId($resource_id);
+
 }

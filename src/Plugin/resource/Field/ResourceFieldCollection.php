@@ -10,6 +10,7 @@ namespace Drupal\restful\Plugin\resource\Field;
 use Doctrine\Common\Collections\ArrayCollection;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
+use Drupal\restful\Plugin\resource\Resource;
 
 class ResourceFieldCollection implements ResourceFieldCollectionInterface {
 
@@ -49,6 +50,13 @@ class ResourceFieldCollection implements ResourceFieldCollectionInterface {
    * @var string[]
    */
   protected $limitFields = array();
+
+  /**
+   * Contains the resource ID this field collection is for.
+   *
+   * @var string
+   */
+  protected $resourceId;
 
   /**
    * Constructor.
@@ -238,6 +246,29 @@ class ResourceFieldCollection implements ResourceFieldCollectionInterface {
    */
   public function setIdField($id_field) {
     $this->idField = $id_field;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getResourceName() {
+    $resource_id = $this->getResourceId();
+    $pos = strpos($resource_id, Resource::DERIVATIVE_SEPARATOR);
+    return $pos === FALSE ? $resource_id : substr($resource_id, 0, $pos);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getResourceId() {
+    return $this->resourceId;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setResourceId($resource_id) {
+    $this->resourceId = $resource_id;
   }
 
   /**

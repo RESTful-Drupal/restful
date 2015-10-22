@@ -14,6 +14,7 @@ use Drupal\restful\Exception\InternalServerErrorException;
 use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
+use Drupal\restful\Plugin\resource\Decorators\CacheDecoratedResource;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldResourceInterface;
 use Drupal\restful\Plugin\resource\ResourceEntity;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterEMW;
@@ -117,10 +118,8 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
       $identifier = implode(ResourceInterface::IDS_SEPARATOR, $identifier);
     }
     $fragments = new ArrayCollection(array(
-      'resource' => $this->pluginId,
-      'entity_type' => $this->entityType,
-      'id' => (int) $identifier,
-      'entity_id' => (int) $this->getEntityIdByFieldId($identifier),
+      'resource' => CacheDecoratedResource::serializeKeyValue($this->pluginId, $this->canonicalPath($identifier)),
+      'entity' => CacheDecoratedResource::serializeKeyValue($this->entityType, $this->getEntityIdByFieldId($identifier)),
     ));
     $options = $this->getOptions();
     switch ($options['renderCache']['granularity']) {
@@ -248,6 +247,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     $resource_field_collection->setInterpreter($interpreter);
     $id_field_name = empty($this->options['idField']) ? 'id' : $this->options['idField'];
     $resource_field_collection->setIdField($this->fieldDefinitions->get($id_field_name));
+    $resource_field_collection->setResourceId($this->pluginId);
 
     // Defer sparse fieldsets to the formatter. That way we can minimize cache
     // fragmentation because we have a unique cache record for all the sparse
@@ -769,7 +769,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     list(,, $bundle) = entity_extract_ids($entity_type, $entity);
 
     if (!empty($this->bundles) && !in_array($bundle, $this->bundles)) {
-      throw new UnprocessableEntityException(sprintf('The entity ID %s is not valid.', $entity_id));
+      throw new UnprocessableEntityException(sprintf('The bundle "%s" is not valid.', $entity_id));
     }
 
     if ($this->checkEntityAccess($op, $entity_type, $entity) === FALSE) {
@@ -1110,7 +1110,9 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
       list($item, $definitions) = $this->getFieldsFromPublicNameItem($resource_field);
       $fields[] = $item;
     }
-    $resource_field = $definitions->get($last_public_field_name);
+    if (!$resource_field = $definitions->get($last_public_field_name)) {
+      throw new BadRequestException(sprintf('Invalid nested field provided %s', $last_public_field_name));
+    }
     $property = $resource_field->getProperty();
     $item = array(
       'name' => $property,

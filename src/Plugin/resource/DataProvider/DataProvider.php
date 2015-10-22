@@ -13,6 +13,7 @@ use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Exception\ServiceUnavailableException;
 use Drupal\restful\Http\HttpHeader;
 use Drupal\restful\Http\RequestInterface;
+use Drupal\restful\Plugin\resource\Decorators\CacheDecoratedResource;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollection;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
@@ -248,8 +249,7 @@ abstract class DataProvider implements DataProviderInterface {
       $identifier = implode(',', $identifier);
     }
     $fragments = new ArrayCollection(array(
-      'resource' => $this->pluginId,
-      'id' => (int) $identifier,
+      'resource' => CacheDecoratedResource::serializeKeyValue($this->pluginId, $this->canonicalPath($identifier)),
     ));
     $options = $this->getOptions();
     switch ($options['renderCache']['granularity']) {

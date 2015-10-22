@@ -104,6 +104,13 @@ class RenderCache implements RenderCacheInterface {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function getCid() {
+    return $this->hash;
+  }
+
+  /**
    * Generates the cache id based on the hash and the fragment IDs.
    *
    * @return string

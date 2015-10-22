@@ -8,6 +8,7 @@
 namespace Drupal\restful\RenderCache\Entity;
 
 use Doctrine\Common\Collections\ArrayCollection;
+use Drupal\restful\Plugin\resource\Decorators\CacheDecoratedResource;
 
 class CacheFragmentController extends \EntityAPIController {
 
@@ -137,7 +138,8 @@ class CacheFragmentController extends \EntityAPIController {
       return NULL;
     }
     $cache_fragment = entity_load_single('cache_fragment', key($results['cache_fragment']));
-    return $cache_fragment->value;
+    $pos = strpos($cache_fragment->value, CacheDecoratedResource::CACHE_PAIR_SEPARATOR);
+    return $pos === FALSE ? $cache_fragment->value : substr($cache_fragment->value, 0, $pos);
   }
 
 }
