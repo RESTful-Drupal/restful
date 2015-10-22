@@ -368,4 +368,26 @@ abstract class ResourceDecoratorBase extends PluginBase implements ResourceDecor
     return $this->process();
   }
 
+  /**
+   * If any method not declared, then defer it to the decorated field.
+   *
+   * This decorator class is proxying all the calls declared in the
+   * ResourceInterface to the underlying decorated resource. But it is not
+   * doing it for any of the methods of the parents of ResourceInterface.
+   *
+   * With this code, any method that is not declared in the class will try to
+   * make that method call it in the decorated resource.
+   *
+   * @param string $name
+   *   The name of the method that could not be found.
+   * @param array $arguments
+   *   The arguments passed to the method, collected in an array.
+   *
+   * @return mixed
+   *   The result of the call.
+   */
+  public function __call($name, $arguments) {
+    return call_user_func_array(array($this->subject, $name), $arguments);
+  }
+
 }
