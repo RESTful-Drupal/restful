@@ -128,7 +128,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
         continue;
       }
       $interpreter = $data->getInterpreter();
-      $output['#fields'][$public_field_name] = $this->embedField($resource_field, $interpreter, $parents, $parent_hashes);
+      $output['#fields'][$public_field_name] = $this->embedField($resource_field, $data->getIdField()->render($interpreter), $interpreter, $parents, $parent_hashes);
     }
 
     if ($data instanceof ResourceFieldCollectionInterface) {
@@ -139,11 +139,6 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
         // In some situations when making an OPTIONS call the $resource_id
         // returns the array of discovery information instead of a real value.
         $output['#resource_id'] = (string) $resource_id;
-        $self = restful()
-          ->getResourceManager()
-          ->getPlugin($data->getResourceId())
-          ->versionedUrl($resource_id);
-        $output['links'] = array('self' => $self);
       }
     }
     if ($this->isCacheEnabled($data)) {
@@ -300,9 +295,13 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
         // Handle single and multiple relationships.
         $rel = array();
         $single_item = $field_contents['#cardinality'] == 1;
+        $relationship_links = empty($field_contents['#relationship_links']) ? NULL : $field_contents['#relationship_links'];
         unset($field_contents['#embedded']);
         unset($field_contents['#cardinality']);
+        unset($field_contents['#relationship_links']);
         foreach ($field_contents as $field_item) {
+          $include_links = empty($field_item['#include_links']) ? NULL : $field_item['#include_links'];
+          unset($field_contents['#include_links']);
           $field_item = $this->populateCachePlaceholder($field_item);
           unset($field_item['#cache_placeholder']);
           $element = $field_item['#relationship_info'];
@@ -314,11 +313,17 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
           // If we get here is because the relationship is included in the
           // sparse fieldset. That means that in this context, empty field
           // limits mean all the fields.
-          $included[$field_path][$include_key] = $this->renormalize($field_item, $included, $nested_allowed_fields) + array('links' => $element['links']);
+          $included[$field_path][$include_key] = $this->renormalize($field_item, $included, $nested_allowed_fields);
+          $included[$field_path][$include_key] += $include_links ? array('links' => $include_links) : array();
           $rel[] = $element;
         }
         // Only place the relationship info.
-        $result['relationships'][$field_name] = $single_item ? reset($rel) : $rel;
+        $result['relationships'][$field_name] = array(
+          'data' => $single_item ? reset($rel) : $rel,
+        );
+        if (!empty($relationship_links)) {
+          $result['relationships'][$field_name]['links'] = $relationship_links;
+        }
       }
     }
 
@@ -358,6 +363,8 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
    *   The resource field being processed. If it is a related resource, this is
    *   used to extract the contents of the resource. If not, it's used to
    *   extract the simple value.
+   * @param string $parent_id
+   *   ID in the parent resource where this is being embedded.
    * @param DataInterpreterInterface $interpreter
    *   The context for the $resource_field.
    * @param array $parents
@@ -370,7 +377,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
    * @return array
    *   The contents for the JSON API attribute or relationship.
    */
-  protected function embedField(ResourceFieldInterface $resource_field, DataInterpreterInterface $interpreter, array &$parents, array &$parent_hashes) {
+  protected function embedField(ResourceFieldInterface $resource_field, $parent_id, DataInterpreterInterface $interpreter, array &$parents, array &$parent_hashes) {
     // If the field points to a resource that can be included, include it
     // right away.
     if (!$resource_field instanceof ResourceFieldResourceInterface) {
@@ -390,7 +397,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
       '#fields' => array(),
       '#embedded' => TRUE,
       '#cache_placeholder' => array(
-        'parents' => array_merge($parents, array($resource_field->getPublicName())),
+        'parents' => array_merge($parents, array($public_field_name)),
         'parent_hashes' => $parent_hashes,
       ),
     );
@@ -433,17 +440,6 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
         'type' => $resource_field->getResourceMachineName(),
         'id' => (string) $id,
       );
-      // If there is a resource plugin for the parent, set the related
-      // links.
-      if ($resource = $this->getResource()) {
-        $basic_info['links']['self'] = $resource_plugin->versionedUrl($id);
-        $basic_info['links']['related'] = $resource->versionedUrl('', array(
-          'absolute' => TRUE,
-          'query' => array(
-            'filter' => array($resource_field->getPublicName() => $id),
-          ),
-        ));
-      }
 
       // We want to be able to include only the images in articles.images,
       // but not articles.related.images. That's why we need the path
@@ -454,19 +450,33 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
         '#resource_plugin' => $resource_plugin->getPluginId(),
         '#resource_id' => $basic_info['id'],
         '#relationship_field_path' => $include_path,
+        '#include_links' => array(
+          'self' => $resource_plugin->versionedUrl($basic_info['id']),
+        ),
         '#relationship_info' => array(
-          'data' => array(
-            'type' => $basic_info['type'],
-            'id' => $basic_info['id'],
-          ),
-          'links' => $basic_info['links'],
+          'type' => $basic_info['type'],
+          'id' => $basic_info['id'],
         ),
       ) + $value_item;
       $output[] = $item;
     }
+    // If there is a resource plugin for the parent, set the related
+    // links.
+    $links = array();
+    if ($resource = $this->getResource()) {
+      $links['related'] = $resource->versionedUrl('', array(
+        'absolute' => TRUE,
+        'query' => array(
+          'filter' => array($public_field_name => reset($ids)),
+        ),
+      ));
+      $links['self'] = $resource_plugin->versionedUrl($parent_id . '/relationships/' . $public_field_name);
+    }
+
     return $output + array(
       '#embedded' => TRUE,
       '#cardinality' => $cardinality,
+      '#relationship_links' => $links,
     );
   }
 
