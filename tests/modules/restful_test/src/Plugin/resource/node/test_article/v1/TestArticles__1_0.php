@@ -33,4 +33,24 @@ use Drupal\restful\Plugin\resource\ResourceNode;
  *   minorVersion = 0
  * )
  */
-class TestArticles__1_0 extends ResourceNode implements ResourceInterface {}
+class TestArticles__1_0 extends ResourceNode implements ResourceInterface {
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function publicFields() {
+    $public_fields = parent::publicFields();
+
+    if (!module_exists('entity_validator')) {
+      return $public_fields;
+    }
+    $public_fields['title'] = $public_fields['label'];
+    $public_fields['body'] = array(
+      'property' => 'body',
+      'sub_property' => 'value',
+    );
+
+    return $public_fields;
+  }
+
+}

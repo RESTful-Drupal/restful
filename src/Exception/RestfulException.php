@@ -142,6 +142,7 @@ class RestfulException extends \Exception {
    * Get the associative array of headers.
    *
    * @return array
+   *   The associated headers to the error exception.
    */
   public function getHeaders() {
     return $this->headers;
