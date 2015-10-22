@@ -310,6 +310,12 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
           unset($field_item['#relationship_field_path']);
           $include_key = $field_item['#resource_plugin'] . '--' . $field_item['#resource_id'];
           $nested_allowed_fields = $this->unprefixInputOptions($allowed_fields, $field_name);
+          // If the list of the child allowed fields is empty, but the parent is
+          // part of the includes, it means that the consumer meant to include
+          // all the fields in the children.
+          if (is_array($allowed_fields) && empty($nested_allowed_fields) && in_array($field_name, $allowed_fields)) {
+            $nested_allowed_fields = FALSE;
+          }
           // If we get here is because the relationship is included in the
           // sparse fieldset. That means that in this context, empty field
           // limits mean all the fields.
@@ -341,14 +347,17 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
     $input = $this->getRequest()->getParsedInput();
     $requested_includes = empty($input['include']) ? array() : explode(',', $input['include']);
     // Keep track of everything that has been included.
-    $include_keys = array();
+    $included_keys = array();
     foreach ($requested_includes as $requested_include) {
+      if (empty($included[$requested_include])) {
+        continue;
+      }
       foreach ($included[$requested_include] as $include_key => $included_item) {
-        if (in_array($include_key, $include_keys)) {
+        if (in_array($include_key, $included_keys)) {
           continue;
         }
         $output['included'][] = $included_item;
-        $include_keys[] = $include_key;
+        $included_keys[] = $include_key;
       }
     }
     return $output;
@@ -549,11 +558,12 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
     $input = $request->getParsedInput();
     $new_input = $input + array('include' => '', 'fields' => '');
     // If the field is not supposed to be included, then bail.
-    if (!in_array($field_item['#relationship_field_path'], explode(',', $new_input['include']))) {
+    $old_includes = array_filter(explode(',', $new_input['include']));
+    if (!in_array($field_item['#relationship_field_path'], $old_includes)) {
       return $field_item;
     }
     $new_input['fields'] = implode(',', $this->unprefixInputOptions(explode(',', $new_input['fields']), $field_item['#relationship_field_path']));
-    $new_input['include'] = implode(',', $this->unprefixInputOptions(explode(',', $new_input['include']), $field_item['#relationship_field_path']));
+    $new_input['include'] = implode(',', $this->unprefixInputOptions($old_includes, $field_item['#relationship_field_path']));
     $request->setParsedInput(array_filter($new_input));
     $embedded_resource->setRequest($request);
     $data = $embedded_resource->getDataProvider()

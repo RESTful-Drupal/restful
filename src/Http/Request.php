@@ -339,6 +339,7 @@ class Request implements RequestInterface {
    *   The parsed input array.
    */
   protected function fixQueryFields(array $input) {
+    // Make sure that we include all the parents for full linkage.
     foreach (array('fields', 'include') as $key_name) {
       if (empty($input[$key_name])) {
         continue;
