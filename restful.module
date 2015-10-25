@@ -45,7 +45,7 @@ function restful_menu() {
       'access arguments' => array($plugin_definition['resource']),
       'page callback' => RestfulManager::FRONT_CONTROLLER_CALLBACK,
       'page arguments' => array($plugin_definition['resource']),
-      'delivery callback' => 'restful_formatted_delivery',
+      'delivery callback' => 'restful_delivery',
       'type' => MENU_CALLBACK,
     );
     // If there is no specific menu item allow the different version variations.
@@ -65,11 +65,6 @@ function restful_menu() {
     else {
       $items[$plugin_definition['menuItem']] = $item;
     }
-  }
-
-  // Make sure the CRSF token endpoint is not HAL.
-  if (!empty($items[$base_path . '/session/token'])) {
-    $items[$base_path . '/session/token']['delivery callback'] = 'restful_unprepared_delivery';
   }
 
   // Make sure the Login endpoint has the correct access callback.
@@ -267,12 +262,10 @@ function restful_menu_process_callback($resource_name, $version = NULL) {
  *
  * @param mixed $var
  *   (optional) If set, the variable will be converted to JSON and output.
- * @param string $method
- *   Name of the method for the formatter.
  *
  * @see restful_menu_process_callback()
  */
-function restful_delivery($var = NULL, $method = 'format') {
+function restful_delivery($var = NULL) {
   if (!isset($var)) {
     return;
   }
@@ -330,7 +323,7 @@ function restful_delivery($var = NULL, $method = 'format') {
     else {
       $formatter_name = isset($plugin_definition['formatter']) ? $plugin_definition['formatter'] : NULL;
     }
-    $output = call_user_func(array($formatter_manager, $method), $var, $formatter_name);
+    $output = $formatter_manager->format($var, $formatter_name);
     $response->setContent($output);
   }
   catch (RestfulException $e) {
@@ -344,31 +337,6 @@ function restful_delivery($var = NULL, $method = 'format') {
 
   $response->prepare($request);
   $response->send();
-}
-
-/**
- * Returns data in JSON format using data preparation in the formatter plugin.
- *
- * @param $var
- *   (optional) If set, the variable will be converted to JSON and output.
- *
- * @see restful_menu_process_callback()
- */
-function restful_formatted_delivery($var = NULL) {
-  restful_delivery($var, 'format');
-}
-
-/**
- * Returns data in JSON format not using data preparation in the formatter
- * plugin.
- *
- * @param $var
- *   (optional) If set, the variable will be converted to JSON and output.
- *
- * @see restful_menu_process_callback()
- */
-function restful_unprepared_delivery($var = NULL) {
-  restful_delivery($var, 'render');
 }
 
 /**

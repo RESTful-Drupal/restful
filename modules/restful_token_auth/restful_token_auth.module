@@ -28,31 +28,6 @@ function restful_token_auth_menu() {
 }
 
 /**
- * Implements hook_menu_alter().
- */
-function restful_token_auth_menu_alter(&$items) {
-  $access_token_plugin_definitions = array();
-  $plugins = restful()
-    ->getResourceManager()
-    ->getPlugins();
-  foreach ($plugins as $plugin) {
-    /* @var ResourceInterface $plugin */
-    $plugin_definition = $plugin->getPluginDefinition();
-    if (!empty($plugin_definition['dataProvider']['entityType']) && $plugin_definition['dataProvider']['entityType'] == 'restful_token_auth') {
-      $access_token_plugin_definitions[] = $plugin_definition;
-    }
-  }
-  if (empty($access_token_plugin_definitions)) {
-    return;
-  }
-  foreach ($access_token_plugin_definitions as $access_token_plugin_definition) {
-    if (!empty($items[$access_token_plugin_definition['menuItem']])) {
-      $items[$access_token_plugin_definition['menuItem']]['delivery callback'] = 'restful_unprepared_delivery';
-    }
-  }
-}
-
-/**
  * Implements hook_restful_parse_request_alter().
  */
 function restful_token_auth_restful_parse_request_alter(RequestInterface &$request) {
@@ -132,4 +107,22 @@ function restful_token_auth_cron() {
 
   $ids = array_keys($result['restful_token_auth']);
   entity_delete_multiple('restful_token_auth', $ids);
+}
+
+/**
+ * Implements hook_restful_resource_alter().
+ */
+function restful_token_auth_restful_resource_alter(ResourceInterface &$resource) {
+  $plugin_definition = $resource->getPluginDefinition();
+  if (
+    empty($plugin_definition['dataProvider']['entityType']) ||
+    $plugin_definition['dataProvider']['entityType'] != 'restful_token_auth' ||
+    !empty($plugin_definition['formatter'])
+  ) {
+    return;
+  }
+  // If this resource is based on access token entities and does not have an
+  // explicit formatter attached to it, then use the single_json formatter.
+  $plugin_definition['formatter'] = 'single_json';
+  $resource->setPluginDefinition($plugin_definition);
 }

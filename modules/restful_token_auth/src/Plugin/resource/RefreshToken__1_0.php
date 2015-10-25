@@ -29,6 +29,7 @@ use Drupal\restful_token_auth\Entity\RestfulTokenAuth;
  *       "access_token"
  *     },
  *   },
+ *   formatter = "single_json",
  *   majorVersion = 1,
  *   minorVersion = 0
  * )
