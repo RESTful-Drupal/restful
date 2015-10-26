@@ -7,6 +7,9 @@
 
 class RestfulDiscoveryTestCase extends RestfulCurlBaseTestCase {
 
+  /**
+   * {@inheritdoc}
+   */
   public static function getInfo() {
     return array(
       'name' => 'Discovery',
@@ -15,14 +18,17 @@ class RestfulDiscoveryTestCase extends RestfulCurlBaseTestCase {
     );
   }
 
-  function setUp() {
+  /**
+   * {@inheritdoc}
+   */
+  public function setUp() {
     parent::setUp('restful_test');
   }
 
   /**
    * Test the headers populated in an OPTIONS request.
    */
-  function testOptionsMethod() {
+  public function testOptionsMethod() {
     $handler = restful_get_restful_handler('test_articles', 1, 4);
 
     // 1. Assert Access-Control-Allow-Methods.
@@ -178,6 +184,5 @@ class RestfulDiscoveryTestCase extends RestfulCurlBaseTestCase {
     $result = $handler->options();
     $this->assertNull($result['entity_reference_single']['form_element']['allowed_values']);
   }
-
 
 }
