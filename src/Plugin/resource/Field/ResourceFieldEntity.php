@@ -768,11 +768,14 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
    */
   protected function entityTypeWrapper() {
     static $entity_wrappers = array();
-    if (isset($entity_wrappers[$this->getEntityType()])) {
-      return $entity_wrappers[$this->getEntityType()];
+    $key = sprintf('%s:%s', $this->getEntityType(), $this->getBundle());
+    if (isset($entity_wrappers[$key])) {
+      return $entity_wrappers[$key];
     }
-    $entity_wrappers[$this->getEntityType()] = entity_metadata_wrapper($this->getEntityType());
-    return $entity_wrappers[$this->getEntityType()];
+    $entity_wrappers[$key] = entity_metadata_wrapper($this->getEntityType(), NULL, array(
+      'bundle' => $this->getBundle(),
+    ));
+    return $entity_wrappers[$key];
   }
 
   /**
@@ -1174,10 +1177,10 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
         'description' => $field_instance['description'],
       ));
       $field_info = field_info_field($this->getProperty());
-      $public_field_info->addSectionDefaults('info', array(
-        'label' => $field_info['label'],
-        'description' => $field_info['description'],
-      ));
+      $section_info = array();
+      $section_info['label'] = empty($field_info['label']) ? NULL : $field_info['label'];
+      $section_info['description'] = empty($field_info['description']) ? NULL : $field_info['description'];
+      $public_field_info->addSectionDefaults('info', $section_info);
       $allowed_values = $public_field_info instanceof PublicFieldInfoEntityInterface ? $public_field_info->getFormSchemaAllowedValues() : NULL;
       $public_field_info->addSectionDefaults('form_element', array(
         'default_value' => isset($field_instance['default_value']) ? $field_instance['default_value'] : NULL,
@@ -1186,15 +1189,20 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
     }
     else {
       // Extract the discovery information from the property info.
-      $property_info = $this
-        ->entityTypeWrapper()
-        ->getPropertyInfo($this->getProperty());
+      try {
+        $property_info = $this
+          ->entityTypeWrapper()
+          ->getPropertyInfo($this->getProperty());
+      }
+      catch(\EntityMetadataWrapperException $e) {
+        return;
+      }
       if (empty($property_info)) {
         return;
       }
       $public_field_info->addSectionDefaults('data', array(
         'type' => $property_info['type'],
-        'required' => $property_info['required'],
+        'required' => empty($property_info['required']) ? FALSE : $property_info['required'],
       ));
       $public_field_info->addSectionDefaults('info', array(
         'label' => $property_info['label'],

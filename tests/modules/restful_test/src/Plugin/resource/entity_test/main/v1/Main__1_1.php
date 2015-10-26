@@ -139,7 +139,6 @@ class Main__1_1 extends Main__1_0 implements ResourceInterface {
       ),
     );
 
-
     return $public_fields;
   }
 
@@ -163,7 +162,7 @@ class Main__1_1 extends Main__1_0 implements ResourceInterface {
       }
       return $return;
     }
-    return $value['fid'];
+    return empty($value['fid']) ? NULL : $value['fid'];
   }
 
 }
