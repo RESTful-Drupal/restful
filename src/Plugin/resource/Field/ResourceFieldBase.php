@@ -290,12 +290,13 @@ abstract class ResourceFieldBase implements ResourceFieldInterface {
    * {@inheritdoc}
    */
   public final static function isArrayNumeric(array $input) {
-    foreach (array_keys($input) as $key) {
+    $keys = array_keys($input);
+    foreach ($keys as $key) {
       if (!ctype_digit((string) $key)) {
         return FALSE;
       }
     }
-    return TRUE;
+    return isset($keys[0]) ? $keys[0] == 0 : TRUE;
   }
 
   /**

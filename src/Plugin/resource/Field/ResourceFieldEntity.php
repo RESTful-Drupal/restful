@@ -1181,10 +1181,12 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
       $section_info['label'] = empty($field_info['label']) ? NULL : $field_info['label'];
       $section_info['description'] = empty($field_info['description']) ? NULL : $field_info['description'];
       $public_field_info->addSectionDefaults('info', $section_info);
+      $type = $public_field_info instanceof PublicFieldInfoEntityInterface ? $public_field_info->getFormSchemaAllowedType() : NULL;
       $allowed_values = $public_field_info instanceof PublicFieldInfoEntityInterface ? $public_field_info->getFormSchemaAllowedValues() : NULL;
       $public_field_info->addSectionDefaults('form_element', array(
         'default_value' => isset($field_instance['default_value']) ? $field_instance['default_value'] : NULL,
         'allowed_values' => $allowed_values,
+        'type' => $type,
       ));
     }
     else {

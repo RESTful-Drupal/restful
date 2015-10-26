@@ -26,8 +26,6 @@ class RestfulDiscoveryTestCase extends RestfulCurlBaseTestCase {
    */
   public function setUp() {
     parent::setUp('restful_test');
-    // Add common fields, vocabulary and terms.
-    restful_test_add_fields();
   }
 
   /**
@@ -67,6 +65,8 @@ class RestfulDiscoveryTestCase extends RestfulCurlBaseTestCase {
    * Field discovery.
    */
   public function testFieldDiscovery() {
+    // Add common fields, vocabulary and terms.
+    restful_test_add_fields();
     // Create an entity.
     $entity = entity_create('entity_test', array('name' => 'main', 'label' => $this->randomName()));
     $pid = $entity->save();
@@ -138,21 +138,15 @@ class RestfulDiscoveryTestCase extends RestfulCurlBaseTestCase {
     );
 
     foreach ($expected as $public_field => $discovery_info) {
-      $result_data = $result[$public_field]['data'];
-      $expected_data = $expected[$public_field]['data'];
-      ksort($result_data);
-      ksort($expected_data);
-      $this->assertEqual($result_data, $expected_data, format_string('The "data" information is properly described for @field.', array('@field' => $public_field)));
-      $result_form_element = $result[$public_field]['form_element'];
-      $expected_form_element = $expected[$public_field]['form_element'];
-      ksort($result_form_element);
-      ksort($expected_form_element);
-      $this->assertEqual($result_form_element, $expected_form_element, format_string('The "form_element" information is properly described for @field.', array('@field' => $public_field)));
-      $result_info = $result[$public_field]['info'];
-      $expected_info = $expected[$public_field]['info'];
-      ksort($result_info);
-      ksort($expected_info);
-      $this->assertEqual($result_info, $expected_info, format_string('The "info" information is properly described for @field.', array('@field' => $public_field)));
+      foreach (array('data', 'form_element', 'info') as $section_name) {
+        if (empty($result['data'][0][$public_field][$section_name]) && empty($expected[$public_field][$section_name])) {
+          continue;
+        }
+        $this->assertEqual($result['data'][0][$public_field][$section_name], $expected[$public_field][$section_name], format_string('The "@section" information is properly described for @field.', array(
+          '@field' => $public_field,
+          '@section' => $section_name,
+        )));
+      }
     }
   }
 
@@ -160,11 +154,10 @@ class RestfulDiscoveryTestCase extends RestfulCurlBaseTestCase {
    * Field discovery allowed values.
    */
   public function testFieldDiscoveryAllowedValues() {
-    $handler = restful_get_restful_handler('test_articles', 1, 2);
-
     // Add entity reference fields.
     restful_test_add_fields('node', 'article');
 
+    $handler = restful()->getResourceManager()->getPlugin('test_articles:1.2');
     // Create 3 nodes.
     $expected_result = array();
     foreach (array(1, 2, 3) as $id) {
@@ -183,18 +176,30 @@ class RestfulDiscoveryTestCase extends RestfulCurlBaseTestCase {
     $instance['widget']['type'] = 'options_select';
     field_update_instance($instance);
 
-    $result = $handler->options();
-    $this->assertEqual($result['entity_reference_single']['form_element']['allowed_values'], $expected_result);
+    $handler->setRequest(Request::create('api/v1.2/test_articles', array(), RequestInterface::METHOD_OPTIONS));
+    $handler->setPath('');
+    $formatter = restful()
+      ->getFormatterManager()
+      ->negotiateFormatter(NULL);
+    $formatter->setResource($handler);
+    $result = $formatter->prepare($handler->process());
+    $this->assertEqual($result['data'][0]['entity_reference_single']['form_element']['allowed_values'], $expected_result);
 
     // Set widget to autocomplete.
     $instance['widget']['type'] = 'entityreference_autocomplete';
     field_update_instance($instance);
 
     // Invalidate public fields cache.
-    $handler->setPublicFields(array());
+    $handler = restful()->getResourceManager()->getPluginCopy('test_articles:1.2');
 
-    $result = $handler->options();
-    $this->assertNull($result['entity_reference_single']['form_element']['allowed_values']);
+    $handler->setRequest(Request::create('api/v1.2/test_articles', array(), RequestInterface::METHOD_OPTIONS));
+    $handler->setPath('');
+    $formatter = restful()
+      ->getFormatterManager()
+      ->negotiateFormatter(NULL);
+    $formatter->setResource($handler);
+    $result = $formatter->prepare($handler->process());
+    $this->assertNull($result['data'][0]['entity_reference_single']['form_element']['allowed_values']);
   }
 
 }
