@@ -7,6 +7,7 @@
 
 namespace Drupal\restful\Plugin\resource;
 
+use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\Component\Plugin\PluginBase;
 use Drupal\restful\Authentication\AuthenticationManager;
 use Drupal\restful\Authentication\AuthenticationManagerInterface;
@@ -634,19 +635,38 @@ abstract class Resource extends PluginBase implements ResourceInterface {
    */
   protected function preflight($path) {
     $plugin_definition = $this->getPluginDefinition();
-    $allowed_origin = empty($plugin_definition['allowOrigin']) ? variable_get('restful_allowed_origin', NULL) : $plugin_definition['allow_origin'];
-    // Always add the allow origin if configured.
+    $header_bag = restful()
+      ->getResponse()
+      ->getHeaders();
 
+    // Populate the Accept header.
+    $accepted_formats = array();
+    $formatter_manager = restful()->getFormatterManager();
+    if (empty($plugin_definition['formatter'])) {
+      foreach ($formatter_manager->getPlugins() as $formatter) {
+        /** @var $formatter \Drupal\restful\Plugin\formatter\FormatterInterface */
+        $header_bag->append(HttpHeader::create('Accept', $formatter->getContentTypeHeader()));
+      }
+    }
+    else {
+      try {
+        $accepted_format = $formatter_manager
+          ->getPlugin($plugin_definition['formatter'])
+          ->getContentTypeHeader();
+        $header_bag->add(HttpHeader::create('Accept', $accepted_format));
+      }
+      catch(PluginNotFoundException $e) {
+        throw new NotImplementedException($e->getMessage());
+      }
+    }
+
+    $allowed_origin = empty($plugin_definition['allowOrigin']) ? variable_get('restful_allowed_origin', NULL) : $plugin_definition['allowOrigin'];
+    // Always add the allow origin if configured.
     if ($allowed_origin) {
-      $header_bag = restful()
-        ->getResponse()
-        ->getHeaders();
-      $header_bag
-        ->add(HttpHeader::create('Access-Control-Allow-Origin', check_plain($allowed_origin)));
+      $header_bag->add(HttpHeader::create('Access-Control-Allow-Origin', check_plain($allowed_origin)));
       // @see: https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS#Requests_with_credentials
       $accepts_credentials = $allowed_origin == '*' ? 'false' : 'true';
-      $header_bag
-        ->add(HttpHeader::create('Access-Control-Allow-Credentials', $accepts_credentials));
+      $header_bag->add(HttpHeader::create('Access-Control-Allow-Credentials', $accepts_credentials));
     }
     // Make sure the Access-Control-Allow-Methods is populated.
     $allowed_methods = array();
@@ -663,13 +683,10 @@ abstract class Resource extends PluginBase implements ResourceInterface {
           }
           $allowed_methods[] = $method;
         }
-        restful()
-          ->getResponse()
-          ->getHeaders()
-          ->add(HttpHeader::create(
-            'Access-Control-Allow-Methods',
-            implode(',', $allowed_methods)
-          ));
+        $header_bag->add(HttpHeader::create(
+          'Access-Control-Allow-Methods',
+          implode(',', $allowed_methods)
+        ));
         break;
       }
     }

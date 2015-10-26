@@ -5,6 +5,8 @@
  * Contains RestfulDiscoveryTestCase
  */
 
+use Drupal\restful\Http\RequestInterface;
+
 class RestfulDiscoveryTestCase extends RestfulCurlBaseTestCase {
 
   /**
@@ -29,34 +31,33 @@ class RestfulDiscoveryTestCase extends RestfulCurlBaseTestCase {
    * Test the headers populated in an OPTIONS request.
    */
   public function testOptionsMethod() {
-    $handler = restful_get_restful_handler('test_articles', 1, 4);
-
     // 1. Assert Access-Control-Allow-Methods.
-    $handler->options('');
-    $headers = $handler->getHttpHeaders();
-    $this->assertEqual($headers['Access-Control-Allow-Methods'], \Drupal\restful\Http\RequestInterface::METHOD_HEAD, 'Access-Control-Allow-Methods header is populated correctly.');
+    $response = $this->httpRequest('api/v1.4/test_articles', RequestInterface::METHOD_OPTIONS);
+    $this->assertTrue(strpos($response['headers'], sprintf('access-control-allow-methods: %s', implode(', ', array(
+      RequestInterface::METHOD_HEAD,
+      RequestInterface::METHOD_OPTIONS,
+    )))) !== FALSE, 'Access-Control-Allow-Methods header is populated correctly.');
     // Make sure it returns the appropriate headers for every path.
-    $handler->options('1');
-    $headers = $handler->getHttpHeaders();
-    $this->assertEqual($headers['Access-Control-Allow-Methods'], \Drupal\restful\Http\RequestInterface::METHOD_PATCH . ',' . \RestfulInterface::DELETE, 'Access-Control-Allow-Methods header is populated correctly for different paths.');
+    $response = $this->httpRequest('api/v1.4/test_articles/1', RequestInterface::METHOD_OPTIONS);
+    $this->assertTrue(strpos($response['headers'], sprintf('access-control-allow-methods: %s', implode(', ', array(
+        RequestInterface::METHOD_PATCH,
+        RequestInterface::METHOD_DELETE,
+        RequestInterface::METHOD_OPTIONS,
+      )))) !== FALSE, 'Access-Control-Allow-Methods header is populated correctly for different paths.');
 
     // 2. Assert Accept.
-    $this->assertEqual($headers['Accept'], 'application/xml; charset=utf-8', 'Accept header is populated correctly for configured formatter.');
-    $handler = restful_get_restful_handler('test_articles', 1, 2);
-    $handler->options('');
-    $accepted_formats = array();
-    $formatters = $handler->getFormatterManager()->getPlugins();
-    foreach ($formatters as $formatter) {
-      /* @var \Drupal\restful\Plugin\formatter\FormatterInterface $formatter */
-      $accepted_formats[] = $formatter->getContentTypeHeader();
-    }
-    $headers = $handler->getHttpHeaders();
-    $this->assertEqual($headers['Accept'], implode(',', $accepted_formats), 'Accept header is populated correctly for non configured formatters.');
+    // List the content types the route accepts.
+    $this->assertTrue(strpos($response['headers'], 'accept: application/xml; charset=utf-8') !== FALSE, 'Accept header is populated correctly for configured formatter.');
+    $response = $this->httpRequest('api/v1.2/test_articles', RequestInterface::METHOD_OPTIONS);
+    $this->assertTrue(strpos($response['headers'], 'application/hal+json, application/json, application/vnd.api+json, application/drupal.single+json, application/xml; charset=utf-8') !== FALSE, 'Accept header is populated correctly for non configured formatters.');
 
     // 3. Assert Access-Control-Allow-Origin.
     $response = $this->httpRequest('api/v1.4/test_articles', \Drupal\restful\Http\RequestInterface::METHOD_HEAD);
-    $headers = explode("\n", $response['headers']);
-    $this->assertTrue(in_array('*', $headers), 'Access-Control-Allow-Origin header is populated correctly.');
+    $this->assertTrue(strpos($response['headers'], 'access-control-allow-origin: *') !== FALSE, 'Accept header is populated correctly for non configured formatters.');
+
+    // 4. Assert Access.
+    $response = $this->httpRequest('api/v1.4/test_articles/1', \Drupal\restful\Http\RequestInterface::METHOD_HEAD);
+    $this->assertTrue($response['code'], 400, 'Access is denied for unsupported HTTP methods.');
   }
 
   /**
