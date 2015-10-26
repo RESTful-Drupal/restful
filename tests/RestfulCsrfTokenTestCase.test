@@ -29,6 +29,9 @@ class RestfulCsrfTokenTestCase extends RestfulCurlBaseTestCase {
    */
   protected $originalServer;
 
+  /**
+   * {@inheritdoc}
+   */
   public static function getInfo() {
     return array(
       'name' => 'CSRF token',
@@ -37,6 +40,9 @@ class RestfulCsrfTokenTestCase extends RestfulCurlBaseTestCase {
     );
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function setUp() {
     parent::setUp('restful_example');
   }

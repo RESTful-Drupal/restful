@@ -2,12 +2,11 @@
 
 /**
  * @file
- * Contains \Drupal\restful_token_auth\Plugin\formatter\FormatterSingleJson.
+ * Contains \Drupal\restful\Plugin\formatter\FormatterSingleJson.
  */
 
-namespace Drupal\restful_token_auth\Plugin\formatter;
+namespace Drupal\restful\Plugin\formatter;
 
-use Drupal\restful\Plugin\formatter\FormatterJson;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldBase;
 
 /**

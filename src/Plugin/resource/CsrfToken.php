@@ -19,7 +19,7 @@ use Drupal\restful\Resource\ResourceManager;
  *   label = "CSRF Token",
  *   description = "Resource that provides CSRF Tokens when using cookie authentication.",
  *   authenticationTypes = TRUE,
- *   authenticationOptional = TRUE,
+ *   authenticationOptional = FALSE,
  *   formatter = "single_json",
  *   renderCache = {
  *     "render": FALSE
@@ -69,16 +69,6 @@ class CsrfToken extends Resource implements ResourceInterface {
    */
   public static function getCsrfToken() {
     return drupal_get_token(\Drupal\restful\Plugin\authentication\Authentication::TOKEN_VALUE);
-  }
-
-  /**
-   * Overrides RestfulBase::access().
-   *
-   * Expose resource only to authenticated users.
-   */
-  public function access() {
-    $account = $this->getAccount();
-    return (bool) $account->uid && parent::access();
   }
 
   /**
