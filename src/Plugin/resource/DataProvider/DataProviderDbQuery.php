@@ -227,12 +227,7 @@ class DataProviderDbQuery extends DataProvider implements DataProviderDbQueryInt
    * {@inheritdoc}
    */
   protected function mapDbRowToPublicFields($row) {
-    $resource_field_collection = new ResourceFieldCollection(array(), $this->getRequest());
-    $interpreter = new DataInterpreterArray($this->getAccount(), new ArrayWrapper((array) $row));
-    $resource_field_collection->setInterpreter($interpreter);
-    $id_field_name = empty($this->options['idField']) ? 'id' : $this->options['idField'];
-    $resource_field_collection->setIdField($this->fieldDefinitions->get($id_field_name));
-    $resource_field_collection->setResourceId($this->pluginId);
+    $resource_field_collection = $this->initResourceFieldCollection($row);
 
     // Loop over all the defined public fields.
     foreach ($this->fieldDefinitions as $public_field_name => $resource_field) {
@@ -508,6 +503,13 @@ class DataProviderDbQuery extends DataProvider implements DataProviderDbQueryInt
       return $parts[$column];
     };
     return array_map($get_part, $identifiers);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function initDataInterpreter($identifier) {
+    return new DataInterpreterArray($this->getAccount(), new ArrayWrapper((array) $identifier));
   }
 
 }

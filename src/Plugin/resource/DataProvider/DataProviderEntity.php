@@ -238,17 +238,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     if (!$this->isValidEntity('view', $entity_id)) {
       return NULL;
     }
-
-    $resource_field_collection = new ResourceFieldCollection(array(), $this->getRequest());
-    /* @var \EntityDrupalWrapper $wrapper */
-    $wrapper = entity_metadata_wrapper($this->entityType, $entity_id);
-    $wrapper->language($this->getLangCode());
-    $interpreter = new DataInterpreterEMW($this->getAccount(), $wrapper);
-    $resource_field_collection->setInterpreter($interpreter);
-    $id_field_name = empty($this->options['idField']) ? 'id' : $this->options['idField'];
-    $resource_field_collection->setIdField($this->fieldDefinitions->get($id_field_name));
-    $resource_field_collection->setResourceId($this->pluginId);
-
+    $resource_field_collection = $this->initResourceFieldCollection($identifier);
     // Defer sparse fieldsets to the formatter. That way we can minimize cache
     // fragmentation because we have a unique cache record for all the sparse
     // fieldsets combinations.
@@ -267,7 +257,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
       // resource fields.
       /* @var ResourceFieldEntityInterface $resource_field */
 
-      if (!$this->methodAccess($resource_field) || !$resource_field->access('view', $interpreter)) {
+      if (!$this->methodAccess($resource_field) || !$resource_field->access('view', $resource_field_collection->getInterpreter())) {
         // The field does not apply to the current method or has denied access.
         continue;
       }
@@ -1166,6 +1156,18 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     $item['entity_type'] = $resource->getEntityType();
     $item['bundles'] = $resource->getBundles();
     return array($item, $definitions);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function initDataInterpreter($identifier) {
+    $id = $identifier;
+    $entity_id = $this->getEntityIdByFieldId($id);
+    /* @var \EntityDrupalWrapper $wrapper */
+    $wrapper = entity_metadata_wrapper($this->entityType, $entity_id);
+    $wrapper->language($this->getLangCode());
+    return new DataInterpreterEMW($this->getAccount(), $wrapper);
   }
 
 }

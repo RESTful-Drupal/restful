@@ -53,19 +53,7 @@ class DataProviderPlug extends DataProvider implements DataProviderInterface {
    * {@inheritdoc}
    */
   public function view($identifier) {
-    $resource_manager = restful()->getResourceManager();
-    try {
-      $plugin = $resource_manager->getPlugin($identifier);
-    }
-    catch (UnauthorizedException $e) {
-      return NULL;
-    }
-    catch (PluginNotFoundException $e) {
-      throw new NotFoundException('Invalid URL path.');
-    }
-    $resource_field_collection = new ResourceFieldCollection(array(), $this->getRequest());
-    $interpreter = new DataInterpreterPlug($this->getAccount(), new PluginWrapper($plugin));
-    $resource_field_collection->setInterpreter($interpreter);
+    $resource_field_collection = $this->initResourceFieldCollection($identifier);
 
     $input = $this->getRequest()->getParsedInput();
     $limit_fields = !empty($input['fields']) ? explode(',', $input['fields']) : array();
@@ -78,7 +66,7 @@ class DataProviderPlug extends DataProvider implements DataProviderInterface {
         continue;
       }
 
-      if (!$this->methodAccess($resource_field) || !$resource_field->access('view', $interpreter)) {
+      if (!$this->methodAccess($resource_field) || !$resource_field->access('view', $resource_field_collection->getInterpreter())) {
         // The field does not apply to the current method or has denied
         // access.
         continue;
@@ -220,6 +208,23 @@ class DataProviderPlug extends DataProvider implements DataProviderInterface {
       });
     }
     return $plugins;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function initDataInterpreter($identifier) {
+    $resource_manager = restful()->getResourceManager();
+    try {
+      $plugin = $resource_manager->getPlugin($identifier);
+    }
+    catch (UnauthorizedException $e) {
+      return NULL;
+    }
+    catch (PluginNotFoundException $e) {
+      throw new NotFoundException('Invalid URL path.');
+    }
+    return new DataInterpreterPlug($this->getAccount(), new PluginWrapper($plugin));
   }
 
 }
