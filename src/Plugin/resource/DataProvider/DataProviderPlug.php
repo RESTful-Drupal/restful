@@ -7,6 +7,7 @@
 
 namespace Drupal\restful\Plugin\resource\DataProvider;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\restful\Exception\NotFoundException;
 use Drupal\restful\Exception\NotImplementedException;
@@ -226,5 +227,31 @@ class DataProviderPlug extends DataProvider implements DataProviderInterface {
     }
     return new DataInterpreterPlug($this->getAccount(), new PluginWrapper($plugin));
   }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCacheFragments($identifier) {
+    // If we are trying to get the context for multiple ids, join them.
+    if (is_array($identifier)) {
+      $identifier = implode(',', $identifier);
+    }
+    $fragments = new ArrayCollection(array(
+      'resource' => $identifier,
+    ));
+    $options = $this->getOptions();
+    switch ($options['renderCache']['granularity']) {
+      case DRUPAL_CACHE_PER_USER:
+        if ($uid = $this->getAccount()->uid) {
+          $fragments->set('user_id', (int) $uid);
+        }
+        break;
+      case DRUPAL_CACHE_PER_ROLE:
+        $fragments->set('user_role', implode(',', $this->getAccount()->roles));
+        break;
+    }
+    return $fragments;
+  }
+
 
 }
