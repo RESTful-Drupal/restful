@@ -1324,7 +1324,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
         );
 
         // Set the default value for the version of the referenced resource.
-        if (empty($resource['major_version']) || empty($resource['minor_version'])) {
+        if (!isset($resource['major_version']) || !isset($resource['minor_version'])) {
           list($major_version, $minor_version) = static::getResourceLastVersion($resource['name']);
           $resource['major_version'] = $major_version;
           $resource['minor_version'] = $minor_version;
