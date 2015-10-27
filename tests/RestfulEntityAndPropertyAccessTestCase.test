@@ -38,7 +38,7 @@ class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
     $user1 = $this->drupalCreateUser();
     try {
       $handler->setAccount($user1);
-      $handler->doPost($parsed_body);
+      $this->doRequest(\Drupal\restful\Http\RequestInterface::METHOD_POST, $handler, $parsed_body);
       $this->fail('Non-privileged user can create entity.');
     }
     catch (Exception $e) {
@@ -48,14 +48,14 @@ class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
     // Privileged user.
     $user2 = $this->drupalCreateUser(array('create article content'));
     $handler->setAccount($user2);
-    $result = $handler->doPost($parsed_body);
-    $this->assertTrue($result[0], 'Privileged user can create entity.');
+    $result = $this->doRequest(\Drupal\restful\Http\RequestInterface::METHOD_POST, $handler, $parsed_body);
+    $this->assertTrue($result['data'][0], 'Privileged user can create entity.');
 
     // Privileged user, with limited access to property.
     restful_test_deny_access_field();
     $handler->setAccount($user2);
-    $result = $handler->doPost($parsed_body);
-    $this->assertTrue($result[0], 'Privileged user can create entity, with limited access to property.');
+    $result = $this->doRequest(\Drupal\restful\Http\RequestInterface::METHOD_POST, $handler, $parsed_body);
+    $this->assertTrue($result['data'][0], 'Privileged user can create entity, with limited access to property.');
 
     // Privileged user, with limited access to property, and that property
     // passed in the request.
@@ -64,11 +64,11 @@ class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
 
     try {
       $handler->setAccount($user1);
-      $handler->doPost($parsed_body);
-      $this->fail('Non-privileged user can create entity with unaccessible property that was passed in the request.');
+      $this->doRequest(\Drupal\restful\Http\RequestInterface::METHOD_POST, $handler, $parsed_body);
+      $this->fail('Non-privileged user can create entity with inaccessible property that was passed in the request.');
     }
     catch (Exception $e) {
-      $this->pass('Non-privileged user cannot create entity with unaccessible property that was passed in the request.');
+      $this->pass('Non-privileged user cannot create entity with inaccessible property that was passed in the request.');
     }
     restful_test_clear_access_field();
   }
@@ -88,14 +88,14 @@ class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
     $node = $this->drupalCreateNode($settings);
     $id = $node->nid;
 
-    $handler = restful_get_restful_handler('test_articles');
-    $request = array('label' => $new_label);
+    $handler = restful()->getResourceManager()->getPlugin('test_articles:1.0');
+    $parsed_body = array('label' => $new_label);
 
     // Non-privileged user.
     $user1 = $this->drupalCreateUser();
     try {
       $handler->setAccount($user1);
-      $handler->put($id, $request);
+      $this->doRequest(\Drupal\restful\Http\RequestInterface::METHOD_PUT, $handler, $parsed_body, $id);
       $this->fail('Non-privileged user can update entity.');
     }
     catch (Exception $e) {
@@ -105,29 +105,29 @@ class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
     // Privileged user.
     $user2 = $this->drupalCreateUser(array('edit any article content'));
     $handler->setAccount($user2);
-    $result = $handler->put($id, $request);
-    $this->assertTrue($result[0], 'Privileged user can update entity.');
-    $this->assertEqual($result[0]['id'], $id, 'Updated entity has the same entity ID.');
-    $this->assertEqual($result[0]['label'], $new_label, 'Entity label was updated.');
+    $result = $this->doRequest(\Drupal\restful\Http\RequestInterface::METHOD_PUT, $handler, $parsed_body, $id);
+    $this->assertTrue($result['data'][0], 'Privileged user can update entity.');
+    $this->assertEqual($result['data'][0]['id'], $id, 'Updated entity has the same entity ID.');
+    $this->assertEqual($result['data'][0]['label'], $new_label, 'Entity label was updated.');
 
     // Privileged user, with limited access to property.
     restful_test_deny_access_field();
     $handler->setAccount($user2);
-    $result = $handler->put($id, $request);
-    $this->assertTrue($result[0], 'Privileged user can update entity, with limited access to property.');
+    $result = $this->doRequest(\Drupal\restful\Http\RequestInterface::METHOD_PUT, $handler, $parsed_body, $id);
+    $this->assertTrue($result['data'][0], 'Privileged user can update entity, with limited access to property.');
 
     // Privileged user, with limited access to property, and that property
     // passed in the request.
     $text1 = $this->randomName();
-    $request['body'] = $text1;
+    $parsed_body['body'] = $text1;
 
     try {
       $handler->setAccount($user1);
-      $handler->put($id, $request);
-      $this->fail('Non-privileged user can update entity with unaccessible property that was passed in the request.');
+      $this->doRequest(\Drupal\restful\Http\RequestInterface::METHOD_PUT, $handler, $parsed_body, $id);
+      $this->fail('Non-privileged user can update entity with inaccessible property that was passed in the request.');
     }
     catch (Exception $e) {
-      $this->pass('Non-privileged user cannot update entity with unaccessible property that was passed in the request.');
+      $this->pass('Non-privileged user cannot update entity with inaccessible property that was passed in the request.');
     }
     restful_test_clear_access_field();
   }
@@ -162,7 +162,7 @@ class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
     restful_test_deny_access_field();
     $handler->setAccount($user1);
     $result = $handler->get($node1->nid, array());
-    $this->assertTrue(!isset($result['body']), 'Privileged user can view entity but without unaccessible properties.');
+    $this->assertTrue(!isset($result['body']), 'Privileged user can view entity but without inaccessible properties.');
     restful_test_clear_access_field();
 
     // Non-privileged user (Revoke "access content" permission).
@@ -213,14 +213,14 @@ class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
     $handler = restful_get_restful_handler('test_articles');
 
     $result = $handler->get($node->nid);
-    $this->assertTrue($result[0]['label'], 'Label access is allowed without access callback.');
+    $this->assertTrue($result['data'][0]['label'], 'Label access is allowed without access callback.');
 
     $public_fields = $handler->getPublicFields();
     $public_fields['label']['access_callbacks'][] = array($this, 'publicFieldAccessFalse');
     $handler->setPublicFields($public_fields);
 
     $result = $handler->get($node->nid);
-    $this->assertTrue(empty($result[0]['label']), 'Label access is denied with access callback.');
+    $this->assertTrue(empty($result['data'][0]['label']), 'Label access is denied with access callback.');
   }
 
   /**
@@ -241,6 +241,40 @@ class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
    */
   public static function publicFieldAccessFalse($op, $public_field_name, \EntityMetadataWrapper $property_wrapper, \EntityMetadataWrapper $wrapper) {
     return $wrapper->label() == 'access' ? \Drupal\restful\Plugin\resource\Field\ResourceFieldBase::ACCESS_ALLOW : \Drupal\restful\Plugin\resource\Field\ResourceFieldBase::ACCESS_DENY;
+  }
+
+  /**
+   * Helper method to format a request.
+   *
+   * @param string $method
+   *   The HTTP verb.
+   * @param \Drupal\restful\Plugin\resource\ResourceInterface $handler
+   *   The handler.
+   * @param array $parsed_body
+   *   The parsed body array.
+   * @param string $path
+   *   The path where to make the request.
+   *
+   * @return array
+   *   The formatted output.
+   */
+  protected function doRequest($method, \Drupal\restful\Plugin\resource\ResourceInterface $handler, array $parsed_body = array(), $path = '') {
+    $output = NULL;
+    if ($method == \Drupal\restful\Http\RequestInterface::METHOD_POST) {
+      $output = $handler->doPost($parsed_body);
+    }
+    elseif ($method == \Drupal\restful\Http\RequestInterface::METHOD_PUT) {
+      $output = $handler->doPut($path, $parsed_body);
+    }
+    elseif ($method == \Drupal\restful\Http\RequestInterface::METHOD_PATCH) {
+      $output = $handler->doPatch($path, $parsed_body);
+    }
+    if (!isset($output)) {
+      return NULL;
+    }
+    $formatter = restful()->getFormatterManager()->negotiateFormatter(NULL, 'json');
+    $formatter->setResource($handler);
+    return $formatter->prepare($output);
   }
 
 }
