@@ -146,23 +146,22 @@ class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
     $node1 = $this->drupalCreateNode($settings);
     $wrapper = entity_metadata_wrapper('node' ,$node1);
 
-    $text1 = $this->randomName();
-    $wrapper->body->set(array('value' => $text1));
+    $wrapper->body->set(array('value' => $this->randomName()));
     $wrapper->save();
 
-    $handler = restful_get_restful_handler('test_articles');
+    $handler = restful()->getResourceManager()->getPlugin('test_articles:1.2');
 
     // Privileged user.
     $handler->setAccount($user1);
-    $response = $handler->get($node1->nid, array());
-    $result = $response[0];
+    $response = $this->doRequest(\Drupal\restful\Http\RequestInterface::METHOD_GET, $handler, array(), $node1->nid);
+    $result = $response['data'][0];
     $this->assertTrue($result['body'], 'Privileged user can view entity.');
 
     // Privileged user, with limited access to property.
     restful_test_deny_access_field();
     $handler->setAccount($user1);
-    $result = $handler->get($node1->nid, array());
-    $this->assertTrue(!isset($result['body']), 'Privileged user can view entity but without inaccessible properties.');
+    $result = $this->doRequest(\Drupal\restful\Http\RequestInterface::METHOD_GET, $handler, array(), $node1->nid);
+    $this->assertTrue(!isset($result['data'][0]['body']), 'Privileged user can view entity but without inaccessible properties.');
     restful_test_clear_access_field();
 
     // Non-privileged user (Revoke "access content" permission).
@@ -170,7 +169,7 @@ class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
     $user2 = drupal_anonymous_user();
     try {
       $handler->setAccount($user2);
-      $handler->get($node1->nid, array());
+      $this->doRequest(\Drupal\restful\Http\RequestInterface::METHOD_GET, $handler, array(), $node1->nid);
       $this->fail('Non-privileged user can view entity.');
     }
     catch (Exception $e) {
@@ -250,7 +249,7 @@ class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
    *   The HTTP verb.
    * @param \Drupal\restful\Plugin\resource\ResourceInterface $handler
    *   The handler.
-   * @param array $parsed_body
+   * @param array $input
    *   The parsed body array.
    * @param string $path
    *   The path where to make the request.
@@ -258,16 +257,19 @@ class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
    * @return array
    *   The formatted output.
    */
-  protected function doRequest($method, \Drupal\restful\Plugin\resource\ResourceInterface $handler, array $parsed_body = array(), $path = '') {
+  protected function doRequest($method, \Drupal\restful\Plugin\resource\ResourceInterface $handler, array $input = array(), $path = '') {
     $output = NULL;
     if ($method == \Drupal\restful\Http\RequestInterface::METHOD_POST) {
-      $output = $handler->doPost($parsed_body);
+      $output = $handler->doPost($input);
     }
     elseif ($method == \Drupal\restful\Http\RequestInterface::METHOD_PUT) {
-      $output = $handler->doPut($path, $parsed_body);
+      $output = $handler->doPut($path, $input);
     }
     elseif ($method == \Drupal\restful\Http\RequestInterface::METHOD_PATCH) {
-      $output = $handler->doPatch($path, $parsed_body);
+      $output = $handler->doPatch($path, $input);
+    }
+    elseif ($method == \Drupal\restful\Http\RequestInterface::METHOD_GET) {
+      $output = $handler->doGet($path, $input);
     }
     if (!isset($output)) {
       return NULL;
