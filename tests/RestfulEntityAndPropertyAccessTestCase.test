@@ -186,16 +186,18 @@ class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
     );
     $node = $this->drupalCreateNode($settings);
 
-    $handler = restful_get_restful_handler('test_articles', 1, 3);
+    $handler = restful()->getResourceManager()->getPlugin('test_articles:1.3');
     try {
-      $handler->get($node->nid);
+      $handler->doGet($node->nid);
       $this->fail('Custom access callback per resource\'s method not executed correctly.');
     }
     catch (ForbiddenException $e) {
       $this->pass('Custom access callback per endpoint executed correctly.');
     }
 
-    $handler->head($node->nid);
+    $handler->setPath($node->nid);
+    $handler->setRequest(\Drupal\restful\Http\Request::create($handler->versionedUrl($node->nid, array('absolute' => FALSE)), array(), \Drupal\restful\Http\RequestInterface::METHOD_GET));
+    $handler->process();
     $this->pass('Custom access callback per endpoint executed correctly.');
   }
 
