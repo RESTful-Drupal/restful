@@ -9,6 +9,9 @@ use Drupal\restful\Exception\ForbiddenException;
 
 class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
 
+  /**
+   * {@inheritdoc}
+   */
   public static function getInfo() {
     return array(
       'name' => 'Entity and property access',
@@ -17,14 +20,17 @@ class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
     );
   }
 
-  function setUp() {
+  /**
+   * {@inheritdoc}
+   */
+  public function setUp() {
     parent::setUp('restful_test');
   }
 
   /**
    * Test access control for creating an entity.
    */
-  function testCreateAccess() {
+  public function testCreateAccess() {
     $handler = restful_get_restful_handler('test_articles');
     $request = array('label' => $this->randomName());
 
@@ -70,7 +76,7 @@ class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
   /**
    * Test access control for updating an entity.
    */
-  function testUpdateAccess() {
+  public function testUpdateAccess() {
     $label = $this->randomName();
     $new_label = $this->randomName();
 
@@ -129,7 +135,7 @@ class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
   /**
    * Test access control for viewing an entity.
    */
-  function testViewAccess() {
+  public function testViewAccess() {
     $user1 = $this->drupalCreateUser();
     $label = $this->randomName();
     $settings = array(
