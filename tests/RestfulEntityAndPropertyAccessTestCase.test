@@ -31,14 +31,14 @@ class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
    * Test access control for creating an entity.
    */
   public function testCreateAccess() {
-    $handler = restful_get_restful_handler('test_articles');
-    $request = array('label' => $this->randomName());
+    $handler = restful()->getResourceManager()->getPlugin('test_articles:1.0');
+    $parsed_body = array('label' => $this->randomName());
 
     // Non-privileged user.
     $user1 = $this->drupalCreateUser();
     try {
       $handler->setAccount($user1);
-      $handler->post('', $request);
+      $handler->doPost($parsed_body);
       $this->fail('Non-privileged user can create entity.');
     }
     catch (Exception $e) {
@@ -48,23 +48,23 @@ class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
     // Privileged user.
     $user2 = $this->drupalCreateUser(array('create article content'));
     $handler->setAccount($user2);
-    $result = $handler->post('', $request);
+    $result = $handler->doPost($parsed_body);
     $this->assertTrue($result[0], 'Privileged user can create entity.');
 
     // Privileged user, with limited access to property.
     restful_test_deny_access_field();
     $handler->setAccount($user2);
-    $result = $handler->post('', $request);
+    $result = $handler->doPost($parsed_body);
     $this->assertTrue($result[0], 'Privileged user can create entity, with limited access to property.');
 
     // Privileged user, with limited access to property, and that property
     // passed in the request.
     $text1 = $this->randomName();
-    $request['body'] = $text1;
+    $parsed_body['body'] = $text1;
 
     try {
       $handler->setAccount($user1);
-      $handler->post('', $request);
+      $handler->doPost($parsed_body);
       $this->fail('Non-privileged user can create entity with unaccessible property that was passed in the request.');
     }
     catch (Exception $e) {
