@@ -56,7 +56,7 @@ class TestArticles__1_3 extends ResourceNode implements ResourceInterface {
    * @return bool
    *   TRUE for access granted, FALSE otherwise.
    */
-  protected function accessViewEntityFalse() {
+  public function accessViewEntityFalse() {
     return FALSE;
   }
 
@@ -66,7 +66,7 @@ class TestArticles__1_3 extends ResourceNode implements ResourceInterface {
    * @return bool
    *   TRUE for access granted, FALSE otherwise.
    */
-  protected function accessViewEntityTrue() {
+  public function accessViewEntityTrue() {
     return TRUE;
   }
 

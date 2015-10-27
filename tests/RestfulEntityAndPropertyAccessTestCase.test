@@ -196,7 +196,7 @@ class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
     }
 
     $handler->setPath($node->nid);
-    $handler->setRequest(\Drupal\restful\Http\Request::create($handler->versionedUrl($node->nid, array('absolute' => FALSE)), array(), \Drupal\restful\Http\RequestInterface::METHOD_GET));
+    $handler->setRequest(\Drupal\restful\Http\Request::create($handler->versionedUrl($node->nid, array('absolute' => FALSE)), array(), \Drupal\restful\Http\RequestInterface::METHOD_HEAD));
     $handler->process();
     $this->pass('Custom access callback per endpoint executed correctly.');
   }
@@ -210,38 +210,16 @@ class RestfulEntityAndPropertyAccessTestCase extends DrupalWebTestCase {
       'type' => 'article',
     );
     $node = $this->drupalCreateNode($settings);
+    $handler = restful()->getResourceManager()->getPlugin('test_articles:1.0');
 
-    $handler = restful_get_restful_handler('test_articles');
+    $result = $this->doRequest(\Drupal\restful\Http\RequestInterface::METHOD_GET, $handler, array(), $node->nid);
+    $this->assertNotNull($result['data'][0]['label'], 'Label access is allowed without access callback.');
 
-    $result = $handler->get($node->nid);
-    $this->assertTrue($result['data'][0]['label'], 'Label access is allowed without access callback.');
+    variable_set('restful_test_revoke_public_field_access', 'label');
+    $handler = restful()->getResourceManager()->getPluginCopy('test_articles:1.0');
 
-    $public_fields = $handler->getPublicFields();
-    $public_fields['label']['access_callbacks'][] = array($this, 'publicFieldAccessFalse');
-    $handler->setPublicFields($public_fields);
-
-    $result = $handler->get($node->nid);
+    $result = $this->doRequest(\Drupal\restful\Http\RequestInterface::METHOD_GET, $handler, array(), $node->nid);
     $this->assertTrue(empty($result['data'][0]['label']), 'Label access is denied with access callback.');
-  }
-
-  /**
-   * An access callback that returns TRUE if title is "access". Otherwise FALSE.
-   *
-   * @param string $op
-   *   The operation that access should be checked for. Can be "view" or "edit".
-   *   Defaults to "edit".
-   * @param string $public_field_name
-   *   The name of the public field.
-   * @param EntityMetadataWrapper $property_wrapper
-   *   The wrapped property.
-   * @param EntityMetadataWrapper $wrapper
-   *   The wrapped entity.
-   *
-   * @return string
-   *   "Allow" or "Deny" if user has access to the property.
-   */
-  public static function publicFieldAccessFalse($op, $public_field_name, \EntityMetadataWrapper $property_wrapper, \EntityMetadataWrapper $wrapper) {
-    return $wrapper->label() == 'access' ? \Drupal\restful\Plugin\resource\Field\ResourceFieldBase::ACCESS_ALLOW : \Drupal\restful\Plugin\resource\Field\ResourceFieldBase::ACCESS_DENY;
   }
 
   /**

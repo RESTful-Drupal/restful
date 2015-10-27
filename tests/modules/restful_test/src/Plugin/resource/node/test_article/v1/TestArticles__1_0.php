@@ -7,6 +7,8 @@
 
 namespace Drupal\restful_test\Plugin\resource\node\test_article\v1;
 
+use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
+use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
 use Drupal\restful\Plugin\resource\ResourceInterface;
 use Drupal\restful\Plugin\resource\ResourceNode;
 
@@ -51,6 +53,41 @@ class TestArticles__1_0 extends ResourceNode implements ResourceInterface {
     );
 
     return $public_fields;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function processPublicFields(array $field_definitions) {
+    $field_definitions = parent::processPublicFields($field_definitions);
+    if (!$altered_public_name = variable_get('restful_test_revoke_public_field_access')) {
+      return $field_definitions;
+    }
+    foreach ($field_definitions as $public_name => &$field_definition) {
+      if ($public_name != $altered_public_name) {
+        continue;
+      }
+      $field_definition['access_callbacks'] = array(array($this, 'publicFieldAccessFalse'));
+    }
+    return $field_definitions;
+  }
+
+  /**
+   * An access callback that returns TRUE if title is "access". Otherwise FALSE.
+   *
+   * @param string $op
+   *   The operation that access should be checked for. Can be "view" or "edit".
+   *   Defaults to "edit".
+   * @param ResourceFieldInterface $resource_field
+   *   The resource field to check access upon.
+   * @param DataInterpreterInterface $interpreter
+   *   The data interpreter.
+   *
+   * @return string
+   *   "Allow" or "Deny" if user has access to the property.
+   */
+  public static function publicFieldAccessFalse($op, ResourceFieldInterface $resource_field, DataInterpreterInterface $interpreter) {
+    return $interpreter->getWrapper()->label() == 'access' ? \Drupal\restful\Plugin\resource\Field\ResourceFieldBase::ACCESS_ALLOW : \Drupal\restful\Plugin\resource\Field\ResourceFieldBase::ACCESS_DENY;
   }
 
 }
