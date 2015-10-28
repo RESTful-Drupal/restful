@@ -26,6 +26,8 @@ class RestfulFilesUpload extends \RestfulEntityBase {
    * - "validators": By default no validation is done on the file extensions or
    *   file size.
    * - "scheme": By default the default scheme (e.g. public, private) is used.
+   * - "make_permanent": When true the file's status will be set to permanent
+   *   and a file useage for restful module will be added.
    */
   public function __construct(array $plugin, \RestfulAuthenticationManager $auth_manager = NULL, \DrupalCacheInterface $cache_controller = NULL, $language = NULL) {
     parent::__construct($plugin, $auth_manager, $cache_controller, $language);
@@ -41,6 +43,7 @@ class RestfulFilesUpload extends \RestfulEntityBase {
       ),
       'scheme' => file_default_scheme(),
       'replace' => FILE_EXISTS_RENAME,
+      'make_permanent' => TRUE,
     );
 
     $this->setPluginKey('options', drupal_array_merge_deep($default_values, $options));
@@ -59,6 +62,7 @@ class RestfulFilesUpload extends \RestfulEntityBase {
       throw new \RestfulBadRequestException('No files sent with the request.');
     }
 
+    $options = $this->getPluginKey('options');
     $ids = array();
 
     foreach ($_FILES as $file_info) {
@@ -70,12 +74,14 @@ class RestfulFilesUpload extends \RestfulEntityBase {
 
       $file = $this->fileSaveUpload($name);
 
-      // Change the file status from temporary to permanent.
-      $file->status = FILE_STATUS_PERMANENT;
-      file_save($file);
+      if ($options['make_permanent']) {
+        // Change the file status from temporary to permanent.
+        $file->status = FILE_STATUS_PERMANENT;
+        file_save($file);
 
-      // Required to be able to reference this file.
-      file_usage_add($file, 'restful', 'files', $file->fid);
+        // Required to be able to reference this file.
+        file_usage_add($file, 'restful', 'files', $file->fid);
+      }
 
       $ids[] = $file->fid;
     }

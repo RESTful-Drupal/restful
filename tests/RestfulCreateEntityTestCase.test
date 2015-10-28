@@ -178,31 +178,73 @@ class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
 
   }
 
+  public function testFileUploadOptions() {
+    variable_set('restful_file_upload', TRUE);
+    variable_set('restful_file_upload_allow_anonymous_user', TRUE);
+
+    // Upload a permanent file.
+    $return = $this->uploadFile();
+    $this->assertEqual($return['code'], 200, 'File uploaded.');
+
+    $return_array = drupal_json_decode($return['body']);
+    $file = file_load($return_array['data'][0]['id']);
+
+    // Make sure it's the same file that was uploaded.
+    $this->compareFile($file);
+    // File should be permanent.
+    $this->assertEqual($file->status, FILE_STATUS_PERMANENT, 'File status is permanent.');
+    $usage = file_usage_list($file);
+    $this->assertEqual(reset($usage['restful']['files']), 1, 'File usage is registered by RESTful.');
+
+
+    // Upload a temporary file
+    //drupal_static_reset('restful_get_restful_handler');
+    cache_clear_all();
+print_r(array_keys(restful_get_restful_plugins()));
+    $handler = restful_get_restful_handler('files', 1, 0);
+    $this->assertNotNull($handler);
+var_dump($handler);
+    $options = $handler->getPluginKey('options');
+    $options['make_permanent'] = FALSE;
+    $handler->setPluginKey('options');
+
+    $return = $this->uploadFile();
+    $this->assertEqual($return['code'], 200, 'File uploaded.');
+
+    $return_array = drupal_json_decode($return['body']);
+    $file = file_load($return_array['data'][0]['id']);
+
+    // Make sure it's the same file that was uploaded.
+    $this->compareFile($file);
+
+    // File should be temporary and not referenced.
+    $this->assertNotEqual($file->status, FILE_STATUS_PERMANENT, 'File status is permanent.');
+    $usage = file_usage_list($file);
+print_r($usage);
+    $this->assertEqual(reset($usage['restful']['files']), 1, 'File usage is registered by RESTful.');
+  }
+
   /**
    * Test access for file upload.
    */
   public function testFileUploadAccess() {
     variable_set('restful_file_upload', TRUE);
-    variable_set('restful_file_upload_allow_anonymous_user', TRUE);
+
     // Test access for anonymous user (allowed).
+    variable_set('restful_file_upload_allow_anonymous_user', TRUE);
     $return = $this->uploadFile();
     $this->assertEqual($return['code'], 200, 'File upload is allowed to anonymous users.');
-    variable_set('restful_file_upload_allow_anonymous_user', FALSE);
-    // Now that we have a successfully uploaded file, make sure it's the same
-    // file that was uploaded.
-    $original = hash_file('md5', $this->imagePath);
-    $return_array = drupal_json_decode($return['body']);
-    $file = file_load($return_array['data'][0]['id']);
-    $uploaded = hash_file('md5', file_create_url($file->uri));
-    $this->assertEqual($original, $uploaded, 'Original and uploaded file are identical.');
+
     // Test access for anonymous user (denied).
+    variable_set('restful_file_upload_allow_anonymous_user', FALSE);
     $return = $this->uploadFile();
     $this->assertEqual($return['code'], 403, 'File upload is denied to anonymous users.');
 
-    $this->drupalLogin($this->account);
     // Test access for authenticated users (allowed).
+    $this->drupalLogin($this->account);
     $return = $this->uploadFile();
     $this->assertEqual($return['code'], 200, 'File upload is allowed to authenticated users.');
+
     // Test access for authenticated users (denied).
     variable_set('restful_file_upload', FALSE);
     $return = $this->uploadFile();
@@ -228,4 +270,10 @@ class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
     ), TRUE);
   }
 
+  protected function compareFile($file) {
+    // Make sure it's the same file that was uploaded.
+    $original = hash_file('md5', $this->imagePath);
+    $uploaded = hash_file('md5', file_create_url($file->uri));
+    $this->assertEqual($original, $uploaded, 'Original and uploaded file are identical.');
+  }
 }
