@@ -309,10 +309,9 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
         unset($field_contents['#cardinality']);
         unset($field_contents['#relationship_links']);
         foreach ($field_contents as $field_item) {
-          $includes_parents[] = $field_name;
           $include_links = empty($field_item['#include_links']) ? NULL : $field_item['#include_links'];
           unset($field_contents['#include_links']);
-          $field_path = $this->buildIncludePath($includes_parents);
+          $field_path = $this->buildIncludePath($includes_parents, $field_name);
           $field_item = $this->populateCachePlaceholder($field_item, $field_path);
           unset($field_item['#cache_placeholder']);
           $element = $field_item['#relationship_info'];
@@ -328,7 +327,9 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
           // If we get here is because the relationship is included in the
           // sparse fieldset. That means that in this context, empty field
           // limits mean all the fields.
-          $included[$field_path][$include_key] = $this->renormalize($field_item, $included, $nested_allowed_fields, $includes_parents);
+          $new_includes_parents = $includes_parents;
+          $new_includes_parents[] = $field_name;
+          $included[$field_path][$include_key] = $this->renormalize($field_item, $included, $nested_allowed_fields, $new_includes_parents);
           $included[$field_path][$include_key] += $include_links ? array('links' => $include_links) : array();
           $rel[] = $element;
         }
