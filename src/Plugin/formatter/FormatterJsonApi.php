@@ -411,16 +411,18 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
       return NULL;
     }
     $ids = $cardinality == 1 ? $ids = array($ids) : $ids;
-    $value = array();
     $empty_value = array(
       '#fields' => array(),
       '#embedded' => TRUE,
+      '#resource_plugin' => $resource_field->getResourceMachineName(),
       '#cache_placeholder' => array(
         'parents' => array_merge($parents, array($public_field_name)),
         'parent_hashes' => $parent_hashes,
       ),
     );
-    $value = array_pad($value, count($ids), $empty_value);
+    $value = array_map(function ($id) use ($empty_value) {
+      return $empty_value + array('#resource_id' => $id);
+    }, $ids);
     if ($this->needsIncluding($resource_field, $parents)) {
       $value = $resource_field->render($interpreter);
       if (
@@ -433,28 +435,13 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
       $new_parents[] = $public_field_name;
       $value = $this->extractFieldValues($value, $new_parents, $parent_hashes);
       $value = $cardinality == 1 ? array($value) : $value;
-      // If some IDs were filtered out in the value while rendering due to the
-      // nested filtering with a target, we should remove those from the IDs
-      // in the relationship.
-      $filter_invalid_ids = function ($resource_id) use ($value) {
-        foreach ($value as $info) {
-          if (empty($info['#resource_id'])) {
-            return FALSE;
-          }
-          if ($info['#resource_id'] == $resource_id) {
-            return TRUE;
-          }
-        }
-        return FALSE;
-      };
-      $ids = array_filter($ids, $filter_invalid_ids);
     }
     // At this point we are dealing with an embed.
     $value = array_filter($value);
-    $combined = $ids ? array_combine($ids, array_pad($value, count($ids), $empty_value)) : array();
-    // Set the resource for the reference to get HATEOAS from them.
+    // Set the resource for the reference.
     $resource_plugin = $resource_field->getResourcePlugin();
-    foreach ($combined as $id => $value_item) {
+    foreach ($value as $value_item) {
+      $id = $value_item['#resource_id'];
       $basic_info = array(
         'type' => $resource_field->getResourceMachineName(),
         'id' => (string) $id,
