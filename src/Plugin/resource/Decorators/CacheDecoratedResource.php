@@ -317,7 +317,7 @@ class CacheDecoratedResource extends ResourceDecoratorBase implements CacheDecor
    * {@inheritdoc}
    */
   public static function serializeKeyValue($key, $value) {
-    return sprintf('%s%s%d', $key, static::CACHE_PAIR_SEPARATOR, $value);
+    return sprintf('%s%s%s', $key, static::CACHE_PAIR_SEPARATOR, $value);
   }
 
 }
