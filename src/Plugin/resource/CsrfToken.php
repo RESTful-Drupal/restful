@@ -6,6 +6,7 @@
  */
 
 namespace Drupal\restful\Plugin\resource;
+use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Resource\ResourceManager;
 
 /**
@@ -18,7 +19,11 @@ use Drupal\restful\Resource\ResourceManager;
  *   label = "CSRF Token",
  *   description = "Resource that provides CSRF Tokens when using cookie authentication.",
  *   authenticationTypes = TRUE,
- *   authenticationOptional = TRUE,
+ *   authenticationOptional = FALSE,
+ *   formatter = "single_json",
+ *   renderCache = {
+ *     "render": FALSE
+ *   },
  *   menuItem = "session/token",
  *   majorVersion = 1,
  *   minorVersion = 0
@@ -40,20 +45,11 @@ class CsrfToken extends Resource implements ResourceInterface {
   /**
    * Value callback; Return the CSRF token.
    *
-   * @return array
+   * @return string
+   *   The token.
    */
   public static function getCsrfToken() {
     return drupal_get_token(\Drupal\restful\Plugin\authentication\Authentication::TOKEN_VALUE);
-  }
-
-  /**
-   * Overrides RestfulBase::access().
-   *
-   * Expose resource only to authenticated users.
-   */
-  public function access() {
-    $account = $this->getAccount();
-    return (bool) $account->uid && parent::access();
   }
 
   /**

@@ -31,6 +31,7 @@ use Drupal\restful\Plugin\resource\DataProvider\DataProviderEntityInterface;
  *       "access_token"
  *     },
  *   },
+ *   formatter = "single_json",
  *   menuItem = "login-token",
  *   majorVersion = 1,
  *   minorVersion = 0
