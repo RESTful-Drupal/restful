@@ -9,6 +9,7 @@ namespace Drupal\restful\Plugin\formatter;
 
 use Drupal\restful\Exception\InternalServerErrorException;
 use Drupal\restful\Exception\ServerConfigurationException;
+use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldBase;
@@ -253,11 +254,14 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
    *   Pool of documents to compound.
    * @param bool|string[] $allowed_fields
    *   The sparse fieldset information. FALSE to select all fields.
+   * @param array $includes_parents
+   *   An array containing the included path until the current field being
+   *   processed.
    *
    * @return array
    *   The processed data.
    */
-  protected function renormalize(array $output, array &$included, $allowed_fields = NULL) {
+  protected function renormalize(array $output, array &$included, $allowed_fields = NULL, $includes_parents = array()) {
     static $depth = -1;
     $depth++;
     if (!isset($allowed_fields)) {
@@ -274,7 +278,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
     $result = array();
     if (ResourceFieldBase::isArrayNumeric($output)) {
       foreach ($output as $item) {
-        $result[] = $this->renormalize($item, $included, $allowed_fields);
+        $result[] = $this->renormalize($item, $included, $allowed_fields, $includes_parents);
       }
       $depth--;
       return $result;
@@ -287,7 +291,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
     }
     if (!isset($output['#fields'])) {
       $depth--;
-      return $this->renormalize($output, $included, $allowed_fields);
+      return $this->renormalize($output, $included, $allowed_fields, $includes_parents);
     }
     foreach ($output['#fields'] as $field_name => $field_contents) {
       if ($allowed_fields !== FALSE && !in_array($field_name, $allowed_fields)) {
@@ -305,14 +309,14 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
         unset($field_contents['#cardinality']);
         unset($field_contents['#relationship_links']);
         foreach ($field_contents as $field_item) {
+          $includes_parents[] = $field_name;
           $include_links = empty($field_item['#include_links']) ? NULL : $field_item['#include_links'];
           unset($field_contents['#include_links']);
-          $field_item = $this->populateCachePlaceholder($field_item);
+          $field_path = $this->buildIncludePath($includes_parents);
+          $field_item = $this->populateCachePlaceholder($field_item, $field_path);
           unset($field_item['#cache_placeholder']);
           $element = $field_item['#relationship_info'];
           unset($field_item['#relationship_info']);
-          $field_path = $field_item['#relationship_field_path'];
-          unset($field_item['#relationship_field_path']);
           $include_key = $field_item['#resource_plugin'] . '--' . $field_item['#resource_id'];
           $nested_allowed_fields = $this->unprefixInputOptions($allowed_fields, $field_name);
           // If the list of the child allowed fields is empty, but the parent is
@@ -324,7 +328,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
           // If we get here is because the relationship is included in the
           // sparse fieldset. That means that in this context, empty field
           // limits mean all the fields.
-          $included[$field_path][$include_key] = $this->renormalize($field_item, $included, $nested_allowed_fields);
+          $included[$field_path][$include_key] = $this->renormalize($field_item, $included, $nested_allowed_fields, $includes_parents);
           $included[$field_path][$include_key] += $include_links ? array('links' => $include_links) : array();
           $rel[] = $element;
         }
@@ -458,12 +462,10 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
       // We want to be able to include only the images in articles.images,
       // but not articles.related.images. That's why we need the path
       // including the parents.
-      $include_path = $this->buildIncludePath($parents, $public_field_name);
       $item = array(
         '#resource_name' => $basic_info['type'],
         '#resource_plugin' => $resource_plugin->getPluginId(),
         '#resource_id' => $basic_info['id'],
-        '#relationship_field_path' => $include_path,
         '#include_links' => array(
           'self' => $resource_plugin->versionedUrl($basic_info['id']),
         ),
@@ -543,12 +545,16 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
    * @param array $field_item
    *   The output to render.
    *
+   * @param string $includes_path
+   *   The includes path encoded in dot notation.
+   *
    * @return array
    *   The rendered embedded field item.
    *
+   * @throws \Drupal\restful\Exception\BadRequestException
    * @throws \Drupal\restful\Exception\InternalServerErrorException
    */
-  protected function populateCachePlaceholder(array $field_item) {
+  protected function populateCachePlaceholder(array $field_item, $includes_path) {
     if (
       empty($field_item['#cache_placeholder']) ||
       empty($field_item['#resource_id']) ||
@@ -559,18 +565,29 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
     $embedded_resource = restful()
       ->getResourceManager()
       ->getPluginCopy($field_item['#resource_plugin']);
-    $request = clone $this->getRequest();
-    $input = $request->getParsedInput();
+    $input = $this->getRequest()->getParsedInput();
     $new_input = $input + array('include' => '', 'fields' => '');
     // If the field is not supposed to be included, then bail.
     $old_includes = array_filter(explode(',', $new_input['include']));
-    if (!in_array($field_item['#relationship_field_path'], $old_includes)) {
+    if (!in_array($includes_path, $old_includes)) {
       return $field_item;
     }
-    $new_input['fields'] = implode(',', $this->unprefixInputOptions(explode(',', $new_input['fields']), $field_item['#relationship_field_path']));
-    $new_input['include'] = implode(',', $this->unprefixInputOptions($old_includes, $field_item['#relationship_field_path']));
-    $request->setParsedInput(array_filter($new_input));
-    $embedded_resource->setRequest($request);
+    $new_input['fields'] = implode(',', $this->unprefixInputOptions(explode(',', $new_input['fields']), $includes_path));
+    $new_input['include'] = implode(',', $this->unprefixInputOptions($old_includes, $includes_path));
+    // Create a new request from scratch copying most of the values but the
+    // $query.
+    $embedded_resource->setRequest(Request::create(
+      $this->getRequest()->getPath(),
+      array_filter($new_input),
+      $this->getRequest()->getMethod(),
+      $this->getRequest()->getHeaders(),
+      $this->getRequest()->isViaRouter(),
+      $this->getRequest()->getCsrfToken(),
+      $this->getRequest()->getCookies(),
+      $this->getRequest()->getFiles(),
+      $this->getRequest()->getServer(),
+      $this->getRequest()->getParsedBody()
+    ));
     $data = $embedded_resource->getDataProvider()
       ->view($field_item['#resource_id']);
     return array_merge(

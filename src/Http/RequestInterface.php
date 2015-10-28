@@ -268,4 +268,9 @@ interface RequestInterface {
    */
   public function setViaRouter($via_router);
 
+  /**
+   * @return array
+   */
+  public function getCookies();
+
 }

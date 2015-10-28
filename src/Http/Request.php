@@ -518,6 +518,13 @@ class Request implements RequestInterface {
   /**
    * {@inheritdoc}
    */
+  public function getCookies() {
+    return $this->cookies;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getFiles() {
     return $this->files;
   }
