@@ -49,7 +49,7 @@ function restful_menu() {
       'type' => MENU_CALLBACK,
     );
     // If there is no specific menu item allow the different version variations.
-    if (empty($plugin_definition['menuItem'])) {
+    if (!isset($plugin_definition['menuItem'])) {
       // Add the version string to the arguments.
       $item['access arguments'][] = 1;
       $item['page arguments'][] = 1;
@@ -63,7 +63,8 @@ function restful_menu() {
       $items[$base_path . '/' . $plugin_definition['resource']] = $item;
     }
     else {
-      $items[$plugin_definition['menuItem']] = $item;
+      $path = implode('/', array($base_path, $plugin_definition['menuItem']));
+      $items[$path] = $item;
     }
   }
 

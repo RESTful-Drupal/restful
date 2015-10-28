@@ -13,6 +13,9 @@ use Drupal\restful\Http\RequestInterface;
 
 class RestfulListTestCase extends RestfulCurlBaseTestCase {
 
+  /**
+   * {@inheritdoc}
+   */
   public static function getInfo() {
     return array(
       'name' => 'List entities',
@@ -21,6 +24,9 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     );
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function setUp() {
     parent::setUp('restful_example', 'restful_test');
   }
@@ -283,6 +289,17 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     $result = $result['data'];
     $this->assertEqual(count($result), $query['range'], 'Range parameter overridden correctly');
 
+    // Test the max cap in the the annotation configuration.
+    $resource_manager->clearPluginCache($handler->getPluginId());
+    $plugin_definition = $handler->getPluginDefinition();
+    $plugin_definition['range'] = 1;
+    $handler->setPluginDefinition($plugin_definition);
+    $query['range'] = 2;
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->doGet('', $query), 'json'));
+    $this->assertEqual(count($result['data']), $query['range'], 'Range is limited to the configured maximum.');
+
     // Test invalid range.
     $query['range'] = $this->randomName();
     $handler->setRequest(Request::create('', $query, RequestInterface::METHOD_GET));
@@ -303,6 +320,8 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
       'sort' => TRUE,
       'range' => FALSE,
     );
+    // Unset the previously added range.
+    unset($plugin_definition['range']);
     $handler->setPluginDefinition($plugin_definition);
     // Re-instantiate the data provider.
     $handler->setDataProvider(NULL);

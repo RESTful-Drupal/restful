@@ -408,6 +408,7 @@ abstract class DataProvider implements DataProviderInterface {
     }
 
     $range = isset($input['range']) ? (int) $input['range'] : $this->getRange();
+    $range = $range > $this->getRange() ? $this->getRange() : $range;
     if (!ctype_digit((string) $range) || $range < 1) {
       throw new BadRequestException('"Range" property should be numeric and equal or higher than 1.');
     }

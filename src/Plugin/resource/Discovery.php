@@ -25,31 +25,12 @@ use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
  *   dataProvider = {
  *     "idField": "name"
  *   },
+ *   menuItem = "",
  *   majorVersion = 1,
  *   minorVersion = 0
  * )
  */
 class Discovery extends Resource {
-
-  /**
-   * Constructs a Discovery object.
-   *
-   * @param array $configuration
-   *   A configuration array containing information about the plugin instance.
-   * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
-   * @param mixed $plugin_definition
-   *   The plugin implementation definition.
-   */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
-    // Set dynamic options that cannot be set in the annotation.
-    $plugin_definition = $this->getPluginDefinition();
-    $plugin_definition['menuItem'] = variable_get('restful_hook_menu_base_path', 'api');
-
-    // Store the plugin definition.
-    $this->pluginDefinition = $plugin_definition;
-  }
 
   /**
    * {@inheritdoc}
@@ -98,7 +79,8 @@ class Discovery extends Resource {
    */
   public function getSelf(DataInterpreterInterface $interpreter) {
     if ($menu_item = $interpreter->getWrapper()->get('menuItem')) {
-      return url($menu_item, array('absolute' => TRUE));
+      $url = variable_get('restful_hook_menu_base_path', 'api') . '/' . $menu_item;
+      return url($url, array('absolute' => TRUE));
     }
 
     $base_path = variable_get('restful_hook_menu_base_path', 'api');
