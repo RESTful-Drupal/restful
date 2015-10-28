@@ -46,8 +46,12 @@ function restful_token_auth_menu_alter(&$items) {
     return;
   }
   foreach ($access_token_plugin_definitions as $access_token_plugin_definition) {
-    if (!empty($items[$access_token_plugin_definition['menuItem']])) {
-      $items[$access_token_plugin_definition['menuItem']]['delivery callback'] = 'restful_unprepared_delivery';
+    $path = implode('/', array(
+      variable_get('restful_hook_menu_base_path', 'api'),
+      $access_token_plugin_definition['menuItem'],
+    ));
+    if (!empty($items[$path])) {
+      $items[$path]['delivery callback'] = 'restful_unprepared_delivery';
     }
   }
 }

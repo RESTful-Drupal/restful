@@ -28,31 +28,12 @@ use Drupal\restful\Resource\ResourceManager;
  *       "user"
  *     },
  *   },
+ *   menuItem = "login",
  *   majorVersion = 1,
  *   minorVersion = 0
  * )
  */
 class LoginCookie__1_0 extends ResourceEntity implements ResourceInterface {
-
-  /**
-   * Constructs a LoginCookie__1_0 object.
-   *
-   * @param array $configuration
-   *   A configuration array containing information about the plugin instance.
-   * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
-   * @param mixed $plugin_definition
-   *   The plugin implementation definition.
-   */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition);
-    // Set dynamic options that cannot be set in the annotation.
-    $plugin_definition = $this->getPluginDefinition();
-    $plugin_definition['menuItem'] = variable_get('restful_hook_menu_base_path', 'api') . '/login';
-
-    // Store the plugin definition.
-    $this->pluginDefinition = $plugin_definition;
-  }
 
   /**
    * {@inheritdoc}
