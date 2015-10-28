@@ -5,8 +5,14 @@
  * Contains RestfulDiscoveryTestCase
  */
 
+use Drupal\restful\Http\Request;
+use Drupal\restful\Http\RequestInterface;
+
 class RestfulDiscoveryTestCase extends RestfulCurlBaseTestCase {
 
+  /**
+   * {@inheritdoc}
+   */
   public static function getInfo() {
     return array(
       'name' => 'Discovery',
@@ -15,64 +21,70 @@ class RestfulDiscoveryTestCase extends RestfulCurlBaseTestCase {
     );
   }
 
-  function setUp() {
+  /**
+   * {@inheritdoc}
+   */
+  public function setUp() {
     parent::setUp('restful_test');
   }
 
   /**
    * Test the headers populated in an OPTIONS request.
    */
-  function testOptionsMethod() {
-    $handler = restful_get_restful_handler('test_articles', 1, 4);
-
+  public function testOptionsMethod() {
     // 1. Assert Access-Control-Allow-Methods.
-    $handler->options('');
-    $headers = $handler->getHttpHeaders();
-    $this->assertEqual($headers['Access-Control-Allow-Methods'], \Drupal\restful\Http\RequestInterface::METHOD_HEAD, 'Access-Control-Allow-Methods header is populated correctly.');
+    $response = $this->httpRequest('api/v1.4/test_articles', RequestInterface::METHOD_OPTIONS);
+    $this->assertTrue(strpos($response['headers'], sprintf('access-control-allow-methods: %s', implode(', ', array(
+        RequestInterface::METHOD_HEAD,
+        RequestInterface::METHOD_OPTIONS,
+      )))) !== FALSE, 'Access-Control-Allow-Methods header is populated correctly.');
     // Make sure it returns the appropriate headers for every path.
-    $handler->options('1');
-    $headers = $handler->getHttpHeaders();
-    $this->assertEqual($headers['Access-Control-Allow-Methods'], \Drupal\restful\Http\RequestInterface::METHOD_PATCH . ',' . \RestfulInterface::DELETE, 'Access-Control-Allow-Methods header is populated correctly for different paths.');
+    $response = $this->httpRequest('api/v1.4/test_articles/1', RequestInterface::METHOD_OPTIONS);
+    $this->assertTrue(strpos($response['headers'], sprintf('access-control-allow-methods: %s', implode(', ', array(
+        RequestInterface::METHOD_PATCH,
+        RequestInterface::METHOD_DELETE,
+        RequestInterface::METHOD_OPTIONS,
+      )))) !== FALSE, 'Access-Control-Allow-Methods header is populated correctly for different paths.');
 
     // 2. Assert Accept.
-    $this->assertEqual($headers['Accept'], 'application/xml; charset=utf-8', 'Accept header is populated correctly for configured formatter.');
-    $handler = restful_get_restful_handler('test_articles', 1, 2);
-    $handler->options('');
-    $accepted_formats = array();
-    $formatters = $handler->getFormatterManager()->getPlugins();
-    foreach ($formatters as $formatter) {
-      /* @var \Drupal\restful\Plugin\formatter\FormatterInterface $formatter */
-      $accepted_formats[] = $formatter->getContentTypeHeader();
-    }
-    $headers = $handler->getHttpHeaders();
-    $this->assertEqual($headers['Accept'], implode(',', $accepted_formats), 'Accept header is populated correctly for non configured formatters.');
+    // List the content types the route accepts.
+    $this->assertTrue(strpos($response['headers'], 'accept: application/xml; charset=utf-8') !== FALSE, 'Accept header is populated correctly for configured formatter.');
+    $response = $this->httpRequest('api/v1.2/test_articles', RequestInterface::METHOD_OPTIONS);
+    $this->assertTrue(strpos($response['headers'], 'application/hal+json, application/json, application/vnd.api+json, application/drupal.single+json, application/xml; charset=utf-8') !== FALSE, 'Accept header is populated correctly for non configured formatters.');
 
     // 3. Assert Access-Control-Allow-Origin.
-    $response = $this->httpRequest('api/v1.4/test_articles', \Drupal\restful\Http\RequestInterface::METHOD_HEAD);
-    $headers = explode("\n", $response['headers']);
-    $this->assertTrue(in_array('*', $headers), 'Access-Control-Allow-Origin header is populated correctly.');
+    $response = $this->httpRequest('api/v1.4/test_articles', RequestInterface::METHOD_HEAD);
+    $this->assertTrue(strpos($response['headers'], 'access-control-allow-origin: *') !== FALSE, 'Accept header is populated correctly for non configured formatters.');
+
+    // 4. Assert Access.
+    $response = $this->httpRequest('api/v1.4/test_articles/1', RequestInterface::METHOD_HEAD);
+    $this->assertTrue($response['code'], 400, 'Access is denied for unsupported HTTP methods.');
   }
 
   /**
    * Field discovery.
    */
   public function testFieldDiscovery() {
-    $handler = restful_get_restful_handler('main', 1, 1);
-    $result = $handler->options();
+    // Add common fields, vocabulary and terms.
+    restful_test_add_fields();
+    // Create an entity.
+    $entity = entity_create('entity_test', array('name' => 'main', 'label' => $this->randomName()));
+    $pid = $entity->save();
+    $handler = restful()->getResourceManager()->getPlugin('main:1.1');
+    $handler->setRequest(Request::create('api/v1.1/main/' . $pid, array(), RequestInterface::METHOD_OPTIONS));
+    $handler->setPath($pid);
+    $formatter = restful()
+      ->getFormatterManager()
+      ->negotiateFormatter(NULL);
+    $formatter->setResource($handler);
+    $result = $formatter->prepare($handler->process());
     $expected = array(
       'id' => array(
         'data' => array(
           'cardinality' => 1,
           'read_only' => TRUE,
           'type' => 'integer',
-          'required' => FALSE,
-        ),
-        'form_element' => array(
-          'allowed_values' => NULL,
-          'default_value' => '',
-          'placeholder' => '',
-          'size' => NULL,
-          'type' => NULL,
+          'required' => TRUE,
         ),
         'info' => array(
           'description' => t('Base ID for the entity.'),
@@ -85,13 +97,16 @@ class RestfulDiscoveryTestCase extends RestfulCurlBaseTestCase {
           'read_only' => FALSE,
           'type' => 'string',
           'required' => FALSE,
+          'size' => 255,
         ),
-        'form_element' => array (
+        'form_element' => array(
           'allowed_values' => NULL,
           'type' => 'texfield',
           'default_value' => '',
           'placeholder' => '',
           'size' => 255,
+          'description' => 'The label of the resource.',
+          'title' => 'label',
         ),
         'info' => array(
           'description' => t('The label of the resource.'),
@@ -103,6 +118,7 @@ class RestfulDiscoveryTestCase extends RestfulCurlBaseTestCase {
           'cardinality' => FIELD_CARDINALITY_UNLIMITED,
           'read_only' => FALSE,
           'type' => 'string',
+          'size' => 255,
           'required' => FALSE,
         ),
         'form_element' => array(
@@ -111,6 +127,8 @@ class RestfulDiscoveryTestCase extends RestfulCurlBaseTestCase {
           'placeholder' => t('This is helpful.'),
           'size' => 255,
           'type' => 'textfield',
+          'description' => 'This field holds different text inputs.',
+          'title' => 'text_multiple',
         ),
         'info' => array(
           'description' => t('This field holds different text inputs.'),
@@ -120,21 +138,15 @@ class RestfulDiscoveryTestCase extends RestfulCurlBaseTestCase {
     );
 
     foreach ($expected as $public_field => $discovery_info) {
-      $result_data = $result[$public_field]['data'];
-      $expected_data = $expected[$public_field]['data'];
-      ksort($result_data);
-      ksort($expected_data);
-      $this->assertEqual($result_data, $expected_data, format_string('The "data" information is properly described for @field.', array('@field' => $public_field)));
-      $result_form_element = $result[$public_field]['form_element'];
-      $expected_form_element = $expected[$public_field]['form_element'];
-      ksort($result_form_element);
-      ksort($expected_form_element);
-      $this->assertEqual($result_form_element, $expected_form_element, format_string('The "form_element" information is properly described for @field.', array('@field' => $public_field)));
-      $result_info = $result[$public_field]['info'];
-      $expected_info = $expected[$public_field]['info'];
-      ksort($result_info);
-      ksort($expected_info);
-      $this->assertEqual($result_info, $expected_info, format_string('The "info" information is properly described for @field.', array('@field' => $public_field)));
+      foreach (array('data', 'form_element', 'info') as $section_name) {
+        if (empty($result['data'][0][$public_field][$section_name]) && empty($expected[$public_field][$section_name])) {
+          continue;
+        }
+        $this->assertEqual($result['data'][0][$public_field][$section_name], $expected[$public_field][$section_name], format_string('The "@section" information is properly described for @field.', array(
+          '@field' => $public_field,
+          '@section' => $section_name,
+        )));
+      }
     }
   }
 
@@ -142,11 +154,10 @@ class RestfulDiscoveryTestCase extends RestfulCurlBaseTestCase {
    * Field discovery allowed values.
    */
   public function testFieldDiscoveryAllowedValues() {
-    $handler = restful_get_restful_handler('test_articles', 1, 2);
-
     // Add entity reference fields.
     restful_test_add_fields('node', 'article');
 
+    $handler = restful()->getResourceManager()->getPlugin('test_articles:1.2');
     // Create 3 nodes.
     $expected_result = array();
     foreach (array(1, 2, 3) as $id) {
@@ -165,19 +176,30 @@ class RestfulDiscoveryTestCase extends RestfulCurlBaseTestCase {
     $instance['widget']['type'] = 'options_select';
     field_update_instance($instance);
 
-    $result = $handler->options();
-    $this->assertEqual($result['entity_reference_single']['form_element']['allowed_values'], $expected_result);
+    $handler->setRequest(Request::create('api/v1.2/test_articles', array(), RequestInterface::METHOD_OPTIONS));
+    $handler->setPath('');
+    $formatter = restful()
+      ->getFormatterManager()
+      ->negotiateFormatter(NULL);
+    $formatter->setResource($handler);
+    $result = $formatter->prepare($handler->process());
+    $this->assertEqual($result['data'][0]['entity_reference_single']['form_element']['allowed_values'], $expected_result);
 
     // Set widget to autocomplete.
     $instance['widget']['type'] = 'entityreference_autocomplete';
     field_update_instance($instance);
 
     // Invalidate public fields cache.
-    $handler->setPublicFields(array());
+    $handler = restful()->getResourceManager()->getPluginCopy('test_articles:1.2');
 
-    $result = $handler->options();
-    $this->assertNull($result['entity_reference_single']['form_element']['allowed_values']);
+    $handler->setRequest(Request::create('api/v1.2/test_articles', array(), RequestInterface::METHOD_OPTIONS));
+    $handler->setPath('');
+    $formatter = restful()
+      ->getFormatterManager()
+      ->negotiateFormatter(NULL);
+    $formatter->setResource($handler);
+    $result = $formatter->prepare($handler->process());
+    $this->assertNull($result['data'][0]['entity_reference_single']['form_element']['allowed_values']);
   }
-
 
 }

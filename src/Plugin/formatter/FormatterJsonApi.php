@@ -8,6 +8,7 @@
 namespace Drupal\restful\Plugin\formatter;
 
 use Drupal\restful\Exception\InternalServerErrorException;
+use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldBase;
@@ -91,6 +92,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
    *   The array of prepared data.
    *
    * @throws InternalServerErrorException
+   * @throws \Drupal\restful\Exception\ServerConfigurationException
    */
   protected function extractFieldValues($data, array $parents = array(), array $parent_hashes = array()) {
     $output = array();
@@ -128,7 +130,10 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
         continue;
       }
       $interpreter = $data->getInterpreter();
-      $output['#fields'][$public_field_name] = $this->embedField($resource_field, $data->getIdField()->render($interpreter), $interpreter, $parents, $parent_hashes);
+      if (!$id_field = $data->getIdField()) {
+        throw new ServerConfigurationException('Invalid required ID field for JSON API formatter.');
+      }
+      $output['#fields'][$public_field_name] = $this->embedField($resource_field, $id_field->render($interpreter), $interpreter, $parents, $parent_hashes);
     }
 
     if ($data instanceof ResourceFieldCollectionInterface) {

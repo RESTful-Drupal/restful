@@ -19,4 +19,14 @@ interface PublicFieldInfoEntityInterface extends PublicFieldInfoInterface {
    */
   public function getFormSchemaAllowedValues();
 
+  /**
+   * Get the form type for the form schema.
+   *
+   * Using Field API's "Options" module to get the allowed values.
+   *
+   * @return mixed
+   *   The form element type.
+   */
+  public function getFormSchemaAllowedType();
+
 }

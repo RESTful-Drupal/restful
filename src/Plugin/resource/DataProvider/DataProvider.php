@@ -9,7 +9,6 @@ namespace Drupal\restful\Plugin\resource\DataProvider;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Drupal\restful\Exception\BadRequestException;
-use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Exception\ServiceUnavailableException;
 use Drupal\restful\Http\HttpHeader;
 use Drupal\restful\Http\RequestInterface;
@@ -543,5 +542,37 @@ abstract class DataProvider implements DataProviderInterface {
   public function getMetadata() {
     return $this->metadata;
   }
+
+  /**
+   * Initialize the empty resource field collection to bundle the output.
+   *
+   * @param mixed $identifier
+   *   The ID of thing being viewed.
+   *
+   * @return ResourceFieldCollectionInterface
+   *   The collection of fields.
+   *
+   * @throws \Drupal\restful\Exception\NotFoundException
+   */
+  protected function initResourceFieldCollection($identifier) {
+    $resource_field_collection = new ResourceFieldCollection(array(), $this->getRequest());
+    $interpreter = $this->initDataInterpreter($identifier);
+    $resource_field_collection->setInterpreter($interpreter);
+    $id_field_name = empty($this->options['idField']) ? 'id' : $this->options['idField'];
+    $resource_field_collection->setIdField($this->fieldDefinitions->get($id_field_name));
+    $resource_field_collection->setResourceId($this->pluginId);
+    return $resource_field_collection;
+  }
+
+  /**
+   * Get the data interpreter.
+   *
+   * @param mixed $identifier
+   *   The ID of thing being viewed.
+   *
+   * @return \Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface
+   *   The data interpreter.
+   */
+  abstract protected function initDataInterpreter($identifier);
 
 }

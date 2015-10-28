@@ -96,7 +96,7 @@ abstract class ResourceEntity extends Resource {
     $public_fields['id'] = array(
       'wrapper_method' => 'getIdentifier',
       'wrapper_method_on_entity' => TRUE,
-      'methods' => array(RequestInterface::METHOD_GET),
+      'methods' => array(RequestInterface::METHOD_GET, RequestInterface::METHOD_OPTIONS),
       'discovery' => array(
         // Information about the field for human consumption.
         'info' => array(
@@ -105,8 +105,10 @@ abstract class ResourceEntity extends Resource {
         ),
         // Describe the data.
         'data' => array(
-          'type' => 'integer',
+          'cardinality' => 1,
           'read_only' => TRUE,
+          'type' => 'integer',
+          'required' => TRUE,
         ),
       ),
     );

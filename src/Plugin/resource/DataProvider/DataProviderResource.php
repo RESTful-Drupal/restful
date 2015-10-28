@@ -144,4 +144,11 @@ class DataProviderResource extends DataProvider implements DataProviderResourceI
     return $this->referencedDataProvider->count();
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  protected function initDataInterpreter($identifier) {
+    return NULL;
+  }
+
 }

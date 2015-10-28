@@ -23,6 +23,7 @@ use Drupal\restful\Plugin\resource\ResourceNode;
  *     "basic_auth",
  *     "cookie"
  *   },
+ *   authenticationOptional = TRUE,
  *   dataProvider = {
  *     "entityType": "node",
  *     "bundles": {

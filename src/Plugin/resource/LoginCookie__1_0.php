@@ -8,7 +8,7 @@
 namespace Drupal\restful\Plugin\resource;
 
 use Drupal\restful\Http\RequestInterface;
-use Drupal\restful\Resource\ResourceManager;
+use Drupal\restful\Plugin\resource\Field\ResourceField;
 
 /**
  * Class LoginCookie__1_0
@@ -74,7 +74,13 @@ class LoginCookie__1_0 extends ResourceEntity implements ResourceInterface {
 
     // User resource may be disabled.
     $output = $user_resource ? $user_resource->view($account->uid) : array();
-    $output += restful_csrf_session_token();
+    if ($resource_field_collection = reset($output)) {
+      /* @var $resource_field_collection \Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface */
+      $resource_field_collection->set('X-CSRF-Token', ResourceField::create(array(
+        'public_name' => 'X-CSRF-Token',
+        'callback' => '\Drupal\restful\Plugin\resource\LoginCookie__1_0::getCSRFTokenValue',
+      )));
+    }
     return $output;
   }
 
@@ -91,6 +97,17 @@ class LoginCookie__1_0 extends ResourceEntity implements ResourceInterface {
 
     $login_array = array('name' => $account->name);
     user_login_finalize($login_array);
+  }
+
+  /**
+   * Get the CSRF token string.
+   *
+   * @return string
+   *   The token.
+   */
+  public static function getCSRFTokenValue() {
+    $token = array_values(restful_csrf_session_token());
+    return reset($token);
   }
 
 }

@@ -89,6 +89,23 @@ class PublicFieldInfoEntity extends PublicFieldInfoBase implements PublicFieldIn
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function getFormSchemaAllowedType() {
+    if (!module_exists('options')) {
+      return NULL;
+    }
+    $field_name = $this->property;
+    if (!$field_info = field_info_field($field_name)) {
+      return NULL;
+    }
+    if (!$field_instance = field_info_instance($this->entityType, $field_name, $this->bundle)) {
+      return NULL;
+    }
+    return $field_instance['widget']['type'];
+  }
+
+  /**
    * Get the entity info for the current entity the endpoint handling.
    *
    * @param string $type

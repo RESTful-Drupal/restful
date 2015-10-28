@@ -46,11 +46,12 @@ class RestfulCurlBaseTestCase extends DrupalWebTestCase {
         break;
 
       case RequestInterface::METHOD_HEAD:
+      case RequestInterface::METHOD_OPTIONS:
         // Set query if there are addition GET parameters.
         $options = isset($body) ? array('absolute' => TRUE, 'query' => $body) : array('absolute' => TRUE);
         $curl_options = array(
           CURLOPT_HTTPGET => FALSE,
-          CURLOPT_CUSTOMREQUEST => RequestInterface::METHOD_HEAD,
+          CURLOPT_CUSTOMREQUEST => $method,
           CURLOPT_URL => url($url, $options),
           CURLOPT_NOBODY => FALSE,
         );
@@ -115,7 +116,10 @@ class RestfulCurlBaseTestCase extends DrupalWebTestCase {
     }
 
     $response = $this->curlExec($curl_options);
-    $response_headers = $this->drupalGetHeaders();
+    $response_headers = array();
+    foreach ($this->drupalGetHeaders() as $header_name => $header_value) {
+      $response_headers[] = $header_name .  ': ' . $header_value;
+    }
     $response_headers = implode("\n", $response_headers);
 
     $code = curl_getinfo($this->curlHandle, CURLINFO_HTTP_CODE);

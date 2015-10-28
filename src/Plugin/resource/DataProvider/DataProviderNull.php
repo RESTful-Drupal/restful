@@ -57,4 +57,11 @@ class DataProviderNull extends DataProvider implements DataProviderInterface {
     return array();
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  protected function initDataInterpreter($identifier) {
+    return NULL;
+  }
+
 }

@@ -64,7 +64,7 @@ class FormatterHalJson extends Formatter implements FormatterInterface {
       );
     }
     else {
-      $output = reset($values);
+      $output = reset($values) ?: array();
     }
 
     $data_provider = $resource->getDataProvider();

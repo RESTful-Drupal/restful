@@ -22,6 +22,9 @@ use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
  *   authenticationTypes = TRUE,
  *   authenticationOptional = TRUE,
  *   discoverable = FALSE,
+ *   dataProvider = {
+ *     "idField": "name"
+ *   },
  *   menuItem = "",
  *   majorVersion = 1,
  *   minorVersion = 0
