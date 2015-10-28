@@ -476,7 +476,8 @@ abstract class Resource extends PluginBase implements ResourceInterface {
     $options += array('absolute' => TRUE);
     $plugin_definition = $this->getPluginDefinition();
     if (!empty($plugin_definition['menuItem'])) {
-      $url = $plugin_definition['menuItem'] . '/' . $path;
+      $url = variable_get('restful_hook_menu_base_path', 'api') . '/';
+      $url .= $plugin_definition['menuItem'] . '/' . $path;
       return url(rtrim($url, '/'), $options);
     }
 
