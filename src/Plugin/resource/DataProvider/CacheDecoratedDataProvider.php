@@ -11,6 +11,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
+use Drupal\restful\RenderCache\RenderCache;
 
 class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface {
 
@@ -262,6 +263,17 @@ class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface 
    */
   public function getMetadata() {
     return $this->metadata;
+  }
+
+  /**
+   * Clears the cache entries related to the given cache fragments.
+   *
+   * @param \Doctrine\Common\Collections\ArrayCollection $cache_fragments
+   *   The cache fragments to clear.
+   */
+  protected function clearRenderedCache(ArrayCollection $cache_fragments) {
+    $cache_object = new RenderCache($cache_fragments, NULL, $this->cacheController);
+    $cache_object->clear();
   }
 
 }
