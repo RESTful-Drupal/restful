@@ -60,7 +60,7 @@ class DataProviderPlug extends DataProvider implements DataProviderInterface {
     $limit_fields = !empty($input['fields']) ? explode(',', $input['fields']) : array();
 
     foreach ($this->fieldDefinitions as $resource_field_name => $resource_field) {
-      /* @var ResourceFieldEntityInterface $resource_field */
+      /* @var \Drupal\restful\Plugin\resource\Field\ResourceFieldInterface $resource_field */
 
       if ($limit_fields && !in_array($resource_field_name, $limit_fields)) {
         // Limit fields doesn't include this property.

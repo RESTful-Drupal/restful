@@ -282,20 +282,20 @@ class ResourceFieldCollection implements ResourceFieldCollectionInterface {
         // If the field is unknown don't use se filter.
         return TRUE;
       }
-      $plugin_value = $resource_field->value($this->getInterpreter());
-      if (is_null($plugin_value)) {
+      $filter_value = $resource_field->value($this->getInterpreter());
+      if (is_null($filter_value)) {
         // Property doesn't exist on the plugin, so filter it out.
         return FALSE;
       }
 
       if ($filter['conjunction'] == 'OR') {
-        $match = $match || $this::evaluateExpression($plugin_value, $filter['value'][$index], $filter['operator'][$index]);
+        $match = $match || $this::evaluateExpression($filter_value, $filter['value'][$index], $filter['operator'][$index]);
         if ($match) {
           break;
         }
       }
       else {
-        $match = $match && $this::evaluateExpression($plugin_value, $filter['value'][$index], $filter['operator'][$index]);
+        $match = $match && $this::evaluateExpression($filter_value, $filter['value'][$index], $filter['operator'][$index]);
         if (!$match) {
           break;
         }
