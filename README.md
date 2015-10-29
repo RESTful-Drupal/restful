@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/RESTful-Drupal/restful.svg?branch=7.x-1.x)](https://travis-ci.org/RESTful-Drupal/restful)
+[![Build Status](https://travis-ci.org/RESTful-Drupal/restful.svg?branch=7.x-2.x)](https://travis-ci.org/RESTful-Drupal/restful)
 
 # RESTful best practices for Drupal
 
