@@ -7,6 +7,8 @@
 
 namespace Drupal\restful_example\Plugin\resource\variables;
 
+use Drupal\restful\Exception\BadRequestException;
+use Drupal\restful\Exception\UnprocessableEntityException;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataInterpreter\ArrayWrapper;
 use Drupal\restful\Plugin\resource\DataProvider\DataProvider;
@@ -41,7 +43,19 @@ class DataProviderVariable extends DataProvider implements DataProviderInterface
    * {@inheritdoc}
    */
   public function create($object) {
-    // TODO: Implement create() method.
+    // Overly simplified update method. Search for the name and value fields,
+    // and set the variable.
+    $name_key = $this->searchPublicFieldByProperty('name');
+    $value_key = $this->searchPublicFieldByProperty('value');
+    if (empty($object[$name_key]) || empty($object[$value_key])) {
+      throw new BadRequestException('You need to provide the variable name and value.');
+    }
+    $identifier = $object[$name_key];
+    if (!empty($GLOBALS['conf'][$identifier])) {
+      throw new UnprocessableEntityException('The selected variable already exists.');
+    }
+    variable_set($identifier, $object[$value_key]);
+    return array($this->view($identifier));
   }
 
   /**
@@ -89,14 +103,27 @@ class DataProviderVariable extends DataProvider implements DataProviderInterface
    * {@inheritdoc}
    */
   public function update($identifier, $object, $replace = FALSE) {
-    // TODO: Implement update() method.
+    // Overly simplified update method. Search for the name and value fields,
+    // and set the variable.
+    $name_key = $this->searchPublicFieldByProperty('name');
+    $value_key = $this->searchPublicFieldByProperty('value');
+    if (empty($object[$value_key])) {
+      throw new BadRequestException('You need to provide the variable value.');
+    }
+    if (!empty($object[$name_key]) && $object[$name_key] != $identifier) {
+      // If the variable name is changed, then remove the old one.
+      $this->remove($identifier);
+      $identifier = $object[$name_key];
+    }
+    variable_set($identifier, $object[$value_key]);
+    return array($this->view($identifier));
   }
 
   /**
    * {@inheritdoc}
    */
   public function remove($identifier) {
-    // TODO: Implement remove() method.
+    variable_del($identifier);
   }
 
   /**
@@ -187,6 +214,24 @@ class DataProviderVariable extends DataProvider implements DataProviderInterface
       'name' => $identifier,
       'value' => variable_get($identifier),
     )));
+  }
+
+  /**
+   * Finds the public field name that has the provided property.
+   *
+   * @param string $property
+   *   The property to find.
+   *
+   * @return string
+   *   The name of the public name.
+   */
+  protected function searchPublicFieldByProperty($property) {
+    foreach ($this->fieldDefinitions as $public_name => $resource_field) {
+      if ($resource_field->getProperty() == $property) {
+        return $public_name;
+      }
+    }
+    return NULL;
   }
 
 }
