@@ -1,6 +1,6 @@
 /**
  * restful-app
- * @version v0.0.1 - 2014-12-06
+ * @version v0.0.1 - 2015-10-29
  * @link 
  * @author  <>
  * @license MIT License, http://www.opensource.org/licenses/MIT
@@ -144,43 +144,48 @@ angular.module('restfulApp')
      *   The query string.
      */
     $scope.tagsQuery = function (query) {
-      var url = DrupalSettings.getBasePath() + 'api/v1/tags';
-      var terms = {results: []};
+      if (query && query.length > 1) {
+        var url = DrupalSettings.getBasePath() + 'api/v1/tags';
+        var terms = {results: []};
 
-      var lowerCaseTerm = query.term.toLowerCase();
-      if (angular.isDefined($scope.tagsQueryCache[lowerCaseTerm])) {
-        // Add caching.
-        terms.results = $scope.tagsQueryCache[lowerCaseTerm];
-        query.callback(terms);
-        return;
-      }
-
-      $http.get(url, {
-        params: {
-          string: query.term
+        var lowerCaseTerm = query.toLowerCase();
+        if (angular.isDefined($scope.tagsQueryCache[lowerCaseTerm])) {
+          // Add caching.
+          terms = $scope.tagsQueryCache[lowerCaseTerm];
+          console.log(terms.results, 'CACHED');
+          $scope.tagsChoices = terms.results;
+          return;
         }
-      }).success(function(data) {
 
-        if (data.length === 0) {
-          terms.results.push({
-            text: query.term,
-            id: query.term,
-            isNew: true
-          });
-        }
-        else {
-          angular.forEach(data, function (label, id) {
+        $http.get(url, {
+          params: {
+            string: query
+          }
+        }).success(function(data) {
+
+          if (data.count === 0) {
             terms.results.push({
-              text: label,
-              id: id,
-              isNew: false
+              text: query,
+              id: query,
+              isNew: true
             });
-          });
-          $scope.tagsQueryCache[lowerCaseTerm] = terms;
-        }
-
-        query.callback(terms);
-      });
+          }
+          else {
+            angular.forEach(data.data, function (object) {
+              terms.results.push({
+                text: object.label,
+                id: object.id,
+                isNew: false
+              });
+            });
+            $scope.tagsQueryCache[lowerCaseTerm] = terms;
+          }
+        $scope.tagsChoices = terms.results;
+        });
+      }
+      else {
+        $scope.tagsChoices = [];
+      }
     };
 
     /**

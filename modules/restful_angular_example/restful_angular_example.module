@@ -119,13 +119,12 @@ function restful_angular_example_library() {
   $libraries['select2'] = array(
     'title' => t('Select 2'),
     'version' => '0.0.5',
-    'website' => 'https://github.com/angular-ui/ui-select2',
+    'website' => 'https://github.com/angular-ui/ui-select',
     'js' => array(
-      $bower_path . '/select2/select2.js' => array(),
-      $bower_path . '/angular-ui-select2/src/select2.js' => array(),
+      $bower_path . '/ui-select/dist/select.min.js' => array(),
     ),
     'css' => array(
-      $bower_path . '/select2/select2.css' => array(),
+      $bower_path . '/ui-select/dist/select.min.css' => array(),
     ),
     'dependencies' => array(
       array('restful_angular_example', 'angular'),
@@ -225,7 +224,7 @@ function restful_angular_example_page($example) {
     // coded group in core to add the settings. The alternative is add a global
     // variable in the window object that contains the information we want to
     // pass to the angular module constructor.
-    drupal_add_js("window.restfulExampleModules = ['angularFileUpload', 'ngPrettyJson', 'ui.select2']", array(
+    drupal_add_js("window.restfulExampleModules = ['angularFileUpload', 'ngPrettyJson', 'ui.select']", array(
       'type' => 'inline',
       // Make sure it is available when constructing the angular module.
       'scope' => 'header',
