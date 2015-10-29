@@ -108,7 +108,10 @@ class DataProviderVariable extends DataProvider implements DataProviderInterface
     $name_key = $this->searchPublicFieldByProperty('name');
     $value_key = $this->searchPublicFieldByProperty('value');
     if (empty($object[$value_key])) {
-      throw new BadRequestException('You need to provide the variable value.');
+      if (!$replace) {
+        return array($this->view($identifier));
+      }
+      $object[$value_key] = NULL;
     }
     if (!empty($object[$name_key]) && $object[$name_key] != $identifier) {
       // If the variable name is changed, then remove the old one.

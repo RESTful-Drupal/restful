@@ -24,6 +24,9 @@ use Drupal\restful\Plugin\resource\ResourceInterface;
  *   dataProvider = {
  *     "idField": "variable_name"
  *   },
+ *   renderCache = {
+ *     "render": true
+ *   },
  *   majorVersion = 1,
  *   minorVersion = 0
  * )
