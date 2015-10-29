@@ -822,8 +822,7 @@ function _restful_get_query_string_from_php_input() {
 }
 
 /**
- * Extracting the token from a request by a key name,
- * either dashed or not.
+ * Extracting the token from a request by a key name, either dashed or not.
  *
  * @param $options
  *  The handler 'options' object.
