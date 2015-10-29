@@ -21,14 +21,14 @@ class RestfulVariableTestCase extends DrupalWebTestCase {
   /**
    * Operations before the testing begins.
    */
-  function setUp() {
+  public function setUp() {
     parent::setUp('restful_example');
   }
 
   /**
    * Test authenticating a user.
    */
-  function testCrudOperations() {
+  public function testCrudOperations() {
     // Set up random content and resource handler.
     $randomString = $this->randomName();
     $handler = restful_get_restful_handler('variables');
