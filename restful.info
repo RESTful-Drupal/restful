@@ -11,7 +11,6 @@ registry_autoload[] = PSR-4
 
 ; Tests
 files[] = tests/RestfulAuthenticationTestCase.test
-; files[] = tests/RestfulAutoCompleteTestCase.test
 files[] = tests/RestfulCreateEntityTestCase.test
 files[] = tests/RestfulCreateNodeTestCase.test
 files[] = tests/RestfulCreateTaxonomyTermTestCase.test
@@ -19,7 +18,7 @@ files[] = tests/RestfulCsrfTokenTestCase.test
 files[] = tests/RestfulCurlBaseTestCase.test
 files[] = tests/RestfulDataProviderPlugPluginsTestCase.test
 files[] = tests/RestfulDbQueryTestCase.test
-; files[] = tests/RestfulVariableTestCase.test
+files[] = tests/RestfulVariableTestCase.test
 files[] = tests/RestfulDiscoveryTestCase.test
 files[] = tests/RestfulEntityAndPropertyAccessTestCase.test
 files[] = tests/RestfulEntityUserAccessTestCase.test
@@ -31,7 +30,6 @@ files[] = tests/RestfulHookMenuTestCase.test
 files[] = tests/RestfulJsonApiTestCase.test
 ; files[] = tests/RestfulListEntityMultipleBundlesTestCase.test
 files[] = tests/RestfulListTestCase.test
-; files[] = tests/RestfulPassThroughTestCase.test
 files[] = tests/RestfulRateLimitTestCase.test
 files[] = tests/RestfulReferenceTestCase.test
 files[] = tests/RestfulRenderCacheTestCase.test
