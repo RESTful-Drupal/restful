@@ -50,7 +50,12 @@ class RestfulDiscoveryTestCase extends RestfulCurlBaseTestCase {
     // List the content types the route accepts.
     $this->assertTrue(strpos($response['headers'], 'accept: application/xml; charset=utf-8') !== FALSE, 'Accept header is populated correctly for configured formatter.');
     $response = $this->httpRequest('api/v1.2/test_articles', RequestInterface::METHOD_OPTIONS);
-    $this->assertTrue(strpos($response['headers'], 'application/hal+json, application/json, application/vnd.api+json, application/drupal.single+json, application/xml; charset=utf-8') !== FALSE, 'Accept header is populated correctly for non configured formatters.');
+
+    $this->assertTrue(strpos($response['headers'], 'application/hal+json') !== FALSE, 'Accept header is populated correctly for non configured formatters.');
+    $this->assertTrue(strpos($response['headers'], 'application/json') !== FALSE, 'Accept header is populated correctly for non configured formatters.');
+    $this->assertTrue(strpos($response['headers'], 'application/vnd.api+json') !== FALSE, 'Accept header is populated correctly for non configured formatters.');
+    $this->assertTrue(strpos($response['headers'], 'application/drupal.single+json') !== FALSE, 'Accept header is populated correctly for non configured formatters.');
+    $this->assertTrue(strpos($response['headers'], 'application/xml') !== FALSE, 'Accept header is populated correctly for non configured formatters.');
 
     // 3. Assert Access-Control-Allow-Origin.
     $response = $this->httpRequest('api/v1.4/test_articles', RequestInterface::METHOD_HEAD);
