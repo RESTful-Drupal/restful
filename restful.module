@@ -845,7 +845,6 @@ function restful_extract_token_from_request($options, $request) {
   elseif (!empty($request['__application'][$dashed_key_name])) {
     return $request['__application'][$dashed_key_name];
   }
-  else {
-    return $request[$dashed_key_name];
-  }
+
+  return $request[$dashed_key_name];
 }
