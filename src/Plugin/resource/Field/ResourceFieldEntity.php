@@ -327,6 +327,11 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
         // access to the property.
         return NULL;
       }
+      catch (UnprocessableEntityException $e) {
+        // If you cannot process the embedded entity is like not having access
+        // to the property.
+        return NULL;
+      }
       // Test if the $embedded_entity meets the filter or not.
       if (empty($parsed_input['filter'])) {
         return $embedded_entity;
@@ -1087,6 +1092,9 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
    *   The metadata array item.
    */
   protected function buildResourceMetadataItem($wrapper) {
+    if ($wrapper instanceof \EntityValueWrapper) {
+      $wrapper = entity_metadata_wrapper($this->getEntityType(), $wrapper->value());
+    }
     $id = $wrapper->getIdentifier();
     $bundle = $wrapper->getBundle();
     $resource = $this->getResource();
