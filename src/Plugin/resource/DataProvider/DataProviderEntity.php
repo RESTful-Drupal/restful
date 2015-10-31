@@ -759,7 +759,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     list(,, $bundle) = entity_extract_ids($entity_type, $entity);
 
     if (!empty($this->bundles) && !in_array($bundle, $this->bundles)) {
-      throw new UnprocessableEntityException(sprintf('The bundle "%s" is not valid.', $entity_id));
+      return FALSE;
     }
 
     if ($this->checkEntityAccess($op, $entity_type, $entity) === FALSE) {

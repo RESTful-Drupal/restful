@@ -1087,6 +1087,9 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
    *   The metadata array item.
    */
   protected function buildResourceMetadataItem($wrapper) {
+    if ($wrapper instanceof \EntityValueWrapper) {
+      $wrapper = entity_metadata_wrapper($this->getEntityType(), $wrapper->value());
+    }
     $id = $wrapper->getIdentifier();
     $bundle = $wrapper->getBundle();
     $resource = $this->getResource();

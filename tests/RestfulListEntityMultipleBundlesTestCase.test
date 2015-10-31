@@ -7,6 +7,9 @@
 
 class RestfulListEntityMultipleBundlesTestCase extends DrupalWebTestCase {
 
+  /**
+   * {@inheritdoc}
+   */
   public static function getInfo() {
     return array(
       'name' => 'List entity with multiple bundles',
@@ -15,46 +18,71 @@ class RestfulListEntityMultipleBundlesTestCase extends DrupalWebTestCase {
     );
   }
 
-  function setUp() {
+  /**
+   * {@inheritdoc}
+   */
+  public function setUp() {
     parent::setUp('restful_test');
   }
 
   /**
    * Test listing an entity with multiple bundles.
    */
-  function testList() {
+  public function testList() {
     $user1 = $this->drupalCreateUser();
+    /* @var \Entity $entity1 */
     $entity1 = entity_create('entity_test', array('name' => 'main', 'uid' => $user1->uid));
     $entity1->save();
 
     $entity2 = entity_create('entity_test', array('name' => 'main', 'uid' => $user1->uid));
+    /* @var \Entity $entity2 */
     $entity2->save();
 
     $entity3 = entity_create('entity_test', array('name' => 'test', 'uid' => $user1->uid));
+    /* @var \Entity $entity3 */
     $entity3->save();
 
-    $handler = restful_get_restful_handler('entity_tests');
+    $handler = restful()->getResourceManager()->getPlugin('entity_tests:1.0');
+    $formatter = restful()->getFormatterManager()->getPlugin('json');
+    $formatter->setResource($handler);
+
     $expected_result = array(
       array(
         'id' => $entity1->pid,
         'label' => 'Main test type',
-        'self' => url('api/v1.0/main/' . $entity1->pid, array('absolute' => TRUE)),
+        'self' => url('api/v1.0/entity_tests/' . $entity1->pid, array('absolute' => TRUE)),
+        'main_bundle' => array(
+          'id' => $entity1->pid,
+          'label' => 'Main test type',
+          'self' => url('api/v1.0/main/' . $entity1->pid, array('absolute' => TRUE)),
+        ),
+        'tests_bundle' => NULL,
       ),
       array(
         'id' => $entity2->pid,
         'label' => 'Main test type',
-        'self' => url('api/v1.0/main/' . $entity2->pid, array('absolute' => TRUE)),
+        'self' => url('api/v1.0/entity_tests/' . $entity2->pid, array('absolute' => TRUE)),
+        'main_bundle' => array(
+          'id' => $entity2->pid,
+          'label' => 'Main test type',
+          'self' => url('api/v1.0/main/' . $entity2->pid, array('absolute' => TRUE)),
+        ),
+        'tests_bundle' => NULL,
       ),
       array(
         'id' => $entity3->pid,
         'label' => 'label',
-        'self' => url('api/v1.0/tests/' . $entity3->pid, array('absolute' => TRUE)),
-        // The "test" bundle also exposes the "type" property.
-        'type' => 'test',
+        'self' => url('api/v1.0/entity_tests/' . $entity3->pid, array('absolute' => TRUE)),
+        'main_bundle' => NULL,
+        'tests_bundle' => array(
+          'type' => 'test',
+          'id' => $entity3->pid,
+          'label' => 'label',
+          'self' => url('api/v1.0/tests/' . $entity3->pid, array('absolute' => TRUE)),
+        ),
       ),
     );
-
-    $result = $handler->get();
-    $this->assertEqual($result, $expected_result);
+    $result = $formatter->prepare($handler->doGet());
+    $this->assertEqual($result['data'], $expected_result);
   }
 }
