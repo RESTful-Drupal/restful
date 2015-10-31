@@ -30,13 +30,16 @@ class RestfulListEntityMultipleBundlesTestCase extends DrupalWebTestCase {
    */
   public function testList() {
     $user1 = $this->drupalCreateUser();
+    /* @var \Entity $entity1 */
     $entity1 = entity_create('entity_test', array('name' => 'main', 'uid' => $user1->uid));
     $entity1->save();
 
     $entity2 = entity_create('entity_test', array('name' => 'main', 'uid' => $user1->uid));
+    /* @var \Entity $entity2 */
     $entity2->save();
 
     $entity3 = entity_create('entity_test', array('name' => 'test', 'uid' => $user1->uid));
+    /* @var \Entity $entity3 */
     $entity3->save();
 
     $handler = restful()->getResourceManager()->getPlugin('entity_tests:1.0');
