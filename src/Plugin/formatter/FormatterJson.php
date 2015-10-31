@@ -7,6 +7,7 @@
 
 namespace Drupal\restful\Plugin\formatter;
 
+use Drupal\restful\Exception\BadRequestException;
 use Drupal\restful\Exception\InternalServerErrorException;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
@@ -194,5 +195,16 @@ class FormatterJson extends Formatter implements FormatterInterface {
   public function getContentTypeHeader() {
     return $this->contentType;
   }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function parseBody($body) {
+    if (!$decoded_json = drupal_json_decode($body)) {
+      throw new BadRequestException(sprintf('Invalid JSON provided: %s.', $body));
+    }
+    return $decoded_json;
+  }
+
 }
 

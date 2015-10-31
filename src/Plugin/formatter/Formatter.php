@@ -82,7 +82,7 @@ abstract class Formatter extends PluginBase implements FormatterInterface {
    * {@inheritdoc}
    */
   public function parseBody($body) {
-    throw new ServerConfigurationException('Invalid body parser.');
+    throw new ServerConfigurationException(sprintf('Invalid body parser for: %s.', $body));
   }
 
   /**
