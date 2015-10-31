@@ -306,13 +306,11 @@ class Request implements RequestInterface {
       parse_str($input_string, $body);
       return $body;
     }
-    elseif ($content_type == 'application/json') {
-      if (!$decoded_json = drupal_json_decode($input_string)) {
-        throw new BadRequestException(sprintf('Invalid JSON provided: %s.', $input_string));
-      }
-      return $decoded_json;
-    }
-    return NULL;
+    // Use the Content Type header to negotiate a formatter to parse the body.
+    $formatter = restful()
+      ->getFormatterManager()
+      ->negotiateFormatter($content_type);
+    return $formatter->parseBody($input_string);
   }
 
   /**

@@ -9,11 +9,11 @@ namespace Drupal\restful\Plugin\formatter;
 
 use Drupal\Component\Plugin\ConfigurablePluginInterface;
 use Drupal\Component\Plugin\PluginInspectionInterface;
+use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
 use Drupal\restful\Plugin\resource\ResourceInterface;
 
 interface FormatterInterface extends PluginInspectionInterface, ConfigurablePluginInterface {
-
 
   /**
    * Massages the raw data to create a structured array to pass to the renderer.
@@ -75,5 +75,19 @@ interface FormatterInterface extends PluginInspectionInterface, ConfigurablePlug
    *   The resource to set.
    */
   public function setResource(ResourceInterface $resource);
+
+  /**
+   * Parses the body string into the common format.
+   *
+   * @param string $body
+   *   The string sent from the consumer.
+   *
+   * @return array
+   *   The parsed object following the expected structure.
+   *
+   * @throws \Drupal\restful\Exception\ServerConfigurationException
+   * @throws \Drupal\restful\Exception\BadRequestException
+   */
+  public function parseBody($body);
 
 }

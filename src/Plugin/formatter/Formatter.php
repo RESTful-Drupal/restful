@@ -9,6 +9,7 @@ namespace Drupal\restful\Plugin\formatter;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Drupal\Component\Plugin\PluginBase;
+use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Plugin\ConfigurablePluginTrait;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldBase;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
@@ -16,7 +17,6 @@ use Drupal\restful\Plugin\resource\ResourceInterface;
 use Drupal\restful\RenderCache\Entity\CacheFragment;
 use Drupal\restful\RenderCache\RenderCache;
 use Drupal\restful\RenderCache\RenderCacheInterface;
-use Symfony\Component\Validator\Constraints\Null;
 
 abstract class Formatter extends PluginBase implements FormatterInterface {
 
@@ -76,6 +76,13 @@ abstract class Formatter extends PluginBase implements FormatterInterface {
     $this->setConfiguration(array(
       'resource' => $resource,
     ));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function parseBody($body) {
+    throw new ServerConfigurationException(sprintf('Invalid body parser for: %s.', $body));
   }
 
   /**
