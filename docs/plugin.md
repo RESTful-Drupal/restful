@@ -1,5 +1,22 @@
 # Defining a RESTful Plugin
 
+## Resources with multiple bundles
+One of the things that your API design should have is entity uniformity. That
+means that you should be able to describe the contents of a single item with a
+schema. That in turn, refers to the ability to set expectation in the fields that
+are going to be present for a given item, by explaining «I'm going to have fields
+a, b and c and they are all strings».
+
+If you have a resource for a Drupal entity type (ex: a node) that should output
+different bundles (ex: article and page), then you have to make sure that you
+only expose fields that are common to the both of them so the resulting payload
+is uniform. Another way to expose them, in case that you need to expose different
+fields, is to treat them as references. In that case you would have a public
+field per bundle that contains a reference to each specific bundle (one for the
+page and another one for the article, linked to the page and article resources).
+You will need to set the field class manually for that field. See an example of
+that in [EntityTests__1_0](../tests/modules/restful_test/src/Plugin/resource/entity_test/EntityTests__1_0.php).
+
 ## Defining the exposed fields
 By default the RESTful module will expose the ID, label and URL of the entity.
 You probably want to expose more than that. To do so you will need to implement
