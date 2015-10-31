@@ -50,35 +50,35 @@ class RestfulListEntityMultipleBundlesTestCase extends DrupalWebTestCase {
       array(
         'id' => $entity1->pid,
         'label' => 'Main test type',
-        'self' => 'http://restful.local/api/v1.0/entity_tests/' . $entity1->pid,
+        'self' => url('api/v1.0/entity_tests/' . $entity1->pid, array('absolute' => TRUE)),
         'main_bundle' => array(
           'id' => $entity1->pid,
           'label' => 'Main test type',
-          'self' => 'http://restful.local/api/v1.0/main/' . $entity1->pid,
+          'self' => url('api/v1.0/main/' . $entity1->pid, array('absolute' => TRUE)),
         ),
         'tests_bundle' => NULL,
       ),
       array(
         'id' => $entity2->pid,
         'label' => 'Main test type',
-        'self' => 'http://restful.local/api/v1.0/entity_tests/' . $entity2->pid,
+        'self' => url('api/v1.0/entity_tests/' . $entity2->pid, array('absolute' => TRUE)),
         'main_bundle' => array(
           'id' => $entity2->pid,
           'label' => 'Main test type',
-          'self' => 'http://restful.local/api/v1.0/main/' . $entity2->pid,
+          'self' => url('api/v1.0/main/' . $entity2->pid, array('absolute' => TRUE)),
         ),
         'tests_bundle' => NULL,
       ),
       array(
         'id' => $entity3->pid,
         'label' => 'label',
-        'self' => 'http://restful.local/api/v1.0/entity_tests/' . $entity3->pid,
+        'self' => url('api/v1.0/entity_tests/' . $entity3->pid, array('absolute' => TRUE)),
         'main_bundle' => NULL,
         'tests_bundle' => array(
           'type' => 'test',
           'id' => $entity3->pid,
           'label' => 'label',
-          'self' => 'http://restful.local/api/v1.0/tests/' . $entity3->pid,
+          'self' => url('api/v1.0/tests/' . $entity3->pid, array('absolute' => TRUE)),
         ),
       ),
     );
