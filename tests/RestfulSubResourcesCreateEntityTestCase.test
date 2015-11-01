@@ -18,6 +18,9 @@ class RestfulSubResourcesCreateEntityTestCase extends DrupalWebTestCase {
    */
   protected $handler = NULL;
 
+  /**
+   * {@inheritdoc}
+   */
   public static function getInfo() {
     return array(
       'name' => 'Sub requests',
@@ -26,7 +29,10 @@ class RestfulSubResourcesCreateEntityTestCase extends DrupalWebTestCase {
     );
   }
 
-  function setUp() {
+  /**
+   * {@inheritdoc}
+   */
+  public function setUp() {
     parent::setUp('restful_test', 'entity_validator_example');
 
     // Entity reference - single.
@@ -86,15 +92,17 @@ class RestfulSubResourcesCreateEntityTestCase extends DrupalWebTestCase {
   /**
    * Test creating and updating an entity with sub-resources.
    */
-  function testCreateAndUpdateEntity() {
+  public function testCreateAndUpdateEntity() {
     $base_request = $request = array(
       'label' => 'parent',
       'body' => 'Drupal',
       'entity_reference_single' => array(
-        'values' => array(array(
-          'label' => 'child1',
-          'body' => 'Drupal1',
-        )),
+        'values' => array(
+          array(
+            'label' => 'child1',
+            'body' => 'Drupal1',
+          ),
+        ),
       ),
       'entity_reference_multiple' => array(
         'values' => array(
@@ -177,7 +185,8 @@ class RestfulSubResourcesCreateEntityTestCase extends DrupalWebTestCase {
 
     // Test the version of the sub-resource.
     $public_fields = $this->handler->getFieldDefinitions();
-    $erm_resource = $public_fields->get('entity_reference_multiple')->getResource();
+    $erm_resource = $public_fields->get('entity_reference_multiple')
+      ->getResource();
     $this->assertEqual($erm_resource['majorVersion'], 1, 'Sub resource major version is correct.');
     $this->assertEqual($erm_resource['minorVersion'], 2, 'Sub resource minor version is correct.');
   }
@@ -269,4 +278,5 @@ class RestfulSubResourcesCreateEntityTestCase extends DrupalWebTestCase {
       $this->fail('Wrong exception thrown on validation fail on the parent.');
     }
   }
+
 }
