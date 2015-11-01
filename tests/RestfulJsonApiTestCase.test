@@ -43,8 +43,8 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
    */
   public static function getInfo() {
     return array(
-      'name' => 'JSON API GET',
-      'description' => 'Test the JSON API formatter for read operations.',
+      'name' => 'JSON API',
+      'description' => 'Test the JSON API formatter.',
       'group' => 'RESTful',
     );
   }
@@ -60,7 +60,9 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
     $this->account = $this->drupalCreateUser();
     $this->entities = $this->createEntities();
     $this->handler = restful()->getResourceManager()->getPlugin('main:1.1');
-    $this->formatter = restful()->getFormatterManager()->negotiateFormatter(NULL, 'json_api');
+    $this->formatter = restful()
+      ->getFormatterManager()
+      ->negotiateFormatter(NULL, 'json_api');
     $configuration = array(
       'resource' => $this->handler,
     );
@@ -123,7 +125,10 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
 
     // Make sure that using fields + includes lists all the fields in the
     // embedded entity if there is no subfield added.
-    $this->handler->setRequest(Request::create('api/v1.1/main/' . $wrapper->getIdentifier(), array('include' => 'entity_reference_multiple_resource,entity_reference_single_resource', 'fields' => 'entity_reference_multiple_resource,entity_reference_single_resource')));
+    $this->handler->setRequest(Request::create('api/v1.1/main/' . $wrapper->getIdentifier(), array(
+      'include' => 'entity_reference_multiple_resource,entity_reference_single_resource',
+      'fields' => 'entity_reference_multiple_resource,entity_reference_single_resource'
+    )));
     $this->handler->setPath($wrapper->getIdentifier());
     $this->formatter->setResource($this->handler);
     $resource_field_collections = $this->handler->process();
@@ -131,7 +136,10 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
     $this->assertEqual(count($result['included'][0]['attributes']), 16);
 
     // Now make sure that including fields only lists those fields.
-    $this->handler->setRequest(Request::create('api/v1.1/main/' . $wrapper->getIdentifier(), array('include' => 'entity_reference_single_resource', 'fields' => 'entity_reference_single_resource.label')));
+    $this->handler->setRequest(Request::create('api/v1.1/main/' . $wrapper->getIdentifier(), array(
+      'include' => 'entity_reference_single_resource',
+      'fields' => 'entity_reference_single_resource.label'
+    )));
     $this->handler->setPath($wrapper->getIdentifier());
     $this->formatter->setResource($this->handler);
     $resource_field_collections = $this->handler->process();
@@ -407,41 +415,92 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
     $expected_links = array(
       'self' => $this->handler->versionedUrl('', array('query' => array('range' => $range))),
       'first' => $this->handler->versionedUrl('', array('query' => array('range' => $range))),
-      'last' => $this->handler->versionedUrl('', array('query' => array('range' => $range, 'page' => 5))),
-      'next' => $this->handler->versionedUrl('', array('query' => array('range' => $range, 'page' => 2))),
+      'last' => $this->handler->versionedUrl('', array(
+        'query' => array(
+          'range' => $range,
+          'page' => 5
+        )
+      )),
+      'next' => $this->handler->versionedUrl('', array(
+        'query' => array(
+          'range' => $range,
+          'page' => 2
+        )
+      )),
     );
     $this->assertEqual($links, $expected_links);
 
     // 2. Test pagination links in the middle page.
     $range = 2;
-    $this->handler->setRequest(Request::create('', array('range' => $range, 'page' => 2)));
+    $this->handler->setRequest(Request::create('', array(
+      'range' => $range,
+      'page' => 2
+    )));
     $this->handler->setPath('');
     $this->formatter->setResource($this->handler);
     $resource_field_collections = $this->handler->process();
     $result = drupal_json_decode($this->formatter->format($resource_field_collections));
     $links = $result['links'];
     $expected_links = array(
-      'self' => $this->handler->versionedUrl('', array('query' => array('range' => $range, 'page' => 2))),
+      'self' => $this->handler->versionedUrl('', array(
+        'query' => array(
+          'range' => $range,
+          'page' => 2
+        )
+      )),
       'first' => $this->handler->versionedUrl('', array('query' => array('range' => $range))),
-      'previous' => $this->handler->versionedUrl('', array('query' => array('range' => $range, 'page' => 1))),
-      'last' => $this->handler->versionedUrl('', array('query' => array('range' => $range, 'page' => 5))),
-      'next' => $this->handler->versionedUrl('', array('query' => array('range' => $range, 'page' => 3))),
+      'previous' => $this->handler->versionedUrl('', array(
+        'query' => array(
+          'range' => $range,
+          'page' => 1
+        )
+      )),
+      'last' => $this->handler->versionedUrl('', array(
+        'query' => array(
+          'range' => $range,
+          'page' => 5
+        )
+      )),
+      'next' => $this->handler->versionedUrl('', array(
+        'query' => array(
+          'range' => $range,
+          'page' => 3
+        )
+      )),
     );
     $this->assertEqual($links, $expected_links);
 
     // 3. Test pagination links in the last page.
     $range = 2;
-    $this->handler->setRequest(Request::create('', array('range' => $range, 'page' => 5)));
+    $this->handler->setRequest(Request::create('', array(
+      'range' => $range,
+      'page' => 5
+    )));
     $this->handler->setPath('');
     $this->formatter->setResource($this->handler);
     $resource_field_collections = $this->handler->process();
     $result = drupal_json_decode($this->formatter->format($resource_field_collections));
     $links = $result['links'];
     $expected_links = array(
-      'self' => $this->handler->versionedUrl('', array('query' => array('range' => $range, 'page' => 5))),
+      'self' => $this->handler->versionedUrl('', array(
+        'query' => array(
+          'range' => $range,
+          'page' => 5
+        )
+      )),
       'first' => $this->handler->versionedUrl('', array('query' => array('range' => $range))),
-      'previous' => $this->handler->versionedUrl('', array('query' => array('range' => $range, 'page' => 4))),
-      'last' => $this->handler->versionedUrl('', array('query' => array('range' => $range, 'page' => 5))),
+      'previous' => $this->handler->versionedUrl('', array(
+        'query' => array(
+          'range' => $range,
+          'page' => 4
+        )
+      )),
+      'last' => $this->handler->versionedUrl('', array(
+        'query' => array(
+          'range' => $range,
+          'page' => 5
+        )
+      )),
     );
     $this->assertEqual($links, $expected_links);
   }
@@ -474,9 +533,18 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
     $entities[2]->term_single[LANGUAGE_NONE][] = array('tid' => $tids[0]);
     $entities[2]->term_multiple[LANGUAGE_NONE][] = array('tid' => $tids[1]);
     $entities[2]->term_multiple[LANGUAGE_NONE][] = array('tid' => $tids[2]);
-    $entities[2]->file_single[LANGUAGE_NONE][] = array('fid' => $images[0], 'display' => TRUE);
-    $entities[2]->file_multiple[LANGUAGE_NONE][] = array('fid' => $images[1], 'display' => TRUE);
-    $entities[2]->file_multiple[LANGUAGE_NONE][] = array('fid' => $images[2], 'display' => TRUE);
+    $entities[2]->file_single[LANGUAGE_NONE][] = array(
+      'fid' => $images[0],
+      'display' => TRUE
+    );
+    $entities[2]->file_multiple[LANGUAGE_NONE][] = array(
+      'fid' => $images[1],
+      'display' => TRUE
+    );
+    $entities[2]->file_multiple[LANGUAGE_NONE][] = array(
+      'fid' => $images[2],
+      'display' => TRUE
+    );
     entity_save('entity_test', $entities[2]);
 
 
@@ -546,6 +614,138 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
     $response = $formatter->prepare($handler->process());
     // Assert that $entities[2] points to $entities[0]
     $this->assertEqual($response['data'][0]['id'], $entities[2]->uuid);
+  }
+
+  /**
+   * Sub-request parsing.
+   */
+  public function testSubRequestParsing() {
+    $relationships = array(
+      'rel1' => array('data' => array('type' => 'tags', 'id' => 7)),
+      'rel2' => array(
+        'data' => array(
+          array(
+            'type' => 'articles',
+            'id' => 1,
+          ),
+          array(
+            'type' => 'articles',
+            'id' => 2,
+            'meta' => array('subrequest' => array('method' => 'PUT')),
+          ),
+          array(
+            'type' => 'articles',
+            'id' => 3,
+            'meta' => array('subrequest' => array('method' => 'PATCH')),
+          ),
+          array(
+            'type' => 'articles',
+            'id' => 'newRel2--1',
+            'meta' => array(
+              'subrequest' => array(
+                'method' => 'POST',
+                'headers' => array('X-CSRF-Token' => 'my-token'),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    // Generate 3 random strings.
+    $rnd_text = array_map(array($this, 'randomName'), range(0, 4));
+    $included = array(
+      array(
+        'type' => 'articles',
+        'id' => 1,
+        'attributes' => array('label' => $rnd_text[0]),
+        'relationships' => array(
+          'articles' => array(
+            'data' => array(
+              'type' => 'articles',
+              'id' => 2,
+            ),
+          ),
+        ),
+      ),
+      array(
+        'type' => 'articles',
+        'id' => 2,
+        'attributes' => array('label' => $rnd_text[1]),
+      ),
+      array(
+        'type' => 'articles',
+        'id' => 3,
+        'attributes' => array('label' => $rnd_text[2]),
+      ),
+      array(
+        'type' => 'articles',
+        'id' => 'newRel2--1',
+        'attributes' => array('label' => $rnd_text[3]),
+        'relationships' => array(
+          'articles' => array(
+            'data' => array(
+              'type' => 'articles',
+              'id' => 1,
+            ),
+          ),
+        ),
+      ),
+    );
+    $data = array(
+      array(
+        'type' => 'articles',
+        'id' => 5,
+        'attributes' => array(
+          'title' => $rnd_text[4],
+        ),
+        'relationships' => $relationships,
+      ),
+    );
+    $json_api = array(
+      'data' => $data,
+      'included' => $included,
+    );
+    $parsed_body = restful()
+      ->getFormatterManager()
+      ->getPlugin('json_api')
+      ->parseBody(drupal_json_encode($json_api));
+
+    $expected = array(
+      array(
+        'title' => $rnd_text[4],
+        'rel1' => array('id' => 7),
+        'rel2' => array(
+          array('id' => 1),
+          array(
+            'id' => 2,
+            'body' => array(
+              'label' => $rnd_text[1],
+            ),
+            'request' => array('method' => 'PUT'),
+          ),
+          array(
+            'id' => 3,
+            'body' => array(
+              'label' => $rnd_text[2],
+            ),
+            'request' => array('method' => 'PATCH'),
+          ),
+          array(
+            'body' => array(
+              'label' => $rnd_text[3],
+              'articles' => array('id' => 1),
+            ),
+            'request' => array(
+              'method' => 'POST',
+              'headers' => array('X-CSRF-Token' => 'my-token'),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    $this->assertEqual($expected, $parsed_body);
   }
 
   /**

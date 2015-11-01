@@ -623,7 +623,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
    * @throws \Drupal\restful\Exception\BadRequestException
    */
   protected static function restructureItem(array $item, array $included) {
-    if (empty($item['attributes']) && empty($item['relationship'])) {
+    if (empty($item['meta']['subrequest']) && empty($item['attributes']) && empty($item['relationship'])) {
       throw new BadRequestException('Invalid JSON provided: both attributes and relationship are empty.');
     }
     // Make sure that the attributes and relationships are accessible.
@@ -649,20 +649,20 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
           throw new BadRequestException('Invalid JSON provided: relationship item without id.');
         }
         // Initialize the object if empty.
-        if ($included_item = static::retrieveIncludedItem($info_pair['type'], $info_pair['id'], $included)) {
+        if (
+          !empty($info_pair['meta']['subrequest']) &&
+          $included_item = static::retrieveIncludedItem($info_pair['type'], $info_pair['id'], $included)
+        ) {
           // If the relationship was included, restructure it and embed it.
           $value = array(
             'body' => static::restructureItem($included_item, $included),
             'id' => $info_pair['id'],
+            'request' => $info_pair['meta']['subrequest'],
           );
-          // If there is sub-request information, then add it.
-          if (!empty($info_pair['meta']['subrequest'])) {
-            $value['request'] = $info_pair['meta']['subrequest'];
-            if (!empty($value['request']['method']) && $value['request']['method'] == RequestInterface::METHOD_POST) {
-              // If the value is a POST remove the ID, since we already
-              // retrieved the included item.
-              unset($value['id']);
-            }
+          if (!empty($value['request']['method']) && $value['request']['method'] == RequestInterface::METHOD_POST) {
+            // If the value is a POST remove the ID, since we already
+            // retrieved the included item.
+            unset($value['id']);
           }
           $element[$field_name][] = $value;
         }
