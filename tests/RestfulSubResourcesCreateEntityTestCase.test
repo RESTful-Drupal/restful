@@ -97,22 +97,31 @@ class RestfulSubResourcesCreateEntityTestCase extends DrupalWebTestCase {
       'label' => 'parent',
       'body' => 'Drupal',
       'entity_reference_single' => array(
-        'values' => array(
-          array(
-            'label' => 'child1',
-            'body' => 'Drupal1',
-          ),
+        'body' => array(
+          'label' => 'child1',
+          'body' => 'Drupal1',
+        ),
+        'request' => array(
+          'method' => 'POST',
         ),
       ),
       'entity_reference_multiple' => array(
-        'values' => array(
-          array(
+        array(
+          'body' => array(
             'label' => 'child2',
             'body' => 'Drupal2',
           ),
-          array(
+          'request' => array(
+            'method' => 'POST',
+          ),
+        ),
+        array(
+          'body' => array(
             'label' => 'child3',
             'body' => 'Drupal3',
+          ),
+          'request' => array(
+            'method' => 'POST',
           ),
         ),
       ),
@@ -156,28 +165,36 @@ class RestfulSubResourcesCreateEntityTestCase extends DrupalWebTestCase {
     $request['entity_reference_multiple']['request'] = array(
       'method' => RequestInterface::METHOD_PATCH,
     );
-    $request['entity_reference_multiple']['values'] = array(
+    $request['entity_reference_multiple'] = array(
       array(
         // Set the $node3.
         'id' => $node3->nid,
       ),
       array(
-        // Create a new node. Even if the request method is set to PATCH, since
-        // there is no id to rely upon, this is a POST.
-        'label' => 'POST new one',
-        'body' => 'Drupal',
+        'body' => array(
+          // Create a new node.
+          'label' => 'POST new one',
+          'body' => 'Drupal',
+        ),
+        'request' => array('method' => 'POST'),
       ),
       array(
         // Set $node4 and update some of the fields.
         'id' => $node4->nid,
-        'label' => 'PATCH existing one',
-        'body' => 'Drupal',
+        'body' => array(
+          'label' => 'PATCH existing one',
+          'body' => 'Drupal',
+        ),
+        'request' => array('method' => 'PATCH'),
       ),
       array(
         // Set $node5 and update some of the fields.
         'id' => $node5->nid,
-        'label' => 'PATCH existing one',
-        'body' => 'Drupal',
+        'body' => array(
+          'label' => 'PATCH existing one',
+          'body' => 'Drupal',
+        ),
+        'request' => array('method' => 'POST'),
       ),
     );
 
