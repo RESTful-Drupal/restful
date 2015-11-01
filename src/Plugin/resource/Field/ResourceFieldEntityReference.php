@@ -53,14 +53,18 @@ class ResourceFieldEntityReference extends ResourceFieldEntity implements Resour
       return NULL;
     }
 
-    $field_info = field_info_field($this->getProperty());
-    if ($field_info['cardinality'] != 1 && !is_array($value)) {
+    $cardinality = $this->cardinality();
+    if ($cardinality != 1 && !is_array($value)) {
       // If the field is entity reference type and its cardinality larger than
       // 1 set value to an array.
-      $value = explode(',', $value);
+      $ids = explode(',', $value);
+      $unpluck_id = function ($item) {
+        return array('id' => $item);
+      };
+      $value = array_map($unpluck_id, $ids);
     }
 
-    if ($field_info['cardinality'] != 1 && ResourceFieldBase::isArrayNumeric($value)) {
+    if ($cardinality != 1 && ResourceFieldBase::isArrayNumeric($value)) {
       // For multiple value items, pre-process them separately.
       $values = array();
       foreach ($value as $item) {
