@@ -7,6 +7,8 @@
 
 namespace Drupal\restful\Plugin\resource\Field;
 
+use Drupal\restful\Exception\BadRequestException;
+use Drupal\restful\Exception\InternalServerErrorException;
 use Drupal\restful\Http\HttpHeaderBag;
 use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
@@ -58,62 +60,38 @@ class ResourceFieldEntityReference extends ResourceFieldEntity implements Resour
       $value = explode(',', $value);
     }
 
+    if ($field_info['cardinality'] != 1 && ResourceFieldBase::isArrayNumeric($value)) {
+      // For multiple value items, pre-process them separately.
+      $values = array();
+      foreach ($value as $item) {
+        $values[] = $this->preprocess($item);
+      }
+      return $values;
+    }
     // If the provided value is the ID to the referenced entity, then do not do
     // a sub-request.
-    if (!is_array($value) || empty($value['values'])) {
-      return $value;
+    if (!is_array($value) || empty($value['body'])) {
+      // Allow to pass an array with the ID instead of the ID directly.
+      return (!empty($value['id']) && array_keys($value) == array('id')) ? $value['id'] : $value;
     }
 
+    /* @var ResourceFieldCollectionInterface $merged_value */
     $merged_value = $this->mergeEntityFromReference($value);
-    $value = static::subRequestId($merged_value);
-
-    return ($field_info['cardinality'] == 1 && is_array($value)) ? reset($value) : $value;
+    return $merged_value->getInterpreter()->getWrapper()->getIdentifier();
   }
 
   /**
    * Helper function; Create an entity from a a sub-resource.
    *
    * @param mixed $value
-   *   The value passed in the request.
+   *   The single value for the sub-request.
    *
    * @return mixed
    *   The value to set using the wrapped property.
    */
   protected function mergeEntityFromReference($value) {
-    // TODO: Move this to the docs. The payload for the resource has changed.
-    // The sub-request applies to all of the values for a given field. It is not
-    // possible to have a different request for the different values of a multi
-    // value field.
-    // The structure of the payload send for a public field declared as a
-    // resource is now like:
-    // 1. array(
-    //   'request' => array(
-    //     'method' => 'PATCH',
-    //     'headers' => array('foo' => 'bar'),
-    //     'csrf_token' => 'abcde',
-    //   ),
-    //   'values' => array(
-    //     array(
-    //       'id' => 1, // This is the referenced entity ID. Hardcoded for now.
-    //       'my-description' => 'Lorem ipsum',
-    //       'another-int' => 2,
-    //     ),
-    //     array(
-    //       'id' => 5,
-    //       'my-description' => 'Only the description has changed this time.',
-    //     ),
-    //   ),
-    // );
-    // 2. array(1, 5); <-- To set a multi value reference field. Without
-    //    updating the underlying entities.
-    // 3. 5 <-- To set a single value reference field. Without updating the
-    //    underlying entities.
-
-    $field_info = field_info_field($this->getProperty());
-
     $resource = $this->getResource();
-    $cardinality = $field_info['cardinality'];
-    if (empty($resource) || empty($value['values'])) {
+    if (empty($resource) || empty($value['body'])) {
       // Field is not defined as "resource", which means it only accepts an
       // integer as a valid value.
       // Or, we are passing an integer and cardinality is 1. That means that we
@@ -129,35 +107,22 @@ class ResourceFieldEntityReference extends ResourceFieldEntity implements Resour
       $resource['minorVersion'],
     ));
 
-    // Return the entity ID that was created.
-    if ($cardinality == 1) {
-      // Single value.
-      return $resource_data_provider->merge(static::subRequestId($value['values'][0]), $value['values'][0]);
-    }
-
-    // Multiple values.
-    $return = array();
-    foreach ($value['values'] as $value_item) {
-      // If there is only the 'id' public property, then only assign the new
-      // reference.
-      if (array_keys($value_item) == array('id')) {
-        $return[] = $value_item;
-        continue;
-      }
-      $merged = $resource_data_provider->merge(static::subRequestId($value_item), $value_item);
-      $return[] = reset($merged);
-    }
-
-    return $return;
+    // We are always dealing with the single value.
+    $merged = $resource_data_provider->merge(static::subRequestId($value), $value['body']);
+    return reset($merged);
   }
 
   /**
    * {@inheritdoc}
    */
   public static function subRequest(array $value) {
-    $value['request'] = empty($value['request']) ? array() : $value['request'];
+    if (empty($value['request'])) {
+      throw new BadRequestException('Malformed body payload. Missing "request" key for the sub-request.');
+    }
+    if (empty($value['request']['method'])) {
+      throw new BadRequestException('Malformed body payload. Missing "method" int the "request" key for the sub-request.');
+    }
     $request_user_info = $value['request'] + array(
-      'method' => restful()->getRequest()->getMethod(),
       'path' => NULL,
       'query' => array(),
       'csrf_token' => NULL,
@@ -186,28 +151,18 @@ class ResourceFieldEntityReference extends ResourceFieldEntity implements Resour
   /**
    * Get the ID of the resource this write sub-request is for.
    *
-   * @param array|\Traversable $value
-   *   The array of values provided for this sub-request.
+   * @param array $value
+   *   The value provided for this sub-request item.
    *
-   * @return int
+   * @return string
    *   The ID.
    */
   protected static function subRequestId($value) {
-    if ($value instanceof ResourceFieldCollectionInterface) {
-      // Return the ID for the referenced entity.
-      return $value->getInterpreter()->getWrapper()->getIdentifier();
-    }
-    if (!is_array($value)) {
+    if ($value['request']['method'] == RequestInterface::METHOD_POST) {
+      // If the request is for post, then disregard any possible ID.
       return NULL;
     }
-    if (!static::isArrayNumeric($value)) {
-      return empty($value['id']) ? NULL : $value['id'];
-    }
-    $output = array();
-    foreach ($value as $item) {
-      $output[] = static::subRequestId($item);
-    }
-    return $output;
+    return empty($value['id']) ? NULL : $value['id'];
   }
 
   /**

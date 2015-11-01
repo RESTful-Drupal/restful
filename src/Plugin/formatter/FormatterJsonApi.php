@@ -628,7 +628,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
     }
     // Make sure that the attributes and relationships are accessible.
     $element = empty($item['attributes']) ? array() : $item['attributes'];
-    $relationships = empty($item['relationship']) ? array() : $item['relationship'];
+    $relationships = empty($item['relationships']) ? array() : $item['relationships'];
     // For every relationship we need to see if it was included.
     foreach ($relationships as $field_name => $relationship) {
       if (empty($relationship['data'])) {
@@ -651,11 +651,24 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
         // Initialize the object if empty.
         if ($included_item = static::retrieveIncludedItem($info_pair['type'], $info_pair['id'], $included)) {
           // If the relationship was included, restructure it and embed it.
-          $element[$field_name][] = static::restructureItem($included_item, $included);
+          $value = array(
+            'body' => static::restructureItem($included_item, $included),
+            'id' => $info_pair['id'],
+          );
+          // If there is sub-request information, then add it.
+          if (!empty($info_pair['meta']['subrequest'])) {
+            $value['request'] = $info_pair['meta']['subrequest'];
+            if (!empty($value['request']['method']) && $value['request']['method'] == RequestInterface::METHOD_POST) {
+              // If the value is a POST remove the ID, since we already
+              // retrieved the included item.
+              unset($value['id']);
+            }
+          }
+          $element[$field_name][] = $value;
         }
         else {
           // If the include could not be retrieved, use the ID instead.
-          $element[$field_name][] = $info_pair['id'];
+          $element[$field_name][] = array('id' => $info_pair['id']);
         }
       }
       // Make the single relationships to be a single item or a single ID.

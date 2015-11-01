@@ -198,18 +198,39 @@ $parsed_body = array(
   'tags' => array(
     array(
       // Create a new term.
-      'label' => 'child1',
+      'body' => array(
+        'label' => 'child1',
+      ),
+      'request' => array(
+        'method' => 'POST',
+        'headers' => array(
+          'X-CSRF-Token' => 'my-csrf-token',
+        ),
+      ),
     ),
     array(
       // PATCH an existing term.
-      'label' => 'new title by PATCH',
+      'body' => array(
+        'label' => 'new title by PATCH',
+      ),
+      'id' => 12,
+      'request' => array(
+        'method' => 'PATCH',
+      ),
     ),
     array(
-      '__application' => array(
-        'method' => \Drupal\restful\Http\RequestInterface::METHOD_PUT,
+      // PATCH an existing term.
+      'body' => array(
+        'label' => 'new title by PUT',
       ),
-      // PUT an existing term.
-      'label' => 'new title by PUT',
+      'id' => 9,
+      'request' => array(
+        'method' => 'PUT',
+      ),
+    ),
+    // Use an existing item.
+    array(
+      'id' => 21,
     ),
   ),
 );
