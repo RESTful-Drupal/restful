@@ -307,7 +307,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     // The access calls use the request method. Fake the view to be a GET.
     $old_request = $this->getRequest();
     $this->getRequest()->setMethod(RequestInterface::METHOD_GET);
-    $output = array($this->view($wrapper->getIdentifier()));
+    $output = array($this->view($identifier));
     // Put the original request back to a PUT/PATCH.
     $this->request = $old_request;
 

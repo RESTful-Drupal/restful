@@ -597,14 +597,16 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
     }
     $data = $decoded_json['data'];
     $includes = empty($decoded_json['included']) ? array() : $decoded_json['included'];
+    // It's always weird to deal with lists of items vs a single item.
+    $single_item = !ResourceFieldBase::isArrayNumeric($data);
     // Make sure we're always dealing with a list of items.
-    $data = ResourceFieldBase::isArrayNumeric($data) ? $data : array($data);
+    $data = $single_item ? array($data) : $data;
     $output = array();
     foreach ($data as $item) {
       $output[] = $this::restructureItem($item, $includes);
     }
 
-    return $output;
+    return $single_item ? reset($output) : $output;
   }
 
   /**
