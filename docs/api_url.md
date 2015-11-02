@@ -7,9 +7,76 @@ You can manipulate the resources using different HTTP request types
 (e.g. `POST`, `GET`, `DELETE`), HTTP headers, and special query strings
 passed in the URL itself.
 
+## Write operations
+Write operations can be performed via the POTS (to create items), PUT or PATCH
+(to update items) HTTP methods.
+
+### Basic example
+The following request will create an article using the articles resource:
+
+```http
+POST /articles HTTP/1.1
+Content-Type: application/json
+Accept: application/json
+
+{
+  "title": "My article",
+  "body": "<p>This is a short one</p>",
+  "tags": [1, 6, 12]
+}
+```
+
+Note how we are setting the properties that we want to set using JSON. The
+provided payload format needs to match the contents of the `Content-Type` header
+(in this case _application/json_).
+
+It's also worth noting that when settings reference fields with multiple values,
+you can submit an array of IDs or a string of IDs separated by comas.
+
+### Advanced example
+You use sub-requests to manipulate (create or alter) the relationships in a single request.The following example will:
+
+  1. Update the title of the article to be _To TDD or Not_.
+  1. Update the contents of tag 6 to replace it with the provided content.
+  1. Create a new tag and assign it to the updated article.
+
+```
+PATCH /articles/1 HTTP/1.1
+Content-Type: application/vnd.api+json
+Accept: application/vnd.api+json
+
+{
+  "title": "To TDD or Not",
+  "tags": [
+    {
+      "id": "6",
+      "body": {
+        "label": "Batman!",
+        "description": "The gadget owner."
+      },
+      "request": {
+        "method": "PATCH"
+      }
+    },
+    {
+      "body": {
+        "label": "everything",
+        "description": "I can only say: 42."
+      },
+      "request": {
+        "method": "POST",
+        "headers": {"Authorization": "Basic Yoasdkk1="}
+      }
+    }
+  ]
+}
+```
+
+See the
+[extension specification](https://gist.github.com/e0ipso/cc95bfce66a5d489bb8a)
+for an example using JSON API.
 
 ## Getting information about the resource
-
 
 ### Exploring the resource
 
@@ -19,9 +86,13 @@ about that resource, in addition to the data itself.
 ``` shell
 curl https://example.com/api/
 ``
-This will output all the available **latest** resources (of course, if you have enabled the "Discovery Resource" option). For example, if there are 3 different api version plugins for content type Article (1.0, 1.1, 2.0) it will display the latest only (2.0 in this case).
+This will output all the available **latest** resources (of course, if you have
+enabled the "Discovery Resource" option). For example, if there are 3 different
+api version plugins for content type Article (1.0, 1.1, 2.0) it will display the
+latest only (2.0 in this case).
 
-If you want to display all the versions of all the resources declared add the query **?all=true** like this.
+If you want to display all the versions of all the resources declared add the
+query **?all=true** like this.
 
 ``` shell
 curl https://example.com/api?all=true
@@ -172,12 +243,14 @@ HTTP ``X-CSRF-Token`` header on all writing requests (POST, PUT and DELETE).
 You can retrieve the token from ``/api/session/token`` with a standard HTTP
 GET request.
 
-See [this](https://github.com/Gizra/angular-restful-auth) AngularJs example that shows a login from a fully decoupled web app
-to a Drupal backend.
+See [this](https://github.com/Gizra/angular-restful-auth) AngularJs example that
+shows a login from a fully decoupled web app to a Drupal backend.
 
-Note: If you use basic auth under .htaccess password you might hit a flood exception, as the server is sending the .htaccess user name and password
- as the authentication. In such a case you may set the ``restful_skip_basic_auth`` to TRUE, in order to avoid using it. This will allow
- enabling and disabling the basic auth on different environments.
+Note: If you use basic auth under .htaccess password you might hit a flood
+exception, as the server is sending the .htaccess user name and password as the
+authentication. In such a case you may set the ``restful_skip_basic_auth`` to
+TRUE, in order to avoid using it. This will allow enabling and disabling the
+basic auth on different environments.
 
 ```bash
 # (Change username and password)
@@ -192,7 +265,7 @@ curl https://example.com/api/v1.3/articles/1?access_token=YOUR_TOKEN
 
 ## Error handling
 If an error occurs when operating the REST endpoint via URL, A valid JSON object
- with ``code``, ``message`` and ``description`` would be returned.
+with ``code``, ``message`` and ``description`` would be returned.
 
 The RESTful module adheres to the [Problem Details for HTTP
 APIs](http://tools.ietf.org/html/draft-nottingham-http-problem-06) draft to

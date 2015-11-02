@@ -193,9 +193,16 @@ class ResourceField extends ResourceFieldBase implements ResourceFieldInterface 
   /**
    * {@inheritdoc}
    */
-  public function cardinality() {
+  public function getCardinality() {
     // Default to cardinality of 1.
     return 1;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setCardinality($cardinality) {
+    $this->cardinality = $cardinality;
   }
 
 }

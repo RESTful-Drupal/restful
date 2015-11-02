@@ -307,7 +307,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     // The access calls use the request method. Fake the view to be a GET.
     $old_request = $this->getRequest();
     $this->getRequest()->setMethod(RequestInterface::METHOD_GET);
-    $output = array($this->view($wrapper->getIdentifier()));
+    $output = array($this->view($identifier));
     // Put the original request back to a PUT/PATCH.
     $this->request = $old_request;
 
@@ -823,9 +823,6 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
       throw new BadRequestException('Bad input data provided. Please, check your input and your Content-Type header.');
     }
     $save = FALSE;
-    // We cannot set the 'id' property of the $object, it's only needed to know
-    // which entity to update. Remove it from the properties to set.
-    unset($object['id']);
     $original_object = $object;
     $interpreter = new DataInterpreterEMW($this->getAccount(), $wrapper);
     // Keeps a list of the fields that have been set.

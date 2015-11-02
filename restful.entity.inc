@@ -79,12 +79,15 @@ function _restful_entity_cache_hashes($entity, $type) {
 function restful_entity_update($entity, $type) {
   $resource_manager = restful()->getResourceManager();
   foreach (_restful_entity_cache_hashes($entity, $type) as $hash) {
-    $handler = $resource_manager->getPlugin(CacheFragmentController::resourceIdFromHash($hash));
+    if (!$instance_id = CacheFragmentController::resourceIdFromHash($hash)) {
+      continue;
+    }
+    $handler = $resource_manager->getPlugin($instance_id);
     if (!$handler instanceof CacheDecoratedResourceInterface) {
-      return;
+      continue;
     }
     if (!$handler->hasSimpleInvalidation()) {
-      return;
+      continue;
     }
     // You can get away without the fragments for a clear.
     $cache_object = new RenderCache(new ArrayCollection(), $hash, $handler->getCacheController());
@@ -100,13 +103,15 @@ function restful_entity_update($entity, $type) {
 function restful_entity_delete($entity, $type) {
   $resource_manager = restful()->getResourceManager();
   foreach (_restful_entity_cache_hashes($entity, $type) as $hash) {
-    $handler = $resource_manager->getPlugin(CacheFragmentController::resourceIdFromHash($hash));
+    if (!$instance_id = CacheFragmentController::resourceIdFromHash($hash)) {
+      continue;
+    }
+    $handler = $resource_manager->getPlugin($instance_id);
     if (!$handler instanceof CacheDecoratedResourceInterface) {
-      // Resource isn't using a cache decorator.
-      return;
+      continue;
     }
     if (!$handler->hasSimpleInvalidation()) {
-      return;
+      continue;
     }
     // You can get away without the fragments for a clear.
     $cache_object = new RenderCache(new ArrayCollection(), $hash, $handler->getCacheController());

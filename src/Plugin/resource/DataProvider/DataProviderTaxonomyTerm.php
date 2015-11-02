@@ -19,12 +19,10 @@ class DataProviderTaxonomyTerm extends DataProviderEntity implements DataProvide
    */
   protected function setPropertyValues(\EntityDrupalWrapper $wrapper, $object, $replace = FALSE) {
     $term = $wrapper->value();
-    if (!empty($term->vid)) {
-      return;
+    if (empty($term->vid)) {
+      $vocabulary = taxonomy_vocabulary_machine_name_load($term->vocabulary_machine_name);
+      $term->vid = $vocabulary->vid;
     }
-
-    $vocabulary = taxonomy_vocabulary_machine_name_load($term->vocabulary_machine_name);
-    $term->vid = $vocabulary->vid;
 
     parent::setPropertyValues($wrapper, $object, $replace);
   }

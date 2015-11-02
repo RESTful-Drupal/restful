@@ -7,6 +7,7 @@
 
 namespace Drupal\restful\Plugin\formatter;
 
+use Drupal\restful\Exception\BadRequestException;
 use Drupal\restful\Exception\InternalServerErrorException;
 use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Http\Request;
@@ -404,7 +405,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
     }
     // Check if the resource needs to be included. If not then set 'full_view'
     // to false.
-    $cardinality = $resource_field->cardinality();
+    $cardinality = $resource_field->getCardinality();
     $output = array();
     $public_field_name = $resource_field->getPublicName();
     if (!$ids = $resource_field->compoundDocumentId($interpreter)) {
@@ -582,6 +583,125 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
       $field_item,
       $this->extractFieldValues($data, $field_item['#cache_placeholder']['parents'], $field_item['#cache_placeholder']['parent_hashes'])
     );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function parseBody($body) {
+    if (!$decoded_json = drupal_json_decode($body)) {
+      throw new BadRequestException(sprintf('Invalid JSON provided: %s.', $body));
+    }
+    if (empty($decoded_json['data'])) {
+      throw new BadRequestException(sprintf('Invalid JSON provided: %s.', $body));
+    }
+    $data = $decoded_json['data'];
+    $includes = empty($decoded_json['included']) ? array() : $decoded_json['included'];
+    // It's always weird to deal with lists of items vs a single item.
+    $single_item = !ResourceFieldBase::isArrayNumeric($data);
+    // Make sure we're always dealing with a list of items.
+    $data = $single_item ? array($data) : $data;
+    $output = array();
+    foreach ($data as $item) {
+      $output[] = $this::restructureItem($item, $includes);
+    }
+
+    return $single_item ? reset($output) : $output;
+  }
+
+  /**
+   * Take a JSON API item and makes it hierarchical object, like simple JSON.
+   *
+   * @param array $item
+   *   The JSON API item.
+   * @param array $included
+   *   The included pool of elements.
+   *
+   * @return array
+   *   The hierarchical object.
+   *
+   * @throws \Drupal\restful\Exception\BadRequestException
+   */
+  protected static function restructureItem(array $item, array $included) {
+    if (empty($item['meta']['subrequest']) && empty($item['attributes']) && empty($item['relationship'])) {
+      throw new BadRequestException('Invalid JSON provided: both attributes and relationship are empty.');
+    }
+    // Make sure that the attributes and relationships are accessible.
+    $element = empty($item['attributes']) ? array() : $item['attributes'];
+    $relationships = empty($item['relationships']) ? array() : $item['relationships'];
+    // For every relationship we need to see if it was included.
+    foreach ($relationships as $field_name => $relationship) {
+      if (empty($relationship['data'])) {
+        throw new BadRequestException('Invalid JSON provided: relationship without data.');
+      }
+      $data = $relationship['data'];
+      // It's always weird to deal with lists of items vs a single item.
+      $single_item = !ResourceFieldBase::isArrayNumeric($data);
+      // Make sure we're always dealing with a list of items.
+      $data = $single_item ? array($data) : $data;
+      $element[$field_name] = array();
+      foreach ($data as $info_pair) {
+        // Validate the JSON API structure for a relationship.
+        if (empty($info_pair['type'])) {
+          throw new BadRequestException('Invalid JSON provided: relationship item without type.');
+        }
+        if (empty($info_pair['id'])) {
+          throw new BadRequestException('Invalid JSON provided: relationship item without id.');
+        }
+        // Initialize the object if empty.
+        if (
+          !empty($info_pair['meta']['subrequest']) &&
+          $included_item = static::retrieveIncludedItem($info_pair['type'], $info_pair['id'], $included)
+        ) {
+          // If the relationship was included, restructure it and embed it.
+          $value = array(
+            'body' => static::restructureItem($included_item, $included),
+            'id' => $info_pair['id'],
+            'request' => $info_pair['meta']['subrequest'],
+          );
+          if (!empty($value['request']['method']) && $value['request']['method'] == RequestInterface::METHOD_POST) {
+            // If the value is a POST remove the ID, since we already
+            // retrieved the included item.
+            unset($value['id']);
+          }
+          $element[$field_name][] = $value;
+        }
+        else {
+          // If the include could not be retrieved, use the ID instead.
+          $element[$field_name][] = array('id' => $info_pair['id']);
+        }
+      }
+      // Make the single relationships to be a single item or a single ID.
+      $element[$field_name] = $single_item ? reset($element[$field_name]) : $element[$field_name];
+    }
+    return $element;
+  }
+
+  /**
+   * Retrieves an item from the included pool of items.
+   *
+   * @param string $type
+   *   The resource type.
+   * @param string $id
+   *   The resource identifier.
+   * @param array $included
+   *   All the available included elements.
+   *
+   * @return array
+   *   The JSON API element.
+   */
+  protected static function retrieveIncludedItem($type, $id, array $included) {
+    foreach ($included as $item) {
+      if (
+        !empty($item['type']) &&
+        $item['type'] == $type &&
+        !empty($item['id']) &&
+        $item['id'] == $id
+      ) {
+        return $item;
+      }
+    }
+    return NULL;
   }
 
 }
