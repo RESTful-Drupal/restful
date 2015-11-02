@@ -1050,13 +1050,23 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
   /**
    * {@inheritdoc}
    */
-  public function cardinality() {
-    // Default to single cardinality.
-    $default = 1;
-    if (!$field_info = field_info_field($this->getProperty())) {
-      return $default;
+  public function getCardinality() {
+    if (isset($this->cardinality)) {
+      return $this->cardinality;
     }
-    return empty($field_info['cardinality']) ? $default : $field_info['cardinality'];
+    // Default to single cardinality.
+    $this->cardinality = 1;
+    if ($field_info = field_info_field($this->getProperty())) {
+      $this->cardinality = empty($field_info['cardinality']) ? $this->cardinality : $field_info['cardinality'];
+    }
+    return $this->cardinality;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setCardinality($cardinality) {
+    $this->cardinality = $cardinality;
   }
 
   /**

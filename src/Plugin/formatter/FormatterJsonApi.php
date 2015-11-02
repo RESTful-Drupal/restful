@@ -405,7 +405,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
     }
     // Check if the resource needs to be included. If not then set 'full_view'
     // to false.
-    $cardinality = $resource_field->cardinality();
+    $cardinality = $resource_field->getCardinality();
     $output = array();
     $public_field_name = $resource_field->getPublicName();
     if (!$ids = $resource_field->compoundDocumentId($interpreter)) {

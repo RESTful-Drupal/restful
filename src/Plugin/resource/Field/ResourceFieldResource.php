@@ -99,12 +99,19 @@ class ResourceFieldResource implements ResourceFieldResourceInterface {
    *   The number of potentially returned fields. Reuses field cardinality
    *   constants.
    */
-  public function cardinality() {
+  public function getCardinality() {
     if ($this->decorated instanceof ResourceFieldEntityInterface) {
-      return $this->decorated->cardinality();
+      return $this->decorated->getCardinality();
     }
     // Default to single cardinality.
     return 1;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setCardinality($cardinality) {
+    $this->decorated->setCardinality($cardinality);
   }
 
   /**

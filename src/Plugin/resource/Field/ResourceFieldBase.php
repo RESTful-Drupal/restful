@@ -150,6 +150,13 @@ abstract class ResourceFieldBase implements ResourceFieldInterface {
   protected $publicFieldInfo;
 
   /**
+   * Holds the field cardinality.
+   *
+   * @var int
+   */
+  protected $cardinality;
+
+  /**
    * Get the request in the data provider.
    *
    * @return RequestInterface

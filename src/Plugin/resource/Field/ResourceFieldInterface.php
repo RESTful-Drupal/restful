@@ -248,7 +248,15 @@ interface ResourceFieldInterface {
    *   The number of potentially returned fields. Reuses field cardinality
    *   constants.
    */
-  public function cardinality();
+  public function getCardinality();
+
+  /**
+   * Set the cardinality.
+   *
+   * @param int $cardinality
+   *   The new cardinality.
+   */
+  public function setCardinality($cardinality);
 
   /**
    * Get the request in the data provider.
