@@ -325,6 +325,16 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     $wrapper->language($this->getLangCode());
     $values = array();
 
+    // Try to figure out the default language used by the entity.
+    // With Drupal >= 7.15 we can use entity_language().
+    if (function_exists('entity_language')) {
+      $default_langcode = entity_language($this->getEntityType(), $wrapper->value());
+    }
+    else {
+      $entity_lang = $wrapper->get('language');
+      $default_langcode = !empty($entity_lang) ? $entity_lang : LANGUAGE_NONE;
+    }
+
     $limit_fields = !empty($request['fields']) ? explode(',', $request['fields']) : array();
 
     foreach ($this->getPublicFields() as $public_field_name => $info) {
@@ -359,6 +369,22 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
             $enabled_languages = array_keys(language_list());
 
             foreach ($enabled_languages as $language) {
+
+              if ($language != $default_langcode) {
+                // The 'entity_metadata_field_property_get' function calls
+                // 'entity_metadata_field_get_language' with $fallback = TRUE,
+                // which forcing a change of the current language to the
+                // default one in case the value of the current language is not
+                // set and the value of the default language is set, hence we
+                // would like to manipulate the function by unset the value
+                // of the default language to NULL.
+                // We cannot use the wrapper to unset the value, as it performs
+                // some validation we would like to skip.
+                $cloned_entity = $wrapper->value();
+                debug('removing default language value');
+                $cloned_entity->{$property}[$default_langcode] = NULL;
+              }
+
               $wrapper->language($language);
               $sub_wrapper = $info['wrapper_method_on_entity'] ? $wrapper : $wrapper->{$property};
               $value[$language] = $this->getValueByWrapper($wrapper, $sub_wrapper, $info, $public_field_name);
