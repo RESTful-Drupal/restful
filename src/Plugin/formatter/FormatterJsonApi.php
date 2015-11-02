@@ -7,6 +7,7 @@
 
 namespace Drupal\restful\Plugin\formatter;
 
+use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\restful\Exception\BadRequestException;
 use Drupal\restful\Exception\InternalServerErrorException;
 use Drupal\restful\Exception\ServerConfigurationException;
@@ -146,6 +147,13 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
         // In some situations when making an OPTIONS call the $resource_id
         // returns the array of discovery information instead of a real value.
         $output['#resource_id'] = (string) $resource_id;
+        try {
+          $output['#links']['self'] = restful()
+            ->getResourceManager()
+            ->getPlugin($output['#resource_plugin'])
+            ->versionedUrl($output['#resource_id']);
+        }
+        catch(PluginNotFoundException $e) {}
       }
     }
     if ($this->isCacheEnabled($data)) {
@@ -342,6 +350,10 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
           $result['relationships'][$field_name]['links'] = $relationship_links;
         }
       }
+    }
+    // Set the links for every item.
+    if (!empty($output['#links'])) {
+      $result['links'] = $output['#links'];
     }
 
     // Decrease the depth level.
