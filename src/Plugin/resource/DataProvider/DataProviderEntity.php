@@ -957,11 +957,11 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     $target_entity_type = NULL;
     $bundles = array();
     if (!$field_info) {
-      if ($resource_field->getPublicName() == 'uid') {
+      if ($resource_field->getProperty() == 'uid') {
         // We make a special case for the user id.
         $target_entity_type = 'user';
       }
-      elseif ($resource_field->getPublicName() == 'vid') {
+      elseif ($resource_field->getProperty() == 'vid') {
         // We make a special case for the vocabulary id.
         $target_entity_type = 'taxonomy_vocabulary';
       }
@@ -981,7 +981,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
         $bundles[] = $allowed_value['vocabulary'];
       }
     }
-    elseif ($resource_field instanceof ResourceFieldResourceInterface && ($resource_info = $resource_field->getResource())) {
+    if (empty($target_entity_type) && $resource_field instanceof ResourceFieldResourceInterface && ($resource_info = $resource_field->getResource())) {
       $instance_id = sprintf('%s:%d.%d', $resource_info['name'], $resource_info['majorVersion'], $resource_info['minorVersion']);
       try {
         $handler = restful()->getResourceManager()->getPlugin($instance_id);
