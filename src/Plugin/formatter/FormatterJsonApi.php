@@ -424,10 +424,11 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
       return NULL;
     }
     $ids = $cardinality == 1 ? $ids = array($ids) : $ids;
+    $resource_info = $resource_field->getResource();
     $empty_value = array(
       '#fields' => array(),
       '#embedded' => TRUE,
-      '#resource_plugin' => $resource_field->getResourceMachineName(),
+      '#resource_plugin' => sprintf('%s:%d.%d', $resource_info['name'], $resource_info['majorVersion'], $resource_info['minorVersion']),
       '#cache_placeholder' => array(
         'parents' => array_merge($parents, array($public_field_name)),
         'parent_hashes' => $parent_hashes,

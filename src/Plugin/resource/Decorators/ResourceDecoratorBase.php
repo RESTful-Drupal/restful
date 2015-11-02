@@ -369,6 +369,13 @@ abstract class ResourceDecoratorBase extends PluginBase implements ResourceDecor
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function getPluginId() {
+    return $this->subject->getPluginId();
+  }
+
+  /**
    * If any method not declared, then defer it to the decorated field.
    *
    * This decorator class is proxying all the calls declared in the
