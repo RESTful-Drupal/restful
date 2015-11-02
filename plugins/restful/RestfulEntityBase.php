@@ -381,7 +381,6 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
                 // We cannot use the wrapper to unset the value, as it performs
                 // some validation we would like to skip.
                 $cloned_entity = $wrapper->value();
-                debug('removing default language value');
                 $cloned_entity->{$property}[$default_langcode] = NULL;
               }
 
