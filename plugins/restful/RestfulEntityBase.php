@@ -1413,11 +1413,9 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       return $public_fields;
     }
 
-    $title_field = $this->getTitleField();
-
     // Change the 'label' public field settings when a bundle use 'title'
     // module.
-    if (!empty($title_field)) {
+    if ($title_field = $this->getTitleField()) {
       $public_fields['label']['wrapper_method_on_entity'] = FALSE;
       $public_fields['label']['wrapper_method'] = 'value';
       $public_fields['label']['property'] = $title_field['field_name'];
