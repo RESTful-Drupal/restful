@@ -365,7 +365,8 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
         }
 
         if (empty($info['formatter'])) {
-          if (field_is_translatable($this->entityType, field_info_field($info['property']))) {
+          $field_info = field_info_field($info['property']);
+          if ($field_info && field_is_translatable($this->entityType, $field_info)) {
             $enabled_languages = array_keys(language_list());
 
             foreach ($enabled_languages as $language) {
