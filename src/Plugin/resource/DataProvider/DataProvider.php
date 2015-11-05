@@ -294,6 +294,8 @@ abstract class DataProvider implements DataProviderInterface {
         $callable = array('\Drupal\restful\Plugin\resource\Field\ResourceFieldBase::emptyDiscoveryInfo', array($public_field_name));
       }
       $resouce_field->setCallback($callable);
+      // Remove the process callbacks, those don't make sense during discovery.
+      $resouce_field->setProcessCallbacks(array());
     }
     return $path ? $this->viewMultiple(array($path)) : $this->index();
   }

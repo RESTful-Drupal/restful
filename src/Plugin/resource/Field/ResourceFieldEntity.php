@@ -1195,12 +1195,19 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
       $section_info['description'] = empty($field_info['description']) ? NULL : $field_info['description'];
       $public_field_info->addSectionDefaults('info', $section_info);
       $type = $public_field_info instanceof PublicFieldInfoEntityInterface ? $public_field_info->getFormSchemaAllowedType() : NULL;
-      $allowed_values = $public_field_info instanceof PublicFieldInfoEntityInterface ? $public_field_info->getFormSchemaAllowedValues() : NULL;
       $public_field_info->addSectionDefaults('form_element', array(
         'default_value' => isset($field_instance['default_value']) ? $field_instance['default_value'] : NULL,
-        'allowed_values' => $allowed_values,
         'type' => $type,
       ));
+      // Loading allowed values can be a performance issue, load them only if
+      // they are not provided in the field definition.
+      $form_element_info = $public_field_info->getSection('form_element');
+      if (!isset($form_element_info['allowed_values'])) {
+        $allowed_values = $public_field_info instanceof PublicFieldInfoEntityInterface ? $public_field_info->getFormSchemaAllowedValues() : NULL;
+        $public_field_info->addSectionDefaults('form_element', array(
+          'allowed_values' => $allowed_values,
+        ));
+      }
     }
     else {
       // Extract the discovery information from the property info.
