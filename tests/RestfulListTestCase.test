@@ -497,7 +497,7 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     $result = $result['data'];
 
     // Sort the results before checking it.
-    usort($result, function ($a, $b){
+    usort($result, function ($a, $b) {
       return strcmp($a['label'], $b['label']);
     });
     $this->assertEqual($result[0]['id'], $nodes['abc'], 'Filter list using CONTAINS operator.');
@@ -835,6 +835,42 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     catch (\Exception $e) {
       $this->fail('Exception of wrong type was thrown for un-accessible node for specific IDs list.');
     }
+  }
+
+  /**
+   * Test node count and pager when there are unpublished nodes.
+   */
+  public function testCountWithUnpublished() {
+    foreach (range(1, 9) as $key) {
+      $settings = array(
+        'type' => 'article',
+        'title' => $key,
+        'status' => NODE_PUBLISHED,
+      );
+      $this->drupalCreateNode($settings);
+    }
+    foreach (range(1, 3) as $key) {
+      $settings = array(
+        'type' => 'article',
+        'title' => $key,
+        'status' => NODE_NOT_PUBLISHED,
+      );
+      $this->drupalCreateNode($settings);
+    }
+
+    $handler = restful()->getResourceManager()->getPlugin('articles:1.0');
+    $formatter = restful()->getFormatterManager()->getPlugin('json');
+    $formatter->setResource($handler);
+    // Set a range for pagination to check only .
+    $handler->getDataProvider()->setRange(9);
+
+    // Check pagination of first page.
+    $result = $handler->doGet('', array('page' => 1));
+    $output = drupal_json_decode($formatter->format($result));
+    $this->assertEqual(count($result), 9, 'Number of results displayed');
+    $this->assertEqual(count($result), $handler->getDataProvider()->count(), 'Count of results takes into account unpublished nodes');
+    $this->assertTrue(empty($output['next']), '"Next" link does not exist on the first page.');
+    $this->assertTrue(empty($output['previous']), '"Previous" link does not exist on the first page.');
   }
 
 }
