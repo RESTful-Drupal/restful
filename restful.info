@@ -13,6 +13,7 @@ registry_autoload[] = PSR-4
 files[] = tests/RestfulAuthenticationTestCase.test
 files[] = tests/RestfulCreateEntityTestCase.test
 files[] = tests/RestfulCreateNodeTestCase.test
+files[] = tests/RestfulCreatePrivateNodeTestCase.test
 files[] = tests/RestfulCreateTaxonomyTermTestCase.test
 files[] = tests/RestfulCsrfTokenTestCase.test
 files[] = tests/RestfulCurlBaseTestCase.test

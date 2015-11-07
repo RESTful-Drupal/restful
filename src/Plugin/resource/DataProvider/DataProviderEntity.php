@@ -874,6 +874,11 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
         continue;
       }
 
+      // Delegate modifications on the value of the field.
+      $field_value = $resource_field->preprocess($object[$public_field_name]);
+      $resource_field->set($field_value, $interpreter);
+      // We check the property access only after setting the values, as the
+      // access callback's response might change according to the field value.
       $entity_property_access = $this::checkPropertyAccess($resource_field, 'edit', $interpreter);
       if (!isset($object[$public_field_name])) {
         // No property to set in the request.
@@ -890,10 +895,6 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
         throw new BadRequestException(format_string('Property @name cannot be set.', array('@name' => $public_field_name)));
       }
 
-      // Delegate modifications on the value of the field.
-      $field_value = $resource_field->preprocess($object[$public_field_name]);
-
-      $resource_field->set($field_value, $interpreter);
       $processed_fields[] = $property_name;
       unset($original_object[$public_field_name]);
       $save = TRUE;
