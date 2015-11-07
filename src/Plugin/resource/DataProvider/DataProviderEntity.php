@@ -697,6 +697,33 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
   }
 
   /**
+   * Overrides DataProvider::isValidOperatorsForFilter().
+   */
+  protected static function isValidOperatorsForFilter(array $operators) {
+    $allowed_operators = array(
+      '=',
+      '>',
+      '<',
+      '>=',
+      '<=',
+      '<>',
+      '!=',
+      'BETWEEN',
+      'CONTAINS',
+      'IN',
+      'LIKE',
+      'NOT IN',
+      'STARTS_WITH',
+    );
+
+    foreach ($operators as $operator) {
+      if (!in_array($operator, $allowed_operators)) {
+        throw new BadRequestException(sprintf('Operator "%s" is not allowed for filtering on this resource. Allowed operators are: %s', $operator, implode(', ', $allowed_operators)));
+      }
+    }
+  }
+
+  /**
    * Overrides DataProvider::isValidConjunctionForFilter().
    */
   protected static function isValidConjunctionForFilter($conjunction) {
