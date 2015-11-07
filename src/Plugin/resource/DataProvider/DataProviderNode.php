@@ -8,6 +8,8 @@
 namespace Drupal\restful\Plugin\resource\DataProvider;
 
 
+use Drupal\restful\Exception\BadRequestException;
+
 class DataProviderNode extends DataProviderEntity implements DataProviderInterface {
 
   /**
@@ -19,6 +21,29 @@ class DataProviderNode extends DataProviderEntity implements DataProviderInterfa
     $query = parent::getQueryForList();
     $query->propertyCondition('status', NODE_PUBLISHED);
     return $query;
+  }
+
+  /**
+   * Overrides DataProviderEntity::count().
+   *
+   * Only count published nodes.
+   */
+  public function count() {
+    $query = $this->getEntityFieldQuery();
+
+    // If we are trying to filter on a computed field, just ignore it and log an
+    // exception.
+    try {
+      $this->queryForListFilter($query);
+    }
+    catch (BadRequestException $e) {
+      watchdog_exception('restful', $e);
+    }
+    $query->propertyCondition('status', NODE_PUBLISHED);
+
+    $this->addExtraInfoToQuery($query);
+
+    return intval($query->count()->execute());
   }
 
   /**
