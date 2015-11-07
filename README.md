@@ -230,7 +230,7 @@ derived from the Entity API and Field API.
 Here is a snippet from a typical JSON response using only the automatic
 documentation:
 
-```javascript
+```json
 {
   "myfield": {
     "info": {
@@ -244,7 +244,7 @@ documentation:
       "required": false
     },
     "form_element": {
-      "type": "texfield",
+      "type": "textfield",
       "default_value": "",
       "placeholder": "",
       "size": 255,

@@ -127,7 +127,7 @@ abstract class ResourceEntity extends Resource {
         ),
         // Information about the form element.
         'form_element' => array(
-          'type' => 'texfield',
+          'type' => 'textfield',
           'size' => 255,
         ),
       ),
