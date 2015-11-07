@@ -453,17 +453,17 @@ abstract class DataProvider implements DataProviderInterface {
       '<=',
       '<>',
       '!=',
-      'IN',
       'NOT IN',
       'BETWEEN',
+      'CONTAINS',
+      'IN',
+      'NOT IN',
+      'STARTS_WITH',
     );
 
     foreach ($operators as $operator) {
       if (!in_array($operator, $allowed_operators)) {
-        throw new BadRequestException(format_string('Operator "@operator" is not allowed for filtering on this resource. Allowed operators are: !allowed', array(
-          '@operator' => $operators,
-          '!allowed' => implode(', ', $allowed_operators),
-        )));
+        throw new BadRequestException(sprintf('Operator "%s" is not allowed for filtering on this resource. Allowed operators are: %s', $operator, implode(', ', $allowed_operators)));
       }
     }
   }
