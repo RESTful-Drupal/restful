@@ -61,7 +61,6 @@ class RefreshToken__1_0 extends TokenAuthenticationBase implements ResourceInter
    *   The new access token.
    */
   public function refreshToken($token) {
-    $account = $this->getAccount();
     // Check if there is a token that did not expire yet.
     /* @var \Drupal\restful\Plugin\resource\DataProvider\DataProviderEntityInterface $data_provider */
     $data_provider = $this->getDataProvider();
@@ -79,12 +78,13 @@ class RefreshToken__1_0 extends TokenAuthenticationBase implements ResourceInter
 
     // Remove the refresh token once used.
     $refresh_token = entity_load_single('restful_token_auth', key($results['restful_token_auth']));
+    $uid = $refresh_token->uid;
     $refresh_token->delete();
 
     // Create the new access token and return it.
     /* @var \Drupal\restful_token_auth\Entity\RestfulTokenAuthController $controller */
     $controller = entity_get_controller($this->getEntityType());
-    $token = $controller->generateAccessToken($account->uid);
+    $token = $controller->generateAccessToken($uid);
     return $this->view($token->id);
   }
 
