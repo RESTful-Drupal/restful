@@ -406,6 +406,17 @@ function _restful_build_http_api_error(RestfulException $exception, ResponseInte
     $headers->add(HttpHeader::create($header_name, $header_value));
   }
   drupal_page_is_cacheable(FALSE);
+
+  // Add a log entry with the error / warning.
+  if ($exception->getCode() < 500) {
+    // Even though it's an exception, it's in fact not a server error - it
+    // might be just access denied, or a bad request, so we just want to log
+    // it, but without marking it as an actual exception.
+    watchdog('restful', $exception->getMessage());
+  }
+  else {
+    watchdog_exception('restful', $exception);
+  }
   return $result;
 }
 
