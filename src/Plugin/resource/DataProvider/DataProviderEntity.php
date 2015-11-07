@@ -879,7 +879,8 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
         // Only set this to NULL if this property has not been set to a specific
         // value by another public field (since 2 public fields can reference
         // the same property).
-        if ($replace && !in_array($property_name, $processed_fields)) {
+        $entity_property_access = $this::checkPropertyAccess($resource_field, 'edit', $interpreter);
+        if ($replace && $entity_property_access && !in_array($property_name, $processed_fields)) {
           // We need to set the value to NULL.
           $resource_field->set(NULL, $interpreter);
         }
