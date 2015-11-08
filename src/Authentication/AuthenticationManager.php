@@ -131,6 +131,10 @@ class AuthenticationManager implements AuthenticationManagerInterface {
     // This is necessary because the page cache system only looks at session
     // cookies, but not at HTTP Basic Auth headers.
     drupal_page_is_cacheable(!$account->uid && variable_get('restful_page_cache', FALSE));
+
+    // Record the access time of this request.
+    $this->setAccessTime($account);
+
     return $account;
   }
 
@@ -153,6 +157,23 @@ class AuthenticationManager implements AuthenticationManagerInterface {
    */
   public function getPlugin($instance_id) {
     return $this->plugins->get($instance_id);
+  }
+
+  /**
+   * Set the user's last access time.
+   *
+   * @param object $account
+   *   A user account.
+   *
+   * @see _drupal_session_write()
+   */
+  protected function setAccessTime($account) {
+    // This logic is pulled directly from _drupal_session_write().
+    if ($account->uid && REQUEST_TIME - $account->access > variable_get('session_write_interval', 180)) {
+      db_update('users')->fields(array(
+        'access' => REQUEST_TIME,
+      ))->condition('uid', $account->uid)->execute();
+    }
   }
 
 }
