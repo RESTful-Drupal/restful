@@ -41,7 +41,7 @@ class RestfulEntityValidatorTestCase extends RestfulCurlBaseTestCase {
       ->getPlugin('test_articles:1.0');
     $handler->setAccount($user1);
 
-    $parsed_body = array('label' => 'no', 'body' => 'Text with Drupal');
+    $parsed_body = array('title' => 'no', 'body' => 'Text with Drupal');
 
     try {
       $request = Request::create('', $parsed_body, RequestInterface::METHOD_POST, NULL, FALSE, NULL, array(), array(), array(), $parsed_body);
@@ -60,7 +60,7 @@ class RestfulEntityValidatorTestCase extends RestfulCurlBaseTestCase {
       $this->assertEqual($field_errors, $expected_result, 'Correct error message passed in the JSON');
     }
 
-    $parsed_body['label'] = 'yes';
+    $parsed_body['title'] = 'yes';
     $request = Request::create('', $parsed_body, RequestInterface::METHOD_POST, NULL, FALSE, NULL, array(), array(), array(), $parsed_body);
     $handler->setRequest($request);
     $result = restful()
