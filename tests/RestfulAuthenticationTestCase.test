@@ -157,4 +157,69 @@ class RestfulAuthenticationTestCase extends RestfulCurlBaseTestCase {
     // If the process function does not throw an exception, the test passes.
     restful()->getFormatterManager()->format($handler->process(), 'json');
   }
+
+
+  /**
+   * Test recording of access time.
+   */
+  public function testAccessTime() {
+    global $user;
+
+    $user1 = $this->drupalCreateUser();
+    $user2 = $this->drupalCreateUser();
+
+    $handler = restful()->getResourceManager()->getPlugin('main:1.5');
+
+    // Case 1. Ensure that access time is recorded for cookie auth.
+    $user = $user1;
+
+    $user1_access_time_before = db_query('SELECT access FROM {users} WHERE uid = :d', array(':d' => $user1->uid))->fetchObject();
+
+    // Perform request authentication.
+    $handler->getAccount();
+
+    $user1_access_time = db_query('SELECT access FROM {users} WHERE uid = :d', array(':d' => $user1->uid))->fetchObject();
+    $this->assertEqual($user1_access_time->access, REQUEST_TIME, 'Cookie authenticated user access time is updated.');
+
+    $this->assertNotEqual($user1_access_time_before->access, $user1_access_time->access, 'Access time before and after request are equal.');
+
+    // Case 2. Ensure that access time is recorded for basic auth.
+    $user = $user2;
+
+    $_SERVER['PHP_AUTH_USER'] = $user2->name;
+    $_SERVER['PHP_AUTH_PW'] = $user2->pass_raw;
+    $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] = NULL;
+    $handler = restful()->getResourceManager()->getPlugin('articles:1.0');
+
+    // Perform request authentication.
+    $handler->getAccount();
+
+    $user2_access_time = db_query('SELECT access FROM {users} WHERE uid = :d', array(':d' => $user2->uid))->fetchObject();
+    $this->assertEqual($user2_access_time->access, REQUEST_TIME, 'Basic authenticated user access time is updated.');
+
+    // Case 3. Ensure that the timestamp gets updated.
+    $user = $user1;
+
+    // Get a timestamp that is in the past.
+    $the_past = REQUEST_TIME - variable_get('session_write_interval');
+
+    // To begin, we'll set the timestamp for user1 back a little bit.
+    db_update('users')
+      ->fields(array('access' => $the_past))
+      ->condition('uid', $user1->uid)
+      ->execute();
+
+    $user1_pre_access_time = db_query('SELECT access FROM {users} WHERE uid = :d', array(':d' => $user1->uid))->fetchObject();
+    $this->assertEqual($user1_pre_access_time->access, $the_past, 'Set user1 access time to a time in the past.');
+
+    // Perform an authenticated request.
+    $this->drupalGet('/api/v1.5/main', array(), array(
+        'Authorization' => 'Basic ' . base64_encode($user1->name . ':' . $user1->pass_raw))
+    );
+
+    $user1_post_access_time = db_query('SELECT access FROM {users} WHERE uid = :d', array(':d' => $user1->uid))->fetchObject();
+
+    $this->assertEqual($user1_post_access_time->access, REQUEST_TIME, 'Basic authenticated user access time is updated.');
+  }
+
 }
