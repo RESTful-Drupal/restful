@@ -1,0 +1,75 @@
+<?php
+
+/**
+ * @file
+ * Contains RestfulCreatePrivateNodeTestCase
+ */
+
+class RestfulCreatePrivateNodeTestCase extends DrupalWebTestCase {
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function getInfo() {
+    return array(
+      'name' => 'Node access integration',
+      'description' => 'Test the creation of a node entity type with private access.',
+      'group' => 'RESTful',
+    );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setUp() {
+    parent::setUp('restful_example', 'restful_node_access_test');
+    // Add entity reference fields.
+    restful_test_add_fields('node', 'article');
+
+    // Rebuild node access.
+    node_access_rebuild();
+  }
+
+  /**
+   * Test creating a node (POST method) with reference to existing private node.
+   *
+   * In this test we make sure that entity_metadata_no_hook_node_access()
+   * returns TRUE, thus allows access to set the entity reference property.
+   *
+   * @see restful_node_access_test_node_access_records()
+   */
+  public function testCreateNodeWithReference() {
+    $user1 = $this->drupalCreateUser(array('create article content'));
+    $user2 = $this->drupalCreateUser(array('create article content'));
+    $this->drupalLogin($user1);
+
+    $settings = array(
+      'type' => 'article',
+      'uid' => $user1->uid,
+    );
+
+    // Create a node that will be set to private.
+    $node1 = $this->drupalCreateNode($settings);
+
+    // Assert user has access to the node.
+    $this->assertTrue(node_access('view', $node1, $user1), 'Author has access to view node.');
+
+    // Assert another user doesn't have access to the node.
+    $this->assertFalse(node_access('view', $node1, $user2), 'Authenticated user, but not author does not have access to view the node.');
+
+    $handler = restful()->getResourceManager()->getPlugin('test_articles:1.2');
+    $formatter = restful()->getFormatterManager()->getPlugin('json');
+    $formatter->setResource($handler);
+    $handler->setAccount($user1);
+
+    $parsed_body = array(
+      'label' => $this->randomName(),
+      'entity_reference_single' => $node1->nid,
+    );
+    $result = $formatter->prepare($handler->doPost($parsed_body));
+
+    $this->assertTrue($result, 'Private node with reference to another private node was created.');
+
+  }
+
+}

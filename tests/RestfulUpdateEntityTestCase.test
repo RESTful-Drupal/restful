@@ -89,6 +89,31 @@ class RestfulUpdateEntityTestCase extends DrupalWebTestCase {
     catch (Exception $e) {
       $this->pass('User cannot update using PUT method an entity with invalid property name.');
     }
+
+
+    $new_label = $this->randomName();
+    $new_body = $this->randomName();
+
+    $request = array(
+      'label' => $new_label,
+      'body' => $new_body,
+    );
+    // Setting new value for 'body'.
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->doPut($id, $request), 'json'));
+    // Making sure the new body has been set.
+    $this->assertEqual(trim(strip_tags($result['data'][0]['body'])), $new_body);
+
+    // Removing the body value.
+    $request = array(
+      'label' => $new_label,
+      'body' => NULL,
+    );
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->doPut($id, $request), 'json'));
+    $this->assertEqual($result['data'][0]['body'], NULL);
   }
 
   /**
@@ -142,5 +167,22 @@ class RestfulUpdateEntityTestCase extends DrupalWebTestCase {
     catch (Exception $e) {
       $this->pass('User cannot update using PATCH method an entity with invalid property name.');
     }
+
+    $new_body = $this->randomName();
+    $request = array('body' => $new_body);
+    // Setting new value for 'body'.
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->doPatch($id, $request), 'json'));
+    // Making sure the new body has been set.
+    $this->assertEqual(trim(strip_tags($result['data'][0]['body'])), $new_body);
+
+    // Removing the body value.
+    $request = array('body' => NULL);
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->doPatch($id, $request), 'json'));
+    $this->assertEqual($result['data'][0]['body'], NULL);
   }
+
 }

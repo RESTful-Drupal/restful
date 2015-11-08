@@ -839,7 +839,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
    * @param array $object
    *   The keyed array of properties sent in the payload.
    * @param bool $replace
-   *   Determine if properties that are missing form the request array should
+   *   Determine if properties that are missing from the request array should
    *   be treated as NULL, or should be skipped. Defaults to FALSE, which will
    *   set the fields to NULL.
    *
@@ -875,25 +875,34 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
       }
 
       $entity_property_access = $this::checkPropertyAccess($resource_field, 'edit', $interpreter);
-      if (!isset($object[$public_field_name])) {
+      if (!array_key_exists($public_field_name, $object)) {
         // No property to set in the request.
         // Only set this to NULL if this property has not been set to a specific
         // value by another public field (since 2 public fields can reference
         // the same property).
         if ($replace && $entity_property_access && !in_array($property_name, $processed_fields)) {
           // We need to set the value to NULL.
-          $resource_field->set(NULL, $interpreter);
+          $field_value = NULL;
         }
-        continue;
+        else {
+          // Either we shouldn't set missing fields as NULL or access is denied
+          // for the current property, hence we skip.
+          continue;
+        }
       }
+      else {
+        // Property is set in the request.
+        // Delegate modifications on the value of the field.
+        $field_value = $resource_field->preprocess($object[$public_field_name]);
+      }
+      $resource_field->set($field_value, $interpreter);
+      // We check the property access only after setting the values, as the
+      // access callback's response might change according to the field value.
+      $entity_property_access = $this::checkPropertyAccess($resource_field, 'edit', $interpreter);
       if (!$entity_property_access) {
         throw new BadRequestException(format_string('Property @name cannot be set.', array('@name' => $public_field_name)));
       }
 
-      // Delegate modifications on the value of the field.
-      $field_value = $resource_field->preprocess($object[$public_field_name]);
-
-      $resource_field->set($field_value, $interpreter);
       $processed_fields[] = $property_name;
       unset($original_object[$public_field_name]);
       $save = TRUE;

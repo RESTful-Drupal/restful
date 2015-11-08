@@ -1,0 +1,41 @@
+<?php
+
+/**
+ * @file
+ * Helper module for testing the RESTful module with node access.
+ */
+
+/**
+ * Implements hook_node_grants().
+ */
+function restful_node_access_test_node_grants($account, $op) {
+  if ($op != 'view') {
+    return NULL;
+  }
+
+  if (!$account->uid) {
+    return NULL;
+  }
+
+  $grants = array();
+  $grants['restful_test'][] = $account->uid;
+
+  return $grants;
+}
+
+/**
+ * Implements hook_node_access_records().
+ */
+function restful_node_access_test_node_access_records($node) {
+  $grants = array();
+  $grants[] = array(
+    'realm' => 'restful_test',
+    'gid' => $node->uid,
+    'grant_view' => 1,
+    'grant_update' => 0,
+    'grant_delete' => 0,
+    'priority' => 0,
+  );
+
+  return $grants;
+}
