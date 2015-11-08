@@ -103,7 +103,7 @@ class RestfulUpdateEntityTestCase extends DrupalWebTestCase {
       ->getFormatterManager()
       ->format($handler->doPut($id, $request), 'json'));
     // Making sure the new body has been set.
-    $this->assertEqual(trim(strip_tags($result[0]['body'])), $new_body);
+    $this->assertEqual(trim(strip_tags($result['data'][0]['body'])), $new_body);
 
     // Removing the body value.
     $request = array(
@@ -113,7 +113,7 @@ class RestfulUpdateEntityTestCase extends DrupalWebTestCase {
     $result = drupal_json_decode(restful()
       ->getFormatterManager()
       ->format($handler->doPut($id, $request), 'json'));
-    $this->assertEqual($result[0]['body'], NULL);
+    $this->assertEqual($result['data'][0]['body'], NULL);
   }
 
   /**
@@ -175,14 +175,14 @@ class RestfulUpdateEntityTestCase extends DrupalWebTestCase {
       ->getFormatterManager()
       ->format($handler->doPatch($id, $request), 'json'));
     // Making sure the new body has been set.
-    $this->assertEqual(trim(strip_tags($result[0]['body'])), $new_body);
+    $this->assertEqual(trim(strip_tags($result['data'][0]['body'])), $new_body);
 
     // Removing the body value.
     $request = array('body' => NULL);
     $result = drupal_json_decode(restful()
       ->getFormatterManager()
       ->format($handler->doPatch($id, $request), 'json'));
-    $this->assertEqual($result[0]['body'], NULL);
+    $this->assertEqual($result['data'][0]['body'], NULL);
   }
 
 }
