@@ -1,51 +1,88 @@
+# @file
+# .travis.yml - Drupal for Travis CI Integration
+#
+# Template provided by https://github.com/LionsAd/drupal_ti.
+#
+# Based for simpletest upon:
+#   https://github.com/sonnym/travis-ci-drupal-module-example
+
 language: php
+
+sudo: false
 
 php:
   - 5.3
+  - 5.4
+  - 5.5
+  - 5.6
+  - 7
+  - hhvm
+
+matrix:
+  fast_finish: true
+  allow_failures:
+    - php: hhvm
+
+env:
+  global:
+    # add composer's global bin directory to the path
+    # see: https://github.com/drush-ops/drush#install---composer
+    - PATH="$PATH:$HOME/.composer/vendor/bin"
+
+    # Configuration variables.
+    - DRUPAL_TI_MODULE_NAME="restful"
+    - DRUPAL_TI_SIMPLETEST_GROUP="RESTful"
+
+    # Define runners and environment vars to include before and after the
+    # main runners / environment vars.
+    #- DRUPAL_TI_SCRIPT_DIR_BEFORE="./drupal_ti/before"
+    #- DRUPAL_TI_SCRIPT_DIR_AFTER="./drupal_ti/after"
+
+    # The environment to use, supported are: drupal-7, drupal-8
+    - DRUPAL_TI_ENVIRONMENT="drupal-7"
+
+    # Drupal specific variables.
+    - DRUPAL_TI_DB="drupal_travis_db"
+    - DRUPAL_TI_DB_URL="mysql://root:@127.0.0.1/drupal_travis_db"
+    # Note: Do not add a trailing slash here.
+    - DRUPAL_TI_WEBSERVER_URL="http://127.0.0.1"
+    - DRUPAL_TI_WEBSERVER_PORT="8080"
+
+    # Simpletest specific commandline arguments, the DRUPAL_TI_SIMPLETEST_GROUP is appended at the end.
+    - DRUPAL_TI_SIMPLETEST_ARGS="--verbose --color --concurrency 4 --url $DRUPAL_TI_WEBSERVER_URL:$DRUPAL_TI_WEBSERVER_PORT"
+
+    # Debug options
+    #- DRUPAL_TI_DEBUG="-x -v"
+    # Set to "all" to output all files, set to e.g. "xvfb selenium" or "selenium",
+    # etc. to only output those channels.
+    #- DRUPAL_TI_DEBUG_FILE_OUTPUT="selenium xvfb webserver"
+
+  matrix:
+    # [[[ SELECT ANY OR MORE OPTIONS ]]]
+    - DRUPAL_TI_RUNNERS="simpletest"
 
 mysql:
-  database: restful
+  database: drupal_travis_db
   username: root
   encoding: utf8
 
+before_install:
+  - composer self-update
+  - cd ./tests
+  - composer global require "lionsad/drupal_ti:1.*"
+  - drupal-ti before_install
+
+install:
+  - drupal-ti install
+
 before_script:
-  # navigate out of module directory to prevent blown stack by recursive module lookup
-  - cd ../..
-
-  # Grab Drush
-  - composer global require "drush/drush:7.*"
-  - phpenv rehash
-
-  # install php packages required for running a web server from drush on php 5.3
-  - sudo apt-get update > /dev/null
-  - sudo apt-get install -y --force-yes php5-cgi php5-mysql
-
-  # create new site, stubbing sendmail path with true to prevent delivery errors and manually resolving drush path
-  - mysql -e 'create database restful'
-  # Set sendmail so drush doesn't throw an error during site install.
-  - echo "sendmail_path='true'" >> `php --ini | grep "Loaded Configuration" | awk '{print $4}'`
-
-  # reference and enable restful in build site
-  - ln -s $(readlink -e $(cd -)) restful/drupal/sites/all/modules/restful
-  - cd restful/drupal
-  - drush --yes pm-enable restful restful_token_auth restful_test
-
-  # Download entity validator.
-  - drush dl entity_validator --dev --yes
-
-  # Patch Entity API.
-  - cd sites/all/modules/entity
-  - curl -O https://www.drupal.org/files/issues/2086225-entity-access-check-18.patch
-  - patch -p1 < 2086225-entity-access-check-18.patch
-  - cd -
-
-  # start a web server on port 8080, run in the background; wait for initialization
-  - drush runserver 127.0.0.1:8080 &
-  - until netstat -an 2>/dev/null | grep '8080.*LISTEN'; do true; done
+  - drupal-ti before_script
 
 script:
-  # Run the tests
-  - cd $TRAVIS_BUILD_DIR/../drupal
-  - php ./scripts/run-tests.sh --php $(which php) --concurrency 4 --verbose --color --url http://localhost:8080 RESTful 2>&1 | tee /tmp/simpletest-result.txt
-  - egrep -i "([1-9]+ fail)|(Fatal error)|([1-9]+ exception)" /tmp/simpletest-result.txt && exit 1
-  - exit 0
+  - drupal-ti script
+
+after_script:
+  - drupal-ti after_script
+
+notifications:
+  email: false
