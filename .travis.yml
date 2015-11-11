@@ -15,7 +15,6 @@ before_script:
   # Grab Drush
   - composer global require "drush/drush:7.*"
   - phpenv rehash
-  - phpenv rehash
 
   # install php packages required for running a web server from drush on php 5.3
   - sudo apt-get update > /dev/null
@@ -23,7 +22,8 @@ before_script:
 
   # create new site, stubbing sendmail path with true to prevent delivery errors and manually resolving drush path
   - mysql -e 'create database restful'
-  - php -d sendmail_path=`which true` `pear config-get php_dir`/drush/drush.php --yes core-quick-drupal --profile=testing --no-server --db-url=mysql://root:@127.0.0.1/restful --enable=simpletest restful
+  # Set sendmail so drush doesn't throw an error during site install.
+  - echo "sendmail_path='true'" >> `php --ini | grep "Loaded Configuration" | awk '{print $4}'`
 
   # reference and enable restful in build site
   - ln -s $(readlink -e $(cd -)) restful/drupal/sites/all/modules/restful
