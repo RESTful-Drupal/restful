@@ -12,9 +12,9 @@ before_script:
   # navigate out of module directory to prevent blown stack by recursive module lookup
   - cd ../..
 
-  # install drush
-  - pear channel-discover pear.drush.org
-  - pear install drush/drush-5.8.0
+  # Grab Drush
+  - composer global require "drush/drush:7.*"
+  - phpenv rehash
   - phpenv rehash
 
   # install php packages required for running a web server from drush on php 5.3
@@ -43,4 +43,9 @@ before_script:
   - drush runserver 127.0.0.1:8080 &
   - until netstat -an 2>/dev/null | grep '8080.*LISTEN'; do true; done
 
-script: drush test-run RESTful --uri=http://127.0.0.1:8080
+script:
+  # Run the tests
+  - cd $TRAVIS_BUILD_DIR/../drupal
+  - php ./scripts/run-tests.sh --php $(which php) --concurrency 4 --verbose --color --url http://localhost:8080 RESTful 2>&1 | tee /tmp/simpletest-result.txt
+  - egrep -i "([1-9]+ fail)|(Fatal error)|([1-9]+ exception)" /tmp/simpletest-result.txt && exit 1
+  - exit 0
