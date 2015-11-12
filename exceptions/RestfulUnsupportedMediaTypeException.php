@@ -5,7 +5,7 @@
  * Contains RestfulUnsupportedMediaTypeException
  */
 
-class RestfulUnsupportedMediaTypeException extends Exception {
+class RestfulUnsupportedMediaTypeException extends RestfulException {
 
   /**
    * Defines the HTTP error code.
@@ -15,16 +15,12 @@ class RestfulUnsupportedMediaTypeException extends Exception {
   protected $code = 415;
 
   /**
-   * Defines the description.
-   *
-   * @var string
+   * {@inheritdoc}
    */
   protected $description = 'Unsupported Media Type.';
 
   /**
-   * Defines the problem instance.
-   *
-   * @var string
+   * {@inheritdoc}
    */
   protected $instance = 'help/restful/problem-instances-unsupported-media-type';
 
