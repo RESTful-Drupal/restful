@@ -17,9 +17,7 @@ class UnauthorizedException extends RestfulException {
   protected $code = 401;
 
   /**
-   * Defines the problem instance.
-   *
-   * @var string
+   * {@inheritdoc}
    */
   protected $instance = 'help/restful/problem-instances-unauthorized';
 

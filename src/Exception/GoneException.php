@@ -17,16 +17,12 @@ class GoneException extends RestfulException {
   protected $code = 410;
 
   /**
-   * Defines the description.
-   *
-   * @var string
+   * {@inheritdoc}
    */
   protected $description = 'The resource at this end point is no longer available.';
 
   /**
-   * Defines the problem instance.
-   *
-   * @var string
+   * {@inheritdoc}
    */
   protected $instance = 'help/restful/problem-instances-gone';
 

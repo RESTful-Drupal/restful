@@ -18,9 +18,7 @@ class InternalServerErrorException extends RestfulException {
   protected $code = 500;
 
   /**
-   * Defines the problem instance.
-   *
-   * @var string
+   * {@inheritdoc}
    */
   protected $instance = 'help/restful/problem-instances-server-configuration';
 

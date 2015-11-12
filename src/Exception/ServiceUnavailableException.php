@@ -17,9 +17,7 @@ class ServiceUnavailableException extends RestfulException {
   protected $code = 503;
 
   /**
-   * Defines the problem instance.
-   *
-   * @var string
+   * {@inheritdoc}
    */
   protected $instance = 'help/restful/problem-instances-bad-request';
 

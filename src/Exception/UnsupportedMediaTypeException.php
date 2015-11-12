@@ -17,9 +17,7 @@ class UnsupportedMediaTypeException extends RestfulException {
   protected $code = 415;
 
   /**
-   * Defines the problem instance.
-   *
-   * @var string
+   * {@inheritdoc}
    */
   protected $instance = 'help/restful/problem-instances-unsupported-media-type';
 
