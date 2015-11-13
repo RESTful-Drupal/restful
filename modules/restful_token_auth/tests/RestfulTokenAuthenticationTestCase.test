@@ -48,19 +48,19 @@ class RestfulTokenAuthenticationTestCase extends DrupalWebTestCase {
     $id= $node1->nid;
 
     $resource_manager = restful()->getResourceManager();
-    $formatter = restful()->getFormatterManager()->getPlugin('json');
+    $formatter = restful()->getFormatterManager()->getPlugin('single_json');
     // Get a token for the user, using the handler.
     $handler = $resource_manager->getPlugin('access_token:1.0');
     $formatter->setResource($handler);
     $result = $formatter->prepare($handler->doGet());
-    $access_token = $result['data'][0]['access_token'];
-    $refresh_token = $result['data'][0]['refresh_token'];
+    $access_token = $result['access_token'];
+    $refresh_token = $result['refresh_token'];
     $this->assertNotNull($access_token);
     $this->assertNotNull($refresh_token);
 
     // Assert the token did not change.
     $result = $formatter->prepare($handler->doGet());
-    $this->assertEqual($access_token, $result['data'][0]['access_token'], 'Access token did not change.');
+    $this->assertEqual($access_token, $result['access_token'], 'Access token did not change.');
 
     // Get a "protected" resource without the access token.
     $handler = $resource_manager->getPlugin('articles:1.3');
@@ -122,7 +122,10 @@ class RestfulTokenAuthenticationTestCase extends DrupalWebTestCase {
     }
 
     // Get a "protected" resource with the access token.
-    $response = $formatter->prepare($handler->doGet($id, array('access_token' => $access_token)));
+    $response = restful()
+      ->getFormatterManager()
+      ->negotiateFormatter(NULL)
+      ->prepare($handler->doGet($id, array('access_token' => $access_token)));
     $handler->setAccount(NULL);
     $handler->getAccount();
     // Validate the returned content.
@@ -180,9 +183,9 @@ class RestfulTokenAuthenticationTestCase extends DrupalWebTestCase {
     $handler = $resource_manager->getPlugin('refresh_token:1.0');
     $formatter->setResource($handler);
     $result = $formatter->prepare($handler->doGet($refresh_token));
-    $this->assertNotNull($result['data'][0]['access_token'], 'A new access token granted for a valid refresh token.');
-    $this->assertNotNull($result['data'][0]['refresh_token'], 'A new refresh token granted for a valid refresh token.');
-    $this->assertNotEqual($refresh_token, $result['data'][0]['refresh_token']);
+    $this->assertNotNull($result['access_token'], 'A new access token granted for a valid refresh token.');
+    $this->assertNotNull($result['refresh_token'], 'A new refresh token granted for a valid refresh token.');
+    $this->assertNotEqual($refresh_token, $result['refresh_token']);
 
     // Test invalid refresh token.
     try {
