@@ -7,6 +7,7 @@
 
 use Drupal\restful\Exception\BadRequestException;
 use Drupal\restful\Exception\UnauthorizedException;
+use Drupal\restful\Http\Request;
 
 class RestfulTokenAuthenticationTestCase extends DrupalWebTestCase {
 
@@ -52,20 +53,24 @@ class RestfulTokenAuthenticationTestCase extends DrupalWebTestCase {
     $handler = $resource_manager->getPlugin('access_token:1.0');
     $formatter->setResource($handler);
     $result = $formatter->prepare($handler->doGet());
-    $access_token = $result['access_token'];
-    $refresh_token = $result['refresh_token'];
+    $access_token = $result['data'][0]['access_token'];
+    $refresh_token = $result['data'][0]['refresh_token'];
     $this->assertNotNull($access_token);
     $this->assertNotNull($refresh_token);
 
     // Assert the token did not change.
     $result = $formatter->prepare($handler->doGet());
-    $this->assertEqual($access_token, $result['access_token'], 'Access token did not change.');
+    $this->assertEqual($access_token, $result['data'][0]['access_token'], 'Access token did not change.');
 
     // Get a "protected" resource without the access token.
     $handler = $resource_manager->getPlugin('articles:1.3');
+    $handler->setRequest(Request::create('api/v1.3/articles'));
+    $handler->setPath('');
     $formatter->setResource($handler);
     try {
-      $handler->doGet($id);
+      // Reset the account to trigger the auth process.
+      $handler->setAccount(NULL);
+      $handler->getAccount();
       $this->fail('"Unauthorized" exception not thrown.');
     }
     catch (UnauthorizedException $e) {
@@ -73,8 +78,13 @@ class RestfulTokenAuthenticationTestCase extends DrupalWebTestCase {
     }
 
     // Get a "protected" resource with invalid access token.
+    $handler->setRequest(Request::create('api/v1.3/articles', array(
+      'access_token' => 'invalid',
+    )));
     try {
-      $handler->doGet($id, array('access_token' => 'invalid'));
+      // Reset the account to trigger the auth process.
+      $handler->setAccount(NULL);
+      $handler->getAccount();
       $this->fail('"Unauthorized" exception not thrown.');
     }
     catch (UnauthorizedException $e) {
@@ -82,8 +92,14 @@ class RestfulTokenAuthenticationTestCase extends DrupalWebTestCase {
     }
 
     // Get a "protected" resource with refresh token as access token.
+    $handler->setRequest(Request::create('api/v1.3/articles/' . $id, array(
+      'access_token' => 'invalid',
+    )));
+    $handler->setPath($id);
     try {
-      $handler->doGet($id, array('access_token' => $refresh_token));
+      // Reset the account to trigger the auth process.
+      $handler->setAccount(NULL);
+      $handler->getAccount();
       $this->fail('"Unauthorized" exception not thrown.');
     }
     catch (UnauthorizedException $e) {
@@ -91,8 +107,14 @@ class RestfulTokenAuthenticationTestCase extends DrupalWebTestCase {
     }
 
     // Get a "protected" resource with refresh token.
+    $handler->setRequest(Request::create('api/v1.3/articles/' . $id, array(
+      'refresh_token' => $refresh_token,
+    )));
+    $handler->setPath($id);
     try {
-      $handler->doGet($id, array('refresh_token' => $refresh_token));
+      // Reset the account to trigger the auth process.
+      $handler->setAccount(NULL);
+      $handler->getAccount();
       $this->fail('"Unauthorized" exception not thrown.');
     }
     catch (UnauthorizedException $e) {
@@ -101,7 +123,10 @@ class RestfulTokenAuthenticationTestCase extends DrupalWebTestCase {
 
     // Get a "protected" resource with the access token.
     $response = $formatter->prepare($handler->doGet($id, array('access_token' => $access_token)));
-    $result = $response[0];
+    $handler->setAccount(NULL);
+    $handler->getAccount();
+    // Validate the returned content.
+    $result = $response['data'][0];
     $this->assertEqual($result['label'], $title1, 'Article resource can be accessed with valid access token.');
 
     // Set the expiration token to the past.
@@ -126,8 +151,14 @@ class RestfulTokenAuthenticationTestCase extends DrupalWebTestCase {
     $handler = $resource_manager->getPlugin('articles:1.3');
     $formatter->setResource($handler);
 
+    $handler->setRequest(Request::create('api/v1.3/articles/' . $id, array(
+      'access_token' => $access_token,
+    )));
+    $handler->setPath($id);
     try {
-      $handler->doGet($id, array('access_token' => $access_token));
+      // Reset the account to trigger the auth process.
+      $handler->setAccount(NULL);
+      $handler->getAccount();
       $this->fail('"Unauthorized" exception not thrown for expired token.');
     }
     catch (UnauthorizedException $e) {
@@ -149,9 +180,9 @@ class RestfulTokenAuthenticationTestCase extends DrupalWebTestCase {
     $handler = $resource_manager->getPlugin('refresh_token:1.0');
     $formatter->setResource($handler);
     $result = $formatter->prepare($handler->doGet($refresh_token));
-    $this->assertNotNull($result['access_token'], 'A new access token granted for a valid refresh token.');
-    $this->assertNotNull($result['refresh_token'], 'A new refresh token granted for a valid refresh token.');
-    $this->assertNotEqual($refresh_token, $result['refresh_token']);
+    $this->assertNotNull($result['data'][0]['access_token'], 'A new access token granted for a valid refresh token.');
+    $this->assertNotNull($result['data'][0]['refresh_token'], 'A new refresh token granted for a valid refresh token.');
+    $this->assertNotEqual($refresh_token, $result['data'][0]['refresh_token']);
 
     // Test invalid refresh token.
     try {
