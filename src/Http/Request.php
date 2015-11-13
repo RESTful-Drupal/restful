@@ -397,7 +397,7 @@ class Request implements RequestInterface {
     if ($strip && strpos($this->path, variable_get('restful_hook_menu_base_path', 'api')) !== FALSE) {
       return substr($this->path, strlen(variable_get('restful_hook_menu_base_path', 'api')) + 1);
     }
-    return ltrim($this->path, '/');
+    return $this->path;
   }
 
   /**
