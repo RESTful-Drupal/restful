@@ -7,3 +7,5 @@ configure = admin/config/services/restful/token-auth
 
 registry_autoload[] = PSR-0
 registry_autoload[] = PSR-4
+
+files[] = tests/RestfulTokenAuthenticationTestCase.test

@@ -29,29 +29,19 @@ class TokenAuthentication extends Authentication {
    * {@inheritdoc}
    */
   public function applies(RequestInterface $request) {
-    $plugin_definition = $this->getPluginDefinition();
-    $options = $plugin_definition['options'];
-    $key_name = !empty($options['paramName']) ? $options['paramName'] : 'access_token';
-
-    // Access token may be on the request, or in the headers.
-    $token = $request->getApplicationData($key_name) ? $request->getApplicationData($key_name) : $request->getHeaders()->get($key_name)->getValueString();
-    return (bool) $token;
+    return (bool) $this->extractToken($request);
   }
 
   /**
    * {@inheritdoc}
    */
   public function authenticate(RequestInterface $request) {
-    $plugin_definition = $this->getPluginDefinition();
-    $options = $plugin_definition['options'];
-    $key_name = !empty($options['paramName']) ? $options['paramName'] : 'access_token';
     // Access token may be on the request, or in the headers.
-    if (!$token = $request->getApplicationData($key_name) ? $request->getApplicationData($key_name) : $request->getHeaders()->get($key_name)->getValueString()) {
+    if (!$token = $this->extractToken($request)) {
       return NULL;
     }
 
-    // Check if there is a token that did not expire yet.
-
+    // Check if there is a token that has not expired yet.
     $query = new \EntityFieldQuery();
     $result = $query
       ->entityCondition('entity_type', 'restful_token_auth')
@@ -81,6 +71,25 @@ class TokenAuthentication extends Authentication {
     }
 
     return user_load($auth_token->uid);
+  }
+
+  /**
+   * Extract the token from the request.
+   *
+   * @param RequestInterface $request
+   *   The request.
+   *
+   * @return string
+   *   The extracted token.
+   */
+  protected function extractToken(RequestInterface $request) {
+    $plugin_definition = $this->getPluginDefinition();
+    $options = $plugin_definition['options'];
+    $key_name = !empty($options['paramName']) ? $options['paramName'] : 'access_token';
+
+    // Access token may be on the request, or in the headers.
+    $input = $request->getParsedInput();
+    return empty($input[$key_name]) ? $request->getHeaders()->get($key_name)->getValueString() : $input[$key_name];
   }
 
 }
