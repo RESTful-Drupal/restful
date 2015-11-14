@@ -173,6 +173,18 @@ abstract class Formatter extends PluginBase implements FormatterInterface {
     $fragments = $this->cacheFragments($data);
     foreach ($parent_hashes as $parent_hash) {
       foreach ($fragments as $tag_type => $tag_value) {
+        // Check if the fragment already exists.
+        $query = new \EntityFieldQuery();
+        $duplicate = (bool) $query
+          ->entityCondition('entity_type', 'cache_fragment')
+          ->propertyCondition('value', $tag_value)
+          ->propertyCondition('type', $tag_type)
+          ->propertyCondition('hash', $parent_hash)
+          ->count()
+          ->execute();
+        if ($duplicate) {
+          continue;
+        }
         $cache_fragment = new CacheFragment(array(
           'value' => $tag_value,
           'type' => $tag_type,
@@ -182,7 +194,6 @@ abstract class Formatter extends PluginBase implements FormatterInterface {
           $cache_fragment->save();
         }
         catch (\Exception $e) {
-          // Log the exception. It's probably a duplicate fragment.
           watchdog_exception('restful', $e);
         }
       }
