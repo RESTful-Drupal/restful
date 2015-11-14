@@ -69,7 +69,7 @@ class RenderCache implements RenderCacheInterface {
    * {@inheritdoc}
    */
   public function get() {
-    return $this->cacheObject->get($this->hash);
+    return $this->cacheObject->get($this->generateCacheId());
   }
 
   /**
@@ -94,7 +94,7 @@ class RenderCache implements RenderCacheInterface {
     $query = new \EntityFieldQuery();
     $results = $query
       ->entityCondition('entity_type', 'cache_fragment')
-      ->propertyCondition('hash', $this->hash)
+      ->propertyCondition('hash', $this->generateCacheId())
       ->execute();
     if (empty($results['cache_fragment'])) {
       return;
