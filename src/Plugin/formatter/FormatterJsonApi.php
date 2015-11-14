@@ -124,6 +124,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
       // If the entity is not going to be cached, then avoid generating the
       // field data altogether.
       $limit_fields = $data->getLimitFields();
+      $output['#fields'] = empty($output['#fields']) ? array() : $output['#fields'];
       if (
         !$this->isCacheEnabled($data) &&
         $limit_fields &&
