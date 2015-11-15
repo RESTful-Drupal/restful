@@ -318,7 +318,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
    * {@inheritdoc}
    */
   public function remove($identifier) {
-    $this->isValidEntity('update', $identifier);
+    $this->isValidEntity('delete', $identifier);
 
     /* @var \EntityDrupalWrapper $wrapper */
     $wrapper = entity_metadata_wrapper($this->entityType, $identifier);
