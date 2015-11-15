@@ -15,16 +15,12 @@ class RestfulServerConfigurationException extends \RestfulException {
   protected $code = 500;
 
   /**
-   * Defines the description.
-   *
-   * @var string
+   * {@inheritdoc}
    */
   protected $description = 'Server configuration error.';
 
   /**
-   * Defines the problem instance.
-   *
-   * @var string
+   * {@inheritdoc}
    */
   protected $instance = 'help/restful/problem-instances-server-configuration';
 
