@@ -29,6 +29,13 @@ class RestfulException extends Exception {
   protected $headers = array();
 
   /**
+   * Defines the description.
+   *
+   * @var string
+   */
+  protected $description;
+
+  /**
    * Gets the description of the exception.
    *
    * @return string
