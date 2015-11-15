@@ -202,6 +202,10 @@ curl -u "username:password" https://example.com/api/login
 
 # Call a "protected" with token resource (Articles resource version 1.3 in "Restful example")
 curl https://example.com/api/v1.3/articles/1?access_token=YOUR_TOKEN
+
+# Or use access-token instead of access_token for ensuring header is not going to be
+# dropped out from $_SERVER so it remains compatible with other webservers different than apache.
+curl -H "access-token: YOUR_TOKEN" https://example.com/api/v1.3/articles/1
 ```
 
 ## Change request formatter
