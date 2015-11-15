@@ -594,7 +594,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    * {@inheritdoc}
    */
   public function deleteEntity($entity_id) {
-    $this->isValidEntity('update', $entity_id);
+    $this->isValidEntity('delete', $entity_id);
 
     $wrapper = entity_metadata_wrapper($this->entityType, $entity_id);
     $wrapper->delete();
