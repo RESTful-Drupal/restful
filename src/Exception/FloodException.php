@@ -17,9 +17,7 @@ class FloodException extends RestfulException {
   protected $code = 429;
 
   /**
-   * Defines the problem instance.
-   *
-   * @var string
+   * {@inheritdoc}
    */
   protected $instance = 'help/restful/problem-instances-flood';
 

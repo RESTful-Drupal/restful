@@ -17,9 +17,7 @@ class NotFoundException extends RestfulException {
   protected $code = 404;
 
   /**
-   * Defines the problem instance.
-   *
-   * @var string
+   * {@inheritdoc}
    */
   protected $instance = 'help/restful/problem-instances-not-found';
 
