@@ -178,20 +178,8 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
    * {@inheritdoc}
    */
   public function count() {
-    $query = $this->getEntityFieldQuery();
-
-    // If we are trying to filter on a computed field, just ignore it and log an
-    // exception.
-    try {
-      $this->queryForListFilter($query);
-    }
-    catch (BadRequestException $e) {
-      watchdog_exception('restful', $e);
-    }
-
-    $this->addExtraInfoToQuery($query);
-
-    return intval($query->count()->execute());
+    $query = $this->getQueryCount();
+    return intval($query->execute());
   }
 
   /**
@@ -512,7 +500,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
   /**
    * Prepare a query for RestfulEntityBase::getList().
    *
-   * @return \EntityFieldQuery
+   * @return \Drupal\restful\Util\EntityFieldQuery
    *   The EntityFieldQuery object.
    */
   protected function getQueryForList() {
@@ -537,6 +525,29 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     $this->addExtraInfoToQuery($query);
 
     return $query;
+  }
+
+  /**
+   * Prepare a query for RestfulEntityBase::count().
+   *
+   * @return \EntityFieldQuery
+   *   The EntityFieldQuery object.
+   */
+  protected function getQueryCount() {
+    $query = $this->getEntityFieldQuery();
+
+    // If we are trying to filter on a computed field, just ignore it and log an
+    // exception.
+    try {
+      $this->queryForListFilter($query);
+    }
+    catch (BadRequestException $e) {
+      watchdog_exception('restful', $e);
+    }
+
+    $this->addExtraInfoToQuery($query);
+
+    return $query->count();
   }
 
   /**
