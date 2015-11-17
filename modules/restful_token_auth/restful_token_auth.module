@@ -131,3 +131,31 @@ function restful_token_auth_cron() {
   $ids = array_keys($result['restful_token_auth']);
   entity_delete_multiple('restful_token_auth', $ids);
 }
+
+/**
+ * Extracting the token from a request by a key name, either dashed or not.
+ *
+ * @param $param_name
+ *  The param name to check.
+ * @param $request
+ *  The current request.
+ *
+ * @return string
+ *  The token from the request.
+ */
+function restful_extract_token_from_request($param_name, $request) {
+  $key_name = !empty($param_name) ? $param_name : 'access_token';
+  $dashed_key_name = str_replace('_', '-', $key_name);
+
+  if (!empty($request['__application'][$key_name])) {
+    return $request['__application'][$key_name];
+  }
+  elseif (!empty($request[$key_name])) {
+    return $request[$key_name];
+  }
+  elseif (!empty($request['__application'][$dashed_key_name])) {
+    return $request['__application'][$dashed_key_name];
+  }
+
+  return $request[$dashed_key_name];
+}

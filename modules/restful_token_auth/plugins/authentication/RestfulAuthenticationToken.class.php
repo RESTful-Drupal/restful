@@ -24,7 +24,7 @@ class RestfulAuthenticationToken extends \RestfulAuthenticationBase {
    */
   public function authenticate(array $request = array(), $method = \RestfulInterface::GET) {
     $options = $this->getPluginKey('options');
-    $token = restful_extract_token_from_request($options, $request);
+    $token = restful_extract_token_from_request($options['param_name'], $request);
 
     // Check if there is a token that did not expire yet.
 
