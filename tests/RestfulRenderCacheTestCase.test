@@ -13,6 +13,9 @@ use Drupal\restful\RenderCache\Entity\CacheFragmentController;
 
 class RestfulRenderCacheTestCase extends \RestfulCurlBaseTestCase {
 
+  /**
+   * {@inheritdoc}
+   */
   public static function getInfo() {
     return array(
       'name' => 'Render Cache',
@@ -21,6 +24,9 @@ class RestfulRenderCacheTestCase extends \RestfulCurlBaseTestCase {
     );
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function setUp() {
     parent::setUp('restful_test');
   }
@@ -111,6 +117,9 @@ class RestfulRenderCacheTestCase extends \RestfulCurlBaseTestCase {
     $account->name .= ' updated';
     user_save($account);
     $this->assertFalse($cache_object->get(), 'Cache object has been cleared after updating a user.');
+    // The cache fragment garbage collection happens on shutdown. For testing
+    // purposes we'll call the function directly here.
+    restful_entity_clear_render_cache();
     // Make sure that the cache fragment entities have been deleted.
     $query = new \EntityFieldQuery();
     /* @var CacheFragmentController $controller */

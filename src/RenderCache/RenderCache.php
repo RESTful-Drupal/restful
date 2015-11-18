@@ -69,7 +69,21 @@ class RenderCache implements RenderCacheInterface {
    * {@inheritdoc}
    */
   public function get() {
-    return $this->cacheObject->get($this->generateCacheId());
+    $cid = $this->generateCacheId();
+    $query = new \EntityFieldQuery();
+    $count = $query
+      ->entityCondition('entity_type', 'cache_fragment')
+      ->propertyCondition('hash', $cid)
+      ->count()
+      ->execute();
+
+    if ($count) {
+      return $this->cacheObject->get($cid);
+    }
+    // If there are no cache fragments for the given hash then clear the cache
+    // and return NULL.
+    $this->cacheObject->clear($cid);
+    return NULL;
   }
 
   /**
