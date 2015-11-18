@@ -109,7 +109,8 @@ abstract class DataProvider implements DataProviderInterface {
     }
 
     // Make sure that we have the same amount of operators than values.
-    if (!in_array(strtoupper($filter['operator'][0]), array(
+    $first_operator = strtoupper($filter['operator'][0]);
+    if (!in_array($first_operator, array(
         'IN',
         'NOT IN',
         'BETWEEN',
@@ -117,11 +118,16 @@ abstract class DataProvider implements DataProviderInterface {
     ) {
       throw new BadRequestException('The number of operators and values has to be the same.');
     }
+    // Make sure that the BETWEEN operator gets only 2 values.
+    if ($first_operator == 'BETWEEN' && count($filter['value']) != 2) {
+      throw new BadRequestException('The BETWEEN operator takes exactly 2 values.');
+    }
 
     $filter += array('conjunction' => 'AND');
 
     // Clean the operator in case it came from the URL.
-    // e.g. filter[minor_version][operator]=">="
+    // e.g. filter[minor_version][operator][0]=">="
+    // str_replace will process all the elements in the array.
     $filter['operator'] = str_replace(array('"', "'"), '', $filter['operator']);
 
     static::isValidOperatorsForFilter($filter['operator']);
