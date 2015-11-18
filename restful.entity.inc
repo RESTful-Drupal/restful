@@ -77,7 +77,9 @@ function _restful_entity_cache_hashes($entity, $type) {
  */
 function restful_entity_update($entity, $type) {
   $hashes = &drupal_static('restful_entity_clear_hashes', array());
-  $hashes += _restful_entity_cache_hashes($entity, $type);
+  $new_hashes = _restful_entity_cache_hashes($entity, $type);
+  array_walk($new_hashes, '_restful_entity_clear_all_resources');
+  $hashes += $new_hashes;
   restful_register_shutdown_function_once('restful_entity_clear_render_cache');
 }
 
@@ -86,7 +88,9 @@ function restful_entity_update($entity, $type) {
  */
 function restful_entity_delete($entity, $type) {
   $hashes = &drupal_static('restful_entity_clear_hashes', array());
-  $hashes += _restful_entity_cache_hashes($entity, $type);
+  $new_hashes = _restful_entity_cache_hashes($entity, $type);
+  array_walk($new_hashes, '_restful_entity_clear_all_resources');
+  $hashes += $new_hashes;
   restful_register_shutdown_function_once('restful_entity_clear_render_cache');
 }
 
@@ -101,7 +105,9 @@ function restful_user_update(&$edit, $account, $category) {
     ->propertyCondition('type', 'user_id')
     ->propertyCondition('value', $account->uid);
   $hashes = &drupal_static('restful_entity_clear_hashes', array());
-  $hashes += CacheFragmentController::lookUpHashes($query);
+  $new_hashes = CacheFragmentController::lookUpHashes($query);
+  array_walk($new_hashes, '_restful_entity_clear_all_resources');
+  $hashes += $new_hashes;
   restful_register_shutdown_function_once('restful_entity_clear_render_cache');
 }
 
@@ -116,7 +122,9 @@ function restful_user_delete($account) {
     ->propertyCondition('type', 'user_id')
     ->propertyCondition('value', $account->uid);
   $hashes = &drupal_static('restful_entity_clear_hashes', array());
-  $hashes += CacheFragmentController::lookUpHashes($query);
+  $new_hashes = CacheFragmentController::lookUpHashes($query);
+  array_walk($new_hashes, '_restful_entity_clear_all_resources');
+  $hashes += $new_hashes;
   restful_register_shutdown_function_once('restful_entity_clear_render_cache');
 }
 
@@ -134,6 +142,26 @@ function restful_register_shutdown_function_once($callback) {
   if (!$added) {
     drupal_register_shutdown_function($callback);
   }
+}
+
+/**
+ * Clear the cache back ends for the given hash.
+ *
+ * @param string $cid
+ *   The cache ID to clear.
+ */
+function _restful_entity_clear_all_resources($cid) {
+  if (!$instance_id = CacheFragmentController::resourceIdFromHash($cid)) {
+    return;
+  }
+  $handler = restful()
+    ->getResourceManager()
+    ->getPlugin($instance_id);
+  if (!$handler instanceof CacheDecoratedResourceInterface) {
+    return;
+  }
+  // Clear the cache bin.
+  $handler->getCacheController()->clear($cid);
 }
 
 /**
