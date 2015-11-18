@@ -9,7 +9,6 @@ use Drupal\restful\Plugin\resource\Decorators\CacheDecoratedResource;
 use Drupal\restful\Plugin\resource\Decorators\CacheDecoratedResourceInterface;
 use Drupal\restful\RenderCache\Entity\CacheFragmentController;
 use Drupal\restful\RenderCache\RenderCache;
-use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Doctrine\Common\Collections\ArrayCollection;
 
 /**
@@ -77,48 +76,18 @@ function _restful_entity_cache_hashes($entity, $type) {
  * Implements hook_entity_update().
  */
 function restful_entity_update($entity, $type) {
-  $resource_manager = restful()->getResourceManager();
-  foreach (_restful_entity_cache_hashes($entity, $type) as $hash) {
-    if (!$instance_id = CacheFragmentController::resourceIdFromHash($hash)) {
-      continue;
-    }
-    $handler = $resource_manager->getPlugin($instance_id);
-    if (!$handler instanceof CacheDecoratedResourceInterface) {
-      continue;
-    }
-    if (!$handler->hasSimpleInvalidation()) {
-      continue;
-    }
-    // You can get away without the fragments for a clear.
-    $cache_object = new RenderCache(new ArrayCollection(), $hash, $handler->getCacheController());
-    // Do a clear with the RenderCache object to also remove the cache fragment
-    // entities.
-    $cache_object->clear();
-  }
+  $hashes = &drupal_static('restful_entity_clear_hashes', array());
+  $hashes += _restful_entity_cache_hashes($entity, $type);
+  restful_register_shutdown_function_once('restful_entity_clear_render_cache');
 }
 
 /**
  * Implements hook_entity_delete().
  */
 function restful_entity_delete($entity, $type) {
-  $resource_manager = restful()->getResourceManager();
-  foreach (_restful_entity_cache_hashes($entity, $type) as $hash) {
-    if (!$instance_id = CacheFragmentController::resourceIdFromHash($hash)) {
-      continue;
-    }
-    $handler = $resource_manager->getPlugin($instance_id);
-    if (!$handler instanceof CacheDecoratedResourceInterface) {
-      continue;
-    }
-    if (!$handler->hasSimpleInvalidation()) {
-      continue;
-    }
-    // You can get away without the fragments for a clear.
-    $cache_object = new RenderCache(new ArrayCollection(), $hash, $handler->getCacheController());
-    // Do a clear with the RenderCache object to also remove the cache fragment
-    // entities.
-    $cache_object->clear();
-  }
+  $hashes = &drupal_static('restful_entity_clear_hashes', array());
+  $hashes += _restful_entity_cache_hashes($entity, $type);
+  restful_register_shutdown_function_once('restful_entity_clear_render_cache');
 }
 
 /**
@@ -131,29 +100,9 @@ function restful_user_update(&$edit, $account, $category) {
     ->entityCondition('entity_type', 'cache_fragment')
     ->propertyCondition('type', 'user_id')
     ->propertyCondition('value', $account->uid);
-  $resource_manager = restful()->getResourceManager();
-  foreach (CacheFragmentController::lookUpHashes($query) as $hash) {
-    if (!$plugin_id = CacheFragmentController::resourceIdFromHash($hash)) {
-      continue;
-    }
-    try {
-      $handler = $resource_manager->getPlugin($plugin_id);
-    }
-    catch (PluginNotFoundException $e) {
-      continue;
-    }
-    if (!$handler instanceof CacheDecoratedResourceInterface) {
-      return;
-    }
-    if (!$handler->hasSimpleInvalidation()) {
-      return;
-    }
-    // You can get away without the fragments for a clear.
-    $cache_object = new RenderCache(new ArrayCollection(), $hash, $handler->getCacheController());
-    // Do a clear with the RenderCache object to also remove the cache fragment
-    // entities.
-    $cache_object->clear();
-  }
+  $hashes = &drupal_static('restful_entity_clear_hashes', array());
+  $hashes += CacheFragmentController::lookUpHashes($query);
+  restful_register_shutdown_function_once('restful_entity_clear_render_cache');
 }
 
 /**
@@ -166,19 +115,51 @@ function restful_user_delete($account) {
     ->entityCondition('entity_type', 'cache_fragment')
     ->propertyCondition('type', 'user_id')
     ->propertyCondition('value', $account->uid);
-  $resource_manager = restful()->getResourceManager();
-  foreach (CacheFragmentController::lookUpHashes($query) as $hash) {
-    $handler = $resource_manager->getPlugin(CacheFragmentController::resourceIdFromHash($hash));
-    if (!$handler instanceof CacheDecoratedResourceInterface) {
-      return;
+  $hashes = &drupal_static('restful_entity_clear_hashes', array());
+  $hashes += CacheFragmentController::lookUpHashes($query);
+  restful_register_shutdown_function_once('restful_entity_clear_render_cache');
+}
+
+/**
+ * Helper function to schedule a shutdown once.
+ *
+ * @param callable $callback
+ *   The callback.
+ */
+function restful_register_shutdown_function_once($callback) {
+  $existing_callbacks = drupal_register_shutdown_function();
+  $added = (bool) array_filter($existing_callbacks, function ($item) use ($callback) {
+    return $item['callback'] == $callback;
+  });
+  if (!$added) {
+    drupal_register_shutdown_function($callback);
+  }
+}
+
+/**
+ * Shutdown function that deletes the scheduled fragments and caches on shutdown.
+ */
+function restful_entity_clear_render_cache() {
+  if ($hashes = drupal_static('restful_entity_clear_hashes', array())) {
+    $hashes = array_unique($hashes);
+    drupal_static_reset('restful_entity_clear_hashes');
+    $resource_manager = restful()->getResourceManager();
+    foreach ($hashes as $hash) {
+      if (!$instance_id = CacheFragmentController::resourceIdFromHash($hash)) {
+        continue;
+      }
+      $handler = $resource_manager->getPlugin($instance_id);
+      if (!$handler instanceof CacheDecoratedResourceInterface) {
+        continue;
+      }
+      if (!$handler->hasSimpleInvalidation()) {
+        continue;
+      }
+      // You can get away without the fragments for a clear.
+      $cache_object = new RenderCache(new ArrayCollection(), $hash, $handler->getCacheController());
+      // Do a clear with the RenderCache object to also remove the cache fragment
+      // entities.
+      $cache_object->clear();
     }
-    if (!$handler->hasSimpleInvalidation()) {
-      return;
-    }
-    // You can get away without the fragments for a clear.
-    $cache_object = new RenderCache(NULL, $hash, $handler->getCacheController());
-    // Do a clear with the RenderCache object to also remove the cache fragment
-    // entities.
-    $cache_object->clear();
   }
 }
