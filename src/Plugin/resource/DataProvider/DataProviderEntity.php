@@ -85,15 +85,18 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
       throw new InternalServerErrorException('The entity type was not provided.');
     }
     $this->entityType = $options['entityType'];
-    if (!empty($options['bundles'])) {
+
+    $options += array('bundles' => array());
+    if ($options['bundles']) {
       $this->bundles = $options['bundles'];
     }
-    else {
+    elseif ($options['bundles'] !== FALSE) {
       // If no bundles are passed, then assume all the bundles of the entity
       // type.
       $entity_info = entity_get_info($this->entityType);
       $this->bundles = !empty($entity_info['bundles']) ? array_keys($entity_info['bundles']) : $entity_info['type'];
     }
+
     if (isset($options['EFQClass'])) {
       $this->EFQClass = $options['EFQClass'];
     }
