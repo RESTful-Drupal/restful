@@ -111,7 +111,7 @@ class RestfulCommentTestCase extends DrupalWebTestCase {
   }
 
   /**
-   * Test creating a comment (PUT method).
+   * Test updating a comment (PUT method).
    */
   public function testUpdateCommentAsPut() {
     $resource_manager = restful()->getResourceManager();
@@ -154,7 +154,7 @@ class RestfulCommentTestCase extends DrupalWebTestCase {
   }
 
   /**
-   * Test creating a comment (PATCH method).
+   * Test updating a comment (PATCH method).
    */
   public function testUpdateCommentAsPatch() {
     $resource_manager = restful()->getResourceManager();
@@ -197,7 +197,7 @@ class RestfulCommentTestCase extends DrupalWebTestCase {
   }
 
   /**
-   * Test creating a comment (DELETE method).
+   * Test deleting a comment (DELETE method).
    */
   public function testDeleteComment() {
     $resource_manager = restful()->getResourceManager();
