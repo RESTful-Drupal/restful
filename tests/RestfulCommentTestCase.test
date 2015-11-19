@@ -71,7 +71,7 @@ class RestfulCommentTestCase extends DrupalWebTestCase {
     $label = $this->randomName();
     $request = array(
       'label' => $label,
-      'node' => $this->node->nid,
+      'nid' => $this->node->nid,
     );
     $result = drupal_json_decode(restful()
       ->getFormatterManager()
@@ -80,6 +80,7 @@ class RestfulCommentTestCase extends DrupalWebTestCase {
 
     $comment = comment_load($result[0]['id']);
     $this->assertEqual($comment->uid, $user->uid, 'Correct user was set to be the author of the comment.');
+    $this->assertEqual($comment->nid, $this->node->nid, 'Correct nid set.');
     $this->assertEqual($comment->subject, $label, 'Correct subject set.');
   }
 
@@ -106,7 +107,7 @@ class RestfulCommentTestCase extends DrupalWebTestCase {
     $result = $result['data'];
 
     $comment = $result[0];
-    $this->assertEqual($comment['node']['id'], $this->node->nid, 'Correct nid get.');
+    $this->assertEqual($comment['nid'], $this->node->nid, 'Correct nid get.');
     $this->assertEqual($comment['label'], $label, 'Correct subject get.');
   }
 
@@ -144,11 +145,11 @@ class RestfulCommentTestCase extends DrupalWebTestCase {
         'id' => $id,
         'label' => $new_label,
         'self' => $handler->versionedUrl($id),
+        'nid' => $this->node->nid,
         'comment_text' => NULL,
       ),
     );
 
-    unset($result[0]['node']);
     $result[0]['comment_text'] = trim(strip_tags($result[0]['comment_text']));
     $this->assertEqual($result, $expected_result);
   }
@@ -187,11 +188,11 @@ class RestfulCommentTestCase extends DrupalWebTestCase {
         'id' => $id,
         'label' => $new_label,
         'self' => $handler->versionedUrl($id),
+        'nid' => $this->node->nid,
         'comment_text' => $text,
       ),
     );
 
-    unset($result[0]['node']);
     $result[0]['comment_text'] = trim(strip_tags($result[0]['comment_text']));
     $this->assertEqual($result, $expected_result);
   }

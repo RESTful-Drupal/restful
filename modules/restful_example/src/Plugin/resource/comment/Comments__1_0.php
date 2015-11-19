@@ -37,13 +37,9 @@ class Comments__1_0 extends ResourceEntity implements ResourceInterface {
   protected function publicFields() {
     $public_fields = parent::publicFields();
 
-    $public_fields['node'] = array(
+    $public_fields['nid'] = array(
       'property' => 'node',
-      'resource' => array(
-        'name' => 'articles',
-        'majorVersion' => 1,
-        'minorVersion' => 0,
-      ),
+      'sub_property' => 'nid',
     );
 
     // Add a custom field for test only.
