@@ -11,6 +11,7 @@ registry_autoload[] = PSR-4
 
 ; Tests
 files[] = tests/RestfulAuthenticationTestCase.test
+files[] = tests/RestfulCommentTestCase.test
 files[] = tests/RestfulCreateEntityTestCase.test
 files[] = tests/RestfulCreateNodeTestCase.test
 files[] = tests/RestfulCreatePrivateNodeTestCase.test

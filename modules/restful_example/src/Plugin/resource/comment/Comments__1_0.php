@@ -29,4 +29,39 @@ use Drupal\restful\Plugin\resource\ResourceInterface;
  *   minorVersion = 0
  * )
  */
-class Comments__1_0 extends ResourceEntity implements ResourceInterface {}
+class Comments__1_0 extends ResourceEntity implements ResourceInterface {
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function publicFields() {
+    $public_fields = parent::publicFields();
+
+    $public_fields['node'] = array(
+      'property' => 'node',
+      'resource' => array(
+        'name' => 'articles',
+        'majorVersion' => 1,
+        'minorVersion' => 0,
+      ),
+    );
+
+    // Add a custom field for test only.
+    if (field_info_field('comment_text')) {
+      $public_fields['comment_text'] = array(
+        'property' => 'comment_text',
+        'sub_property' => 'value',
+      );
+    }
+
+    return $public_fields;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function dataProviderClassName() {
+    return '\Drupal\restful_example\Plugin\resource\DataProvider\DataProviderComment';
+  }
+
+}
