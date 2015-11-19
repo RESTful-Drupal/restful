@@ -634,7 +634,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
 
     // Set the uid as early as possible to avoid false-negatives on permission
     // checks.
-    if (!empty($this->getAccount()->uid) && $this->getAccount()->uid !== 0) {
+    if ('node' == $this->entityType && !empty($this->getAccount()->uid)) {
       $values['uid'] += $this->getAccount()->uid;
     }
 
