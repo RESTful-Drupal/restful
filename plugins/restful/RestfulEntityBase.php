@@ -632,6 +632,12 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     $bundle_key = $entity_info['entity keys']['bundle'];
     $values = $bundle_key ? array($bundle_key => $this->bundle) : array();
 
+    // Set the uid as early as possible to avoid false-negatives on permission
+    // checks.
+    if (!empty($this->getAccount()->uid) && $this->getAccount()->uid !== 0) {
+      $values['uid'] += $this->getAccount()->uid;
+    }
+
     $entity = entity_create($this->entityType, $values);
 
     if ($this->checkEntityAccess('create', $this->entityType, $entity) === FALSE) {
