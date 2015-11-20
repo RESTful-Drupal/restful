@@ -57,7 +57,7 @@ class Comments__1_0 extends ResourceEntity implements ResourceInterface {
    * {@inheritdoc}
    */
   protected function dataProviderClassName() {
-    return '\Drupal\restful_example\Plugin\resource\DataProvider\DataProviderComment';
+    return '\Drupal\restful_example\Plugin\resource\comment\DataProviderComment';
   }
 
 }

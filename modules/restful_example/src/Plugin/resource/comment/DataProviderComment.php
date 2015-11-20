@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains \Drupal\restful_example\Plugin\resource\DataProvider\DataProviderComment.
+ * Contains \Drupal\restful_example\Plugin\resource\comment\DataProviderComment.
  */
 
-namespace Drupal\restful_example\Plugin\resource\DataProvider;
+namespace Drupal\restful_example\Plugin\resource\comment;
 
 use Drupal\restful\Plugin\resource\DataProvider\DataProviderEntity;
 use Drupal\restful\Plugin\resource\DataProvider\DataProviderInterface;
@@ -16,6 +16,9 @@ class DataProviderComment  extends DataProviderEntity implements DataProviderInt
    * Overrides DataProviderEntity::setPropertyValues().
    *
    * Set nid and node type to a comment.
+   *
+   * Note that to create a comment with 'post comments' permission, apply a
+   * patch on https://www.drupal.org/node/2236229
    */
   protected function setPropertyValues(\EntityDrupalWrapper $wrapper, $object, $replace = FALSE) {
     $comment = $wrapper->value();
