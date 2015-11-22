@@ -172,13 +172,17 @@ function restful_menu_access_callback($resource_name, $version_string = NULL) {
   catch (RestfulException $e) {
     // We can get here if the request method is not valid or if no resource can
     // be negotiated.
-    watchdog('restful', $e->getMessage(), array(), WATCHDOG_WARNING);
+    $response = restful()->getResponse();
+    $output = _restful_build_http_api_error($e, $response);
+    $response->setStatusCode($e->getCode());
+    $response->setContent(drupal_json_encode($output));
+    $response->send();
+    exit();
   }
   catch (\Drupal\Component\Plugin\Exception\PluginNotFoundException $e) {
     restful_delivery(MENU_NOT_FOUND);
     exit();
   }
-  return FALSE;
 }
 
 /**
