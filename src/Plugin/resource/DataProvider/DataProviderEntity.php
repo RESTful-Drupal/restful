@@ -875,6 +875,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     }
     $save = FALSE;
     $original_object = $object;
+    $op = $wrapper->getIdentifier() ? 'edit' : 'create';
     $interpreter = new DataInterpreterEMW($this->getAccount(), $wrapper);
     // Keeps a list of the fields that have been set.
     $processed_fields = array();
@@ -898,7 +899,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
         continue;
       }
 
-      $entity_property_access = $this::checkPropertyAccess($resource_field, 'edit', $interpreter);
+      $entity_property_access = $this::checkPropertyAccess($resource_field, $op, $interpreter);
       if (!array_key_exists($public_field_name, $object)) {
         // No property to set in the request.
         // Only set this to NULL if this property has not been set to a specific
@@ -922,7 +923,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
       $resource_field->set($field_value, $interpreter);
       // We check the property access only after setting the values, as the
       // access callback's response might change according to the field value.
-      $entity_property_access = $this::checkPropertyAccess($resource_field, 'edit', $interpreter);
+      $entity_property_access = $this::checkPropertyAccess($resource_field, $op, $interpreter);
       if (!$entity_property_access) {
         throw new BadRequestException(format_string('Property @name cannot be set.', array('@name' => $public_field_name)));
       }
