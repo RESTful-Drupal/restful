@@ -180,7 +180,7 @@ class ResourceField extends ResourceFieldBase implements ResourceFieldInterface 
    */
   public function compoundDocumentId(DataInterpreterInterface $interpreter) {
     // Since this kind of field can be anything, just return the value.
-    return $this->value();
+    return $this->value($interpreter);
   }
 
   /**
