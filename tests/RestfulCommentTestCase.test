@@ -1,0 +1,308 @@
+<?php
+
+/**
+ * @file
+ * Contains RestfulCommentTestCase
+ */
+
+class RestfulCommentTestCase extends DrupalWebTestCase {
+
+  /**
+   * Holds the user account that owns the content.
+   *
+   * @var object
+   */
+  protected $account;
+
+  /**
+   * Article content.
+   *
+   * @var object
+   */
+  protected $node;
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Comment integration',
+      'description' => 'Test the CRUD of a comment.',
+      'group' => 'RESTful',
+    );
+  }
+
+  public function setUp() {
+    parent::setUp('restful_example', 'comment');
+    $this->account = $this->drupalCreateUser(array(
+      'create article content',
+      'edit own comments',
+    ));
+
+    $settings = array(
+      'type' => 'article',
+      'title' => $this->randomName(),
+      'uid' => $this->account->uid,
+    );
+    $this->node = $this->drupalCreateNode($settings);
+
+    // Add a comment_text field instead of comment_body field as the
+    // comment_body property is required, see entity_metadata_comment_entity_property_info()
+    // for more information.
+    $this->addTextField('comment', 'comment_node_article', 'comment_text');
+  }
+
+  /**
+   * Test creating a comment (POST method).
+   */
+  public function testCreateComment() {
+    $resource_manager = restful()->getResourceManager();
+    $this->drupalLogin($this->account);
+
+    $handler = $resource_manager->getPlugin('comments:1.0');
+
+    // @todo Remove "administer comments" when https://www.drupal.org/node/2236229 is fixed.
+    $permissions = array(
+      'post comments',
+      'administer comments',
+    );
+    // Set a different user from the logged in user, to assert the comment's
+    // author is set correctly.
+    $user = $this->drupalCreateUser($permissions);
+    $handler->setAccount($user);
+
+    $label = $this->randomName();
+    $request = array(
+      'label' => $label,
+      'nid' => $this->node->nid,
+    );
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->doPost($request), 'json'));
+    $result = $result['data'];
+
+    $comment = comment_load($result[0]['id']);
+    $this->assertEqual($comment->uid, $user->uid, 'Correct user was set to be the author of the comment.');
+    $this->assertEqual($comment->nid, $this->node->nid, 'Correct nid set.');
+    $this->assertEqual($comment->subject, $label, 'Correct subject set.');
+  }
+
+  /**
+   * Test creating a comment (GET method).
+   */
+  public function testRetrieve() {
+    $resource_manager = restful()->getResourceManager();
+
+    $label = $this->randomName();
+    $settings = array(
+      'node_type' => 'comment_node_article',
+      'nid' => $this->node->nid,
+      'uid' => $this->account->uid,
+      'subject' => $label,
+    );
+    $comment = $this->createComment($settings);
+    $id = $comment->cid;
+
+    $handler = $resource_manager->getPlugin('comments:1.0');
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->doGet($id), 'json'));
+    $result = $result['data'];
+
+    $comment = $result[0];
+    $this->assertEqual($comment['nid'], $this->node->nid, 'Correct nid get.');
+    $this->assertEqual($comment['label'], $label, 'Correct subject get.');
+  }
+
+  /**
+   * Test updating a comment (PUT method).
+   */
+  public function testUpdateCommentAsPut() {
+    $resource_manager = restful()->getResourceManager();
+
+    $label = $this->randomName();
+    $new_label = $this->randomName();
+    $text = $this->randomName();
+
+    $settings = array(
+      'node_type' => 'comment_node_article',
+      'nid' => $this->node->nid,
+      'uid' => $this->account->uid,
+      'subject' => $label,
+    );
+    $settings['comment_text'][LANGUAGE_NONE][0]['value'] = $text;
+
+    $comment = $this->createComment($settings);
+    $id = $comment->cid;
+
+    $handler = $resource_manager->getPlugin('comments:1.0');
+    $handler->setAccount($this->account);
+    $request = array('label' => $new_label);
+
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->doPut($id, $request), 'json'));
+    $result = $result['data'];
+    $expected_result = array(
+      array(
+        'id' => $id,
+        'label' => $new_label,
+        'self' => $handler->versionedUrl($id),
+        'nid' => $this->node->nid,
+        'comment_text' => NULL,
+      ),
+    );
+
+    $result[0]['comment_text'] = trim(strip_tags($result[0]['comment_text']));
+    $this->assertEqual($result, $expected_result);
+  }
+
+  /**
+   * Test updating a comment (PATCH method).
+   */
+  public function testUpdateCommentAsPatch() {
+    $resource_manager = restful()->getResourceManager();
+
+    $label = $this->randomName();
+    $new_label = $this->randomName();
+    $text = $this->randomName();
+
+    $settings = array(
+      'node_type' => 'comment_node_article',
+      'nid' => $this->node->nid,
+      'uid' => $this->account->uid,
+      'subject' => $label,
+    );
+    $settings['comment_text'][LANGUAGE_NONE][0]['value'] = $text;
+
+    $comment = $this->createComment($settings);
+    $id = $comment->cid;
+
+    $handler = $resource_manager->getPlugin('comments:1.0');
+    $handler->setAccount($this->account);
+    $request = array('label' => $new_label);
+
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->doPatch($id, $request), 'json'));
+    $result = $result['data'];
+    $expected_result = array(
+      array(
+        'id' => $id,
+        'label' => $new_label,
+        'self' => $handler->versionedUrl($id),
+        'nid' => $this->node->nid,
+        'comment_text' => $text,
+      ),
+    );
+
+    $result[0]['comment_text'] = trim(strip_tags($result[0]['comment_text']));
+    $this->assertEqual($result, $expected_result);
+  }
+
+  /**
+   * Test deleting a comment (DELETE method).
+   */
+  public function testDeleteComment() {
+    $resource_manager = restful()->getResourceManager();
+
+    $label = $this->randomName();
+    $text = $this->randomName();
+
+    $settings = array(
+      'node_type' => 'comment_node_article',
+      'nid' => $this->node->nid,
+      'uid' => $this->account->uid,
+      'subject' => $label,
+    );
+    $settings['comment_text'][LANGUAGE_NONE][0]['value'] = $text;
+
+    $comment = $this->createComment($settings);
+    $id = $comment->cid;
+
+    $handler = $resource_manager->getPlugin('comments:1.0');
+    // Set a different user from the comment user, as only the administer
+    // can delete comments.
+    $user = $this->drupalCreateUser(array('administer comments'));
+    $handler->setAccount($user);
+    $handler->doDelete($id);
+
+    $result = !comment_load($id);
+    $this->assertTrue($result, 'Comment deleted.');
+  }
+
+  /**
+   * Adds a text field.
+   *
+   * @param string $entity_type
+   *   The entity type.
+   * @param string $bundle.
+   *   The bundle name.
+   * @param string $field_name.
+   *   The field name.
+   */
+  protected function addTextField($entity_type, $bundle, $field_name) {
+    // Text - single, with text processing.
+    $field = array(
+      'field_name' => $field_name,
+      'type' => 'text_long',
+      'entity_types' => array($entity_type),
+      'cardinality' => 1,
+    );
+    field_create_field($field);
+
+    $instance = array(
+      'field_name' => $field_name,
+      'bundle' => $bundle,
+      'entity_type' => $entity_type,
+      'label' => t('Text single with text processing'),
+      'settings' => array(
+        'text_processing' => 1,
+      ),
+    );
+    field_create_instance($instance);
+  }
+
+  /**
+   * Creates a comment based on default settings.
+   *
+   * @param array $settings
+   *   An associative array of settings to change from the defaults, keys are
+   *   comment properties, for example 'subject' => 'Hello, world!'.
+   * @return object
+   *   Created comment object.
+   */
+  protected function createComment($settings = array()) {
+    // Populate defaults array.
+    $settings += array(
+      'cid'          => FALSE,
+      'pid'          => 0,
+      'subject'      => $this->randomName(8),
+      'status'       => COMMENT_PUBLISHED,
+      'node_type'    => 'comment_node_article',
+      'language'     => LANGUAGE_NONE,
+      'comment_text' => array(LANGUAGE_NONE => array(array())),
+    );
+
+    // If the comment's user uid is not specified manually, use the currently
+    // logged in user if available, or else the user running the test.
+    if (!isset($settings['uid'])) {
+      if ($this->loggedInUser) {
+        $settings['uid'] = $this->loggedInUser->uid;
+      }
+      else {
+        global $user;
+        $settings['uid'] = $user->uid;
+      }
+    }
+
+    // Merge comment text field value and format separately.
+    $body = array(
+      'value' => $this->randomName(32),
+      'format' => filter_default_format(),
+    );
+    $settings['comment_text'][$settings['language']][0] += $body;
+
+    $comment = (object) $settings;
+    comment_save($comment);
+
+    return $comment;
+  }
+}
