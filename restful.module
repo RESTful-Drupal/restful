@@ -63,7 +63,17 @@ function restful_menu() {
       $items[$base_path . '/' . $plugin_definition['resource']] = $item;
     }
     else {
-      $path = implode('/', array($base_path, $plugin_definition['menuItem']));
+      if (!empty($plugin_definition['menuItem'])) {
+        // The plugin have a menu item defined there for we can add it after the
+        // base path with a backslash.
+        $path = $base_path . '/' . $plugin_definition['menuItem'];
+      }
+      else {
+        // The menu item is empty. That mean we can't have a path like api/
+        // since this will cause to page not found when trying to access to the
+        // menu item.
+        $path = $base_path;
+      }
       $items[$path] = $item;
     }
   }
