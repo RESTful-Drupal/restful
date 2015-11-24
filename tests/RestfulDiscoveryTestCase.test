@@ -40,7 +40,7 @@ class RestfulDiscoveryTestCase extends RestfulCurlBaseTestCase {
   /**
    * Test the headers populated in an OPTIONS request.
    */
-  public function _testOptionsMethod() {
+  public function testOptionsMethod() {
     // 1. Assert Access-Control-Allow-Methods.
     $response = $this->httpRequest('api/v1.4/test_articles', RequestInterface::METHOD_OPTIONS);
     $this->assertTrue(strpos($response['headers'], sprintf('access-control-allow-methods: %s', implode(', ', array(
