@@ -8,6 +8,9 @@
 use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
 
+/**
+ * Class RestfulDiscoveryTestCase.
+ */
 class RestfulDiscoveryTestCase extends RestfulCurlBaseTestCase {
 
   /**
@@ -35,6 +38,13 @@ class RestfulDiscoveryTestCase extends RestfulCurlBaseTestCase {
     $request = $this->httpRequest('api');
     $body = drupal_json_decode($request['body']);
     $this->assertTrue(!empty($body['self']), 'The discovery plugin exposed the plugins.');
+
+    // Disable the plugin and test a 404.
+    variable_set('restful_enable_discovery_resource', FALSE);
+    $request = $this->httpRequest('api');
+    $body = drupal_json_decode($request['body']);
+    $this->assertEqual($body['status'], 404, 'The discovery plugin is disabled.');
+    variable_set('restful_enable_discovery_resource', TRUE);
   }
 
   /**
