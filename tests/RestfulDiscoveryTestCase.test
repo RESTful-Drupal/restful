@@ -29,6 +29,15 @@ class RestfulDiscoveryTestCase extends RestfulCurlBaseTestCase {
   }
 
   /**
+   * Test the discovery page.
+   */
+  public function testDiscoveryPage() {
+    $request = $this->httpRequest('api');
+    $body = drupal_json_decode($request['body']);
+    $this->assertTrue(!empty($body['self']), 'The discovery plugin exposed the plugins.');
+  }
+
+  /**
    * Test the headers populated in an OPTIONS request.
    */
   public function testOptionsMethod() {

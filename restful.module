@@ -64,6 +64,10 @@ function restful_menu() {
     }
     else {
       $path = implode('/', array($base_path, $plugin_definition['menuItem']));
+
+      // Remove trailing slashes that can lead to 404 errors.
+      $path = rtrim($path, '/');
+
       $items[$path] = $item;
     }
   }
