@@ -13,6 +13,11 @@ use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
 use Drupal\restful\RenderCache\RenderCache;
 
+/**
+ * Class CacheDecoratedDataProvider.
+ *
+ * @package Drupal\restful\Plugin\resource\DataProvider
+ */
 class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface {
 
   /**
@@ -184,8 +189,10 @@ class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface 
    * {@inheritdoc}
    */
   public function view($identifier) {
-    /* @var ResourceFieldCollectionInterface $resource_field_collection */
     $resource_field_collection = $this->subject->view($identifier);
+    if (!$resource_field_collection instanceof ResourceFieldCollectionInterface) {
+      return NULL;
+    }
 
     $resource_field_collection->setContext('cache_fragments', $this->getCacheFragments($identifier));
     return $resource_field_collection;
