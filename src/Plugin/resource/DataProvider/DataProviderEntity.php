@@ -19,10 +19,8 @@ use Drupal\restful\Plugin\resource\Field\ResourceFieldResourceInterface;
 use Drupal\restful\Plugin\resource\ResourceEntity;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterEMW;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
-use Drupal\restful\Plugin\resource\Field\ResourceFieldCollection;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldEntity;
-use Drupal\restful\Plugin\resource\Field\ResourceFieldEntityInterface;
 use Drupal\restful\Exception\BadRequestException;
 use Drupal\restful\Exception\UnprocessableEntityException;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
@@ -32,6 +30,11 @@ use Drupal\restful\Util\RelationalFilter;
 use Drupal\restful\Util\RelationalFilterInterface;
 use Drupal\entity_validator\ValidatorPluginManager;
 
+/**
+ * Class DataProviderEntity.
+ *
+ * @package Drupal\restful\Plugin\resource\DataProvider
+ */
 class DataProviderEntity extends DataProvider implements DataProviderEntityInterface {
 
   /**
@@ -227,7 +230,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     $entity_id = $this->getEntityIdByFieldId($id);
 
     if (!$this->isValidEntity('view', $entity_id)) {
-      return NULL;
+      throw new ForbiddenException(sprintf('The current user cannot access entity "%s".', $entity_id));
     }
     $resource_field_collection = $this->initResourceFieldCollection($identifier);
     // Defer sparse fieldsets to the formatter. That way we can minimize cache
@@ -246,7 +249,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     foreach ($this->fieldDefinitions as $resource_field_name => $resource_field) {
       // Create an empty field collection and populate it with the appropriate
       // resource fields.
-      /* @var ResourceFieldEntityInterface $resource_field */
+      /* @var \Drupal\restful\Plugin\resource\Field\ResourceFieldEntityInterface $resource_field */
 
       if (!$this->methodAccess($resource_field) || !$resource_field->access('view', $resource_field_collection->getInterpreter())) {
         // The field does not apply to the current method or has denied access.
@@ -267,12 +270,16 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     // If no IDs were requested, we should not throw an exception in case an
     // entity is un-accessible by the user.
     foreach ($identifiers as $identifier) {
-      if ($row = $this->view($identifier)) {
-        $return[] = $row;
+      try {
+        $row = $this->view($identifier);
       }
+      catch (ForbiddenException $e) {
+        $row = NULL;
+      }
+      $return[] = $row;
     }
 
-    return $return;
+    return array_filter($return);
   }
 
   /**
@@ -591,7 +598,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
 
     foreach ($sorts as $public_field_name => $direction) {
       // Determine if sorting is by field or property.
-      /* @var ResourceFieldEntityInterface $resource_field */
+      /* @var \Drupal\restful\Plugin\resource\Field\ResourceFieldEntityInterface $resource_field */
       if (!$resource_field = $resource_fields->get($public_field_name)) {
         return;
       }
@@ -624,7 +631,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     $this->validateFilters($filters);
     foreach ($filters as $filter) {
       // Determine if filtering is by field or property.
-      /* @var ResourceFieldEntityInterface $resource_field */
+      /* @var \Drupal\restful\Plugin\resource\Field\ResourceFieldEntityInterface $resource_field */
       if (!$resource_field = $resource_fields->get($filter['public_field'])) {
         if (!static::isNestedField($filter['public_field'])) {
           // This is not a nested filter.
@@ -884,7 +891,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
 
     $field_definitions = clone $this->fieldDefinitions;
     foreach ($field_definitions as $public_field_name => $resource_field) {
-      /* @var ResourceFieldEntityInterface $resource_field */
+      /* @var \Drupal\restful\Plugin\resource\Field\ResourceFieldEntityInterface $resource_field */
 
       if (!$this->methodAccess($resource_field)) {
         // Allow passing the value in the request.

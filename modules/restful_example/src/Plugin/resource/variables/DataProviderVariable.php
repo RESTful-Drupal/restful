@@ -8,14 +8,19 @@
 namespace Drupal\restful_example\Plugin\resource\variables;
 
 use Drupal\restful\Exception\BadRequestException;
+use Drupal\restful\Exception\ForbiddenException;
 use Drupal\restful\Exception\UnprocessableEntityException;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataInterpreter\ArrayWrapper;
 use Drupal\restful\Plugin\resource\DataProvider\DataProvider;
 use Drupal\restful\Plugin\resource\DataProvider\DataProviderInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
-use Drupal\restful\Plugin\resource\ResourceInterface;
 
+/**
+ * Class DataProviderVariable.
+ *
+ * @package Drupal\restful_example\Plugin\resource\variables
+ */
 class DataProviderVariable extends DataProvider implements DataProviderInterface {
 
   /**
@@ -90,13 +95,18 @@ class DataProviderVariable extends DataProvider implements DataProviderInterface
    * {@inheritdoc}
    */
   public function viewMultiple(array $identifiers) {
-    $output = array();
+    $return = array();
     foreach ($identifiers as $identifier) {
-      if ($values = $this->view($identifier)) {
-        $output[] = $values;
+      try {
+        $row = $this->view($identifier);
       }
+      catch (ForbiddenException $e) {
+        $row = NULL;
+      }
+      $return[] = $row;
     }
-    return $output;
+
+    return array_filter($return);
   }
 
   /**
@@ -146,10 +156,10 @@ class DataProviderVariable extends DataProvider implements DataProviderInterface
   /**
    * Removes plugins from the list based on the request options.
    *
-   * @param ResourceInterface[] $variables
+   * @param \Drupal\restful\Plugin\resource\ResourceInterface[] $variables
    *   The array of resource plugins keyed by instance ID.
    *
-   * @return ResourceInterface[]
+   * @return \Drupal\restful\Plugin\resource\ResourceInterface[]
    *   The same array minus the filtered plugins.
    *
    * @throws \Drupal\restful\Exception\BadRequestException
@@ -178,10 +188,10 @@ class DataProviderVariable extends DataProvider implements DataProviderInterface
   /**
    * Sorts plugins on the list based on the request options.
    *
-   * @param ResourceInterface[] $variables
+   * @param \Drupal\restful\Plugin\resource\ResourceInterface[] $variables
    *   The array of resource plugins keyed by instance ID.
    *
-   * @return ResourceInterface[]
+   * @return \Drupal\restful\Plugin\resource\ResourceInterface[]
    *   The sorted array.
    *
    * @throws \Drupal\restful\Exception\BadRequestException
