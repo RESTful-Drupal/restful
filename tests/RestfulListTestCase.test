@@ -2,11 +2,10 @@
 
 /**
  * @file
- * Contains RestfulListTestCase
+ * Contains RestfulListTestCase.
  */
 
 use Drupal\restful\Exception\BadRequestException;
-use Drupal\restful\Exception\ForbiddenException;
 use Drupal\restful\Exception\ServiceUnavailableException;
 use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
@@ -550,8 +549,8 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
         'integer_single' => array(
           'value' => array(1, 4),
           'operator' => array('>', '<>'),
-        )
-      )
+        ),
+      ),
     );
     $handler->setRequest(Request::create('', $query, RequestInterface::METHOD_GET));
     $handler->setPath('');
@@ -566,8 +565,8 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
         'integer_single' => array(
           'value' => array(1, 5),
           'operator' => array('>', '<>'),
-        )
-      )
+        ),
+      ),
     );
     $handler->setRequest(Request::create('', $query, RequestInterface::METHOD_GET));
     $handler->setPath('');
@@ -581,8 +580,8 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
       'filter' => array(
         'integer_multiple' => array(
           'value' => array(3, 4),
-        )
-      )
+        ),
+      ),
     );
     $handler->setRequest(Request::create('', $query, RequestInterface::METHOD_GET));
     $handler->setPath('');
@@ -829,9 +828,11 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     );
     $handler->setRequest(Request::create('api/articles/v1.0' . implode(',', $ids)));
     $handler->setPath(implode(',', $ids));
-    $result = drupal_json_decode(restful()->getFormatterManager()->format($handler->process(), 'json'));
+    $result = drupal_json_decode(restful()
+      ->getFormatterManager()
+      ->format($handler->process(), 'json'));
     $this->assertEqual(count($result['data']), 2, 'List of specific items returned and ignored un-accessible entity.');
-    $this->assertTrue(empty($result['denied']), 'No denied entities reported when selecting a list of specific items.');
+    $this->assertEqual(count($result['denied']), 1, 'A denied entity was detected.');
   }
 
   /**
@@ -865,7 +866,8 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     $result = $handler->doGet('', array('page' => 1));
     $output = drupal_json_decode($formatter->format($result));
     $this->assertEqual(count($result), 9, 'Number of results displayed');
-    $this->assertEqual(count($result), $handler->getDataProvider()->count(), 'Count of results takes into account unpublished nodes');
+    $this->assertEqual(count($result), $handler->getDataProvider()
+      ->count(), 'Count of results takes into account unpublished nodes');
     $this->assertTrue(empty($output['next']), '"Next" link does not exist on the first page.');
     $this->assertTrue(empty($output['previous']), '"Previous" link does not exist on the first page.');
   }
