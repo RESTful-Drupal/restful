@@ -851,11 +851,11 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
   /**
    * Check access to CRUD an entity.
    *
-   * @param $op
+   * @param string $op
    *   The operation. Allowed values are "create", "update" and "delete".
-   * @param $entity_type
+   * @param string $entity_type
    *   The entity type.
-   * @param $entity
+   * @param object $entity
    *   The entity object.
    *
    * @return bool
@@ -880,6 +880,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
    *   set the fields to NULL.
    *
    * @throws BadRequestException
+   *   If the provided object is not valid.
    */
   protected function setPropertyValues(\EntityDrupalWrapper $wrapper, $object, $replace = FALSE) {
     if (!is_array($object)) {
@@ -971,6 +972,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
    *   The parsed body.
    *
    * @throws \Drupal\restful\Exception\BadRequestException
+   *   For the empty body.
    */
   protected function validateBody($body) {
     if (isset($body) && !is_array($body)) {
