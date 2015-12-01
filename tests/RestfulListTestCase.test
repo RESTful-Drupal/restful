@@ -11,6 +11,9 @@ use Drupal\restful\Exception\ServiceUnavailableException;
 use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
 
+/**
+ * Class RestfulListTestCase.
+ */
 class RestfulListTestCase extends RestfulCurlBaseTestCase {
 
   /**
@@ -813,9 +816,10 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     $result = drupal_json_decode(restful()
       ->getFormatterManager()
       ->format($handler->process(), 'json'));
-    $result = $result['data'];
+    $result = $result;
 
-    $this->assertEqual(count($result), 2, 'List returned and ignored un-accessible entity.');
+    $this->assertEqual(count($result['data']), 2, 'List returned and ignored un-accessible entity.');
+    $this->assertEqual(count($result['denied']), 1, 'A denied entity was detected.');
 
     // Get a list with specific IDs.
     $ids = array(
@@ -825,16 +829,10 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     );
     $handler->setRequest(Request::create('api/articles/v1.0' . implode(',', $ids)));
     $handler->setPath(implode(',', $ids));
-    try {
-      restful()->getFormatterManager()->format($handler->process(), 'json');
-      $this->fail('Exception was not thrown for un-accessible node for specific IDs list.');
-    }
-    catch (ForbiddenException $e) {
-      $this->pass('Exception was thrown for un-accessible node for specific IDs list.');
-    }
-    catch (\Exception $e) {
-      $this->fail('Exception of wrong type was thrown for un-accessible node for specific IDs list.');
-    }
+    $result = restful()->getFormatterManager()->format($handler->process(), 'json');
+    $result = $result['data'];
+    $this->assertEqual(count($result), 2, 'List of specific items returned and ignored un-accessible entity.');
+    $this->assertTrue(empty($result['denied']), 'No denied entities reported when selecting a list of specific items.');
   }
 
   /**
