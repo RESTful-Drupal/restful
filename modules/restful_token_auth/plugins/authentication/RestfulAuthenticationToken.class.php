@@ -17,7 +17,7 @@ class RestfulAuthenticationToken extends \RestfulAuthenticationBase {
    * @return string
    *  The token from the request or FALSE if token isn't exists.
    */
-  private  function extractToken(array $request = array(), $param_name) {
+  private  function extractTokenFromRequest(array $request = array(), $param_name) {
     $key_name = !empty($param_name) ? $param_name : 'access_token';
     $dashed_key_name = str_replace('_', '-', $key_name);
 
@@ -46,7 +46,7 @@ class RestfulAuthenticationToken extends \RestfulAuthenticationBase {
   public function applies(array $request = array(), $method = \RestfulInterface::GET) {
     $options = $this->getPluginKey('options');
 
-    return $this->extractToken($request, $options['param_name']);
+    return $this->extractTokenFromRequest($request, $options['param_name']);
   }
 
   /**
@@ -54,7 +54,7 @@ class RestfulAuthenticationToken extends \RestfulAuthenticationBase {
    */
   public function authenticate(array $request = array(), $method = \RestfulInterface::GET) {
     $options = $this->getPluginKey('options');
-    $token = $this->extractToken($request, $options['param_name']);
+    $token = $this->extractTokenFromRequest($request, $options['param_name']);
 
     // Check if there is a token that did not expire yet.
 
