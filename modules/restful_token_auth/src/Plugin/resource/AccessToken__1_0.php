@@ -58,7 +58,6 @@ class AccessToken__1_0 extends TokenAuthenticationBase implements ResourceInterf
     $entity_type = $this->getEntityType();
     $account = $this->getAccount();
     // Check if there is a token that did not expire yet.
-
     /* @var DataProviderEntityInterface $data_provider */
     $data_provider = $this->getDataProvider();
     $query = $data_provider->EFQObject();

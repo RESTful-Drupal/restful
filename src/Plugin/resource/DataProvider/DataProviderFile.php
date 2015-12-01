@@ -8,6 +8,7 @@
 namespace Drupal\restful\Plugin\resource\DataProvider;
 
 use Drupal\restful\Exception\BadRequestException;
+use Drupal\restful\Exception\ForbiddenException;
 use Drupal\restful\Exception\NotImplementedException;
 use Drupal\restful\Exception\ServiceUnavailableException;
 use Drupal\restful\Http\RequestInterface;
@@ -66,7 +67,12 @@ class DataProviderFile extends DataProviderEntity implements DataProviderInterfa
       // The access calls use the request method. Fake the view to be a GET.
       $old_request = $this->getRequest();
       $this->getRequest()->setMethod(RequestInterface::METHOD_GET);
-      $return[] = array($this->view($id));
+      try {
+        $return[] = array($this->view($id));
+      }
+      catch (ForbiddenException $e) {
+        // A forbidden element should not forbid access to the whole list.
+      }
       // Put the original request back to a POST.
       $this->request = $old_request;
     }

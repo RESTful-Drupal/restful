@@ -9,6 +9,7 @@ namespace Drupal\restful\Plugin\formatter;
 
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\restful\Exception\BadRequestException;
+use Drupal\restful\Exception\ForbiddenException;
 use Drupal\restful\Exception\InternalServerErrorException;
 use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Http\Request;
@@ -63,6 +64,11 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
         // Get the total number of items for the current request without
         // pagination.
         $output['meta']['count'] = $data_provider->count();
+        // If there are items that were taken out during access checks,
+        // substract the count.
+        if ($inaccessible_records = $data_provider->getMetadata()->get('inaccessible_records')) {
+          $output['meta']['denied'] = empty($output['meta']['denied']) ? $inaccessible_records : $output['meta']['denied'] + $inaccessible_records;
+        }
       }
       else {
         // For non-list requests do not return an array of one item.
@@ -591,8 +597,14 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
       $this->getRequest()->getServer(),
       $this->getRequest()->getParsedBody()
     ));
-    $data = $embedded_resource->getDataProvider()
-      ->view($field_item['#resource_id']);
+    try {
+      $data = $embedded_resource->getDataProvider()
+        ->view($field_item['#resource_id']);
+    }
+    catch (ForbiddenException $e) {
+      // Populate it with an empty element.
+      $data = array();
+    }
     return array_merge(
       $field_item,
       $this->extractFieldValues($data, $field_item['#cache_placeholder']['parents'], $field_item['#cache_placeholder']['parent_hashes'])
