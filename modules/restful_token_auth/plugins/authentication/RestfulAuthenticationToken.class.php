@@ -7,16 +7,46 @@
 class RestfulAuthenticationToken extends \RestfulAuthenticationBase {
 
   /**
-   * {@inheritdoc}
+   * Extracting the token from a request by a key name, either dashed or not.
+   *
+   * @param $param_name
+   *  The param name to check.
+   * @param array $request
+   *  The current request.
+   *
+   * @return string
+   *  The token from the request or FALSE if token isn't exists.
    */
-  public function applies(array $request = array(), $method = \RestfulInterface::GET) {
-    $options = $this->getPluginKey('options');
-    $key_name = !empty($options['param_name']) ? $options['param_name'] : 'access_token';
+  private  function extractToken(array $request = array(), $param_name) {
+    $key_name = !empty($param_name) ? $param_name : 'access_token';
     $dashed_key_name = str_replace('_', '-', $key_name);
 
     // Access token may be on the request, or in the headers
     // (may be a with dash instead of underscore).
-    return !empty($request['__application'][$key_name]) || !empty($request[$key_name]) || !empty($request['__application'][$dashed_key_name]) || !empty($request[$dashed_key_name]);
+    if (!empty($request['__application'][$key_name])) {
+      return $request['__application'][$key_name];
+    }
+    elseif (!empty($request[$key_name])) {
+      return $request[$key_name];
+    }
+    elseif (!empty($request['__application'][$dashed_key_name])) {
+      return $request['__application'][$dashed_key_name];
+    }
+    elseif (!empty($request[$dashed_key_name])) {
+      return $request[$dashed_key_name];
+    }
+
+    // Access token with that key name isn't exists.
+    return FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function applies(array $request = array(), $method = \RestfulInterface::GET) {
+    $options = $this->getPluginKey('options');
+
+    return $this->extractToken($request, $options['param_name']);
   }
 
   /**
@@ -24,7 +54,7 @@ class RestfulAuthenticationToken extends \RestfulAuthenticationBase {
    */
   public function authenticate(array $request = array(), $method = \RestfulInterface::GET) {
     $options = $this->getPluginKey('options');
-    $token = restful_extract_token_from_request($options['param_name'], $request);
+    $token = $this->extractToken($request, $options['param_name']);
 
     // Check if there is a token that did not expire yet.
 
