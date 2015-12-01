@@ -829,9 +829,8 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     );
     $handler->setRequest(Request::create('api/articles/v1.0' . implode(',', $ids)));
     $handler->setPath(implode(',', $ids));
-    $result = restful()->getFormatterManager()->format($handler->process(), 'json');
-    $result = $result['data'];
-    $this->assertEqual(count($result), 2, 'List of specific items returned and ignored un-accessible entity.');
+    $result = drupal_json_decode(restful()->getFormatterManager()->format($handler->process(), 'json'));
+    $this->assertEqual(count($result['data']), 2, 'List of specific items returned and ignored un-accessible entity.');
     $this->assertTrue(empty($result['denied']), 'No denied entities reported when selecting a list of specific items.');
   }
 
