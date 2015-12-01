@@ -53,6 +53,11 @@ class FormatterJson extends Formatter implements FormatterInterface {
         // Get the total number of items for the current request without
         // pagination.
         $output['count'] = $data_provider->count();
+        // If there are items that were taken out during access checks,
+        // report them as denied in the metadata.
+        if ($inaccessible_records = $data_provider->getMetadata()->get('inaccessible_records')) {
+          $output['denied'] = empty($output['meta']['denied']) ? $inaccessible_records : $output['meta']['denied'] + $inaccessible_records;
+        }
       }
       if (method_exists($resource, 'additionalHateoas')) {
         $output = array_merge($output, $resource->additionalHateoas($output));

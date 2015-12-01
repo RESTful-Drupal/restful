@@ -65,7 +65,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
         // pagination.
         $output['meta']['count'] = $data_provider->count();
         // If there are items that were taken out during access checks,
-        // substract the count.
+        // report them as denied in the metadata.
         if ($inaccessible_records = $data_provider->getMetadata()->get('inaccessible_records')) {
           $output['meta']['denied'] = empty($output['meta']['denied']) ? $inaccessible_records : $output['meta']['denied'] + $inaccessible_records;
         }
