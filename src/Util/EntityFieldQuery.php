@@ -309,13 +309,14 @@ class EntityFieldQuery extends \EntityFieldQuery implements EntityFieldQueryRela
     $base_table = $this->metaData['base_table'];
 
     // Add tables for the fields used.
+    $field_base_table = NULL;
     foreach ($this->fields as $key => $field) {
       $tablename = $tablename_function($field);
       $table_alias = _field_sql_storage_tablealias($tablename, $key, $this);
       $table_aliases[$key] = $table_alias;
       $select_query->addMetaData('base_table', $base_table);
       $entity_id_key = $this->metaData['entity_id_key'];
-      if ($key) {
+      if ($field_base_table) {
         if (!isset($query_tables[$table_alias])) {
           $this->addFieldJoin($select_query, $field['field_name'], $tablename, $table_alias, "$table_alias.entity_type = $field_base_table.entity_type AND $table_alias.$id_key = $field_base_table.$id_key");
         }
@@ -332,7 +333,9 @@ class EntityFieldQuery extends \EntityFieldQuery implements EntityFieldQueryRela
         if (!isset($this->tags['DANGEROUS_ACCESS_CHECK_OPT_OUT'])) {
           $select_query->addTag('entity_field_access');
         }
-        $field_base_table = $table_alias;
+        if (!$this->containsLeftJoinOperator($this->fields[$key]['field_name'])) {
+          $field_base_table = $table_alias;
+        }
       }
       if ($field['cardinality'] != 1 || $field['translatable']) {
         $select_query->distinct();
@@ -346,13 +349,15 @@ class EntityFieldQuery extends \EntityFieldQuery implements EntityFieldQueryRela
     // Add field meta conditions.
     _field_sql_storage_query_field_conditions($this, $select_query, $this->fieldMetaConditions, $table_aliases, '_field_sql_storage_query_columnname');
 
-    // Find out if the query needs the OR.
+    // If there was no field condition that created an INNER JOIN, that means
+    // that additional JOINs need to carry the OR condition. For the base table
+    // we'll use the table for the first field.
     $needs_or = FALSE;
-    foreach ($this->fieldConditions as $field_condition) {
-      if ($field_condition['field']['field_name'] != $this->fields[0]['field_name']) {
-        continue;
-      }
-      $needs_or = in_array($field_condition['operator'], static::$leftJoinOperators);
+    if (!isset($field_base_table)) {
+      $needs_or = TRUE;
+      // Get the table name for the first field.
+      $field_table_name = key($this->fields[0]['storage']['details']['sql'][$this->age]);
+      $field_base_table = _field_sql_storage_tablealias($field_table_name, 0, $this);
     }
 
     if (isset($this->deleted)) {
@@ -458,6 +463,27 @@ class EntityFieldQuery extends \EntityFieldQuery implements EntityFieldQueryRela
       ->condition($sql_field, $condition['value'], $condition['operator'])
       ->condition($sql_field, NULL, 'IS NULL');
     $select_query->$method($db_or);
+  }
+
+  /**
+   * Checks if any of the conditions contains a LEFT JOIN operation.
+   *
+   * @param string $field_name
+   *   If provided only this field will be checked.
+   *
+   * @return bool
+   *   TRUE if any of the conditions contain a left join operator.
+   */
+  protected function containsLeftJoinOperator($field_name = NULL) {
+    foreach ($this->fieldConditions as $field_condition) {
+      if ($field_name && $field_condition['field']['field_name'] != $field_name) {
+        continue;
+      }
+      if (in_array($field_condition['operator'], static::$leftJoinOperators)) {
+        return TRUE;
+      }
+    }
+    return FALSE;
   }
 
 }
