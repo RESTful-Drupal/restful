@@ -807,6 +807,7 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     // Deny access via hook_node_access() to a specific node.
     restful_test_deny_access_node($node2->nid);
 
+    variable_set('restful_show_access_denied', TRUE);
     $handler = $resource_manager->getPlugin('articles:1.0');
     $handler->setAccount($user1);
 

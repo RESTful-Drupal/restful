@@ -2,12 +2,15 @@
 
 /**
  * @file
- * Contains \RestfulJsonApiTestCase
+ * Contains \RestfulJsonApiTestCase.
  */
 
 use Drupal\restful\Exception\UnprocessableEntityException;
 use Drupal\restful\Http\Request;
 
+/**
+ * Class RestfulJsonApiTestCase.
+ */
 class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
 
   /**
