@@ -459,9 +459,10 @@ class EntityFieldQuery extends \EntityFieldQuery implements EntityFieldQueryRela
       return;
     }
     $method = $having ? 'havingCondition' : 'condition';
-    $db_or = db_or()
-      ->condition($sql_field, $condition['value'], $condition['operator'])
-      ->condition($sql_field, NULL, 'IS NULL');
+    $db_or = db_or()->condition($sql_field, $condition['value'], $condition['operator']);
+    if (strtoupper($condition['operator']) != 'IS NULL' && strtoupper($condition['operator']) != 'IS NOT NULL') {
+      $db_or->condition($sql_field, NULL, 'IS NULL');
+    }
     $select_query->$method($db_or);
   }
 
