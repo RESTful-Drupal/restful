@@ -59,6 +59,13 @@ function restful_admin_settings($form_state) {
     ),
   );
 
+  $form['restful_show_access_denied'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Show access denied records'),
+    '#description' => t('Check this box to get an HTTP 403 error when requesting entities with access denied. Listing denied entities will remove them from the output and have a flag indicating the access violation. Leave it unchecked to hide access denied records. If you do not care about unpriviledged users knowing that records they do not have access to exist, you can check this box.'),
+    '#default_value' => variable_get('restful_show_access_denied', FALSE),
+  );
+
   $form['restful_allowed_origin'] = array(
     '#type' => 'textfield',
     '#title' => t('Allowed origin'),

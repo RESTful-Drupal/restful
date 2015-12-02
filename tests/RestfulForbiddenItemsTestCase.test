@@ -4,7 +4,8 @@
  * @file
  * Contains \RestfulForbiddenItemsTestCase.
  */
-use Drupal\restful\Exception\ForbiddenException;
+
+use Drupal\restful\Exception\InaccessibleRecordException;
 use Drupal\restful\Http\Request;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
 
@@ -48,8 +49,24 @@ class RestfulForbiddenItemsTestCase extends DrupalWebTestCase {
       $handler->doGet($nids[1]);
       $this->fail('There should be a Forbidden exception.');
     }
-    catch (ForbiddenException $e) {
-      $this->pass('Requesting an access denied node throws an exception.');
+    catch (InaccessibleRecordException $e) {
+      $this->assertEqual($e->getCode(), 404);
+      $this->assertEqual($e->getMessage(), InaccessibleRecordException::ERROR_404_MESSAGE);
+    }
+
+    variable_set('restful_show_access_denied', TRUE);
+    $handler = $resource_manager->getPluginCopy('test_articles:1.2');
+    $handler->setAccount($account);
+
+    $this->assertTrue((bool) $handler->doGet($nids[2]));
+    restful_test_deny_access_node($nids[1]);
+    try {
+      $handler->doGet($nids[1]);
+      $this->fail('There should be a Forbidden exception.');
+    }
+    catch (InaccessibleRecordException $e) {
+      $this->assertEqual($e->getCode(), 403);
+      $this->assertNotEqual($e->getMessage(), InaccessibleRecordException::ERROR_404_MESSAGE);
     }
 
     // When we include the related entities we are loading the referenced
@@ -79,14 +96,13 @@ class RestfulForbiddenItemsTestCase extends DrupalWebTestCase {
     $handler->setPath('');
     $handler->setRequest(Request::create(NULL, array(
       'include' => 'entity_reference_single,entity_reference_multiple',
-      'range' => 1,
     )));
     $handler->setAccount($account);
     $response = $handler->process();
     $formatter->setResource($handler);
     $results = $formatter->prepare($response);
     $this->assertEqual(count($results['data'][0]['relationships']['entity_reference_multiple']['data']), 1, 'The count is not altered incorrectly.');
-    $this->assertTrue(empty($results['meta']['denied']), 'Only top level denied elements are reported.');
+    $this->assertEqual(count($results['meta']['denied']), 1, 'Denied elements are reported.');
 
     // Same test without the includes should yield the same results.
     $handler = $resource_manager->getPluginCopy('test_articles:1.2');

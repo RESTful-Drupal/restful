@@ -8,7 +8,7 @@
 namespace Drupal\restful\Plugin\resource\DataProvider;
 
 use Doctrine\Common\Collections\ArrayCollection;
-use Drupal\restful\Exception\ForbiddenException;
+use Drupal\restful\Exception\InaccessibleRecordException;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
@@ -210,7 +210,7 @@ class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface 
       try {
         $row = $this->view($identifier);
       }
-      catch (ForbiddenException $e) {
+      catch (InaccessibleRecordException $e) {
         $row = NULL;
       }
       $return[] = $row;

@@ -8,7 +8,7 @@
 namespace Drupal\restful_example\Plugin\resource\variables;
 
 use Drupal\restful\Exception\BadRequestException;
-use Drupal\restful\Exception\ForbiddenException;
+use Drupal\restful\Exception\InaccessibleRecordException;
 use Drupal\restful\Exception\UnprocessableEntityException;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataInterpreter\ArrayWrapper;
@@ -100,7 +100,7 @@ class DataProviderVariable extends DataProvider implements DataProviderInterface
       try {
         $row = $this->view($identifier);
       }
-      catch (ForbiddenException $e) {
+      catch (InaccessibleRecordException $e) {
         $row = NULL;
       }
       $return[] = $row;

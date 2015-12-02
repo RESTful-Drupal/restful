@@ -9,11 +9,15 @@ namespace Drupal\restful\Plugin\resource\DataProvider;
 
 use Drupal\restful\Exception\BadRequestException;
 use Drupal\restful\Exception\ForbiddenException;
-use Drupal\restful\Exception\NotImplementedException;
 use Drupal\restful\Exception\ServiceUnavailableException;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
 
+/**
+ * Class DataProviderFile.
+ *
+ * @package Drupal\restful\Plugin\resource\DataProvider
+ */
 class DataProviderFile extends DataProviderEntity implements DataProviderInterface {
 
   /**

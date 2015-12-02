@@ -9,9 +9,9 @@ namespace Drupal\restful\Plugin\formatter;
 
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\restful\Exception\BadRequestException;
-use Drupal\restful\Exception\ForbiddenException;
 use Drupal\restful\Exception\InternalServerErrorException;
 use Drupal\restful\Exception\ServerConfigurationException;
+use Drupal\restful\Exception\InaccessibleRecordException;
 use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
@@ -66,7 +66,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
         $output['meta']['count'] = $data_provider->count();
         // If there are items that were taken out during access checks,
         // report them as denied in the metadata.
-        if ($inaccessible_records = $data_provider->getMetadata()->get('inaccessible_records')) {
+        if (variable_get('restful_show_access_denied', FALSE) && ($inaccessible_records = $data_provider->getMetadata()->get('inaccessible_records'))) {
           $output['meta']['denied'] = empty($output['meta']['denied']) ? $inaccessible_records : $output['meta']['denied'] + $inaccessible_records;
         }
       }
@@ -601,7 +601,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
       $data = $embedded_resource->getDataProvider()
         ->view($field_item['#resource_id']);
     }
-    catch (ForbiddenException $e) {
+    catch (InaccessibleRecordException $e) {
       // Populate it with an empty element.
       $data = array();
     }

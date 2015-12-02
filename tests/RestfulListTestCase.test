@@ -815,7 +815,6 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     $result = drupal_json_decode(restful()
       ->getFormatterManager()
       ->format($handler->process(), 'json'));
-    $result = $result;
 
     $this->assertEqual(count($result['data']), 2, 'List returned and ignored un-accessible entity.');
     $this->assertEqual(count($result['denied']), 1, 'A denied entity was detected.');

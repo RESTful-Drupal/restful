@@ -9,9 +9,9 @@ namespace Drupal\restful\Plugin\resource\DataProvider;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
-use Drupal\restful\Exception\ForbiddenException;
 use Drupal\restful\Exception\NotFoundException;
 use Drupal\restful\Exception\NotImplementedException;
+use Drupal\restful\Exception\InaccessibleRecordException;
 use Drupal\restful\Exception\UnauthorizedException;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterPlug;
@@ -90,7 +90,7 @@ class DataProviderPlug extends DataProvider implements DataProviderInterface {
       try {
         $row = $this->view($identifier);
       }
-      catch (ForbiddenException $e) {
+      catch (InaccessibleRecordException $e) {
         $row = NULL;
       }
       $return[] = $row;
@@ -236,7 +236,7 @@ class DataProviderPlug extends DataProvider implements DataProviderInterface {
     // If the plugin is not discoverable throw an access denied exception.
     $definition = $plugin->getPluginDefinition();
     if (empty($definition['discoverable'])) {
-      throw new ForbiddenException(sprintf('The plugin %s is not discoverable.', $plugin->getResourceName()));
+      throw new InaccessibleRecordException(sprintf('The plugin %s is not discoverable.', $plugin->getResourceName()));
     }
     return new DataInterpreterPlug($this->getAccount(), new PluginWrapper($plugin));
   }

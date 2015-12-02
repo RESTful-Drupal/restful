@@ -12,6 +12,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Drupal\restful\Exception\ForbiddenException;
 use Drupal\restful\Exception\InternalServerErrorException;
 use Drupal\restful\Exception\ServerConfigurationException;
+use Drupal\restful\Exception\InaccessibleRecordException;
 use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\Decorators\CacheDecoratedResource;
@@ -226,13 +227,12 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
    * {@inheritdoc}
    */
   public function view($identifier) {
-    $id = $identifier;
-    $entity_id = $this->getEntityIdByFieldId($id);
+    $entity_id = $this->getEntityIdByFieldId($identifier);
 
     if (!$this->isValidEntity('view', $entity_id)) {
-      throw new ForbiddenException(sprintf('The current user cannot access entity "%s".', $entity_id));
+      throw new InaccessibleRecordException(sprintf('The current user cannot access entity "%s".', $entity_id));
     }
-    $resource_field_collection = $this->initResourceFieldCollection($identifier);
+    $field_collection = $this->initResourceFieldCollection($identifier);
     // Defer sparse fieldsets to the formatter. That way we can minimize cache
     // fragmentation because we have a unique cache record for all the sparse
     // fieldsets combinations.
@@ -244,22 +244,22 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     // performance reasons.
     $input = $this->getRequest()->getParsedInput();
     $limit_fields = !empty($input['fields']) ? explode(',', $input['fields']) : array();
-    $resource_field_collection->setLimitFields($limit_fields);
+    $field_collection->setLimitFields($limit_fields);
 
-    foreach ($this->fieldDefinitions as $resource_field_name => $resource_field) {
+    foreach ($this->fieldDefinitions as $resource_field) {
       // Create an empty field collection and populate it with the appropriate
       // resource fields.
       /* @var \Drupal\restful\Plugin\resource\Field\ResourceFieldEntityInterface $resource_field */
 
-      if (!$this->methodAccess($resource_field) || !$resource_field->access('view', $resource_field_collection->getInterpreter())) {
+      if (!$this->methodAccess($resource_field) || !$resource_field->access('view', $field_collection->getInterpreter())) {
         // The field does not apply to the current method or has denied access.
         continue;
       }
 
-      $resource_field_collection->set($resource_field->id(), $resource_field);
+      $field_collection->set($resource_field->id(), $resource_field);
     }
 
-    return $resource_field_collection;
+    return $field_collection;
   }
 
   /**
@@ -273,7 +273,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
       try {
         $row = $this->view($identifier);
       }
-      catch (ForbiddenException $e) {
+      catch (InaccessibleRecordException $e) {
         $row = NULL;
       }
       $return[] = $row;
@@ -805,7 +805,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
    *   TRUE if entity is valid, and user can access it.
    *
    * @throws UnprocessableEntityException
-   * @throws ForbiddenException
+   * @throws InaccessibleRecordException
    */
   protected function isValidEntity($op, $entity_id) {
     $entity_type = $this->entityType;
@@ -814,7 +814,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
       // We need to check if the entity ID is numeric since if this is a uuid
       // that starts by the number 4, and there is an entity with ID 4 that
       // entity will be loaded incorrectly.
-      throw new UnprocessableEntityException(sprintf('The entity ID %s does not exist.', $entity_id));
+      throw new InaccessibleRecordException(sprintf('The entity ID %s does not exist.', $entity_id));
     }
 
     list(,, $bundle) = entity_extract_ids($entity_type, $entity);
@@ -842,7 +842,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
       }
 
       // Entity was explicitly requested so we need to throw an exception.
-      throw new ForbiddenException(sprintf('You do not have access to entity ID %s.', $entity_id));
+      throw new InaccessibleRecordException(sprintf('You do not have access to entity ID %s.', $entity_id));
     }
 
     return TRUE;

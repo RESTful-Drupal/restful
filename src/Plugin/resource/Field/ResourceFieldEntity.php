@@ -7,8 +7,8 @@
 
 namespace Drupal\restful\Plugin\resource\Field;
 
-use Drupal\restful\Exception\ForbiddenException;
 use Drupal\restful\Exception\ServerConfigurationException;
+use Drupal\restful\Exception\InaccessibleRecordException;
 use Drupal\restful\Exception\UnprocessableEntityException;
 use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
@@ -17,9 +17,13 @@ use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
 use Drupal\restful\Plugin\resource\Field\PublicFieldInfo\PublicFieldInfoEntity;
 use Drupal\restful\Plugin\resource\Field\PublicFieldInfo\PublicFieldInfoEntityInterface;
 use Drupal\restful\Plugin\resource\Field\PublicFieldInfo\PublicFieldInfoInterface;
-use Drupal\restful\Plugin\resource\ResourceInterface;
 use Drupal\restful\Util\String;
 
+/**
+ * Class ResourceFieldEntity.
+ *
+ * @package Drupal\restful\Plugin\resource\Field
+ */
 class ResourceFieldEntity implements ResourceFieldEntityInterface {
 
   /**
@@ -327,7 +331,7 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
           ->getDataProvider()
           ->view($embedded_identifier);
       }
-      catch (ForbiddenException $e) {
+      catch (InaccessibleRecordException $e) {
         // If you don't have access to the embedded entity is like not having
         // access to the property.
         return NULL;
