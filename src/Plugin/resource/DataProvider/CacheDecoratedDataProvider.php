@@ -8,6 +8,7 @@
 namespace Drupal\restful\Plugin\resource\DataProvider;
 
 use Doctrine\Common\Collections\ArrayCollection;
+use Drupal\restful\Exception\InaccessibleRecordException;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
@@ -202,16 +203,20 @@ class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface 
    * {@inheritdoc}
    */
   public function viewMultiple(array $identifiers) {
-    $output = array();
+    $return = array();
     // If no IDs were requested, we should not throw an exception in case an
     // entity is un-accessible by the user.
     foreach ($identifiers as $identifier) {
-      if ($row = $this->view($identifier)) {
-        $output[] = $row;
+      try {
+        $row = $this->view($identifier);
       }
+      catch (InaccessibleRecordException $e) {
+        $row = NULL;
+      }
+      $return[] = $row;
     }
 
-    return $output;
+    return array_filter($return);
   }
 
   /**

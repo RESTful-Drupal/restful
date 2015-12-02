@@ -2,14 +2,20 @@
 
 /**
  * @file
- * Contains RestfulEntityUserAccessTestCase
+ * Contains RestfulEntityUserAccessTestCase.
  */
 
-use Drupal\restful\Exception\ForbiddenException;
+use Drupal\restful\Exception\InaccessibleRecordException;
 use Drupal\restful\Http\Request;
 
+/**
+ * Class RestfulEntityUserAccessTestCase.
+ */
 class RestfulEntityUserAccessTestCase extends DrupalWebTestCase {
 
+  /**
+   * {@inheritdoc}
+   */
   public static function getInfo() {
     return array(
       'name' => 'User resource access',
@@ -18,6 +24,9 @@ class RestfulEntityUserAccessTestCase extends DrupalWebTestCase {
     );
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function setUp() {
     parent::setUp('restful');
   }
@@ -40,7 +49,7 @@ class RestfulEntityUserAccessTestCase extends DrupalWebTestCase {
       $handler->process();
       $this->fail('Non-privileged user can view another user.');
     }
-    catch (ForbiddenException $e) {
+    catch (InaccessibleRecordException $e) {
       $this->pass('Non-privileged user cannot view another user.');
     }
     catch (\Exception $e) {

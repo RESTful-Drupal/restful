@@ -1,0 +1,169 @@
+<?php
+
+/**
+ * @file
+ * Contains \RestfulForbiddenItemsTestCase.
+ */
+
+use Drupal\restful\Exception\InaccessibleRecordException;
+use Drupal\restful\Http\Request;
+use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
+
+/**
+ * Class RestfulForbiddenItemsTestCase.
+ */
+class RestfulForbiddenItemsTestCase extends DrupalWebTestCase {
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function getInfo() {
+    return array(
+      'name' => 'Forbidden Items',
+      'description' => 'Tests handling access denied items.',
+      'group' => 'RESTful',
+    );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setUp() {
+    parent::setUp('restful_test');
+    restful_test_add_fields('node', 'article');
+  }
+
+  /**
+   * Tests access denied in lists and single elements.
+   */
+  public function testAccessDenied() {
+    $account = $this->drupalCreateUser();
+    $nids = $this->createEntityWithReferences($account->uid);
+    $resource_manager = restful()->getResourceManager();
+    $handler = $resource_manager->getPluginCopy('test_articles:1.2');
+    $handler->setAccount($account);
+
+    $this->assertTrue((bool) $handler->doGet($nids[2]));
+    restful_test_deny_access_node($nids[1]);
+    try {
+      $handler->doGet($nids[1]);
+      $this->fail('There should be a Forbidden exception.');
+    }
+    catch (InaccessibleRecordException $e) {
+      $this->assertEqual($e->getCode(), 404);
+      $this->assertEqual($e->getMessage(), InaccessibleRecordException::ERROR_404_MESSAGE);
+    }
+
+    variable_set('restful_show_access_denied', TRUE);
+    $handler = $resource_manager->getPluginCopy('test_articles:1.2');
+    $handler->setAccount($account);
+
+    $this->assertTrue((bool) $handler->doGet($nids[2]));
+    restful_test_deny_access_node($nids[1]);
+    try {
+      $handler->doGet($nids[1]);
+      $this->fail('There should be a Forbidden exception.');
+    }
+    catch (InaccessibleRecordException $e) {
+      $this->assertEqual($e->getCode(), 403);
+      $this->assertNotEqual($e->getMessage(), InaccessibleRecordException::ERROR_404_MESSAGE);
+    }
+
+    // When we include the related entities we are loading the referenced
+    // entity, that's when we check for the entity access. If we are only
+    // getting the list of IDs we don't know which entities will be accessible
+    // or not.
+    $handler = $resource_manager->getPluginCopy('test_articles:1.2');
+    $handler->setPath('');
+    $handler->setRequest(Request::create(NULL, array('include' => 'entity_reference_single,entity_reference_multiple')));
+    $handler->setAccount($account);
+    $response = $handler->process();
+    $returned_nids = array_map(function (ResourceFieldCollectionInterface $item) {
+      return $item->getIdField()->render($item->getInterpreter());
+    }, $response);
+    $this->assertTrue(count($response) == 2 && !in_array($nids[1], $returned_nids), 'Listing a denied node removes it from the listing.');
+    $formatter = restful()->getFormatterManager()->getPlugin('json_api');
+    $formatter->setResource($handler);
+    $results = $formatter->prepare($response);
+    $this->assertEqual(count($results['data'][0]['relationships']['entity_reference_multiple']['data']), 1, 'The inaccessible node is not present in the relationship.');
+
+    // Avoid count or pagination problems due to denied items.
+    $this->assertTrue(empty($results['links']['next']));
+
+    // Make sure that denied items in the related elements do not alter the top
+    // level count incorrectly.
+    $handler = $resource_manager->getPluginCopy('test_articles:1.2');
+    $handler->setPath('');
+    $handler->setRequest(Request::create(NULL, array(
+      'include' => 'entity_reference_single,entity_reference_multiple',
+    )));
+    $handler->setAccount($account);
+    $response = $handler->process();
+    $formatter->setResource($handler);
+    $results = $formatter->prepare($response);
+    $this->assertEqual(count($results['data'][0]['relationships']['entity_reference_multiple']['data']), 1, 'The count is not altered incorrectly.');
+    $this->assertEqual(count($results['meta']['denied']), 1, 'Denied elements are reported.');
+
+    // Same test without the includes should yield the same results.
+    $handler = $resource_manager->getPluginCopy('test_articles:1.2');
+    $handler->setPath('');
+    $handler->setRequest(Request::create(NULL, array(
+      'range' => 1,
+    )));
+    $handler->setAccount($account);
+    $response = $handler->process();
+    $formatter->setResource($handler);
+    $results = $formatter->prepare($response);
+    $this->assertEqual(count($results['data'][0]['relationships']['entity_reference_multiple']['data']), 2, 'Access checks are not applied when the entity is not included.');
+    $this->assertTrue(empty($results['meta']['denied']), 'No denied item was detected.');
+  }
+
+  /**
+   * Adds some content to be retrieved.
+   *
+   * @param int $uid
+   *   The owner ID.
+   *
+   * @return int[]
+   *   The entity IDs.
+   */
+  protected function createEntityWithReferences($uid) {
+    $node1 = (object) array(
+      'title' => t('Node 1'),
+      'type' => 'article',
+      'uid' => $uid,
+    );
+    node_object_prepare($node1);
+    node_save($node1);
+
+    $node2 = (object) array(
+      'title' => t('Node 2'),
+      'type' => 'article',
+      'uid' => $uid,
+    );
+    node_object_prepare($node2);
+    node_save($node2);
+
+    $node3 = (object) array(
+      'title' => t('Node 3'),
+      'type' => 'article',
+      'uid' => $uid,
+    );
+    node_object_prepare($node3);
+    node_save($node3);
+
+    // Set some references to node1.
+    $wrapper = entity_metadata_wrapper('node', $node1);
+    $wrapper->entity_reference_single->set($node3);
+    $wrapper->entity_reference_multiple[] = $node2;
+    $wrapper->entity_reference_multiple[] = $node3;
+    $wrapper->save();
+
+    return array(
+      $node1->nid,
+      $node2->nid,
+      $node3->nid,
+    );
+  }
+
+}

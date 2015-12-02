@@ -185,7 +185,7 @@ class RestfulDiscoveryTestCase extends RestfulCurlBaseTestCase {
     // Create 3 nodes.
     $expected_result = array();
     foreach (array(1, 2, 3) as $id) {
-      $title = 'article' . '/' . $id;
+      $title = 'article/' . $id;
       $settings = array(
         'title' => $title,
         'type' => 'article',

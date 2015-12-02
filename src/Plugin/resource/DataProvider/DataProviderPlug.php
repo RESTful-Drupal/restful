@@ -11,15 +11,18 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 use Drupal\restful\Exception\NotFoundException;
 use Drupal\restful\Exception\NotImplementedException;
+use Drupal\restful\Exception\InaccessibleRecordException;
 use Drupal\restful\Exception\UnauthorizedException;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterPlug;
 use Drupal\restful\Plugin\resource\DataInterpreter\PluginWrapper;
-use Drupal\restful\Plugin\resource\Field\ResourceFieldCollection;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
-use Drupal\restful\Plugin\resource\Field\ResourceFieldEntityInterface;
-use Drupal\restful\Plugin\resource\ResourceInterface;
 
+/**
+ * Class DataProviderPlug.
+ *
+ * @package Drupal\restful\Plugin\resource\DataProvider
+ */
 class DataProviderPlug extends DataProvider implements DataProviderInterface {
 
   /**
@@ -82,13 +85,18 @@ class DataProviderPlug extends DataProvider implements DataProviderInterface {
    * {@inheritdoc}
    */
   public function viewMultiple(array $identifiers) {
-    $output = array();
+    $return = array();
     foreach ($identifiers as $identifier) {
-      if ($values = $this->view($identifier)) {
-        $output[] = $values;
+      try {
+        $row = $this->view($identifier);
       }
+      catch (InaccessibleRecordException $e) {
+        $row = NULL;
+      }
+      $return[] = $row;
     }
-    return $output;
+
+    return array_filter($return);
   }
 
   /**
@@ -133,10 +141,10 @@ class DataProviderPlug extends DataProvider implements DataProviderInterface {
   /**
    * Removes plugins from the list based on the request options.
    *
-   * @param ResourceInterface[] $plugins
+   * @param \Drupal\restful\Plugin\resource\ResourceInterface[] $plugins
    *   The array of resource plugins keyed by instance ID.
    *
-   * @return ResourceInterface[]
+   * @return \Drupal\restful\Plugin\resource\ResourceInterface[]
    *   The same array minus the filtered plugins.
    */
   protected function applyFilters(array $plugins) {
@@ -183,10 +191,10 @@ class DataProviderPlug extends DataProvider implements DataProviderInterface {
   /**
    * Sorts plugins on the list based on the request options.
    *
-   * @param ResourceInterface[] $plugins
+   * @param \Drupal\restful\Plugin\resource\ResourceInterface[] $plugins
    *   The array of resource plugins keyed by instance ID.
    *
-   * @return ResourceInterface[]
+   * @return \Drupal\restful\Plugin\resource\ResourceInterface[]
    *   The sorted array.
    */
   protected function applySort(array $plugins) {
@@ -224,6 +232,11 @@ class DataProviderPlug extends DataProvider implements DataProviderInterface {
     }
     catch (PluginNotFoundException $e) {
       throw new NotFoundException('Invalid URL path.');
+    }
+    // If the plugin is not discoverable throw an access denied exception.
+    $definition = $plugin->getPluginDefinition();
+    if (empty($definition['discoverable'])) {
+      throw new InaccessibleRecordException(sprintf('The plugin %s is not discoverable.', $plugin->getResourceName()));
     }
     return new DataInterpreterPlug($this->getAccount(), new PluginWrapper($plugin));
   }
