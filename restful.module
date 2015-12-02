@@ -505,6 +505,11 @@ function restful_menu_process_callback($resource_name, $version = NULL) {
   $request = restful_parse_request();
 
   try {
+    if (!\RestfulBase::isValidMethod($method, FALSE)) {
+      throw new RestfulBadRequestException(format_string('Unsupported method @method.', array(
+        '@method' => $method,
+      )));
+    }
     return $handler->{$method}($path, $request);
   }
   catch (RestfulException $e) {
