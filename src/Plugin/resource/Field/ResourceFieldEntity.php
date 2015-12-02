@@ -7,8 +7,8 @@
 
 namespace Drupal\restful\Plugin\resource\Field;
 
-use Drupal\restful\Exception\ForbiddenException;
 use Drupal\restful\Exception\ServerConfigurationException;
+use Drupal\restful\Exception\InaccessibleRecordException;
 use Drupal\restful\Exception\UnprocessableEntityException;
 use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
@@ -17,9 +17,13 @@ use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
 use Drupal\restful\Plugin\resource\Field\PublicFieldInfo\PublicFieldInfoEntity;
 use Drupal\restful\Plugin\resource\Field\PublicFieldInfo\PublicFieldInfoEntityInterface;
 use Drupal\restful\Plugin\resource\Field\PublicFieldInfo\PublicFieldInfoInterface;
-use Drupal\restful\Plugin\resource\ResourceInterface;
 use Drupal\restful\Util\String;
 
+/**
+ * Class ResourceFieldEntity.
+ *
+ * @package Drupal\restful\Plugin\resource\Field
+ */
 class ResourceFieldEntity implements ResourceFieldEntityInterface {
 
   /**
@@ -187,11 +191,11 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
       $values = array();
       // Multiple values.
       foreach ($property_wrapper->getIterator() as $item_wrapper) {
-        $values[] = $this->singleValue($item_wrapper, $wrapper);
+        $values[] = $this->singleValue($item_wrapper, $wrapper, $interpreter->getAccount());
       }
       return $values;
     }
-    return $this->singleValue($property_wrapper, $wrapper);
+    return $this->singleValue($property_wrapper, $wrapper, $interpreter->getAccount());
   }
 
   /**
@@ -278,16 +282,20 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
    *   The property wrapper. Either \EntityDrupalWrapper or \EntityListWrapper.
    * @param \EntityDrupalWrapper $wrapper
    *   The entity wrapper.
+   * @param object $account
+   *   The user account.
    *
    * @return mixed
    *   A single value for the field.
+   *
+   * @throws \Drupal\restful\Exception\BadRequestException
+   * @throws \Drupal\restful\Exception\ServerConfigurationException
    */
-  protected function singleValue(\EntityMetadataWrapper $property_wrapper, \EntityDrupalWrapper $wrapper) {
+  protected function singleValue(\EntityMetadataWrapper $property_wrapper, \EntityDrupalWrapper $wrapper, $account) {
     if ($resource = $this->getResource()) {
       // TODO: The resource input data in the field definition has changed.
       // Now it does not need to be keyed by bundle since you don't even need
       // an entity to use the resource based field.
-
       $embedded_identifier = $this->propertyIdentifier($property_wrapper);
       // Allow embedding entities with ID 0, like the anon user.
       if (empty($embedded_identifier) && $embedded_identifier !== 0) {
@@ -311,6 +319,7 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
       // Configure the plugin copy with the sub-request and sub-path.
       $embedded_resource->setPath($embedded_identifier);
       $embedded_resource->setRequest($request);
+      $embedded_resource->setAccount($account);
       $metadata = $this->getMetadata($wrapper->getIdentifier());
       $metadata = $metadata ?: array();
       $metadata[] = $this->buildResourceMetadataItem($property_wrapper);
@@ -322,7 +331,7 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
           ->getDataProvider()
           ->view($embedded_identifier);
       }
-      catch (ForbiddenException $e) {
+      catch (InaccessibleRecordException $e) {
         // If you don't have access to the embedded entity is like not having
         // access to the property.
         return NULL;

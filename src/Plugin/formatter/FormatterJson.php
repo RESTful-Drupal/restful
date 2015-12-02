@@ -14,7 +14,8 @@ use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldResourceInterface;
 
 /**
- * Class FormatterHalJson
+ * Class FormatterHalJson.
+ *
  * @package Drupal\restful\Plugin\formatter
  *
  * @Formatter(
@@ -26,7 +27,7 @@ use Drupal\restful\Plugin\resource\Field\ResourceFieldResourceInterface;
 class FormatterJson extends Formatter implements FormatterInterface {
 
   /**
-   * Content Type
+   * Content Type.
    *
    * @var string
    */
@@ -53,6 +54,11 @@ class FormatterJson extends Formatter implements FormatterInterface {
         // Get the total number of items for the current request without
         // pagination.
         $output['count'] = $data_provider->count();
+        // If there are items that were taken out during access checks,
+        // report them as denied in the metadata.
+        if (variable_get('restful_show_access_denied', FALSE) && ($inaccessible_records = $data_provider->getMetadata()->get('inaccessible_records'))) {
+          $output['denied'] = empty($output['meta']['denied']) ? $inaccessible_records : $output['meta']['denied'] + $inaccessible_records;
+        }
       }
       if (method_exists($resource, 'additionalHateoas')) {
         $output = array_merge($output, $resource->additionalHateoas($output));

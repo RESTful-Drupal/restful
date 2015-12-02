@@ -12,6 +12,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Drupal\restful\Exception\ForbiddenException;
 use Drupal\restful\Exception\InternalServerErrorException;
 use Drupal\restful\Exception\ServerConfigurationException;
+use Drupal\restful\Exception\InaccessibleRecordException;
 use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\Decorators\CacheDecoratedResource;
@@ -19,10 +20,8 @@ use Drupal\restful\Plugin\resource\Field\ResourceFieldResourceInterface;
 use Drupal\restful\Plugin\resource\ResourceEntity;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterEMW;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
-use Drupal\restful\Plugin\resource\Field\ResourceFieldCollection;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldEntity;
-use Drupal\restful\Plugin\resource\Field\ResourceFieldEntityInterface;
 use Drupal\restful\Exception\BadRequestException;
 use Drupal\restful\Exception\UnprocessableEntityException;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
@@ -32,6 +31,11 @@ use Drupal\restful\Util\RelationalFilter;
 use Drupal\restful\Util\RelationalFilterInterface;
 use Drupal\entity_validator\ValidatorPluginManager;
 
+/**
+ * Class DataProviderEntity.
+ *
+ * @package Drupal\restful\Plugin\resource\DataProvider
+ */
 class DataProviderEntity extends DataProvider implements DataProviderEntityInterface {
 
   /**
@@ -223,13 +227,12 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
    * {@inheritdoc}
    */
   public function view($identifier) {
-    $id = $identifier;
-    $entity_id = $this->getEntityIdByFieldId($id);
+    $entity_id = $this->getEntityIdByFieldId($identifier);
 
     if (!$this->isValidEntity('view', $entity_id)) {
-      return NULL;
+      throw new InaccessibleRecordException(sprintf('The current user cannot access entity "%s".', $entity_id));
     }
-    $resource_field_collection = $this->initResourceFieldCollection($identifier);
+    $field_collection = $this->initResourceFieldCollection($identifier);
     // Defer sparse fieldsets to the formatter. That way we can minimize cache
     // fragmentation because we have a unique cache record for all the sparse
     // fieldsets combinations.
@@ -241,22 +244,22 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     // performance reasons.
     $input = $this->getRequest()->getParsedInput();
     $limit_fields = !empty($input['fields']) ? explode(',', $input['fields']) : array();
-    $resource_field_collection->setLimitFields($limit_fields);
+    $field_collection->setLimitFields($limit_fields);
 
-    foreach ($this->fieldDefinitions as $resource_field_name => $resource_field) {
+    foreach ($this->fieldDefinitions as $resource_field) {
       // Create an empty field collection and populate it with the appropriate
       // resource fields.
-      /* @var ResourceFieldEntityInterface $resource_field */
+      /* @var \Drupal\restful\Plugin\resource\Field\ResourceFieldEntityInterface $resource_field */
 
-      if (!$this->methodAccess($resource_field) || !$resource_field->access('view', $resource_field_collection->getInterpreter())) {
+      if (!$this->methodAccess($resource_field) || !$resource_field->access('view', $field_collection->getInterpreter())) {
         // The field does not apply to the current method or has denied access.
         continue;
       }
 
-      $resource_field_collection->set($resource_field->id(), $resource_field);
+      $field_collection->set($resource_field->id(), $resource_field);
     }
 
-    return $resource_field_collection;
+    return $field_collection;
   }
 
   /**
@@ -267,12 +270,16 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     // If no IDs were requested, we should not throw an exception in case an
     // entity is un-accessible by the user.
     foreach ($identifiers as $identifier) {
-      if ($row = $this->view($identifier)) {
-        $return[] = $row;
+      try {
+        $row = $this->view($identifier);
       }
+      catch (InaccessibleRecordException $e) {
+        $row = NULL;
+      }
+      $return[] = $row;
     }
 
-    return $return;
+    return array_filter($return);
   }
 
   /**
@@ -591,7 +598,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
 
     foreach ($sorts as $public_field_name => $direction) {
       // Determine if sorting is by field or property.
-      /* @var ResourceFieldEntityInterface $resource_field */
+      /* @var \Drupal\restful\Plugin\resource\Field\ResourceFieldEntityInterface $resource_field */
       if (!$resource_field = $resource_fields->get($public_field_name)) {
         return;
       }
@@ -624,7 +631,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     $this->validateFilters($filters);
     foreach ($filters as $filter) {
       // Determine if filtering is by field or property.
-      /* @var ResourceFieldEntityInterface $resource_field */
+      /* @var \Drupal\restful\Plugin\resource\Field\ResourceFieldEntityInterface $resource_field */
       if (!$resource_field = $resource_fields->get($filter['public_field'])) {
         if (!static::isNestedField($filter['public_field'])) {
           // This is not a nested filter.
@@ -798,7 +805,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
    *   TRUE if entity is valid, and user can access it.
    *
    * @throws UnprocessableEntityException
-   * @throws ForbiddenException
+   * @throws InaccessibleRecordException
    */
   protected function isValidEntity($op, $entity_id) {
     $entity_type = $this->entityType;
@@ -822,18 +829,20 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
         // Just return FALSE, without an exception, for example when a list of
         // entities is requested, and we don't want to fail all the list because
         // of a single item without access.
-
         // Add the inaccessible item to the metadata to fix the record count in
         // the formatter.
         $inaccessible_records = $this->getMetadata()->get('inaccessible_records');
-        $inaccessible_records[] = $entity_id;
+        $inaccessible_records[] = array(
+          'resource' => $this->pluginId,
+          'id' => $entity_id,
+        );
         $this->getMetadata()->set('inaccessible_records', $inaccessible_records);
 
         return FALSE;
       }
 
       // Entity was explicitly requested so we need to throw an exception.
-      throw new ForbiddenException(sprintf('You do not have access to entity ID %s.', $entity_id));
+      throw new InaccessibleRecordException(sprintf('You do not have access to entity ID %s.', $entity_id));
     }
 
     return TRUE;
@@ -842,11 +851,11 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
   /**
    * Check access to CRUD an entity.
    *
-   * @param $op
+   * @param string $op
    *   The operation. Allowed values are "create", "update" and "delete".
-   * @param $entity_type
+   * @param string $entity_type
    *   The entity type.
-   * @param $entity
+   * @param object $entity
    *   The entity object.
    *
    * @return bool
@@ -871,6 +880,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
    *   set the fields to NULL.
    *
    * @throws BadRequestException
+   *   If the provided object is not valid.
    */
   protected function setPropertyValues(\EntityDrupalWrapper $wrapper, $object, $replace = FALSE) {
     if (!is_array($object)) {
@@ -884,7 +894,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
 
     $field_definitions = clone $this->fieldDefinitions;
     foreach ($field_definitions as $public_field_name => $resource_field) {
-      /* @var ResourceFieldEntityInterface $resource_field */
+      /* @var \Drupal\restful\Plugin\resource\Field\ResourceFieldEntityInterface $resource_field */
 
       if (!$this->methodAccess($resource_field)) {
         // Allow passing the value in the request.
@@ -962,6 +972,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
    *   The parsed body.
    *
    * @throws \Drupal\restful\Exception\BadRequestException
+   *   For the empty body.
    */
   protected function validateBody($body) {
     if (isset($body) && !is_array($body)) {

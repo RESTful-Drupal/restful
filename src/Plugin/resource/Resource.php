@@ -358,7 +358,15 @@ abstract class Resource extends PluginBase implements ResourceInterface {
       ->getHeaders()
       ->add(HttpHeader::create('Link', $this->versionedUrl($canonical_path, array(), FALSE) . '; rel="canonical"'));
 
-    return $this->getDataProvider()->viewMultiple($ids);
+    // If there is only one ID then use 'view'. Else, use 'viewMultiple'. The
+    // difference between the two is that 'view' allows access denied
+    // exceptions.
+    if (count($ids) == 1) {
+      return array($this->getDataProvider()->view($ids[0]));
+    }
+    else {
+      return $this->getDataProvider()->viewMultiple($ids);
+    }
   }
 
   /**

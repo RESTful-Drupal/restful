@@ -6,9 +6,9 @@
  */
 
 /**
- * Flag a field to not be accessible.
+ * Flag a node to not be accessible.
  *
- * @param $nid
+ * @param int $nid
  *   The node ID to deny access.
  */
 function restful_test_deny_access_node($nid) {
@@ -46,7 +46,7 @@ function restful_test_node_access($node, $op, $account) {
 /**
  * Flag a field to not be accessible.
  *
- * @param $field_name
+ * @param string $field_name
  *   The field name. Defaults to "body".
  */
 function restful_test_deny_access_field($field_name = 'body') {
