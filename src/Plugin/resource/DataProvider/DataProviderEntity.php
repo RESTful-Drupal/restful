@@ -814,7 +814,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
       // We need to check if the entity ID is numeric since if this is a uuid
       // that starts by the number 4, and there is an entity with ID 4 that
       // entity will be loaded incorrectly.
-      throw new InaccessibleRecordException(sprintf('The entity ID %s does not exist.', $entity_id));
+      throw new UnprocessableEntityException(sprintf('The entity ID %s does not exist.', $entity_id));
     }
 
     list(,, $bundle) = entity_extract_ids($entity_type, $entity);

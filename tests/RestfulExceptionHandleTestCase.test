@@ -2,11 +2,17 @@
 
 /**
  * @file
- * Contains RestfulExceptionHandleTestCase
+ * Contains RestfulExceptionHandleTestCase.
  */
 
+/**
+ * Class RestfulExceptionHandleTestCase.
+ */
 class RestfulExceptionHandleTestCase extends \RestfulCurlBaseTestCase {
 
+  /**
+   * {@inheritdoc}
+   */
   public static function getInfo() {
     return array(
       'name' => 'Exception handling',
@@ -15,6 +21,9 @@ class RestfulExceptionHandleTestCase extends \RestfulCurlBaseTestCase {
     );
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function setUp() {
     parent::setUp('restful_example');
   }

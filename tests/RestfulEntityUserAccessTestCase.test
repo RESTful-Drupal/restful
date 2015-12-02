@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains RestfulEntityUserAccessTestCase
+ * Contains RestfulEntityUserAccessTestCase.
  */
 
 use Drupal\restful\Exception\InaccessibleRecordException;
