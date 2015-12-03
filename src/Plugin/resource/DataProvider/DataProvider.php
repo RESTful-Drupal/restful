@@ -97,6 +97,9 @@ abstract class DataProvider implements DataProviderInterface {
       $filter = array('value' => $filter);
     }
     if (!is_array($filter['value'])) {
+      if (!isset($filter['value'])) {
+        throw new BadRequestException(sprintf('Value not present for the "%s" filter. Please check the URL format.', $public_field));
+      }
       $filter['value'] = array($filter['value']);
     }
     // Add the property.
