@@ -1109,6 +1109,11 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
     // Cache the processed fields.
     $this->setPublicFields($public_fields);
 
+    // Allow other modules alter the fields info if the plugin allowed it.
+    if ($this->getPluginKey('allow_public_alter')) {
+      drupal_alter('restful_public_fields', $public_fields, $this->getPlugin());
+    }
+
     return $this->publicFields;
   }
 
