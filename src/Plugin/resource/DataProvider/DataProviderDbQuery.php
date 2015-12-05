@@ -207,10 +207,7 @@ class DataProviderDbQuery extends DataProvider implements DataProviderDbQueryInt
    * {@inheritdoc}
    */
   public function view($identifier) {
-    $table = $this->getTableName();
-    /* @var \SelectQuery $query */
-    $query = db_select($table)
-      ->fields($table);
+    $query = $this->getQuery();
     foreach ($this->getIdColumn() as $index => $column) {
       $identifier = is_array($identifier) ? $identifier : array($identifier);
       $query->condition($this->getTableName() . '.' . $column, current($this->getColumnFromIds($identifier, $index)));
