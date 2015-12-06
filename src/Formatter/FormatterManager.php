@@ -14,6 +14,11 @@ use Drupal\restful\Plugin\resource\ResourceInterface;
 use Drupal\restful\Plugin\FormatterPluginManager;
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
 
+/**
+ * Class FormatterManager.
+ *
+ * @package Drupal\restful\Formatter
+ */
 class FormatterManager implements FormatterManagerInterface {
 
   /**
