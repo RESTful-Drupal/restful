@@ -20,6 +20,10 @@ install:
   - phpenv rehash
   # Make sure we don't fail when checking out projects
   - echo -e "Host github.com\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
+  - sudo echo -e "\ndeb http://archive.ubuntu.com/ubuntu precise multiverse" >> /etc/apt/sources.list
+  - sudo echo deb http://archive.ubuntu.com/ubuntu precise-updates multiverse >> /etc/apt/sources.list
+  - sudo echo deb deb http://security.ubuntu.com/ubuntu precise-security multiverse >> /etc/apt/sources.list
+
   # LAMP package installation (mysql is already started)
   - sudo apt-get update
   - sudo apt-get install apache2 libapache2-mod-fastcgi
