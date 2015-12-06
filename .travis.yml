@@ -20,9 +20,9 @@ install:
   - phpenv rehash
   # Make sure we don't fail when checking out projects
   - echo -e "Host github.com\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
-  - sudo echo -e "\ndeb http://archive.ubuntu.com/ubuntu precise multiverse" >> /etc/apt/sources.list
-  - sudo echo deb http://archive.ubuntu.com/ubuntu precise-updates multiverse >> /etc/apt/sources.list
-  - sudo echo deb deb http://security.ubuntu.com/ubuntu precise-security multiverse >> /etc/apt/sources.list
+  - echo -e "\ndeb http://archive.ubuntu.com/ubuntu precise multiverse" | sudo tee -a /etc/apt/sources.list
+  - echo "deb http://archive.ubuntu.com/ubuntu precise-updates multiverse" | sudo tee -a /etc/apt/sources.list
+  - echo "deb deb http://security.ubuntu.com/ubuntu precise-security multiverse" | sudo tee -a /etc/apt/sources.list
 
   # LAMP package installation (mysql is already started)
   - sudo apt-get update
