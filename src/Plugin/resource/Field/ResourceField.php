@@ -49,12 +49,14 @@ class ResourceField extends ResourceFieldBase implements ResourceFieldInterface 
   public static function create(array $field, RequestInterface $request = NULL) {
     $request = $request ?: restful()->getRequest();
     if ($class_name = static::fieldClassName($field)) {
-      // Call the create factory in the derived class.
-      return call_user_func_array(array($class_name, 'create'), array(
-        $field,
-        $request,
-        new static($field, $request),
-      ));
+      if ($class_name != get_called_class() && $class_name != '\\' . get_called_class()) {
+        // Call the create factory in the derived class.
+        return call_user_func_array(array($class_name, 'create'), array(
+          $field,
+          $request,
+          new static($field, $request),
+        ));
+      }
     }
     // If no other class was found, then use the current one.
     $resource_field = new static($field, $request);
