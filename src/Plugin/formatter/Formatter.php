@@ -11,6 +11,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Drupal\Component\Plugin\PluginBase;
 use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Plugin\ConfigurablePluginTrait;
+use Drupal\restful\Plugin\resource\Decorators\CacheDecoratedResourceInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldBase;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
 use Drupal\restful\Plugin\resource\ResourceInterface;
@@ -219,6 +220,9 @@ abstract class Formatter extends PluginBase implements FormatterInterface {
     $cache_fragments->set('formatter', $this->getPluginId());
     /* @var \Drupal\restful\Plugin\resource\Decorators\CacheDecoratedResource $cached_resource */
     if (!$cached_resource = $this->getResource()) {
+      return NULL;
+    }
+    if (!$cached_resource instanceof CacheDecoratedResourceInterface) {
       return NULL;
     }
     return RenderCache::create($cache_fragments, $cached_resource->getCacheController());
