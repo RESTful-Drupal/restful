@@ -216,7 +216,7 @@ class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface 
       $return[] = $row;
     }
 
-    return array_filter($return);
+    return array_values(array_filter($return));
   }
 
   /**

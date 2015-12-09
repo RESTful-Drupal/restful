@@ -96,7 +96,7 @@ class DataProviderPlug extends DataProvider implements DataProviderInterface {
       $return[] = $row;
     }
 
-    return array_filter($return);
+    return array_values(array_filter($return));
   }
 
   /**
