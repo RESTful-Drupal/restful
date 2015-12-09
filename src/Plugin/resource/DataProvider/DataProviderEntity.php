@@ -230,6 +230,12 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     $entity_id = $this->getEntityIdByFieldId($identifier);
 
     if (!$this->isValidEntity('view', $entity_id)) {
+      // This view may have been requested as part of a create operation. In
+      // that case, we don't throw an InaccessibleRecordException, as the create
+      // may succeed with or without the user having access to view the new item.
+      if (!$this->getResourcePath()) {
+        return array();
+      }
       throw new InaccessibleRecordException(sprintf('The current user cannot access entity "%s".', $entity_id));
     }
     $field_collection = $this->initResourceFieldCollection($identifier);
