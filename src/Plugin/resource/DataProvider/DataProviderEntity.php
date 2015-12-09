@@ -216,6 +216,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     // The access calls use the request method. Fake the view to be a GET.
     $old_request = $this->getRequest();
     $this->getRequest()->setMethod(RequestInterface::METHOD_GET);
+    $this->getRequest()->setViaRouter(FALSE);
     $output = array($this->view($wrapper->getIdentifier()));
     // Put the original request back to a POST.
     $this->request = $old_request;
@@ -233,7 +234,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
       // This view may have been requested as part of a create operation. In
       // that case, we don't throw an InaccessibleRecordException, as the create
       // may succeed with or without the user having access to view the new item.
-      if (!$this->getResourcePath()) {
+      if (!$this->getRequest()->isViaRouter()) {
         return array();
       }
       throw new InaccessibleRecordException(sprintf('The current user cannot access entity "%s".', $entity_id));
