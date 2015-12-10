@@ -331,7 +331,7 @@ class DataProviderDbQuery extends DataProvider implements DataProviderDbQueryInt
     if (!drupal_write_record($this->getTableName(), $record, $id_columns)) {
       throw new ServiceUnavailableException('Record could not be updated to the database.');
     }
-    return $this->view($identifier);
+    return array($this->view($identifier));
   }
 
   /**
