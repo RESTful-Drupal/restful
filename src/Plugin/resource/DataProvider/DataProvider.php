@@ -9,7 +9,7 @@ namespace Drupal\restful\Plugin\resource\DataProvider;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Drupal\restful\Exception\BadRequestException;
-use Drupal\restful\Exception\ServiceUnavailableException;
+use Drupal\restful\Exception\UnprocessableEntityException;
 use Drupal\restful\Http\HttpHeader;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\Decorators\CacheDecoratedResource;
@@ -331,7 +331,7 @@ abstract class DataProvider implements DataProviderInterface {
    *   With the different sorting options.
    *
    * @throws \Drupal\restful\Exception\BadRequestException
-   * @throws \Drupal\restful\Exception\ServiceUnavailableException
+   * @throws \Drupal\restful\Exception\UnprocessableEntityException
    */
   protected function parseRequestForListSort() {
     $input = $this->getRequest()->getParsedInput();
@@ -342,7 +342,7 @@ abstract class DataProvider implements DataProviderInterface {
 
     $url_params = $this->options['urlParams'];
     if (!$url_params['sort']) {
-      throw new ServiceUnavailableException('Sort parameters have been disabled in server configuration.');
+      throw new UnprocessableEntityException('Sort parameters have been disabled in server configuration.');
     }
 
     $sorts = array();
@@ -366,7 +366,7 @@ abstract class DataProvider implements DataProviderInterface {
    *   An array of filters to apply.
    *
    * @throws \Drupal\restful\Exception\BadRequestException
-   * @throws \Drupal\restful\Exception\ServiceUnavailableException
+   * @throws \Drupal\restful\Exception\UnprocessableEntityException
    *
    * @see \RestfulEntityBase::getQueryForList
    */
@@ -386,7 +386,7 @@ abstract class DataProvider implements DataProviderInterface {
 
     $url_params = empty($this->options['urlParams']) ? array() : $this->options['urlParams'];
     if (isset($url_params['filter']) && !$url_params['filter']) {
-      throw new ServiceUnavailableException('Filter parameters have been disabled in server configuration.');
+      throw new UnprocessableEntityException('Filter parameters have been disabled in server configuration.');
     }
 
     $filters = array();
@@ -408,7 +408,7 @@ abstract class DataProvider implements DataProviderInterface {
    *   A numeric array with the offset and length options.
    *
    * @throws BadRequestException
-   * @throws ServiceUnavailableException
+   * @throws UnprocessableEntityException
    */
   protected function parseRequestForListPagination() {
     $input = $this->getRequest()->getParsedInput();
@@ -426,7 +426,7 @@ abstract class DataProvider implements DataProviderInterface {
 
     $url_params = empty($this->options['urlParams']) ? array() : $this->options['urlParams'];
     if (isset($url_params['range']) && !$url_params['range']) {
-      throw new ServiceUnavailableException('Range parameters have been disabled in server configuration.');
+      throw new UnprocessableEntityException('Range parameters have been disabled in server configuration.');
     }
 
     $offset = ($page - 1) * $range;
