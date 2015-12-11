@@ -584,15 +584,13 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
     )));
     $handler->setPath($entities[2]->uuid);
     $format_manager->setResource($handler);
-    try {
-      $format_manager
-        ->negotiateFormatter(NULL, 'json_api')
-        ->prepare($handler->process());
-      $this->fail('Entity can be loaded with uuid when there is no idField.');
-    }
-    catch (UnprocessableEntityException $e) {
-      $this->pass('Entity cannot be loaded with uuid when there is no idField.');
-    }
+    $response = $format_manager
+      ->negotiateFormatter(NULL, 'json_api')
+      ->prepare($handler->process());
+
+    $result = $response['data']['attributes'];
+    // Make sure the entity_reference_resource_error is NULL.
+    $this->assertNull($result['entity_reference_resource_error'], 'Entity cannot be loaded with uuid when there is no idField.');
     variable_del('restful_test_alternative_id_error');
 
     // Clear caches to remove error field.
