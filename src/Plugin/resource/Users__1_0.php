@@ -15,7 +15,7 @@ namespace Drupal\restful\Plugin\resource;
  *   name = "users:1.0",
  *   resource = "users",
  *   label = "Users",
- *   description = "Export the article content type with cookie authentication.",
+ *   description = "Export the User entity with cookie authentication.",
  *   authenticationTypes = TRUE,
  *   authenticationOptional = TRUE,
  *   dataProvider = {
