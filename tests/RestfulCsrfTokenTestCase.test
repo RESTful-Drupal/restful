@@ -109,7 +109,7 @@ class RestfulCsrfTokenTestCase extends RestfulCurlBaseTestCase {
         'Content-Type' => 'application/x-www-form-urlencoded',
       ), FALSE);
       if ($csrf_required) {
-        $params['@code'] = 403;
+        $params['@code'] = 400;
         $this->assertEqual($result['code'], $params['@code'], format_string('@code on @method without CSRF token for @role user.', $params));
       }
       else {
