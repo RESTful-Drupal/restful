@@ -391,6 +391,22 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
     $input = $request->getParsedInput();
     $this->assertEqual($input['fields'], 'first,first.second,first.second.third,first.second.third.fourth,first.third,first.third.fourth');
     $this->assertEqual($input['include'], 'fifth,fifth.sixth,fifth.sixth.seventh');
+
+    // 8. Assert generic reference resource field.
+    // Add some data to the DB table.
+    $record = array(
+      'str_field' => $this->randomName(),
+      'int_field' => mt_rand(1, 10),
+      'serialized_field' => serialize(array()),
+    );
+    drupal_write_record('restful_test_db_query', $record);
+    $handler = restful()->getResourceManager()->getPlugin('main:1.8');
+    $handler->setRequest(Request::create('', array('include' => 'random_rel', 'range' => 1)));
+    $handler->setPath(1);
+    $formatter = restful()->getFormatterManager()->getPlugin('json_api');
+    $formatter->setResource($handler);
+    $result = $formatter->prepare($handler->process());
+    $this->assertEqual($result['included'][0]['attributes']['id'], 1);
   }
 
   /**

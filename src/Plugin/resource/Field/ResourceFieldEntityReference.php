@@ -15,6 +15,11 @@ use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
 use Drupal\restful\Plugin\resource\DataProvider\DataProviderResource;
 
+/**
+ * Class ResourceFieldEntityReference.
+ *
+ * @package Drupal\restful\Plugin\resource\Field
+ */
 class ResourceFieldEntityReference extends ResourceFieldEntity implements ResourceFieldEntityReferenceInterface {
 
   /**
