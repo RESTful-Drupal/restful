@@ -6,7 +6,7 @@
  */
 
 use Drupal\restful\Exception\BadRequestException;
-use Drupal\restful\Exception\ServiceUnavailableException;
+use Drupal\restful\Exception\UnprocessableEntityException;
 use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
 
@@ -276,7 +276,7 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
       restful()->getFormatterManager()->format($handler->process(), 'json');
       $this->fail('Exception not raised for disabled sort parameter.');
     }
-    catch (ServiceUnavailableException $e) {
+    catch (UnprocessableEntityException $e) {
       $this->pass('Exception raised for disabled sort parameter.');
     }
 
@@ -334,7 +334,7 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
       restful()->getFormatterManager()->format($handler->process(), 'json');
       $this->fail('Exception not raised for disabled range parameter.');
     }
-    catch (ServiceUnavailableException $e) {
+    catch (UnprocessableEntityException $e) {
       $this->pass('Exception raised for disabled range parameter.');
     }
 
@@ -609,7 +609,7 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
       restful()->getFormatterManager()->format($handler->process(), 'json');
       $this->fail('Exception not raised for disabled filter parameter.');
     }
-    catch (ServiceUnavailableException $e) {
+    catch (UnprocessableEntityException $e) {
       $this->pass('Exception raised for disabled filter parameter.');
     }
 
