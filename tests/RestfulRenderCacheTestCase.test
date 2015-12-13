@@ -9,8 +9,10 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\RenderCache\RenderCache;
-use Drupal\restful\RenderCache\Entity\CacheFragmentController;
 
+/**
+ * Class RestfulRenderCacheTestCase.
+ */
 class RestfulRenderCacheTestCase extends \RestfulCurlBaseTestCase {
 
   /**
@@ -122,7 +124,7 @@ class RestfulRenderCacheTestCase extends \RestfulCurlBaseTestCase {
     restful_entity_clear_render_cache();
     // Make sure that the cache fragment entities have been deleted.
     $query = new \EntityFieldQuery();
-    /* @var CacheFragmentController $controller */
+    /* @var \Drupal\restful\RenderCache\Entity\CacheFragmentController $controller */
     $controller = entity_get_controller('cache_fragment');
     $results = $query
       ->entityCondition('entity_type', 'cache_fragment')
@@ -226,7 +228,7 @@ class RestfulRenderCacheTestCase extends \RestfulCurlBaseTestCase {
     // Try to access the cached resource.
     $response = $this->httpRequest($path);
     // The user should get a 403.
-    $this->assertEqual($response['code'], 403, 'Access denied for anonymous user.');
+    $this->assertEqual($response['code'], 401, 'Access denied for anonymous user.');
     // Clear the cache, since anonymous requests get cached. Requests with basic
     // authentication will pick that cached version. This is a know issue and we
     // accept it as a lesser evil.
@@ -245,7 +247,7 @@ class RestfulRenderCacheTestCase extends \RestfulCurlBaseTestCase {
     // Try to access the cached resource.
     $response = $this->httpRequest($path);
     // The user should get a 403.
-    $this->assertEqual($response['code'], 403, 'Access denied for anonymous user.');
+    $this->assertEqual($response['code'], 401, 'Access denied for anonymous user.');
     if (!drupal_is_cli()) {
       // Make sure that there is not a page cache entry.
       $this->assertFalse($cache->get($url), 'A page cache entry was created for an anonymous user.');
