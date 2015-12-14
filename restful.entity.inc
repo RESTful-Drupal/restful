@@ -165,7 +165,7 @@ function _restful_entity_clear_all_resources($cid) {
 }
 
 /**
- * Shutdown function that deletes the scheduled fragments and caches on shutdown.
+ * Delete the scheduled fragments and caches on shutdown.
  */
 function restful_entity_clear_render_cache() {
   if ($hashes = drupal_static('restful_entity_clear_hashes', array())) {
@@ -185,8 +185,8 @@ function restful_entity_clear_render_cache() {
       }
       // You can get away without the fragments for a clear.
       $cache_object = new RenderCache(new ArrayCollection(), $hash, $handler->getCacheController());
-      // Do a clear with the RenderCache object to also remove the cache fragment
-      // entities.
+      // Do a clear with the RenderCache object to also remove the cache
+      // fragment entities.
       $cache_object->clear();
     }
   }

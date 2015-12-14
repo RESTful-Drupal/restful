@@ -10,6 +10,11 @@ namespace Drupal\restful\RenderCache\Entity;
 use Doctrine\Common\Collections\ArrayCollection;
 use Drupal\restful\Plugin\resource\Decorators\CacheDecoratedResource;
 
+/**
+ * Class CacheFragmentController.
+ *
+ * @package Drupal\restful\RenderCache\Entity
+ */
 class CacheFragmentController extends \EntityAPIController {
 
   /**
@@ -114,7 +119,70 @@ class CacheFragmentController extends \EntityAPIController {
     if (empty($results['cache_fragment'])) {
       return;
     }
+    if ($this->isFastDeleteEnabled()) {
+      db_truncate('cache_fragment');
+      return;
+    }
     $this->delete(array_keys($results['cache_fragment']));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function delete($ids, \DatabaseTransaction $transaction = NULL) {
+    if ($this->isFastDeleteEnabled()) {
+      $this->fastDelete($ids, $transaction);
+      return;
+    }
+    parent::delete($ids, $transaction);
+  }
+
+  /**
+   * Do a fast delete without loading entities of firing delete hooks.
+   *
+   * @param array $ids
+   *   An array of entity IDs.
+   * @param \DatabaseTransaction $transaction
+   *   Optionally a DatabaseTransaction object to use. Allows overrides to pass
+   *   in their transaction object.
+   *
+   * @throws \Exception
+   *   When there is a database error.
+   */
+  protected function fastDelete($ids, \DatabaseTransaction $transaction = NULL) {
+    $transaction = isset($transaction) ? $transaction : db_transaction();
+
+    try {
+      db_delete($this->entityInfo['base table'])
+        ->condition($this->idKey, $ids, 'IN')
+        ->execute();
+
+      if (isset($this->revisionTable)) {
+        db_delete($this->revisionTable)
+          ->condition($this->idKey, $ids, 'IN')
+          ->execute();
+      }
+      // Reset the cache as soon as the changes have been applied.
+      $this->resetCache($ids);
+
+      // Ignore slave server temporarily.
+      db_ignore_slave();
+    }
+    catch (\Exception $e) {
+      $transaction->rollback();
+      watchdog_exception($this->entityType, $e);
+      throw $e;
+    }
+  }
+
+  /**
+   * Helper function that checks if this controller uses a fast delete.
+   *
+   * @return bool
+   *   TRUE if fast delete is enabled. FALSE otherwise.
+   */
+  protected function isFastDeleteEnabled() {
+    return (bool) variable_get('restful_fast_cache_clear', TRUE);
   }
 
   /**
