@@ -101,7 +101,7 @@ function restful_admin_settings($form_state) {
   $form['restful_cache']['restful_fast_cache_clear'] = array(
     '#type' => 'checkbox',
     '#title' => t('Fast cache clear'),
-    '#description' => t('A lot of cache fragment entries may be created by default, and depending of your setup. This may cause your cache clears to be slow. By checking this checkbox the cache fragments are deleted from the database in a fast manner. As a trade-in, no hook_entity_delete will be fired for the cache fragment entities. This is OK in the vast majority of the cases.'),
+    '#description' => t('A lot of cache fragment entries may be created by default. This may cause your cache clears to be slow. By checking this checkbox the cache fragments are deleted from the database in a fast manner. As a trade-in, no hook_entity_delete will be fired for the cache fragment entities. This is OK in the vast majority of the cases. You can mitigate the number of generated fragments by overriding the "getCacheContext" method in your data provider.'),
     '#default_value' => variable_get('restful_fast_cache_clear', TRUE),
   );
 
