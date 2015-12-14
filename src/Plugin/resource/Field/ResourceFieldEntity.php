@@ -336,6 +336,10 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
         // access to the property.
         return NULL;
       }
+      catch (UnprocessableEntityException $e) {
+        // If you access a nonexistent embedded entity.
+        return NULL;
+      }
       // Test if the $embedded_entity meets the filter or not.
       if (empty($parsed_input['filter'])) {
         return $embedded_entity;
