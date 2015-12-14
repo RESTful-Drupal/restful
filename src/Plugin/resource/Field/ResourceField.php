@@ -10,7 +10,6 @@ namespace Drupal\restful\Plugin\resource\Field;
 use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
-use Drupal\restful\Plugin\resource\Field\PublicFieldInfo\PublicFieldInfoBase;
 use Drupal\restful\Resource\ResourceManager;
 
 class ResourceField extends ResourceFieldBase implements ResourceFieldInterface {
@@ -39,8 +38,6 @@ class ResourceField extends ResourceFieldBase implements ResourceFieldInterface 
     // Store the definition, useful to access custom keys on custom resource
     // fields.
     $this->definition = $field;
-    $discovery_info = empty($field['discovery']) ? array() : $field['discovery'];
-    $this->setPublicFieldInfo(new PublicFieldInfoBase($this->getPublicName(), $discovery_info));
   }
 
   /**

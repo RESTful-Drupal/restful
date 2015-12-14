@@ -34,9 +34,19 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
   protected $decorated;
 
   /**
-   * A sub property name of a property to take from it the content. This can be
-   * used for example on a text field with filtered text input format where we
-   * would need to do $wrapper->body->value->value().
+   * A copy of the underlying property.
+   *
+   * This is duplicated here for performance reasons.
+   *
+   * @var string
+   */
+  protected $property;
+
+  /**
+   * A sub property name of a property to take from it the content.
+   *
+   * This can be used for example on a text field with filtered text input
+   * format where we would need to do $wrapper->body->value->value().
    *
    * @var string
    */
@@ -832,10 +842,10 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
     }
 
     // Set the Entity related defaults.
-    if ($this->getProperty() && $field = field_info_field($this->getProperty())) {
+    $this->property = $this->decorated->getProperty();
+    if ($this->property && $field = field_info_field($this->property)) {
       // If it's an image check if we need to add image style processing.
-      $image_styles = $this->getImageStyles();
-      if ($field['type'] == 'image' && !empty($image_styles)) {
+      if ($field['type'] == 'image' && $image_styles = $this->getImageStyles()) {
         $process_callbacks = $this->getProcessCallbacks();
         array_unshift($process_callbacks, array(
           array($this, 'getImageUris'),
@@ -970,13 +980,14 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
    * {@inheritdoc}
    */
   public function getProperty() {
-    return $this->decorated->getProperty();
+    return $this->property;
   }
 
   /**
    * {@inheritdoc}
    */
   public function setProperty($property) {
+    $this->property = $property;
     $this->decorated->setProperty($property);
   }
 
@@ -1147,25 +1158,23 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
     // store the value in the decorated object.
     $property = NULL;
 
-    $entity_type = $this->getEntityType();
     $wrapper_method = $this->getWrapperMethod();
-    $entity_info = entity_get_info($entity_type);
+    $wrapper = $this->entityTypeWrapper();
     if ($wrapper_method == 'label') {
       // Store the label key.
-      $property = empty($entity_info['entity keys']['label']) ? NULL : $entity_info['entity keys']['label'];
+      $property = $wrapper->entityKey('label');
     }
     elseif ($wrapper_method == 'getBundle') {
-      // Store the label key.
-      $this->setProperty($property);
+      // Store the bundle key.
+      $property = $wrapper->entityKey('bundle');
     }
     elseif ($wrapper_method == 'getIdentifier') {
       // Store the ID key.
-      $property = empty($entity_info['entity keys']['id']) ? NULL : $entity_info['entity keys']['id'];
+      $property = $wrapper->entityKey('id');
     }
 
     // There are occasions when the wrapper property is not the schema
     // database field.
-    $wrapper = $this->entityTypeWrapper();
     if (!is_a($wrapper, '\EntityStructureWrapper')) {
       // The entity type does not exist.
       return;
