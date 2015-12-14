@@ -135,7 +135,7 @@ class CacheFragmentController extends \EntityAPIController {
       return;
     }
     if ($this->isFastDeleteEnabled()) {
-      db_truncate($this::getTableName());
+      db_truncate($this::getTableName())->execute();
       return;
     }
     $this->delete(array_keys($results[static::ENTITY_TYPE]));
