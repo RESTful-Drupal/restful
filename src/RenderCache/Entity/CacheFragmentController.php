@@ -248,7 +248,7 @@ class CacheFragmentController extends \EntityAPIController {
     }
     // Get the hashes from the base table.
     $info = entity_get_info(static::ENTITY_TYPE);
-    static::$tableIdKey = $info['base table'];
+    static::$tableIdKey = $info['entity keys']['id'];
     return static::$tableIdKey;
   }
 
