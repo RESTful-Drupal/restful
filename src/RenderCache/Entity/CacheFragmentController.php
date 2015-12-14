@@ -18,6 +18,25 @@ use Drupal\restful\Plugin\resource\Decorators\CacheDecoratedResource;
 class CacheFragmentController extends \EntityAPIController {
 
   /**
+   * The type name of the cache fragment entity.
+   */
+  const ENTITY_TYPE = 'cache_fragment';
+
+  /**
+   * The name of the DB table holding the entities.
+   *
+   * @var string
+   */
+  protected static $tableName;
+
+  /**
+   * The name of the property that contains the ID of the entity.
+   *
+   * @var string
+   */
+  protected static $tableIdKey;
+
+  /**
    * Creates all the caches tags from the tag collection.
    *
    * @param ArrayCollection $cache_fragments
@@ -36,7 +55,7 @@ class CacheFragmentController extends \EntityAPIController {
         'value' => $tag_value,
         'type' => $tag_type,
         'hash' => $hash,
-      ), 'cache_fragment');
+      ), static::ENTITY_TYPE);
       try {
         if ($id = $this->save($cache_fragment)) {
           $fragments[] = $cache_fragment;
@@ -62,10 +81,10 @@ class CacheFragmentController extends \EntityAPIController {
   protected function existingFragments($hash) {
     $query = new \EntityFieldQuery();
     $results = $query
-      ->entityCondition('entity_type', 'cache_fragment')
+      ->entityCondition('entity_type', static::ENTITY_TYPE)
       ->propertyCondition('hash', $hash)
       ->execute();
-    return empty($results['cache_fragment']) ? array() : $this->load(array_keys($results['cache_fragment']));
+    return empty($results[static::ENTITY_TYPE]) ? array() : $this->load(array_keys($results[static::ENTITY_TYPE]));
   }
 
   /**
@@ -92,16 +111,12 @@ class CacheFragmentController extends \EntityAPIController {
    */
   public static function lookUpHashes(\EntityFieldQuery $query) {
     $results = $query->execute();
-    if (empty($results['cache_fragment'])) {
+    if (empty($results[static::ENTITY_TYPE])) {
       return array();
     }
-    $fragment_ids = array_keys($results['cache_fragment']);
+    $fragment_ids = array_keys($results[static::ENTITY_TYPE]);
 
-    // Get the hashes from the base table.
-    $info = entity_get_info('cache_fragment');
-    $entity_table = $info['base table'];
-    $entity_id_key = $info['entity keys']['id'];
-    $hashes = db_query('SELECT hash FROM {' . $entity_table . '} WHERE ' . $entity_id_key . ' IN (:ids)', array(
+    $hashes = db_query('SELECT hash FROM {' . static::getTableName() . '} WHERE ' . static::getTableIdkey() . ' IN (:ids)', array(
       ':ids' => $fragment_ids,
     ))->fetchCol();
     return $hashes;
@@ -114,16 +129,16 @@ class CacheFragmentController extends \EntityAPIController {
     // We are not truncating the entity table so hooks are fired.
     $query = new \EntityFieldQuery();
     $results = $query
-      ->entityCondition('entity_type', 'cache_fragment')
+      ->entityCondition('entity_type', static::ENTITY_TYPE)
       ->execute();
-    if (empty($results['cache_fragment'])) {
+    if (empty($results[static::ENTITY_TYPE])) {
       return;
     }
     if ($this->isFastDeleteEnabled()) {
-      db_truncate('cache_fragment');
+      db_truncate($this::getTableName());
       return;
     }
-    $this->delete(array_keys($results['cache_fragment']));
+    $this->delete(array_keys($results[static::ENTITY_TYPE]));
   }
 
   /**
@@ -153,15 +168,10 @@ class CacheFragmentController extends \EntityAPIController {
     $transaction = isset($transaction) ? $transaction : db_transaction();
 
     try {
-      db_delete($this->entityInfo['base table'])
-        ->condition($this->idKey, $ids, 'IN')
+      db_delete($this::getTableName())
+        ->condition($this::getTableIdkey(), $ids, 'IN')
         ->execute();
 
-      if (isset($this->revisionTable)) {
-        db_delete($this->revisionTable)
-          ->condition($this->idKey, $ids, 'IN')
-          ->execute();
-      }
       // Reset the cache as soon as the changes have been applied.
       $this->resetCache($ids);
 
@@ -197,17 +207,49 @@ class CacheFragmentController extends \EntityAPIController {
   public static function resourceIdFromHash($hash) {
     $query = new \EntityFieldQuery();
     $results = $query
-      ->entityCondition('entity_type', 'cache_fragment')
+      ->entityCondition('entity_type', static::ENTITY_TYPE)
       ->propertyCondition('type', 'resource')
       ->propertyCondition('hash', $hash)
       ->range(0, 1)
       ->execute();
-    if (empty($results['cache_fragment'])) {
+    if (empty($results[static::ENTITY_TYPE])) {
       return NULL;
     }
-    $cache_fragment = entity_load_single('cache_fragment', key($results['cache_fragment']));
+    $cache_fragment = entity_load_single(static::ENTITY_TYPE, key($results[static::ENTITY_TYPE]));
     $pos = strpos($cache_fragment->value, CacheDecoratedResource::CACHE_PAIR_SEPARATOR);
     return $pos === FALSE ? $cache_fragment->value : substr($cache_fragment->value, 0, $pos);
+  }
+
+  /**
+   * Gets the name of the table for the cache fragment entity.
+   *
+   * @return string
+   *   The name.
+   */
+  protected static function getTableName() {
+    if (static::$tableName) {
+      return static::$tableName;
+    }
+    // Get the hashes from the base table.
+    $info = entity_get_info(static::ENTITY_TYPE);
+    static::$tableName = $info['base table'];
+    return static::$tableName;
+  }
+
+  /**
+   * Gets the name of the table for the cache fragment entity.
+   *
+   * @return string
+   *   The name.
+   */
+  protected static function getTableIdkey() {
+    if (static::$tableIdKey) {
+      return static::$tableIdKey;
+    }
+    // Get the hashes from the base table.
+    $info = entity_get_info(static::ENTITY_TYPE);
+    static::$tableIdKey = $info['base table'];
+    return static::$tableIdKey;
   }
 
 }
