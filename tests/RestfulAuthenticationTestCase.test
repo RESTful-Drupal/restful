@@ -9,6 +9,9 @@ use Drupal\restful\Plugin\AuthenticationPluginManager;
 use Drupal\Component\Plugin\PluginManagerInterface;
 use Drupal\restful\Http\Request;
 
+/**
+ * Class RestfulAuthenticationTestCase.
+ */
 class RestfulAuthenticationTestCase extends RestfulCurlBaseTestCase {
 
   /**
@@ -39,6 +42,9 @@ class RestfulAuthenticationTestCase extends RestfulCurlBaseTestCase {
    */
   protected $pluginManager;
 
+  /**
+   * {@inheritdoc}
+   */
   public static function getInfo() {
     return array(
       'name' => 'Authentication',
@@ -47,6 +53,9 @@ class RestfulAuthenticationTestCase extends RestfulCurlBaseTestCase {
     );
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function setUp() {
     parent::setUp('restful_test');
     // Create a custom user that we'll use to identify.

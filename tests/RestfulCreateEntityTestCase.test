@@ -9,8 +9,14 @@ use Drupal\restful\Exception\BadRequestException;
 use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
 
+/**
+ * Class RestfulCreateEntityTestCase.
+ */
 class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
 
+  /**
+   * {@inheritdoc}
+   */
   public static function getInfo() {
     return array(
       'name' => 'Create entity',
@@ -33,6 +39,9 @@ class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
    */
   protected $account;
 
+  /**
+   * {@inheritdoc}
+   */
   public function setUp() {
     parent::setUp('restful_test', 'entityreference');
 
