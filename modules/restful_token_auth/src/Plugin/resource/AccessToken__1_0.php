@@ -47,6 +47,7 @@ class AccessToken__1_0 extends TokenAuthenticationBase implements ResourceInterf
       '' => array(
         // Get or create a new token.
         RequestInterface::METHOD_GET => 'getOrCreateToken',
+        RequestInterface::METHOD_OPTIONS => 'discover',
       ),
     );
   }
