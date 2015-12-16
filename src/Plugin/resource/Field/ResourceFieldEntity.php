@@ -175,7 +175,6 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
 
     // Add the default specifics for the current object.
     $resource_field->addDefaults();
-
     return $resource_field;
   }
 
@@ -662,8 +661,7 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
    * @return mixed
    *   A single or multiple values.
    */
-  protected function resourceValue(DataInterpreterInterface $source) {
-  }
+  protected function resourceValue(DataInterpreterInterface $source) {}
 
   /**
    * {@inheritdoc}
@@ -735,7 +733,7 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
     if (isset($this->column)) {
       return $this->column;
     }
-    if ($this->getProperty() && $field = field_info_field($this->getProperty())) {
+    if ($this->getProperty() && $field = $this::fieldInfoField($this->getProperty())) {
       if ($field['type'] == 'text_long') {
         // Do not default to format.
         $this->setColumn('value');
@@ -827,11 +825,10 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
 
   /**
    * {@inheritdoc}
+   *
+   * Almost all the defaults come are applied by the object's property defaults.
    */
   public function addDefaults() {
-    // Almost all the defaults come are applied by the object's property
-    // defaults.
-
     // Set the defaults from the decorated.
     $this->setResource($this->decorated->getResource());
 
@@ -842,17 +839,19 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
     }
 
     // Set the Entity related defaults.
-    $this->property = $this->decorated->getProperty();
-    if ($this->property && $field = field_info_field($this->property)) {
+    if (
+      ($this->property = $this->decorated->getProperty()) &&
+      ($field = $this::fieldInfoField($this->property)) &&
+      $field['type'] == 'image' &&
+      ($image_styles = $this->getImageStyles())
+    ) {
       // If it's an image check if we need to add image style processing.
-      if ($field['type'] == 'image' && $image_styles = $this->getImageStyles()) {
-        $process_callbacks = $this->getProcessCallbacks();
-        array_unshift($process_callbacks, array(
-          array($this, 'getImageUris'),
-          array($image_styles),
-        ));
-        $this->setProcessCallbacks($process_callbacks);
-      }
+      $process_callbacks = $this->getProcessCallbacks();
+      array_unshift($process_callbacks, array(
+        array($this, 'getImageUris'),
+        array($image_styles),
+      ));
+      $this->setProcessCallbacks($process_callbacks);
     }
   }
 
@@ -884,8 +883,7 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
    * {@inheritdoc}
    */
   public static function propertyIsField($name) {
-    $field_info = field_info_field($name);
-    return !empty($field_info);
+    return (bool) static::fieldInfoField($name);
   }
 
   /**
@@ -915,11 +913,10 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
     }
     // If there is an extending class for the particular field use that class
     // instead.
-    if (empty($field_definition['property']) || !$field_info = field_info_field($field_definition['property'])) {
+    if (empty($field_definition['property']) || !$field_info = static::fieldInfoField($field_definition['property'])) {
       return NULL;
     }
 
-    $resource_field = NULL;
     switch ($field_info['type']) {
       case 'entityreference':
       case 'taxonomy_term_reference':
@@ -939,11 +936,6 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
         return '\Drupal\restful\Plugin\resource\Field\ResourceFieldEntityFile';
 
       default:
-        // TODO: This will not work unless we provide the correct namespace.
-        $class_name = 'ResourceFieldEntity' . String::camelize($field_info['type']);
-        if (class_exists($class_name)) {
-          return $class_name;
-        }
         return NULL;
     }
   }
@@ -1080,7 +1072,7 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
     }
     // Default to single cardinality.
     $this->cardinality = 1;
-    if ($field_info = field_info_field($this->getProperty())) {
+    if ($field_info = $this::fieldInfoField($this->getProperty())) {
       $this->cardinality = empty($field_info['cardinality']) ? $this->cardinality : $field_info['cardinality'];
     }
     return $this->cardinality;
@@ -1211,7 +1203,7 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
         'label' => $field_instance['label'],
         'description' => $field_instance['description'],
       ));
-      $field_info = field_info_field($this->getProperty());
+      $field_info = $this::fieldInfoField($this->getProperty());
       $section_info = array();
       $section_info['label'] = empty($field_info['label']) ? NULL : $field_info['label'];
       $section_info['description'] = empty($field_info['description']) ? NULL : $field_info['description'];
@@ -1253,6 +1245,24 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
         'description' => $property_info['description'],
       ));
     }
+  }
+
+  /**
+   * Gets statically cached information about a field.
+   *
+   * @param string $field_name
+   *   The name of the field to retrieve. $field_name can only refer to a
+   *   non-deleted, active field. For deleted fields, use
+   *   field_info_field_by_id(). To retrieve information about inactive fields,
+   *   use field_read_fields().
+   *
+   * @return array
+   *   The field info.
+   *
+   * @see field_info_field()
+   */
+  protected static function fieldInfoField($field_name) {
+    return field_info_field($field_name);
   }
 
 }

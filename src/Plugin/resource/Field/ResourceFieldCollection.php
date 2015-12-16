@@ -127,16 +127,20 @@ class ResourceFieldCollection implements ResourceFieldCollectionInterface {
    *   The request.
    */
   public function __construct(array $fields = array(), RequestInterface $request) {
+    static $field_pool = array();
     foreach ($fields as $public_name => $field_info) {
       $field_info['public_name'] = $public_name;
-      // The default values are added.
-      if (empty($field_info['resource'])) {
-        $resource_field = ResourceField::create($field_info, $request);
+      $cid = sha1(serialize($field_info));
+      if (!isset($field_pool[$cid])) {
+        // The default values are added.
+        if (empty($field_info['resource'])) {
+          $field_pool[$cid] = ResourceField::create($field_info, $request);
+        }
+        else {
+          $field_pool[$cid] = ResourceFieldResource::create($field_info, $request);
+        }
       }
-      else {
-        $resource_field = ResourceFieldResource::create($field_info, $request);
-      }
-      $this->fields[$resource_field->id()] = $resource_field;
+      $this->fields[$field_pool[$cid]->id()] = clone $field_pool[$cid];
     }
     $this->idField = empty($fields['id']) ? NULL : $this->get('id');
   }
