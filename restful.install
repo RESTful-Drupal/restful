@@ -142,3 +142,12 @@ function restful_update_7200() {
   $table_schema = drupal_get_schema('restful_cache_fragment', TRUE);
   db_create_table('restful_cache_fragment', $table_schema);
 }
+
+/**
+ * Clear RESTful cache on cache flush.
+ */
+function restful_update_7201() {
+  // Even if the recommended value is FALSE, there might be some deploy
+  // workflows that assume cache clearing.
+  variable_set('restful_clear_on_cc_all', TRUE);
+}

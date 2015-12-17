@@ -10,6 +10,11 @@ namespace Drupal\restful\RenderCache;
 use Doctrine\Common\Collections\ArrayCollection;
 use Drupal\restful\RenderCache\Entity\CacheFragmentController;
 
+/**
+ * Class RenderCache.
+ *
+ * @package Drupal\restful\RenderCache
+ */
 class RenderCache implements RenderCacheInterface {
 
   /**

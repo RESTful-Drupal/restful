@@ -14,6 +14,7 @@ use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Http\Response;
 use Drupal\restful\Http\ResponseInterface;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
+use Drupal\restful\RenderCache\RenderCache;
 use Drupal\restful\Resource\ResourceManager;
 use Drupal\restful\Resource\ResourceManagerInterface;
 use Drupal\restful\Util\PersistableCache;
@@ -179,7 +180,7 @@ class RestfulManager {
     $response = Response::create();
     $resource_manager = new ResourceManager($request);
     $formatter_manager = new FormatterManager();
-    $persistable_cache = new PersistableCache('cache_restful');
+    $persistable_cache = new PersistableCache(RenderCache::CACHE_BIN);
 
     return new static($request, $response, $resource_manager, $formatter_manager, $persistable_cache);
   }

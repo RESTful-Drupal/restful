@@ -73,38 +73,6 @@ function restful_admin_settings($form_state) {
     '#default_value' => variable_get('restful_allowed_origin', ''),
   );
 
-  $form['restful_cache'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Cache'),
-    '#description' => t('Cache options for the different layers of RESTful.'),
-    '#collapsible' => FALSE,
-  );
-
-  $form['restful_cache']['restful_page_cache'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Page cache'),
-    '#description' => t('RESTful can leverage page cache, this will boost your performace for anonymous traffic. !link to start caching responses. Status: <strong>@status</strong>. <strong>CAUTION:</strong> If your resources are using authentication providers other than cookie, you will want to turn this off. Otherwise you may get cached anonymous values for your authenticated GET requests.', array(
-      '!link' => l(t('Enable page cache'), 'admin/config/development/performance'),
-      '@status' => variable_get('cache', FALSE) ? t('Enabled') : t('Disabled'),
-    )),
-    '#disabled' => !variable_get('cache', FALSE),
-    '#default_value' => variable_get('restful_page_cache', FALSE) && variable_get('cache', FALSE),
-  );
-
-  $form['restful_cache']['restful_render_cache'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Cache results'),
-    '#description' => t('When enabled any resource that has not explicitly disabled the caching will be cached. Note that the first hit may result with slower response, although the next ones would be significantly faster. This is different from the page cache in the sense that it acts at the row level (a single entity, a single database row, ...), therefore allowing you to assemble non cached pages with the cached bits faster.'),
-    '#default_value' => variable_get('restful_render_cache', FALSE),
-  );
-
-  $form['restful_cache']['restful_fast_cache_clear'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Fast cache clear'),
-    '#description' => t('A lot of cache fragment entries may be created by default. This may cause your cache clears to be slow. By checking this checkbox the cache fragments are deleted from the database in a fast manner. As a trade-in, no hook_entity_delete will be fired for the cache fragment entities. This is OK in the vast majority of the cases. You can mitigate the number of generated fragments by overriding the "getCacheContext" method in your data provider.'),
-    '#default_value' => variable_get('restful_fast_cache_clear', TRUE),
-  );
-
   $form['advanced'] = array(
     '#type' => 'fieldset',
     '#title' => t('Advanced'),

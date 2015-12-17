@@ -12,6 +12,7 @@ use Drupal\restful\Plugin\resource\DataProvider\CacheDecoratedDataProvider;
 use Drupal\restful\Plugin\resource\DataProvider\DataProviderInterface;
 use Drupal\restful\Plugin\resource\ResourceInterface;
 use Drupal\restful\RenderCache\Entity\CacheFragmentController;
+use Drupal\restful\RenderCache\RenderCache;
 use Drupal\restful\Resource\ResourceManager;
 
 class CacheDecoratedResource extends ResourceDecoratorBase implements CacheDecoratedResourceInterface {
@@ -239,7 +240,7 @@ class CacheDecoratedResource extends ResourceDecoratorBase implements CacheDecor
     $cache_info += array(
       'render' => variable_get('restful_render_cache', FALSE),
       'class' => NULL,
-      'bin' => 'cache_restful',
+      'bin' => RenderCache::CACHE_BIN,
       'expire' => CACHE_PERMANENT,
       'simpleInvalidate' => TRUE,
       'granularity' => DRUPAL_CACHE_PER_USER,
