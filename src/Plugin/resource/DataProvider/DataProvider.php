@@ -13,6 +13,7 @@ use Drupal\restful\Exception\UnprocessableEntityException;
 use Drupal\restful\Http\HttpHeader;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\Decorators\CacheDecoratedResource;
+use Drupal\restful\Plugin\resource\Field\PublicFieldInfo\PublicFieldInfoBase;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollection;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
@@ -290,21 +291,24 @@ abstract class DataProvider implements DataProviderInterface {
   public function discover($path = NULL) {
     // Alter the field definition by adding a callback to get the auto
     // discover information in render time.
-    foreach ($this->fieldDefinitions as $public_field_name => $resouce_field) {
+    foreach ($this->fieldDefinitions as $public_field_name => $resource_field) {
       /* @var ResourceFieldInterface $resource_field */
-      if (method_exists($resouce_field, 'autoDiscovery')) {
+      if (method_exists($resource_field, 'autoDiscovery')) {
         // Adding the autoDiscover method to the resource field class will allow
         // you to be smarter about the auto discovery information.
-        $callable = array($resouce_field, 'autoDiscovery');
+        $callable = array($resource_field, 'autoDiscovery');
       }
       else {
         // If the given field does not have discovery information, provide the
         // empty one instead of an error.
         $callable = array('\Drupal\restful\Plugin\resource\Field\ResourceFieldBase::emptyDiscoveryInfo', array($public_field_name));
       }
-      $resouce_field->setCallback($callable);
+      $resource_field->setCallback($callable);
       // Remove the process callbacks, those don't make sense during discovery.
-      $resouce_field->setProcessCallbacks(array());
+      $resource_field->setProcessCallbacks(array());
+      $definition = $resource_field->getDefinition();
+      $discovery_info = empty($definition['discovery']) ? array() : $definition['discovery'];
+      $resource_field->setPublicFieldInfo(new PublicFieldInfoBase($resource_field->getPublicName(), $discovery_info));
     }
     return $path ? $this->viewMultiple(array($path)) : $this->index();
   }

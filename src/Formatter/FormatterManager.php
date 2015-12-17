@@ -13,6 +13,7 @@ use Drupal\restful\Plugin\formatter\FormatterInterface;
 use Drupal\restful\Plugin\resource\ResourceInterface;
 use Drupal\restful\Plugin\FormatterPluginManager;
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
+use Drupal\restful\Resource\ResourceManager;
 
 /**
  * Class FormatterManager.
@@ -144,7 +145,7 @@ class FormatterManager implements FormatterManagerInterface {
       ->get('accept')
       ->getValueString();
     $formatter = $this->negotiateFormatter($accept, $formatter_name);
-    $output = call_user_func(array($formatter, $method), $data, $formatter_name);
+    $output = ResourceManager::executeCallback(array($formatter, $method), array($data, $formatter_name));
 
     // The content type header is modified after the massaging if there is
     // an error code. Therefore we need to set the content type header after

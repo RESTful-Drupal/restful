@@ -8,8 +8,14 @@
 use Drupal\restful\Http\Request;
 use Drupal\restful\Plugin\resource\DataProvider\CacheDecoratedDataProvider;
 
+/**
+ * Class RestfulReferenceTestCase.
+ */
 class RestfulReferenceTestCase extends RestfulCurlBaseTestCase {
 
+  /**
+   * {@inheritdoc}
+   */
   public static function getInfo() {
     return array(
       'name' => 'Referenced resources',
@@ -18,6 +24,9 @@ class RestfulReferenceTestCase extends RestfulCurlBaseTestCase {
     );
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function setUp() {
     parent::setUp('restful_test');
   }
