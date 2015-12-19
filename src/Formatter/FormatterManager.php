@@ -173,7 +173,7 @@ class FormatterManager implements FormatterManagerInterface {
    * @see drupal_match_path().
    */
   protected static function matchContentType($content_type, $pattern) {
-    $regexps = &drupal_static(__FUNCTION__);
+    $regexps = &drupal_static(__METHOD__);
 
     if (!isset($regexps[$pattern])) {
       // Convert path settings to a regular expression.
