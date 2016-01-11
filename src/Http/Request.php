@@ -369,11 +369,12 @@ class Request implements RequestInterface {
       $headers = apache_request_headers();
     }
     else {
+      $content_header_keys = array('CONTENT_TYPE', 'CONTENT_LENGTH');
       foreach ($_SERVER as $key => $value) {
-        if (strpos($key, 'HTTP_') === 0) {
+        if (strpos($key, 'HTTP_') === 0 || in_array($key, $content_header_keys)) {
           // Generate the plausible header name based on the $name.
           // Converts 'HTTP_X_FORWARDED_FOR' to 'X-Forwarded-For'
-          $name = substr($key, 5);
+          $name = preg_replace('/^HTTP_/', '', $key);
           $parts = explode('_', $name);
           $parts = array_map('strtolower', $parts);
           $parts = array_map('ucfirst', $parts);
