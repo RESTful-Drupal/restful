@@ -89,6 +89,13 @@ class TokenAuthentication extends Authentication {
 
     // Access token may be on the request, or in the headers.
     $input = $request->getParsedInput();
+
+    // If we don't have an $key_name on either the URL or the in the headers,
+    // then check again using a hyphen instead of an underscore.
+    if (empty($input[$key_name]) && empty($request->getHeaders()->get($key_name)->getValueString())) {
+      $key_name = str_replace('_', '-', $key_name);
+    }
+
     return empty($input[$key_name]) ? $request->getHeaders()->get($key_name)->getValueString() : $input[$key_name];
   }
 
