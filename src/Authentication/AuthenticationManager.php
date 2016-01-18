@@ -96,13 +96,13 @@ class AuthenticationManager implements AuthenticationManagerInterface {
     $account = NULL;
     foreach ($this->plugins as $provider) {
       /* @var \Drupal\restful\Plugin\authentication\AuthenticationInterface $provider */
-      if ($provider->applies($request) && $account = $provider->authenticate($request)) {
+      if ($provider->applies($request) && ($account = $provider->authenticate($request)) && $account->uid) {
         // The account has been loaded, we can stop looking.
         break;
       }
     }
 
-    if (!$account) {
+    if (empty($account->uid)) {
 
       if (RestfulManager::isRestfulPath($request) && $this->plugins->count() && !$this->getIsOptional()) {
         // Allow caching pages for anonymous users.
