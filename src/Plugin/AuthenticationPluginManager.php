@@ -57,4 +57,24 @@ class AuthenticationPluginManager extends DefaultPluginManager {
     return new static(Module::getNamespaces(), _cache_get_object($bin));
   }
 
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDefinitions() {
+    $definitions = &drupal_static(__FUNCTION__);
+    if (!isset($definitions)) {
+      $definitions = parent::getDefinitions();
+    }
+    return $definitions;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDefinition($plugin_id, $exception_on_invalid = TRUE) {
+    $definitions = $this->getDefinitions();
+    return $this->doGetDefinition($definitions, $plugin_id, $exception_on_invalid);
+  }
+
 }
