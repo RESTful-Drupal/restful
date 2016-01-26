@@ -62,7 +62,7 @@ class AuthenticationPluginManager extends DefaultPluginManager {
    * {@inheritdoc}
    */
   public function getDefinitions() {
-    $definitions = &drupal_static(__FUNCTION__);
+    $definitions = &drupal_static(__METHOD__);
     if (!isset($definitions)) {
       $definitions = parent::getDefinitions();
     }
