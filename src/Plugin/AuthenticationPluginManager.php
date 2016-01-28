@@ -17,6 +17,8 @@ use Drupal\plug\Util\Module;
  */
 class AuthenticationPluginManager extends DefaultPluginManager {
 
+  use SemiSingletonTrait;
+
   /**
    * {@inheritdoc}
    */
@@ -49,12 +51,20 @@ class AuthenticationPluginManager extends DefaultPluginManager {
    *
    * @param string $bin
    *   The cache bin for the plugin manager.
+   * @param bool $avoid_singleton
+   *   Do not use the stored singleton.
    *
    * @return AuthenticationPluginManager
    *   The created manager.
    */
-  public static function create($bin = 'cache') {
-    return new static(Module::getNamespaces(), _cache_get_object($bin));
+  public static function create($bin = 'cache', $avoid_singleton = FALSE) {
+    $factory = function ($bin) {
+      return new static(Module::getNamespaces(), _cache_get_object($bin));
+    };
+    if ($avoid_singleton) {
+      $factory($bin);
+    }
+    return static::semiSingletonInstance($factory, array($bin));
   }
 
 }
