@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains \Drupal\restful_token_auth\Plugin\resource\Articles__1_3.
+ * Contains \Drupal\restful_token_auth_test\Plugin\resource\Articles__1_3.
  */
 
-namespace Drupal\restful_token_auth\Plugin\resource;
+namespace Drupal\restful_token_auth_test\Plugin\resource;
 
 use Drupal\restful\Plugin\resource\ResourceInterface;
 use Drupal\restful\Plugin\resource\ResourceNode;

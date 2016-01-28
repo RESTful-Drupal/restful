@@ -26,7 +26,7 @@ class RestfulTokenAuthenticationTestCase extends DrupalWebTestCase {
    * {@inheritdoc}
    */
   public function setUp() {
-    parent::setUp('restful_example', 'restful_token_auth');
+    parent::setUp('restful_example', 'restful_token_auth', 'restful_token_auth_test');
   }
 
   /**
