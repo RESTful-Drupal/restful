@@ -192,41 +192,38 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
       $data['links'] = array();
     }
 
-    $input = $original_input = $request->getParsedInput();
+    $input = $request->getParsedInput();
+    $page = isset($input['page']) ? (int) $input['page'] : 1;
 
     // Get self link.
     $options = $top_level ? array('query' => $input) : array();
     $data['links']['self'] = $resource->versionedUrl($path, $options);
 
-    $data_provider = $resource->getDataProvider();
-    $page = !empty($input['page']) ? $input['page'] : 1;
-
     // We know that there are more pages if the total count is bigger than the
     // number of items of the current request plus the number of items in
     // previous pages.
-    $items_per_page = empty($original_input['range']) ? $data_provider->getRange() : $original_input['range'];
-    if (isset($data['meta']['count']) && $data['meta']['count'] > $items_per_page) {
-      $num_pages = ceil($data['meta']['count'] / $items_per_page);
-      unset($input['page']);
-      $data['links']['first'] = $resource->getUrl(array('query' => $input), FALSE);
+    $max_range = $resource->getDataProvider()->getRange();
+    $range = isset($input['range']) ? (int) $input['range'] : $max_range;
+    $range = $range > $max_range ? $max_range : $range;
+    if (isset($data['meta']['count']) && $data['meta']['count'] > $range) {
+      $num_pages = ceil($data['meta']['count'] / $range);
+
+      $query = array('page' => 1) + $input;
+      $data['links']['first'] = $resource->getUrl(array('query' => $query), FALSE);
+
+      $query = array('page' => $num_pages) + $input;
+      $data['links']['last'] = $resource->getUrl(array('query' => $query), FALSE);
 
       if ($page > 1) {
-        $input = $original_input;
-        $input['page'] = $page - 1;
-        $data['links']['previous'] = $resource->getUrl(array('query' => $input), FALSE);
+        $query = array('page' => $page - 1) + $input;
+        $data['links']['previous'] = $resource->getUrl(array('query' => $query), FALSE);
       }
-      if ($num_pages > 1) {
-        $input = $original_input;
-        $input['page'] = $num_pages;
-        $data['links']['last'] = $resource->getUrl(array('query' => $input), FALSE);
-        if ($page != $num_pages) {
-          $input = $original_input;
-          $input['page'] = $page + 1;
-          $data['links']['next'] = $resource->getUrl(array('query' => $input), FALSE);
-        }
+
+      if ($page < $num_pages) {
+        $query = array('page' =>$page + 1) + $input;
+        $data['links']['next'] = $resource->getUrl(array('query' => $query), FALSE);
       }
     }
-
   }
 
   /**

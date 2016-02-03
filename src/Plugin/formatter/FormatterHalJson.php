@@ -121,14 +121,13 @@ class FormatterHalJson extends Formatter implements FormatterInterface {
     );
 
     $input = $request->getParsedInput();
-    $data_provider = $resource->getDataProvider();
     $page = !empty($input['page']) ? $input['page'] : 1;
 
     if ($page > 1) {
-      $input['page'] = $page - 1;
+      $query = array('page' => $page - 1) + $input;
       $data['_links']['previous'] = array(
         'title' => 'Previous',
-        'href' => $resource->getUrl(),
+        'href' => $resource->versionedUrl('', array('query' => $query), TRUE),
       );
     }
 
@@ -138,13 +137,15 @@ class FormatterHalJson extends Formatter implements FormatterInterface {
     // We know that there are more pages if the total count is bigger than the
     // number of items of the current request plus the number of items in
     // previous pages.
-    $items_per_page = $data_provider->getRange();
-    $previous_items = ($page - 1) * $items_per_page;
+    $max_range = $resource->getDataProvider()->getRange();
+    $range = isset($input['range']) ? (int) $input['range'] : $max_range;
+    $range = $range > $max_range ? $max_range : $range;
+    $previous_items = ($page - 1) * $range;
     if (isset($data['count']) && $data['count'] > $listed_items + $previous_items) {
-      $input['page'] = $page + 1;
+      $query = array('page' => $page + 1) + $input;
       $data['_links']['next'] = array(
         'title' => 'Next',
-        'href' => $resource->getUrl(),
+        'href' => $resource->versionedUrl('', array('query' => $query), TRUE),
       );
     }
 
