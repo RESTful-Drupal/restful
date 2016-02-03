@@ -272,4 +272,4 @@ with a robust entity validation (RESTful 1.x requires Entity Validator 1.x).
 
 ## Credits
 * [Gizra](http://gizra.com)
-* [Mateu Aguiló Bosch](https://github.com/mateu-aguilo-bosch)
+* [Mateu Aguiló Bosch](https://github.com/e0ipso)
