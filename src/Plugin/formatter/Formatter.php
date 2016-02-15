@@ -324,8 +324,7 @@ abstract class Formatter extends PluginBase implements FormatterInterface {
    * @return int
    *   The items per page.
    */
-  protected function calculateItemsPerPage(ResourceInterface $resource = NULL) {
-    $resource = $resource ?: $this->getResource();
+  protected function calculateItemsPerPage(ResourceInterface $resource) {
     $data_provider = $resource->getDataProvider();
     $max_range = $data_provider->getRange();
     $original_input = $resource->getRequest()->getParsedInput();
