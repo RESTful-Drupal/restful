@@ -172,7 +172,7 @@ class FormatterJson extends Formatter implements FormatterInterface {
     // We know that there are more pages if the total count is bigger than the
     // number of items of the current request plus the number of items in
     // previous pages.
-    $items_per_page = $resource->getDataProvider()->getRange();
+    $items_per_page = $this->calculateItemsPerPage($resource);
     $previous_items = ($page - 1) * $items_per_page;
     if (isset($data['count']) && $data['count'] > count($data['data']) + $previous_items) {
       $query = array('page' => $page + 1) + $input;
