@@ -73,6 +73,41 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
   }
 
   /**
+   * Create test entities.
+   *
+   * @return Entity[]
+   *   An array of entities.
+   */
+  protected function createEntities() {
+    $entities = array();
+    $entities[] = entity_create('entity_test', array(
+      'name' => 'main',
+      'uid' => $this->account->uid,
+    ));
+    $entities[0]->save();
+
+    $entities[] = entity_create('entity_test', array(
+      'name' => 'main',
+      'uid' => $this->account->uid,
+    ));
+    $entities[1]->save();
+
+    $entities[] = entity_create('entity_test', array(
+      'name' => 'main',
+      'uid' => $this->account->uid,
+    ));
+
+    $entities[0]->entity_reference_single[LANGUAGE_NONE][] = array('target_id' => $entities[1]->pid);
+    $entities[0]->save();
+    $entities[2]->entity_reference_single[LANGUAGE_NONE][] = array('target_id' => $entities[0]->pid);
+    $entities[2]->entity_reference_multiple[LANGUAGE_NONE][] = array('target_id' => $entities[0]->pid);
+    $entities[2]->entity_reference_multiple[LANGUAGE_NONE][] = array('target_id' => $entities[1]->pid);
+    $entities[2]->save();
+
+    return $entities;
+  }
+
+  /**
    * Test requesting resources.
    */
   public function testReading() {
@@ -130,7 +165,7 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
     // embedded entity if there is no subfield added.
     $this->handler->setRequest(Request::create('api/v1.1/main/' . $wrapper->getIdentifier(), array(
       'include' => 'entity_reference_multiple_resource,entity_reference_single_resource',
-      'fields' => 'entity_reference_multiple_resource,entity_reference_single_resource'
+      'fields' => 'entity_reference_multiple_resource,entity_reference_single_resource',
     )));
     $this->handler->setPath($wrapper->getIdentifier());
     $this->formatter->setResource($this->handler);
@@ -141,7 +176,7 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
     // Now make sure that including fields only lists those fields.
     $this->handler->setRequest(Request::create('api/v1.1/main/' . $wrapper->getIdentifier(), array(
       'include' => 'entity_reference_single_resource',
-      'fields' => 'entity_reference_single_resource.label'
+      'fields' => 'entity_reference_single_resource.label',
     )));
     $this->handler->setPath($wrapper->getIdentifier());
     $this->formatter->setResource($this->handler);
@@ -401,7 +436,10 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
     );
     drupal_write_record('restful_test_db_query', $record);
     $handler = restful()->getResourceManager()->getPlugin('main:1.8');
-    $handler->setRequest(Request::create('', array('include' => 'random_rel', 'range' => 1)));
+    $handler->setRequest(Request::create('', array(
+      'include' => 'random_rel',
+      'range' => 1,
+    )));
     $handler->setPath(1);
     $formatter = restful()->getFormatterManager()->getPlugin('json_api');
     $formatter->setResource($handler);
@@ -437,14 +475,14 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
       'last' => $this->handler->versionedUrl('', array(
         'query' => array(
           'range' => $range,
-          'page' => 5
-        )
+          'page' => 5,
+        ),
       )),
       'next' => $this->handler->versionedUrl('', array(
         'query' => array(
           'range' => $range,
-          'page' => 2
-        )
+          'page' => 2,
+        ),
       )),
     );
     $this->assertEqual($links, $expected_links);
@@ -453,7 +491,7 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
     $range = 2;
     $this->handler->setRequest(Request::create('', array(
       'range' => $range,
-      'page' => 2
+      'page' => 2,
     )));
     $this->handler->setPath('');
     $this->formatter->setResource($this->handler);
@@ -464,27 +502,27 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
       'self' => $this->handler->versionedUrl('', array(
         'query' => array(
           'range' => $range,
-          'page' => 2
-        )
+          'page' => 2,
+        ),
       )),
       'first' => $this->handler->versionedUrl('', array('query' => array('range' => $range))),
       'previous' => $this->handler->versionedUrl('', array(
         'query' => array(
           'range' => $range,
-          'page' => 1
-        )
+          'page' => 1,
+        ),
       )),
       'last' => $this->handler->versionedUrl('', array(
         'query' => array(
           'range' => $range,
-          'page' => 5
-        )
+          'page' => 5,
+        ),
       )),
       'next' => $this->handler->versionedUrl('', array(
         'query' => array(
           'range' => $range,
-          'page' => 3
-        )
+          'page' => 3,
+        ),
       )),
     );
     $this->assertEqual($links, $expected_links);
@@ -493,7 +531,7 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
     $range = 2;
     $this->handler->setRequest(Request::create('', array(
       'range' => $range,
-      'page' => 5
+      'page' => 5,
     )));
     $this->handler->setPath('');
     $this->formatter->setResource($this->handler);
@@ -504,21 +542,21 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
       'self' => $this->handler->versionedUrl('', array(
         'query' => array(
           'range' => $range,
-          'page' => 5
-        )
+          'page' => 5,
+        ),
       )),
       'first' => $this->handler->versionedUrl('', array('query' => array('range' => $range))),
       'previous' => $this->handler->versionedUrl('', array(
         'query' => array(
           'range' => $range,
-          'page' => 4
-        )
+          'page' => 4,
+        ),
       )),
       'last' => $this->handler->versionedUrl('', array(
         'query' => array(
           'range' => $range,
-          'page' => 5
-        )
+          'page' => 5,
+        ),
       )),
     );
     $this->assertEqual($links, $expected_links);
@@ -537,8 +575,7 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
 
     // Add files and taxonomy term references.
     $query = new EntityFieldQuery();
-    $result = $query
-      ->entityCondition('entity_type', 'taxonomy_term')
+    $result = $query->entityCondition('entity_type', 'taxonomy_term')
       ->entityCondition('bundle', 'test_vocab')
       ->execute();
     $tids = array_keys($result['taxonomy_term']);
@@ -554,15 +591,15 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
     $entities[2]->term_multiple[LANGUAGE_NONE][] = array('tid' => $tids[2]);
     $entities[2]->file_single[LANGUAGE_NONE][] = array(
       'fid' => $images[0],
-      'display' => TRUE
+      'display' => TRUE,
     );
     $entities[2]->file_multiple[LANGUAGE_NONE][] = array(
       'fid' => $images[1],
-      'display' => TRUE
+      'display' => TRUE,
     );
     $entities[2]->file_multiple[LANGUAGE_NONE][] = array(
       'fid' => $images[2],
-      'display' => TRUE
+      'display' => TRUE,
     );
     entity_save('entity_test', $entities[2]);
 
@@ -600,8 +637,7 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
     )));
     $handler->setPath($entities[2]->uuid);
     $format_manager->setResource($handler);
-    $response = $format_manager
-      ->negotiateFormatter(NULL, 'json_api')
+    $response = $format_manager->negotiateFormatter(NULL, 'json_api')
       ->prepare($handler->process());
 
     $result = $response['data']['attributes'];
@@ -763,41 +799,6 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
     );
 
     $this->assertEqual($expected, $parsed_body);
-  }
-
-  /**
-   * Create test entities.
-   *
-   * @return Entity[]
-   *   An array of entities.
-   */
-  protected function createEntities() {
-    $entities = array();
-    $entities[] = entity_create('entity_test', array(
-      'name' => 'main',
-      'uid' => $this->account->uid,
-    ));
-    $entities[0]->save();
-
-    $entities[] = entity_create('entity_test', array(
-      'name' => 'main',
-      'uid' => $this->account->uid,
-    ));
-    $entities[1]->save();
-
-    $entities[] = entity_create('entity_test', array(
-      'name' => 'main',
-      'uid' => $this->account->uid,
-    ));
-
-    $entities[0]->entity_reference_single[LANGUAGE_NONE][] = array('target_id' => $entities[1]->pid);
-    $entities[0]->save();
-    $entities[2]->entity_reference_single[LANGUAGE_NONE][] = array('target_id' => $entities[0]->pid);
-    $entities[2]->entity_reference_multiple[LANGUAGE_NONE][] = array('target_id' => $entities[0]->pid);
-    $entities[2]->entity_reference_multiple[LANGUAGE_NONE][] = array('target_id' => $entities[1]->pid);
-    $entities[2]->save();
-
-    return $entities;
   }
 
 }
