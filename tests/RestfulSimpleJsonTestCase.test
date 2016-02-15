@@ -37,7 +37,7 @@ class RestfulSimpleJsonTestCase extends RestfulCurlBaseTestCase {
     $plugin_definition['formatter'] = 'json';
     $handler->setPluginDefinition($plugin_definition);
 
-    $handler->setRequest(Request::create('api/v1.5/articles/' . $node->nid));
+    $handler->setRequest(Request::create('/api/v1.5/articles/' . $node->nid));
     $handler->setPath($node->nid);
     $response = drupal_json_decode(restful()
       ->getFormatterManager()
@@ -81,6 +81,21 @@ class RestfulSimpleJsonTestCase extends RestfulCurlBaseTestCase {
     $this->assertEqual($decoded_json['count'], 2, 'Count was populated correctly.');
     $this->assertEqual(count($decoded_json['data']), 1, 'The correct number of items was listed.');
     $this->assertNotNull($decoded_json['next'], '"Next" property added.');
+
+    // Test the pagination links for bigger ranges.
+    // Create an extra node for more pagination options.
+    restful_test_create_node_with_tags();
+    $handler->setRequest(Request::create('/api/v1.5/articles', array(
+      'range' => 1000,
+      'page' => 2,
+    )));
+    $handler->setPath('');
+    $results = $handler->process();
+    $formatter = restful()->getFormatterManager()->getPlugin('json');
+    $formatter->setResource($handler);
+    $data = $formatter->prepare($results);
+
+    $this->assertNotNull($data['next'], '"Next" property added.');
   }
 
 }
