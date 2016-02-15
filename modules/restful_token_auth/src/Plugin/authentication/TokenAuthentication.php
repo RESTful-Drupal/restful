@@ -93,7 +93,7 @@ class TokenAuthentication extends Authentication {
     // If we don't have a $key_name on either the URL or the in the headers,
     // then check again using a hyphen instead of an underscore. This is due to
     // new versions of Apache not accepting headers with underscores.
-    if (empty($input[$key_name]) && $request->getHeaders()->get($key_name)->getValueString()) {
+    if (empty($input[$key_name]) && !$request->getHeaders()->get($key_name)->getValueString()) {
       $key_name = str_replace('_', '-', $key_name);
     }
 
