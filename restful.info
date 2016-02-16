@@ -1,7 +1,7 @@
 name = RESTful
 description = Turn Drupal to a RESTful server, following best practices.
 core = 7.x
-php = 5.4
+php = 5.5.9
 dependencies[] = entity
 dependencies[] = plug
 configure = admin/config/services/restful
