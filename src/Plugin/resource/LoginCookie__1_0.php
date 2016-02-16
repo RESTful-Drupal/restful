@@ -92,6 +92,12 @@ class LoginCookie__1_0 extends ResourceEntity implements ResourceInterface {
    */
   public function loginUser($account) {
     global $user;
+
+    // Explicitly allow a session to be saved, as it was disabled in
+    // UserSessionState::switchUser. However this resource is a special one, in
+    // the sense that we want to keep the user authenticated after login.
+    drupal_save_session(TRUE);
+
     // Override the global user.
     $user = user_load($account->uid);
 

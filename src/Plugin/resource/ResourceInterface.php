@@ -52,6 +52,11 @@ interface ResourceInterface extends PluginInspectionInterface, ConfigurablePlugi
   public function getAccount($cache = TRUE);
 
   /**
+   * Switches the user back from the original user for the session.
+   */
+  public function switchUserBack();
+
+  /**
    * {@inheritdoc}
    */
   public function setAccount($account);
