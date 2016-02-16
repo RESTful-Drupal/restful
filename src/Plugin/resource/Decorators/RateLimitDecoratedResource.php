@@ -7,12 +7,14 @@
 
 namespace Drupal\restful\Plugin\resource\Decorators;
 
-use Drupal\restful\Http\RequestInterface;
-use Drupal\restful\Plugin\resource\DataProvider\DataProviderInterface;
-use Drupal\restful\Plugin\resource\Field\ResourceFieldCollection;
 use Drupal\restful\Plugin\resource\ResourceInterface;
 use Drupal\restful\RateLimit\RateLimitManager;
 
+/**
+ * Class RateLimitDecoratedResource.
+ *
+ * @package Drupal\restful\Plugin\resource\Decorators
+ */
 class RateLimitDecoratedResource extends ResourceDecoratorBase implements ResourceDecoratorInterface {
 
   /**
@@ -81,13 +83,6 @@ class RateLimitDecoratedResource extends ResourceDecoratorBase implements Resour
   public function setAccount($account) {
     $this->subject->setAccount($account);
     $this->rateLimitManager->setAccount($account);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function discover($path = NULL) {
-    return $this->subject->discover($path);
   }
 
 }
