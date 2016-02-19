@@ -82,6 +82,17 @@ class UserSessionState implements UserSessionStateInterface {
 
     $user = $this->originalUser;
     drupal_save_session($this->needsSaving);
+    $this->reset();
+  }
+
+  /**
+   * Reset the initial values.
+   */
+  protected function reset() {
+    // Reset initial values.
+    static::$isSwitched = FALSE;
+    $this->originalUser = NULL;
+    $this->needsSaving = FALSE;
   }
 
 }
