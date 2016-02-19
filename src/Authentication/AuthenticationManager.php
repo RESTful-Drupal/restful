@@ -156,7 +156,9 @@ class AuthenticationManager implements AuthenticationManagerInterface {
    */
   public function setAccount($account) {
     $this->account = $account;
-    $this->userSessionState->switchUser($account);
+    if (!empty($account->uid)) {
+      $this->userSessionState->switchUser($account);
+    }
   }
 
   /**
