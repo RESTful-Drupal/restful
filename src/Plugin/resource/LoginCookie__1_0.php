@@ -122,6 +122,7 @@ class LoginCookie__1_0 extends ResourceEntity implements ResourceInterface {
    */
   public function switchUserBack() {
     // We don't want to switch back in this case!
+    drupal_save_session(TRUE);
   }
 
 }
