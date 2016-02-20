@@ -124,6 +124,13 @@ abstract class Resource extends PluginBase implements ResourceInterface {
   /**
    * {@inheritdoc}
    */
+  public function switchUserBack() {
+    return $this->authenticationManager->switchUserBack();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function setAccount($account) {
     $this->authenticationManager->setAccount($account);
     $this->getDataProvider()->setAccount($account);

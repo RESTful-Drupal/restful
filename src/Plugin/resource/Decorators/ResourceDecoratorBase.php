@@ -16,6 +16,11 @@ use Drupal\restful\Plugin\resource\DataProvider\DataProviderInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldCollectionInterface;
 use Drupal\restful\Plugin\resource\ResourceInterface;
 
+/**
+ * Class ResourceDecoratorBase.
+ *
+ * @package Drupal\restful\Plugin\resource\Decorators
+ */
 abstract class ResourceDecoratorBase extends PluginBase implements ResourceDecoratorInterface {
 
   /**
@@ -51,8 +56,6 @@ abstract class ResourceDecoratorBase extends PluginBase implements ResourceDecor
   }
 
   /**
-   * Proxy method to get the account from the rateLimitManager.
-   *
    * {@inheritdoc}
    */
   public function getAccount($cache = TRUE) {
@@ -60,13 +63,25 @@ abstract class ResourceDecoratorBase extends PluginBase implements ResourceDecor
   }
 
   /**
-   * Proxy method to get the account from the rateLimitManager.
-   *
    * {@inheritdoc}
    */
   public function setAccount($account) {
     $this->subject->setAccount($account);
     $this->getDataProvider()->setAccount($account);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function switchUserBack() {
+    $this->subject->switchUserBack();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function discover($path = NULL) {
+    return $this->subject->discover($path);
   }
 
   /**

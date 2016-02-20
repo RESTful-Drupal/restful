@@ -92,6 +92,13 @@ class LoginCookie__1_0 extends ResourceEntity implements ResourceInterface {
    */
   public function loginUser($account) {
     global $user;
+
+    $this->authenticationManager->switchUserBack();
+    // Explicitly allow a session to be saved, as it was disabled in
+    // UserSessionState::switchUser. However this resource is a special one, in
+    // the sense that we want to keep the user authenticated after login.
+    drupal_save_session(TRUE);
+
     // Override the global user.
     $user = user_load($account->uid);
 
@@ -108,6 +115,14 @@ class LoginCookie__1_0 extends ResourceEntity implements ResourceInterface {
   public static function getCSRFTokenValue() {
     $token = array_values(restful_csrf_session_token());
     return reset($token);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function switchUserBack() {
+    // We don't want to switch back in this case!
+    drupal_save_session(TRUE);
   }
 
 }

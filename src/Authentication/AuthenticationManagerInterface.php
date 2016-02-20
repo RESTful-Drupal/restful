@@ -47,15 +47,15 @@ interface AuthenticationManagerInterface {
   /**
    * Get the user account for the request.
    *
-   * @param array $request
+   * @param RequestInterface $request
    *   The request.
-   * @param string $method
-   *   The HTTP method.
-   * @param boolean $cache
+   * @param bool $cache
    *   Boolean indicating if the resolved user should be cached for next calls.
    *
    * @throws UnauthorizedException
-   * @return \stdClass
+   *   When bad credentials are provided.
+   *
+   * @return object
    *   The user object.
    */
   public function getAccount(RequestInterface $request, $cache = TRUE);
@@ -69,9 +69,15 @@ interface AuthenticationManagerInterface {
   public function setAccount($account);
 
   /**
+   * Switches the user back from the original user for the session.
+   */
+  public function switchUserBack();
+
+  /**
    * Gets the plugin collection for this plugin manager.
    *
    * @return AuthenticationPluginManager
+   *   The plugin manager.
    */
   public function getPlugins();
 

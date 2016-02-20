@@ -289,13 +289,6 @@ class CacheDecoratedResource extends ResourceDecoratorBase implements CacheDecor
   /**
    * {@inheritdoc}
    */
-  public function discover($path = NULL) {
-    return $this->subject->discover($path);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function hasSimpleInvalidation() {
     $data_provider = $this->getDataProvider();
     $options = $data_provider->getOptions();

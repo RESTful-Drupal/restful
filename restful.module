@@ -273,7 +273,7 @@ function restful_menu_process_callback($resource_name, $version = NULL) {
 
   try {
     $resource->setPath(implode('/', $path));
-    return $resource->process();
+    $result = $resource->process();
   }
   catch (RestfulException $e) {
     $result = _restful_build_http_api_error($e);
@@ -286,6 +286,8 @@ function restful_menu_process_callback($resource_name, $version = NULL) {
     );
   }
 
+  // If the user was switched during the execution thread, then switch it back.
+  $resource->switchUserBack();
   return $result;
 }
 

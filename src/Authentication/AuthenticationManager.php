@@ -12,6 +12,11 @@ use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\AuthenticationPluginManager;
 use Drupal\restful\RestfulManager;
 
+/**
+ * Class AuthenticationManager.
+ *
+ * @package Drupal\restful\Authentication
+ */
 class AuthenticationManager implements AuthenticationManagerInterface {
 
   /**
@@ -39,13 +44,21 @@ class AuthenticationManager implements AuthenticationManagerInterface {
   protected $isOptional = FALSE;
 
   /**
+   * User session state to switch user for the Drupal thread.
+   *
+   * @var UserSessionStateInterface
+   */
+  protected $userSessionState;
+
+  /**
    * Constructs a new AuthenticationManager object.
    *
    * @param AuthenticationPluginManager $manager
    *   The authentication plugin manager.
    */
-  public function __construct(AuthenticationPluginManager $manager = NULL) {
+  public function __construct(AuthenticationPluginManager $manager = NULL, UserSessionStateInterface $user_session_state = NULL) {
     $this->plugins = new AuthenticationPluginCollection($manager ?: AuthenticationPluginManager::create());
+    $this->userSessionState = $user_session_state ?: new UserSessionState();
   }
 
   /**
@@ -143,6 +156,16 @@ class AuthenticationManager implements AuthenticationManagerInterface {
    */
   public function setAccount($account) {
     $this->account = $account;
+    if (!empty($account->uid)) {
+      $this->userSessionState->switchUser($account);
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function switchUserBack() {
+    return $this->userSessionState->switchUserBack();
   }
 
   /**
