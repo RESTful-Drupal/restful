@@ -7,10 +7,15 @@
 
 namespace Drupal\restful\Util;
 
+/**
+ * Class StringHelper.
+ *
+ * @package Drupal\restful\Util
+ */
 class StringHelper {
 
   /**
-   * Turns a string into camel case. From search_api_index to SearchApiIndex.
+   * Turns a string into camel case.
    *
    * @param string $input
    *   The input string.
