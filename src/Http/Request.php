@@ -433,7 +433,8 @@ class Request implements RequestInterface {
     // for compatibility with Apache PHP CGI/FastCGI.
     // This requires the following line in your ".htaccess"-File:
     // RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
-    $authorization_header = $_SERVER['HTTP_AUTHORIZATION'] ?: $_SERVER['REDIRECT_HTTP_AUTHORIZATION'];
+    $authorization_header = isset($_SERVER['HTTP_AUTHORIZATION']) ? $_SERVER['HTTP_AUTHORIZATION'] : NULL;
+    $authorization_header = $authorization_header ?: (isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION']) ? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] : NULL);
     if (!empty($authorization_header) && !isset($username) && !isset($password)) {
       if (!$token = StringHelper::removePrefix('Basic ', $authorization_header)) {
         return NULL;
