@@ -714,15 +714,25 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    *  array.
    */
   protected function getTitleField() {
+    if (!module_exists('title')) {
+      return FALSE;
+    }
+
     $entity_info = $this->getEntityInfo();
+    if (empty($entity_info['entity keys']['label'])) {
+      return FALSE;
+    }
+
+    // In 'title_entity_info_alter' function on the title module this is how
+    // the field name is being set.
+    $field_name = $entity_info['entity keys']['label'] . '_field';
+
     $title_field = array();
 
-    if (module_exists('title')) {
-      $title_field_info = field_info_field('title_field');
-      if (!empty($title_field_info['bundles'][$this->getEntityType()]) && in_array($this->getBundle(), $title_field_info['bundles'][$this->getEntityType()])) {
-        $title_field['field_name'] = $title_field_info['field_name'];
-        $title_field['original_property'] = $entity_info['entity keys']['label'];
-      }
+    $title_field_info = field_info_field($field_name);
+    if (!empty($title_field_info['bundles'][$this->getEntityType()]) && in_array($this->getBundle(), $title_field_info['bundles'][$this->getEntityType()])) {
+      $title_field['field_name'] = $title_field_info['field_name'];
+      $title_field['original_property'] = $entity_info['entity keys']['label'];
     }
 
     return $title_field;
