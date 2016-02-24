@@ -15,16 +15,12 @@ class RestfulForbiddenException extends RestfulException {
   protected $code = 403;
 
   /**
-   * Defines the description.
-   *
-   * @var string
+   * {@inheritdoc}
    */
   protected $description = 'Forbidden.';
 
   /**
-   * Defines the problem instance.
-   *
-   * @var string
+   * {@inheritdoc}
    */
   protected $instance = 'help/restful/problem-instances-forbidden';
 

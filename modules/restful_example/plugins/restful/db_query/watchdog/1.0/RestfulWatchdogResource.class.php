@@ -5,7 +5,7 @@
  * Contains RestfulEntityBase.
  */
 
-class RestFulWatchdogResource extends \RestfulDataProviderDbQuery implements \RestfulDataProviderDbQueryInterface {
+class RestfulWatchdogResource extends \RestfulDataProviderDbQuery implements \RestfulDataProviderDbQueryInterface {
   public function publicFieldsInfo() {
 
     $public_fields['log_id'] = array(

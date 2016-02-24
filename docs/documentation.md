@@ -6,6 +6,9 @@ about the field itself. This includes basic information about the field,
 information about the data the field holds, and information about the form
 element to generate on the client side for this field.
 
+Note that this data will usually be provided automatically by the entity's existing
+property definitions, but can be overridden or added to here.
+
 By declaring this information, you make it possible for clients to provide
 form elements for your API using reusable form components.
 

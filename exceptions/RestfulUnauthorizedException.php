@@ -15,16 +15,12 @@ class RestfulUnauthorizedException extends \RestfulException {
   protected $code = 401;
 
   /**
-   * Defines the description.
-   *
-   * @var string
+   * {@inheritdoc}
    */
   protected $description = 'Unauthorized.';
 
   /**
-   * Defines the problem instance.
-   *
-   * @var string
+   * {@inheritdoc}
    */
   protected $instance = 'help/restful/problem-instances-unauthorized';
 

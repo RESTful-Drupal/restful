@@ -30,7 +30,14 @@
 
   <div class="input-wrapper tags">
     <label>Tags</label>
-    <input multiple type="hidden" ui-select2="{query: tagsQuery, minimumInputLength: 2}" ng-model="data.tags" data-placeholder="Select or create tags" style="width: 300px"/>
+    <ui-select multiple ng-model="data.tags" tagging style="width: 300px" theme="bootstrap">
+      <ui-select-match placeholder="Select or create tags">
+        <span class="{{$item.class || 'item'}}">{{ $item.text }}</span>
+      </ui-select-match>
+      <ui-select-choices repeat="term in tagsChoices" refresh="tagsQuery($select.search)" position="down">
+        <span class="option">{{ term.text }}</span>
+      </ui-select-choices>
+    </ui-select>
   </div>
 
   <div class="input-wrapper file-wrapper">

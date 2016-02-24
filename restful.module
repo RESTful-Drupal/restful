@@ -505,6 +505,11 @@ function restful_menu_process_callback($resource_name, $version = NULL) {
   $request = restful_parse_request();
 
   try {
+    if (!\RestfulBase::isValidMethod($method, FALSE)) {
+      throw new RestfulBadRequestException(format_string('Unsupported method @method.', array(
+        '@method' => $method,
+      )));
+    }
     return $handler->{$method}($path, $request);
   }
   catch (RestfulException $e) {
@@ -614,6 +619,13 @@ function restful_parse_request() {
  * @see restful_menu_process_callback()
  */
 function restful_delivery($var = NULL, $method = 'format') {
+  if ($restful_handler = restful_get_restful_handler_for_path()) {
+    // Allow the handler to change the HTTP headers.
+    foreach ($restful_handler->getHttpHeaders() as $key => $value) {
+      drupal_add_http_header($key, $value);
+    }
+  }
+
   if (!isset($var)) {
     return;
   }
@@ -626,18 +638,12 @@ function restful_delivery($var = NULL, $method = 'format') {
     drupal_add_http_header('Content-Type', 'application/problem+json; charset=utf-8');
   }
 
-  // Get the formatter for the current resource.
-  if ($restful_handler = restful_get_restful_handler_for_path()) {
-    // Allow the handler to change the HTTP headers.
-    foreach ($restful_handler->getHttpHeaders() as $key => $value) {
-      drupal_add_http_header($key, $value);
-    }
-    // If we are returning from an OPTIONS call, always use render.
-    if ($restful_handler->getMethod() == \RestfulInterface::OPTIONS) {
-      $method = 'render';
-    }
+  // If we are returning from an OPTIONS call, always use render.
+  if ($restful_handler && $restful_handler->getMethod() == \RestfulInterface::OPTIONS) {
+    $method = 'render';
   }
 
+  // Get the formatter for the current resource.
   try {
     $formatter_handler = \RestfulManager::outputFormat($restful_handler);
     $output = $formatter_handler->{$method}($var);

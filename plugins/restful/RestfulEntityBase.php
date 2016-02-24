@@ -400,7 +400,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
         }
       }
 
-      if ($value && $info['process_callbacks']) {
+      if (isset($value) && $info['process_callbacks']) {
         foreach ($info['process_callbacks'] as $process_callback) {
           $value = static::executeCallback($process_callback, array($value));
         }
@@ -653,7 +653,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    * {@inheritdoc}
    */
   public function deleteEntity($entity_id) {
-    $this->isValidEntity('update', $entity_id);
+    $this->isValidEntity('delete', $entity_id);
 
     $wrapper = entity_metadata_wrapper($this->entityType, $entity_id);
     $wrapper->delete();
@@ -750,7 +750,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    * @param bool $null_missing_fields
    *   Determine if properties that are missing from the request array should
    *   be treated as NULL, or should be skipped. Defaults to FALSE, which will
-   *   set the fields to NULL.
+   *   skip, instead of setting the fields to NULL.
    *
    * @throws RestfulBadRequestException
    */
@@ -1476,7 +1476,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
         );
 
         // Set the default value for the version of the referenced resource.
-        if (empty($resource['major_version']) || empty($resource['minor_version'])) {
+        if (!isset($resource['major_version']) || !isset($resource['minor_version'])) {
           list($major_version, $minor_version) = static::getResourceLastVersion($resource['name']);
           $resource['major_version'] = $major_version;
           $resource['minor_version'] = $minor_version;
