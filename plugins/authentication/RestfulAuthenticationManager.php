@@ -96,6 +96,9 @@ class RestfulAuthenticationManager extends \ArrayObject {
     if (!$account) {
 
       if ($this->count() && !$this->getIsOptional()) {
+        // Allow caching pages for anonymous users.
+        drupal_page_is_cacheable(variable_get('restful_page_cache', FALSE));
+
         // User didn't authenticate against any provider, so we throw an error.
         throw new \RestfulUnauthorizedException('Bad credentials');
       }
@@ -114,6 +117,15 @@ class RestfulAuthenticationManager extends \ArrayObject {
     if ($cache) {
       $this->setAccount($account);
     }
+
+    // Disable page caching for security reasons so that an authenticated user
+    // response never gets into the page cache for anonymous users.
+    // This is necessary because the page cache system only looks at session
+    // cookies, but not at HTTP Basic Auth headers.
+    drupal_page_is_cacheable(!$account->uid && variable_get('restful_page_cache', FALSE));
+
+    // Record the access time of this request.
+    $this->setAccessTime($account);
 
     return $account;
   }
@@ -197,5 +209,20 @@ class RestfulAuthenticationManager extends \ArrayObject {
     return $this->originalUserSession;
   }
 
-
+  /**
+   * Set the user's last access time.
+   *
+   * @param object $account
+   *   A user account.
+   *
+   * @see _drupal_session_write()
+   */
+  protected function setAccessTime($account) {
+    // This logic is pulled directly from _drupal_session_write().
+    if ($account->uid && REQUEST_TIME - $account->access > variable_get('session_write_interval', 180)) {
+      db_update('users')->fields(array(
+        'access' => REQUEST_TIME,
+      ))->condition('uid', $account->uid)->execute();
+    }
+  }
 }

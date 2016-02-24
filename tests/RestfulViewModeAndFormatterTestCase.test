@@ -16,7 +16,7 @@ class RestfulViewModeAndFormatterTestCase extends DrupalWebTestCase {
   }
 
   function setUp() {
-    parent::setUp('restful_example', 'restful_test');
+    parent::setUp('restful_token_auth', 'restful_example', 'restful_test');
   }
 
   /**

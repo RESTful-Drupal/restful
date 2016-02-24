@@ -341,7 +341,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
         }
       }
 
-      if ($value && $info['process_callbacks']) {
+      if (isset($value) && $info['process_callbacks']) {
         foreach ($info['process_callbacks'] as $process_callback) {
           $value = static::executeCallback($process_callback, array($value));
         }
@@ -594,7 +594,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    * {@inheritdoc}
    */
   public function deleteEntity($entity_id) {
-    $this->isValidEntity('update', $entity_id);
+    $this->isValidEntity('delete', $entity_id);
 
     $wrapper = entity_metadata_wrapper($this->entityType, $entity_id);
     $wrapper->delete();
@@ -652,9 +652,9 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    * @param EntityMetadataWrapper $wrapper
    *   The wrapped entity object, passed by reference.
    * @param bool $null_missing_fields
-   *   Determine if properties that are missing form the request array should
+   *   Determine if properties that are missing from the request array should
    *   be treated as NULL, or should be skipped. Defaults to FALSE, which will
-   *   set the fields to NULL.
+   *   skip, instead of setting the fields to NULL.
    *
    * @throws RestfulBadRequestException
    */
@@ -680,16 +680,24 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       }
 
       $property_name = $info['property'];
-      if (!isset($request[$public_field_name])) {
+
+      if (!array_key_exists($public_field_name, $request)) {
         // No property to set in the request.
         if ($null_missing_fields && $this->checkPropertyAccess('edit', $public_field_name, $wrapper->{$property_name}, $wrapper)) {
           // We need to set the value to NULL.
-          $wrapper->{$property_name}->set(NULL);
+          $field_value = NULL;
         }
-        continue;
+        else {
+          // Either we shouldn't set missing fields as NULL or access is denied
+          // for the current property, hence we skip.
+          continue;
+        }
+      }
+      else {
+        // Property is set in the request.
+        $field_value = $this->propertyValuesPreprocess($property_name, $request[$public_field_name], $public_field_name);
       }
 
-      $field_value = $this->propertyValuesPreprocess($property_name, $request[$public_field_name], $public_field_name);
       $wrapper->{$property_name}->set($field_value);
 
       // We check the property access only after setting the values, as the
@@ -736,6 +744,11 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    *   The value to set using the wrapped property.
    */
   public function propertyValuesPreprocess($property_name, $value, $public_field_name) {
+    // If value is NULL, just return.
+    if (!isset($value)) {
+      return NULL;
+    }
+
     // Get the field info.
     $field_info = field_info_field($property_name);
 
@@ -1180,7 +1193,8 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    * Check access to CRUD an entity.
    *
    * @param $op
-   *   The operation. Allowed values are "create", "update" and "delete".
+   *   The operation. Allowed values are "view", "create", "update" and
+   *   "delete".
    * @param $entity_type
    *   The entity type.
    * @param $entity
@@ -1235,7 +1249,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
           ),
           // Information about the form element.
           'form_element' => array(
-            'type' => 'texfield',
+            'type' => 'textfield',
             'size' => 255,
           ),
         ),
@@ -1310,7 +1324,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
         );
 
         // Set the default value for the version of the referenced resource.
-        if (empty($resource['major_version']) || empty($resource['minor_version'])) {
+        if (!isset($resource['major_version']) || !isset($resource['minor_version'])) {
           list($major_version, $minor_version) = static::getResourceLastVersion($resource['name']);
           $resource['major_version'] = $major_version;
           $resource['minor_version'] = $minor_version;

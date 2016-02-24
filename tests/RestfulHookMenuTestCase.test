@@ -67,6 +67,14 @@ class RestfulHookMenuTestCase extends RestfulCurlBaseTestCase {
 
     $node1 = node_load($node1->nid);
     $this->assertEqual($node1->title, 'new title', 'HTTP method was overriden.');
+
+    // Try to override with an invalid method.
+    $headers = array('X-HTTP-Method-Override' => 'MALICIOUS');
+    $body = array(
+      'label' => 'new title',
+    );
+    $result = $this->httpRequest('api/v1.0/articles/' . $node1->nid, \RestfulInterface::POST, $body, $headers);
+    $this->assertTrue($result['code'] > 399, 'Bad overridden method is caught.');
   }
 
   /**

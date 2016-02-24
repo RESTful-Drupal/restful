@@ -202,7 +202,57 @@ curl -u "username:password" https://example.com/api/login
 
 # Call a "protected" with token resource (Articles resource version 1.3 in "Restful example")
 curl https://example.com/api/v1.3/articles/1?access_token=YOUR_TOKEN
+
+# Or use access-token instead of access_token for ensuring header is not going to be
+# dropped out from $_SERVER so it remains compatible with other webservers different than apache.
+curl -H "access-token: YOUR_TOKEN" https://example.com/api/v1.3/articles/1
 ```
+
+## Change request formatter
+
+By default Restful module allows for any **Content-type** requests by setting the ```Accept: */*```. This means that you can make requests in the format you want (of course if this format is available on the restful plugins). 
+
+For example let's say that we want to get a request in ```xml``` while by default we get the requests in ```hal+json```. All we have to do is set a Header parameter like this ```Accept: application/xml```.
+
+```shell
+curl -H 'Accept:application/xml' https://example.com/api/articles
+```
+
+And will return data in xml formatter.
+
+```xml
+<?xml version="1.0"?>
+<api>
+  <articles>
+    <item0>
+      <id>1</id>
+      <label>Article title</label>
+      <_links>
+          <self>
+            <href>http://example.com/api/articles/1</href>
+          </self>
+        </_links>
+    </item0>
+    <item1>
+      <id>2</id>
+      <label>Article title</label>
+      <_links>
+          <self>
+            <href>http://example.com/api/articles/2</href>
+          </self>
+        </_links>
+    </item1>
+    <count>3</count>
+    <_links>
+      <self>
+        <title>Self</title>
+        <href>http://example.com/api/articles</href>
+      </self>
+    </_links>
+</api>
+
+```
+
 
 ## Error handling
 If an error occurs when operating the REST endpoint via URL, A valid JSON object

@@ -15,16 +15,12 @@ class RestfulNotImplementedException extends \RestfulException {
   protected $code = 501;
 
   /**
-   * Defines the description.
-   *
-   * @var string
+   * {@inheritdoc}
    */
   protected $description = 'Not Implemented.';
 
   /**
-   * Defines the problem instance.
-   *
-   * @var string
+   * {@inheritdoc}
    */
   protected $instance = 'help/restful/problem-instances-not-implemented';
 

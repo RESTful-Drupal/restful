@@ -15,16 +15,12 @@ class RestfulFloodException extends RestfulException {
   protected $code = 429;
 
   /**
-   * Defines the description.
-   *
-   * @var string
+   * {@inheritdoc}
    */
   protected $description = 'Too Many Requests.';
 
   /**
-   * Defines the problem instance.
-   *
-   * @var string
+   * {@inheritdoc}
    */
   protected $instance = 'help/restful/problem-instances-flood';
 

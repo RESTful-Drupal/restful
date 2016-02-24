@@ -367,7 +367,7 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     $request['filter'] = array('integer_single' => '1');
     $result = $handler->get('', $request);
     $this->assertEqual($result[0]['id'], $nodes['abc'], 'Filter list by Single value field.');
-    
+
     // LIKE operator.
     $request['filter'] = array(
       'label' => array(
@@ -604,6 +604,42 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     $result = $handler->get('', array('page' => 3));
     $output = drupal_json_decode($handler->format($result));
     $this->assertEqual($output['count'], 9, 'Total count exists and is correct.');
+  }
+
+  /**
+   * Test node count and pager when there are unpublished nodes.
+   */
+  function testCountWithUnpublished() {
+    foreach(range(1, 9) as $key) {
+      $settings = array(
+        'type' => 'article',
+        'title' => $key,
+        'status' => NODE_PUBLISHED,
+      );
+      $this->drupalCreateNode($settings);
+    }
+    foreach(range(1, 3) as $key) {
+      $settings = array(
+        'type' => 'article',
+        'title' => $key,
+        'status' => NODE_NOT_PUBLISHED,
+      );
+      $this->drupalCreateNode($settings);
+    }
+
+    /** @var RestfulInterface $handler */
+    $handler = restful_get_restful_handler('articles');
+    // Set a range for pagination to check only .
+    $handler->setRange(9);
+
+    // Check pagination of first page.
+    $result = $handler->get('', array('page' => 1));
+    $output = drupal_json_decode($handler->format($result));
+    $this->assertEqual(count($result), 9, 'Number of results displayed');
+    $this->assertEqual(count($result), $handler->getTotalCount(), 'Count of results takes into account unpublished nodes');
+    $this->assertTrue(empty($output['next']), '"Next" link does not exist on the first page.');
+    $this->assertTrue(empty($output['previous']), '"Previous" link does not exist on the first page.');
+
   }
 
   /**

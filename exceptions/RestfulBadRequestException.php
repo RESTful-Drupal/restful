@@ -15,16 +15,12 @@ class RestfulBadRequestException extends RestfulException {
   protected $code = 400;
 
   /**
-   * Defines the description.
-   *
-   * @var string
+   * {@inheritdoc}
    */
   protected $description = 'Bad Request.';
 
   /**
-   * Defines the problem instance.
-   *
-   * @var string
+   * {@inheritdoc}
    */
   protected $instance = 'help/restful/problem-instances-bad-request';
 
