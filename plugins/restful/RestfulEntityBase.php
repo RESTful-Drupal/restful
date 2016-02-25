@@ -739,17 +739,26 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
   }
 
   /**
+   * Determine if the current instance is translatable.
+   *
+   * @return bool
+   */
+  protected function instanceIsTranslatable() {
+    if (module_exists('entity_translation')) {
+      return entity_translation_node_supported_type($this->getBundle());
+    }
+
+    return FALSE;
+  }
+
+  /**
    * Set the default language of the instance.
    *
    * @param \EntityMetadataWrapper $wrapper
    *   The wrapped entity object, passed by reference.
    */
   protected function setInstanceDefaultLanguage(\EntityMetadataWrapper $wrapper) {
-    // Use the default language from the plugin if set, otherwise use the
-    // default language of the website.
-    $language = $this->getPluginKey('default_language');
-    $language = $language ?: language_default('language');
-    $wrapper->language->set($language);
+    $wrapper->language->set(language_default('language'));
   }
 
   /**
@@ -776,7 +785,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
 
     // Set the default language of a new instance if this bundle support
     // field translation.
-    if ($this->getMethod() == \RestfulInterface::POST && entity_translation_node_supported_type($this->getBundle())) {
+    if ($this->getMethod() == \RestfulInterface::POST && $this->instanceIsTranslatable()) {
       $this->setInstanceDefaultLanguage($wrapper);
     }
 
