@@ -115,9 +115,7 @@ class RestfulViewEntityMultiLingualTestCase extends RestfulCurlBaseTestCase {
       'fr' => $this->randomName(),
     );
 
-    $languages = array('en', 'fr');
-
-    foreach ($languages as $langcode) {
+    foreach (array('en', 'fr') as $langcode) {
       $wrapper->language($langcode);
       $wrapper->text_single->set($text1[$langcode]);
       $wrapper->text_multiple->set(array($text1[$langcode], $text2[$langcode]));
@@ -128,8 +126,6 @@ class RestfulViewEntityMultiLingualTestCase extends RestfulCurlBaseTestCase {
     foreach (array('en', 'fr') as $langcode) {
       $this->assertExpectedResult($langcode, $id, $text1[$langcode], $text2[$langcode]);
     }
-
-    $this->postCheck($languages);
   }
 
   /**
@@ -151,48 +147,8 @@ class RestfulViewEntityMultiLingualTestCase extends RestfulCurlBaseTestCase {
     $response = $handler->get($id);
     $result = $response[0];
 
-    $this->assertEqual(trim(strip_tags($result['text_single'][$langcode])), $text1, 'Entity view has correct result for "text_single" in language "' . $langcode . '".');
-    $this->assertEqual(trim(strip_tags($result['text_multiple'][$langcode][0])), $text1, 'Entity view has correct result for the first value of "text_multiple" in language "' . $langcode . '".');
-    $this->assertEqual(trim(strip_tags($result['text_multiple'][$langcode][1])), $text2, 'Entity view has correct result for the second value of "text_multiple" in language "' . $langcode . '".');
-  }
-
-  /**
-   * Helper to test creating an entity (POST method) in a certain language.
-   *
-   * @param $languages
-   *  An array of languages.
-   */
-  private function postCheck($languages) {
-    $handler = restful_get_restful_handler('restful_test_translatable_entity');
-
-    $text1 = $this->randomName();
-    $text2 = $this->randomName();
-
-    $request = array(
-      'text_single' => array($languages[0] => $text1),
-    );
-
-    $response = $handler->post('', $request);
-    $this->assertEqual(trim(strip_tags($response[0]['text_single'][$languages[0]])), $text1, 'Entity view has correct result for "text_single" in language "' . $languages[0] . '".');
-    $this->assertEqual(trim(strip_tags($response[0]['text_single'][$languages[1]])), NULL, 'Entity view has correct result for "text_single" in language "' . $languages[1] . '".');
-
-
-    $request = array(
-      'text_single' => array($languages[1] => $text1),
-    );
-    $response = $handler->post('', $request);
-    $this->assertEqual(trim(strip_tags($response[0]['text_single'][$languages[0]])), NULL, 'Entity view has correct result for "text_single" in language "' . $languages[0] . '".');
-    $this->assertEqual(trim(strip_tags($response[0]['text_single'][$languages[1]])), $text1, 'Entity view has correct result for "text_single" in language "' . $languages[1] . '".');
-
-    $request = array(
-      'text_single' => array(
-        $languages[0] => $text1,
-        $languages[1] => $text2,
-      ),
-    );
-    $response = $handler->post('', $request);
-    $this->assertEqual(trim(strip_tags($response[0]['text_single'][$languages[0]])), $text1, 'Entity view has correct result for "text_single" in language "' . $languages[0] . '".');
-    $this->assertEqual(trim(strip_tags($response[0]['text_single'][$languages[1]])), $text2, 'Entity view has correct result for "text_single" in language "' . $languages[1] . '".');
-
+    $this->assertEqual(trim(strip_tags($result['text_single'])), $text1, 'Entity view has correct result for "text_single" in language "' . $langcode . '".');
+    $this->assertEqual(trim(strip_tags($result['text_multiple'][0])), $text1, 'Entity view has correct result for the first value of "text_multiple" in language "' . $langcode . '".');
+    $this->assertEqual(trim(strip_tags($result['text_multiple'][1])), $text2, 'Entity view has correct result for the second value of "text_multiple" in language "' . $langcode . '".');
   }
 }
