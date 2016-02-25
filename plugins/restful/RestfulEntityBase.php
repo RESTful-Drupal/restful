@@ -365,8 +365,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
         }
 
         if (empty($info['formatter'])) {
-          $field_info = field_info_field($info['property']);
-          if ($field_info && field_is_translatable($this->entityType, $field_info)) {
+          if ($this->fieldIsTranslatable($info['property'])) {
             $enabled_languages = array_keys(language_list());
 
             foreach ($enabled_languages as $language) {
@@ -391,6 +390,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
             }
           }
           else {
+            // Field is not translatable.
             $value = $this->getValueByWrapper($wrapper, $sub_wrapper, $info, $public_field_name);
           }
         }
@@ -739,26 +739,38 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
   }
 
   /**
-   * Determine if the current instance is translatable.
+   * Determine if the current plugin supports field translation.
    *
    * @return bool
    */
-  protected function instanceIsTranslatable() {
-    if (module_exists('entity_translation')) {
-      return entity_translation_node_supported_type($this->getBundle());
-    }
-
-    return FALSE;
+  protected function fieldTranslateAvailable() {
+    return $this->getPluginKey('field_translate_available') && module_exists('entity_translation');
   }
 
   /**
-   * Set the default language of the instance.
+   * Determine if the current bundle is translatable.
    *
-   * @param \EntityMetadataWrapper $wrapper
-   *   The wrapped entity object, passed by reference.
+   * @return bool
    */
-  protected function setInstanceDefaultLanguage(\EntityMetadataWrapper $wrapper) {
-    $wrapper->language->set(language_default('language'));
+  protected function bundleIsTranslatable() {
+    if ($this->getEntityType() == 'node') {
+      return entity_translation_node_supported_type($this->getBundle());
+    }
+
+    // For now we don't have a way to indicate this on other entities.
+    return TRUE;
+  }
+
+  /**
+   * Determine if a specific field is translatable.
+   *
+   * @param $field
+   *  The field machine name.
+   *
+   * @return bool
+   */
+  protected function fieldIsTranslatable($field) {
+    return $this->fieldTranslateAvailable() && $this->bundleIsTranslatable() && field_is_translatable($this->getEntityType(), field_info_field($field));
   }
 
   /**
@@ -782,12 +794,6 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
 
     $default_language = language_default();
     $title_field = $this->getTitleField();
-
-    // Set the default language of a new instance if this bundle support
-    // field translation.
-    if ($this->getMethod() == \RestfulInterface::POST && $this->instanceIsTranslatable()) {
-      $this->setInstanceDefaultLanguage($wrapper);
-    }
 
     foreach ($this->getPublicFields() as $public_field_name => $info) {
       if (!empty($info['create_or_update_passthrough'])) {
@@ -818,9 +824,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
         }
       }
       else {
-        // Property is set in the request.
-
-        if (field_is_translatable($this->entityType, field_info_field($info['property']))) {
+        if ($this->fieldIsTranslatable($property_name)) {
           $values = $request[$public_field_name];
 
           // Parse values in case it still not an array.
