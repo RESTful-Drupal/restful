@@ -231,7 +231,12 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       $query->entityCondition('bundle', $bundles, 'IN');
     }
 
-    $query->propertyCondition($entity_info['entity keys']['label'], $string, $operator);
+    if (empty($title_field = $this->getTitleField())) {
+      $query->propertyCondition($entity_info['entity keys']['label'], $string, $operator);
+    }
+    else {
+      $query->fieldCondition($title_field['field_name'], 'value', $string, $operator);
+    }
 
     // Add a generic entity access tag to the query.
     $query->addTag($entity_type . '_access');
