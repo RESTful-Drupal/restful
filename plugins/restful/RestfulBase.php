@@ -815,7 +815,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
       $this->getRateLimitManager()->checkRateLimit($request);
     }
 
-    $return = $this->{$method_name}($path);
+    $return = $this->{$method_name}($this->path);
 
     if (empty($request['__application']['rest_call'])) {
       // Switch back to the original user.
