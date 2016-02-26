@@ -1,0 +1,25 @@
+<?php
+
+/**
+ * @file
+ * Contains restful.module..
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function restful_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    // Main module help for the restful module.
+    case 'help.page.restful':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('Enhances the REST core module to provide extra features.') . '</p>';
+      return $output;
+
+    default:
+      return NULL;
+  }
+}

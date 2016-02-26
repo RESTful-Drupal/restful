@@ -1,0 +1,14 @@
+{
+  "name": "drupal/restful",
+  "type": "drupal-module",
+  "description": "Enhances the REST core module to provide extra features.",
+  "keywords": ["Drupal"],
+  "license": "GPL-2.0+",
+  "homepage": "https://www.drupal.org/project/restful",
+  "minimum-stability": "dev",
+  "support": {
+    "issues": "http://drupal.org/project/issues/restful",
+    "source": "http://cgit.drupalcode.org/restful"
+  },
+  "require": { }
+}
