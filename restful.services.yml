@@ -1,0 +1,28 @@
+services:
+  serializer.normalizer.entity_reference_item.restful:
+    class: Drupal\restful\Normalizer\EntityReferenceItemNormalizer
+    arguments: ['@rest.link_manager', '@serializer.entity_resolver']
+    tags:
+      - { name: normalizer, priority: 20 }
+  serializer.normalizer.field_item.restful:
+    class: Drupal\restful\Normalizer\FieldItemNormalizer
+    tags:
+      - { name: normalizer, priority: 20 }
+  serializer.normalizer.field.restful:
+    class: Drupal\restful\Normalizer\FieldNormalizer
+    tags:
+      - { name: normalizer, priority: 20 }
+  serializer.normalizer.file_entity.restful:
+    class: Drupal\restful\Normalizer\FileEntityNormalizer
+    tags:
+      - { name: normalizer, priority: 30 }
+    arguments: ['@entity.manager', '@http_client', '@rest.link_manager', '@module_handler']
+  serializer.normalizer.entity.restful:
+    class: Drupal\restful\Normalizer\ContentEntityNormalizer
+    arguments: ['@rest.link_manager', '@entity.manager', '@module_handler']
+    tags:
+      - { name: normalizer, priority: 20 }
+  serializer.encoder.restful:
+    class: Drupal\restful\Encoder\JsonEncoder
+    tags:
+      - { name: encoder, priority: 20, format: 'hal_json' }
