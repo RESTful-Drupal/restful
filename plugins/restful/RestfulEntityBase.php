@@ -185,14 +185,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       return array();
     }
 
-    $result = $this->getQueryResultForAutocomplete();
-
-    $return = array();
-    foreach ($result as $entity_id => $label) {
-      $return[$entity_id] = check_plain($label);
-    }
-
-    return $return;
+    return $this->getQueryResultForAutocomplete();
   }
 
   /**
@@ -278,11 +271,11 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     foreach (array_keys($result[$entity_type]) as $id) {
       $wrapper = entity_metadata_wrapper($this->entityType, $id);
       if (empty($title_field = $this->getTitleField())) {
-        $return[$id] = $wrapper->label();
+        $return[$id] = check_plain($wrapper->label());
       }
       else {
         $wrapper->language($this->getLangCode());
-        $return[$id] = $wrapper->{$title_field['field_name']}->value();
+        $return[$id] = check_plain($wrapper->{$title_field['field_name']}->value());
       }
     }
 
