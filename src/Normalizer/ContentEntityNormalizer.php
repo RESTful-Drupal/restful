@@ -27,6 +27,13 @@ class ContentEntityNormalizer extends HalContentEntityNormalizer {
   protected $requestStack;
 
   /**
+   * The request.
+   *
+   * @var \Symfony\Component\HttpFoundation\Request
+   */
+  protected $request;
+
+  /**
    * Constructs an ContentEntityNormalizer object.
    *
    * @param \Drupal\rest\LinkManager\LinkManagerInterface $link_manager
@@ -34,6 +41,7 @@ class ContentEntityNormalizer extends HalContentEntityNormalizer {
    */
   public function __construct(LinkManagerInterface $link_manager, EntityManagerInterface $entity_manager, ModuleHandlerInterface $module_handler, RequestStack $request_stack) {
     parent::__construct($link_manager, $entity_manager, $module_handler);
+    $this->request = $request_stack->getCurrentRequest();
     $this->requestStack = $request_stack;
   }
 
@@ -72,8 +80,7 @@ class ContentEntityNormalizer extends HalContentEntityNormalizer {
     }
     // Ignore the entity ID and revision ID.
     $exclude = array($entity->getEntityType()->getKey('id'), $entity->getEntityType()->getKey('revision'));
-    $request = $this->requestStack->getCurrentRequest();
-    $field_names = explode(',', $request->query->get('fields', array_keys($fields)));
+    $field_names = explode(',', $this->request->query->get('fields', array_keys($fields)));
     $exclude = array_merge($exclude, array_diff(array_keys($fields), $field_names));
     foreach ($fields as $field) {
       // Continue if this is an excluded field or the current user does not have
