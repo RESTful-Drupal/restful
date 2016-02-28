@@ -8,12 +8,34 @@
 namespace Drupal\restful\Normalizer;
 
 use Drupal\Component\Utility\NestedArray;
+use Drupal\Core\Entity\EntityManagerInterface;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\hal\Normalizer\ContentEntityNormalizer as HalContentEntityNormalizer;
+use Drupal\rest\LinkManager\LinkManagerInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Converts the Drupal entity object structure to a HAL array structure.
  */
 class ContentEntityNormalizer extends HalContentEntityNormalizer {
+
+  /**
+   * The request stack service.
+   *
+   * @var \Symfony\Component\HttpFoundation\RequestStack
+   */
+  protected $requestStack;
+
+  /**
+   * Constructs an ContentEntityNormalizer object.
+   *
+   * @param \Drupal\rest\LinkManager\LinkManagerInterface $link_manager
+   *   The hypermedia link manager.
+   */
+  public function __construct(LinkManagerInterface $link_manager, EntityManagerInterface $entity_manager, ModuleHandlerInterface $module_handler, RequestStack $request_stack) {
+    parent::__construct($link_manager, $entity_manager, $module_handler);
+    $this->requestStack = $request_stack;
+  }
 
   /**
    * {@inheritdoc}
@@ -50,7 +72,8 @@ class ContentEntityNormalizer extends HalContentEntityNormalizer {
     }
     // Ignore the entity ID and revision ID.
     $exclude = array($entity->getEntityType()->getKey('id'), $entity->getEntityType()->getKey('revision'));
-    $field_names = explode(',', \Drupal::request()->query->get('fields', array_keys($fields)));
+    $request = $this->requestStack->getCurrentRequest();
+    $field_names = explode(',', $request->query->get('fields', array_keys($fields)));
     $exclude = array_merge($exclude, array_diff(array_keys($fields), $field_names));
     foreach ($fields as $field) {
       // Continue if this is an excluded field or the current user does not have
