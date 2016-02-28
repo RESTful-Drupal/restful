@@ -221,6 +221,10 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     $entity_info = $this->getEntityInfo();
     $request = $this->getRequest();
 
+    if (!empty($request['autocomplete']['language'])) {
+      $this->setLangCode($request['autocomplete']['language']);
+    }
+
     $string = drupal_strtolower($request['autocomplete']['string']);
     $operator = !empty($request['autocomplete']['operator']) ? $request['autocomplete']['operator'] : $autocomplete_options['operator'];
 
@@ -269,11 +273,17 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       return array();
     }
 
-    $ids = array_keys($result[$entity_type]);
     $return = array();
 
-    foreach (entity_load($entity_type, $ids) as $id => $entity) {
-      $return[$id] = entity_label($entity_type, $entity);
+    foreach (array_keys($result[$entity_type]) as $id) {
+      $wrapper = entity_metadata_wrapper($this->entityType, $id);
+      if (empty($title_field = $this->getTitleField())) {
+        $return[$id] = $wrapper->label();
+      }
+      else {
+        $wrapper->language($this->getLangCode());
+        $return[$id] = $wrapper->{$title_field['field_name']}->value();
+      }
     }
 
     return $return;
