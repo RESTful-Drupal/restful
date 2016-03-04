@@ -95,7 +95,7 @@ class ContentEntityNormalizerTest extends UnitTestCase {
       ->will($this->returnCallback(function (\Drupal\Core\Field\FieldItemListInterface $argument, $format) {
         return [
           $argument->getFieldDefinition()->getName() => [
-           'value' => $format,
+            'value' => $format,
           ],
         ];
       }));
@@ -123,9 +123,12 @@ class ContentEntityNormalizerTest extends UnitTestCase {
    * Creates a mock field list item.
    *
    * @param string $name
+   *   Field name.
    * @param bool $access
+   *   Stubbed access.
    *
    * @return \Drupal\Core\Field\FieldItemListInterface|\PHPUnit_Framework_MockObject_MockObject
+   *   The mock.
    */
   protected function createMockFieldListItem($name, $access = TRUE, $user_context = NULL) {
     $mock = $this->getMock('Drupal\Core\Field\FieldItemListInterface');
@@ -153,6 +156,7 @@ class ContentEntityNormalizerTest extends UnitTestCase {
    *   The field definitions.
    *
    * @return \PHPUnit_Framework_MockObject_MockObject
+   *   The mock.
    */
   public function createMockForContentEntity($definitions) {
     $content_entity_mock = $this->getMockBuilder('Drupal\Core\Entity\ContentEntityBase')
