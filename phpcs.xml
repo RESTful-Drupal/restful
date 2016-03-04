@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ruleset name="restful">
+  <description>Default PHP CodeSniffer configuration for RESTful.</description>
+  <file>.</file>
+  <arg name="extensions" value="inc,install,module,php,profile,test,theme,yml"/>
+
+  <!--Blacklist of coding standard rules that are not yet fixed. -->
+  <rule ref="Drupal">
+    <exclude name="Drupal.Commenting.DocComment.MissingShort"/>
+    <exclude name="Drupal.Commenting.FunctionComment.IncorrectTypeHint"/>
+    <exclude name="Drupal.Commenting.FunctionComment.MissingReturnComment"/>
+    <exclude name="Drupal.NamingConventions.ValidVariableName.LowerCamelName"/>
+  </rule>
+</ruleset>

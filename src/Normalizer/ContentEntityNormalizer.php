@@ -49,10 +49,10 @@ class ContentEntityNormalizer extends HalContentEntityNormalizer {
    * {@inheritdoc}
    */
   public function normalize($entity, $format = NULL, array $context = array()) {
-    $context += array(
+    $context += [
       'account' => NULL,
       'included_fields' => NULL,
-    );
+    ];
 
     // Create the array of normalized fields, starting with the URI.
     /* @var $entity \Drupal\Core\Entity\ContentEntityInterface */
@@ -85,7 +85,8 @@ class ContentEntityNormalizer extends HalContentEntityNormalizer {
     foreach ($fields as $field) {
       // Continue if this is an excluded field or the current user does not have
       // access to view it.
-      if (in_array($field->getFieldDefinition()->getName(), $exclude) || !$field->access('view', $context['account'])) {
+      $name = $field->getFieldDefinition()->getName();
+      if (in_array($name, $exclude) || !$field->access('view', $context['account'])) {
         continue;
       }
 

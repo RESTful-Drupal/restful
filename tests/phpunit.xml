@@ -1,0 +1,18 @@
+<!--?xml version="1.0" encoding="UTF-8"?-->
+
+<phpunit colors="true">
+  <testsuites>
+    <testsuite name="RESTful">
+      <directory>./src/</directory>
+    </testsuite>
+  </testsuites>
+  <!-- Filter for coverage reports. -->
+  <filter>
+    <blacklist>
+      <directory>./vendor</directory>
+    </blacklist>
+    <whitelist>
+      <directory>../src</directory>
+    </whitelist>
+  </filter>
+</phpunit>

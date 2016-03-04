@@ -1,0 +1,50 @@
+language: php
+sudo: false
+
+php:
+  - 5.5
+  - 5.6
+  - 7
+  - hhvm
+
+env:
+  - DRUPAL_CORE=8.0.x
+  - DRUPAL_CORE=8.1.x
+
+matrix:
+  allow_failures:
+    # We cannot use hhvm-nightly since that does not work in Travis CI's old
+    # Ubuntu 12.04.
+    - php: hhvm
+  # Don't wait for the allowed failures to build.
+  fast_finish: true
+
+before_script:
+  # Remove Xdebug as we don't need it and it causes
+  # PHP Fatal error:  Maximum function nesting level of '256' reached.
+  # We also don't care if that file exists or not on PHP 7.
+  - phpenv config-rm xdebug.ini || true
+
+  # Remember the current restful test directory for later use in the Drupal
+  # installation.
+  - TESTDIR=$(pwd)
+  # Navigate out of module directory to prevent blown stack by recursive module
+  # lookup.
+  - cd ..
+
+  # Download Drupal 8 core.
+  - travis_retry git clone --branch $DRUPAL_CORE --depth 1 http://git.drupal.org/project/drupal.git
+  - cd drupal
+
+  # Reference restful in build site.
+  - ln -s $TESTDIR modules/restful
+
+  # Install PHPCS to check for Drupal coding standards.
+  - composer global require drupal/coder
+  - ~/.composer/vendor/bin/phpcs --config-set installed_paths ~/.composer/vendor/drupal/coder/coder_sniffer
+
+script:
+  # Run the PHPUnit tests which also include the kernel tests.
+  - ./vendor/phpunit/phpunit/phpunit -c ./core/phpunit.xml.dist ./modules/restful
+  # Check for coding standards violations
+  - cd modules/restful && ~/.composer/vendor/bin/phpcs
