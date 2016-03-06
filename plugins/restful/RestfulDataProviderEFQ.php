@@ -143,7 +143,10 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
       if (!$property_name = $public_fields[$public_field_name]['property']) {
         throw new \RestfulBadRequestException('The current sort selection does not map to any entity property or Field API field.');
       }
-      if (field_info_field($property_name)) {
+      if ($field = field_info_field($property_name)) {
+        if (!field_access('view', $field, $this->entityType)) {
+          throw new RestfulBadRequestException(format_string('Access denied for sorting by: @sort.', array('@sort' => $public_field_name)));
+        }
         $query->fieldOrderBy($public_fields[$public_field_name]['property'], $public_fields[$public_field_name]['column'], $direction);
       }
       else {
@@ -170,7 +173,11 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
       if (!$property_name = $public_fields[$filter['public_field']]['property']) {
         throw new \RestfulBadRequestException('The current filter selection does not map to any entity property or Field API field.');
       }
-      if (field_info_field($property_name)) {
+      if ($field = field_info_field($property_name)) {
+        if (!field_access('view', $field, $this->entityType)) {
+          throw new RestfulBadRequestException(format_string('Access denied for the filter: @filter.', array('@filter' => $filter['public_field'])));
+        }
+
         if (in_array(strtoupper($filter['operator'][0]), array('IN', 'BETWEEN'))) {
           $query->fieldCondition($public_fields[$filter['public_field']]['property'], $public_fields[$filter['public_field']]['column'], $filter['value'], $filter['operator'][0]);
           continue;
