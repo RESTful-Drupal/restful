@@ -1,0 +1,7 @@
+name: RESTful Examples
+type: module
+description: Provides some examples for the RESTful module.
+core: 8.x
+package: REST
+dependencies:
+  - restful
