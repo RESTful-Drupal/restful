@@ -606,6 +606,10 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
         throw new BadRequestException('The current sort selection does not map to any entity property or Field API field.');
       }
       if (ResourceFieldEntity::propertyIsField($property_name)) {
+        $field = field_info_field($property_name);
+        if (!field_access('view', $field, $this->entityType)) {
+          throw new BadRequestException(format_string('Access denied for sorting by @sort.', array('@sort' => $public_field_name)));
+        }
         $query->fieldOrderBy($property_name, $resource_field->getColumn(), $direction);
       }
       else {
@@ -649,7 +653,11 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
         throw new BadRequestException(sprintf('The current filter "%s" selection does not map to any entity property or Field API field.', $filter['public_field']));
       }
 
-      if (field_info_field($property_name)) {
+      if ($field = field_info_field($property_name)) {
+        if (!field_access('view', $field, $this->entityType)) {
+          throw new BadRequestException(format_string('Access denied for filtering by @filter.', array('@filter' => $filter['public_field'])));
+        }
+
         if ($this::isMultipleValuOperator($filter['operator'][0])) {
           $query->fieldCondition($property_name, $resource_field->getColumn(), $this->getReferencedIds($filter['value'], $resource_field), $filter['operator'][0]);
           continue;
