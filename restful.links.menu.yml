@@ -1,0 +1,8 @@
+# Resource Config menu items definition
+entity.resource_config.collection:
+  title: 'Resource Config'
+  route_name: entity.resource_config.collection
+  description: 'List Resource Config (bundles)'
+  parent: system.admin_structure
+  weight: 99
+

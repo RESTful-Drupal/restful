@@ -1,0 +1,67 @@
+restful.resource_config.*:
+  type: config_entity
+  label: 'Resource Config config'
+  mapping:
+    plugin:
+      type: string
+      label: 'Plugin ID'
+    label:
+      type: label
+      label: 'Label'
+    entity_type:
+      type: string
+      label: 'Entity Type'
+    bundle:
+      type: string
+      label: 'Bundle'
+    resource_fields:
+      type: sequence
+      label: 'Fields'
+      sequence:
+        type: restful.resource_field
+
+restful.resource_field:
+  type: mapping
+  mapping:
+    public_name:
+      type: string
+      label: 'Public attribute name'
+    process_callbacks:
+      type: sequence
+      label: 'Process callbacks'
+      sequence:
+        type: callable
+    callback:
+      type: callable
+      label: 'Attribute content callback'
+    data:
+      type: restful.resource_field.data
+
+restful.resource_field.data:
+  type: mapping
+  mapping:
+    id:
+      type: string
+      label: 'Resource field type'
+    class:
+      type: string
+      label: 'Wrapper class'
+    data:
+      type: restful.resource_field.data.[%parent.id]
+      label: 'Custom data'
+
+# This is a placeholder so more complex field types can add custom config data.
+restful.resource_field.data.*:
+  # By default the data is the basic field data.
+  type: mapping
+  mapping:
+    column:
+      type: string
+      label: 'Field column'
+    field:
+      type: string
+      label: 'The entity field'
+
+# Probably worth creating a data type to validate that it's a callabe.
+callable:
+  type: string
