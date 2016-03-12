@@ -1,0 +1,19 @@
+id: 'articles.v1.0'
+label: 'Articles'
+contentEntityTypeId: 'node'
+contentBundleId: 'article'
+resourceFields:
+  title:
+    publicName: 'title'
+    data:
+      field: 'title'
+  shortDescription:
+    publicName: 'shortDescription'
+    processCallbacks:
+      - '\Drupal\editor\EditorXssFilter\Standard::filterXss'
+    data:
+      field: 'body'
+      column: 'summary'
+  randomNum:
+    publicName: 'randomNum'
+    callback: '\Drupal\editor\EditorXssFilter\Standard::filterXss'

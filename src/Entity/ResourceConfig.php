@@ -7,6 +7,7 @@
 
 namespace Drupal\restful\Entity;
 
+use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\restful\ResourceConfigInterface;
 
@@ -44,6 +45,7 @@ use Drupal\restful\ResourceConfigInterface;
  * )
  */
 class ResourceConfig extends ConfigEntityBase implements ResourceConfigInterface {
+
   /**
    * The Resource Config ID.
    *
@@ -57,5 +59,51 @@ class ResourceConfig extends ConfigEntityBase implements ResourceConfigInterface
    * @var string
    */
   protected $label;
+
+  /**
+   * Entity type.
+   *
+   * @var string
+   */
+  protected $contentEntityTypeId;
+
+  /**
+   * Bundle.
+   *
+   * @var string
+   */
+  protected $contentBundleId;
+
+  /**
+   * Resource fields.
+   *
+   * @var \Drupal\restful\ResourceFields\ResourceFieldInterface[]
+   */
+  protected $resourceFields;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __construct(array $values, $entity_type) {
+    parent::__construct($this->addDefaults($values), $entity_type);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function addDefaults(array $values) {
+    $default_field = [
+      'data' => [
+        'column' => 'value',
+      ],
+      'id' => 'field',
+    ];
+    if (!empty($values['resourceFields'])) {
+      $values['resourceFields'] = array_map(function ($value) use ($default_field) {
+        return NestedArray::mergeDeep($default_field, $value);
+      }, $values['resourceFields']);
+    }
+    return $values;
+  }
 
 }

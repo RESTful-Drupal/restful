@@ -2,19 +2,19 @@ restful.resource_config.*:
   type: config_entity
   label: 'Resource Config config'
   mapping:
-    plugin:
+    id:
       type: string
       label: 'Plugin ID'
     label:
       type: label
       label: 'Label'
-    entity_type:
+    contentEntityTypeId:
       type: string
       label: 'Entity Type'
-    bundle:
+    contentBundleId:
       type: string
       label: 'Bundle'
-    resource_fields:
+    resourceFields:
       type: sequence
       label: 'Fields'
       sequence:
@@ -23,10 +23,16 @@ restful.resource_config.*:
 restful.resource_field:
   type: mapping
   mapping:
-    public_name:
+    publicName:
       type: string
       label: 'Public attribute name'
-    process_callbacks:
+    id:
+      type: string
+      label: 'Resource field type'
+    class:
+      type: string
+      label: 'Wrapper class'
+    processCallbacks:
       type: sequence
       label: 'Process callbacks'
       sequence:
@@ -34,18 +40,6 @@ restful.resource_field:
     callback:
       type: callable
       label: 'Attribute content callback'
-    data:
-      type: restful.resource_field.data
-
-restful.resource_field.data:
-  type: mapping
-  mapping:
-    id:
-      type: string
-      label: 'Resource field type'
-    class:
-      type: string
-      label: 'Wrapper class'
     data:
       type: restful.resource_field.data.[%parent.id]
       label: 'Custom data'
