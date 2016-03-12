@@ -8,6 +8,12 @@ restful.resource_config.*:
     label:
       type: label
       label: 'Label'
+    version:
+      type: string
+      label: 'Version'
+    path:
+      type: string
+      label: 'Path'
     contentEntityTypeId:
       type: string
       label: 'Entity Type'

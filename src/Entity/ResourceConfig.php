@@ -61,6 +61,20 @@ class ResourceConfig extends ConfigEntityBase implements ResourceConfigInterface
   protected $label;
 
   /**
+   * The version string for the resource.
+   *
+   * @var string
+   */
+  protected $version;
+
+  /**
+   * The path for the resource.
+   *
+   * @var string
+   */
+  protected $path;
+
+  /**
    * Entity type.
    *
    * @var string

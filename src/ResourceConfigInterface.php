@@ -13,7 +13,6 @@ use Drupal\Core\Config\Entity\ConfigEntityInterface;
  * Provides an interface for defining Resource Config entities.
  */
 interface ResourceConfigInterface extends ConfigEntityInterface {
-  // Add get/set methods for your configuration properties here.
 
   /**
    * Applies default values to the config entity.

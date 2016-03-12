@@ -1,5 +1,7 @@
 id: 'articles.v1.0'
 label: 'Articles'
+version: 'v1.0'
+path: 'articles'
 contentEntityTypeId: 'node'
 contentBundleId: 'article'
 resourceFields:
