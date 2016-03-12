@@ -100,6 +100,9 @@ class ResourceConfig extends ConfigEntityBase implements ResourceConfigInterface
     ];
     if (!empty($values['resourceFields'])) {
       $values['resourceFields'] = array_map(function ($value) use ($default_field) {
+        if (!is_array($value)) {
+          return $value;
+        }
         return NestedArray::mergeDeep($default_field, $value);
       }, $values['resourceFields']);
     }
