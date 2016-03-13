@@ -6,6 +6,7 @@
  */
 
 namespace Drupal\Tests\restful\Unit\Entity;
+
 use Drupal\restful\Entity\ResourceConfig;
 use Drupal\Tests\UnitTestCase;
 
@@ -69,6 +70,53 @@ class ResourceConfigTest extends UnitTestCase {
     unset($data[1][1]['resourceFields']['shortDescription']['processCallbacks']);
 
     return $data;
+  }
+
+  /**
+   * Test setters and getters.
+   *
+   * @covers ::setVersion
+   * @covers ::getVersion
+   * @covers ::setPath
+   * @covers ::getPath
+   * @covers ::setContentEntityTypeId
+   * @covers ::getContentEntityTypeId
+   * @covers ::setContentBundleId
+   * @covers ::getContentBundleId
+   *
+   * @dataProvider settersAndGettersProvider
+   */
+  public function testSettersAndGetters($mutator, $accessor, $value) {
+    $entity = new ResourceConfig([], NULL);
+    $entity->{$mutator}($value);
+    $this->assertEquals($value, $entity->{$accessor}());
+  }
+
+  /**
+   * Provider for the setters test.
+   *
+   * @return array
+   *   The data.
+   */
+  public function settersAndGettersProvider() {
+    return [
+      [
+        'setVersion',
+        'getVersion',
+        sprintf('v%d.%d', mt_rand(1, 10), mt_rand(1, 10)),
+      ],
+      ['setPath', 'getPath', $this->getRandomGenerator()->name()],
+      [
+        'setContentEntityTypeId',
+        'getContentEntityTypeId',
+        $this->getRandomGenerator()->name(),
+      ],
+      [
+        'setContentBundleId',
+        'getContentBundleId',
+        $this->getRandomGenerator()->name(),
+      ],
+    ];
   }
 
 }

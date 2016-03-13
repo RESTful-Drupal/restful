@@ -105,6 +105,62 @@ class ResourceConfig extends ConfigEntityBase implements ResourceConfigInterface
   /**
    * {@inheritdoc}
    */
+  public function getVersion() {
+    return $this->version;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setVersion($version) {
+    $this->version = $version;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getPath() {
+    return $this->path;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setPath($path) {
+    $this->path = $path;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getContentEntityTypeId() {
+    return $this->contentEntityTypeId;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setContentEntityTypeId($entity_type_id) {
+    $this->contentEntityTypeId = $entity_type_id;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getContentBundleId() {
+    return $this->contentBundleId;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setContentBundleId($bundle_id) {
+    $this->contentBundleId = $bundle_id;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public static function addDefaults(array $values) {
     $default_field = [
       'data' => [
