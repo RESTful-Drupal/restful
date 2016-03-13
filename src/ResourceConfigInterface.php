@@ -23,6 +23,6 @@ interface ResourceConfigInterface extends ConfigEntityInterface {
    * @return array
    *   The values with the defaults.
    */
-  public function addDefaults(array $values);
+  public static function addDefaults(array $values);
 
 }

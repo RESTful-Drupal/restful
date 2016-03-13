@@ -2,10 +2,11 @@
 
 /**
  * @file
- * Contains \Drupal\Tests\restful\Unit\ContentEntityNormalizerTest.
+ * Contains \Drupal\Tests\restful\Unit\Normalizer\ContentEntityNormalizerTest.
  */
 
-namespace Drupal\Tests\restful\Unit;
+namespace Drupal\Tests\restful\Unit\Normalizer;
+
 use Drupal\restful\Normalizer\ContentEntityNormalizer;
 use Drupal\Tests\UnitTestCase;
 

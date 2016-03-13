@@ -91,7 +91,7 @@ class ResourceConfig extends ConfigEntityBase implements ResourceConfigInterface
   /**
    * Resource fields.
    *
-   * @var \Drupal\restful\ResourceFields\ResourceFieldInterface[]
+   * @var array
    */
   protected $resourceFields;
 
@@ -99,13 +99,13 @@ class ResourceConfig extends ConfigEntityBase implements ResourceConfigInterface
    * {@inheritdoc}
    */
   public function __construct(array $values, $entity_type) {
-    parent::__construct($this->addDefaults($values), $entity_type);
+    parent::__construct(static::addDefaults($values), $entity_type);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function addDefaults(array $values) {
+  public static function addDefaults(array $values) {
     $default_field = [
       'data' => [
         'column' => 'value',
@@ -115,9 +115,23 @@ class ResourceConfig extends ConfigEntityBase implements ResourceConfigInterface
     if (!empty($values['resourceFields'])) {
       $values['resourceFields'] = array_map(function ($value) use ($default_field) {
         if (!is_array($value)) {
+          // Avoid PHP blowing up.
           return $value;
         }
-        return NestedArray::mergeDeep($default_field, $value);
+        $defaults = NestedArray::mergeDeep($default_field, $value);
+
+        // If the field has a callback, that makes it a callback resource field.
+        if (!empty($defaults['callback'])) {
+          $defaults['id'] = 'callback';
+          unset($defaults['data']);
+        }
+
+        // If the process callbacks are empty, remove them.
+        if (isset($defaults['processCallbacks']) && !$defaults['processCallbacks']) {
+          unset($defaults['processCallbacks']);
+        }
+
+        return $defaults;
       }, $values['resourceFields']);
     }
     return $values;
