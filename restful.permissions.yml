@@ -1,0 +1,6 @@
+access RESTful resources:
+  title: 'Access RESTful resources'
+  description: 'Access all RESTful resources declared in the site.'
+
+## permission_callbacks:
+##  - Drupal\environment_indicator\EnvironmentIndicatorPermissions::permissions

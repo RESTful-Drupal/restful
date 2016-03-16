@@ -26,3 +26,8 @@ services:
     class: Drupal\restful\Encoder\JsonEncoder
     tags:
       - { name: encoder, priority: 20, format: 'hal_json' }
+  restful.resource_routes:
+    class: Drupal\restful\Routing\ResourceRoutes
+    arguments: ['@plugin.manager.rest', '@entity_type.manager', '@logger.channel.rest']
+    tags:
+      - { name: 'event_subscriber' }
