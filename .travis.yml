@@ -19,6 +19,16 @@ matrix:
   # Don't wait for the allowed failures to build.
   fast_finish: true
 
+mysql:
+  database: drupal
+  username: root
+  encoding: utf8
+
+# Cache composer downloads.
+cache:
+  directories:
+    - $HOME/.composer
+
 before_script:
   # Remove Xdebug as we don't need it and it causes
   # PHP Fatal error:  Maximum function nesting level of '256' reached.
@@ -32,19 +42,29 @@ before_script:
   # lookup.
   - cd ..
 
-  # Download Drupal 8 core.
+  # Create database.
+  - mysql -e 'create database drupal'
+  # Export database variable for kernel tests.
+  - export SIMPLETEST_DB=mysql://root:@127.0.0.1/drupal
+  # Download Drupal 8 core from the Github mirror because it is faster.
   - travis_retry git clone --branch $DRUPAL_CORE --depth 1 http://git.drupal.org/project/drupal.git
   - cd drupal
 
   # Reference restful in build site.
   - ln -s $TESTDIR modules/restful
 
+  # Start a web server on port 8888, run in the background.
+  - php -S localhost:8888 &
+
+  # Export web server URL for browser tests.
+  - export SIMPLETEST_BASE_URL=http://localhost:8888
+
   # Install PHPCS to check for Drupal coding standards.
-  - composer global require drupal/coder
+  - travis_retry composer global require drupal/coder
   - ~/.composer/vendor/bin/phpcs --config-set installed_paths ~/.composer/vendor/drupal/coder/coder_sniffer
 
 script:
   # Run the PHPUnit tests which also include the kernel tests.
-  - ./vendor/phpunit/phpunit/phpunit -c ./core/phpunit.xml.dist ./modules/restful
+  - ./vendor/bin/phpunit -c ./core/phpunit.xml.dist ./modules/restful
   # Check for coding standards violations
   - cd modules/restful && ~/.composer/vendor/bin/phpcs
