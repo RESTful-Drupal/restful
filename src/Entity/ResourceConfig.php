@@ -93,7 +93,7 @@ class ResourceConfig extends ConfigEntityBase implements ResourceConfigInterface
    *
    * @var array
    */
-  protected $resourceFields;
+  protected $resourceFields = [];
 
   /**
    * {@inheritdoc}

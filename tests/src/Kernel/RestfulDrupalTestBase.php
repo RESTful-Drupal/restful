@@ -5,6 +5,7 @@
  * Contains \Drupal\Tests\restful\Kernel\RestfulDrupalTestBase.
  */
 namespace Drupal\Tests\restful\Kernel;
+
 use Drupal\KernelTests\KernelTestBase;
 
 /**
@@ -15,18 +16,23 @@ use Drupal\KernelTests\KernelTestBase;
 class RestfulDrupalTestBase extends KernelTestBase {
 
   /**
+   * Modules to enable.
+   *
+   * @var string[]
+   */
+  public static $modules = [
+    'restful',
+    'restful_examples',
+    'rest',
+    'serialization',
+    'system',
+  ];
+  /**
    * RESTful logger.
    *
    * @var \Psr\Log\LoggerInterface
    */
   protected $logger;
-
-  /**
-   * Modules to enable.
-   *
-   * @var string[]
-   */
-  public static $modules = ['restful', 'restful_examples'];
 
   /**
    * {@inheritdoc}

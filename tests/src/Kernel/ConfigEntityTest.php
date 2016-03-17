@@ -33,10 +33,11 @@ class ConfigEntityTest extends RestfulDrupalTestBase {
   /**
    * Tests that an empty rule configuration can be saved.
    */
-  public function testSavingEmptyRule() {
+  public function testSavingEntity() {
     $config_entity = $this->storage->create([
       'id' => 'test_rule',
     ]);
+    // This will make sure that the empty entity saves and meets the schema.
     $config_entity->save();
   }
 
