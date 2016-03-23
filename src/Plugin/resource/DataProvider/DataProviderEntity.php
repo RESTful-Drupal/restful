@@ -649,6 +649,13 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
         throw new BadRequestException(sprintf('The current filter "%s" selection does not map to any entity property or Field API field.', $filter['public_field']));
       }
 
+      // Give the chance for other data providers to have a special handling for
+      // a given field.
+      $this->alterFilterQuery($filter, $query);
+      if (!empty($filter['processed'])) {
+        // If the filter was already processed by the alter filters, continue.
+        continue;
+      }
       if (field_info_field($property_name)) {
         if ($this::isMultipleValuOperator($filter['operator'][0])) {
           $query->fieldCondition($property_name, $resource_field->getColumn(), $this->getReferencedIds($filter['value'], $resource_field), $filter['operator'][0]);
@@ -671,6 +678,23 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
         }
       }
     }
+  }
+
+  /**
+   * Placeholder method to alter the filters.
+   *
+   * If no further processing for the filter is needed (i.e. alterFilterQuery
+   * already added the query filters to $query), then set the 'processed' flag
+   * in $filter to TRUE. Otherwise normal filtering will be added on top,
+   * leading to unexpected results.
+   *
+   * @param array $filter
+   *   The parsed filter information.
+   * @param \EntityFieldQuery $query
+   *   The EFQ to add the filter to.
+   */
+  protected function alterFilterQuery(array &$filter, \EntityFieldQuery $query) {
+    // This method is intentionally empty.
   }
 
   /**
