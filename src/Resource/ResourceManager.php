@@ -329,7 +329,7 @@ class ResourceManager implements ResourceManagerInterface {
    * @return ResourceInterface
    *   The transformed resource.
    */
-  protected function massagePlugin(ResourceInterface $plugin, RequestInterface $request = NULL) {
+  protected function massagePlugin(ResourceInterface $plugin = NULL, RequestInterface $request = NULL) {
     if (!$plugin) {
       return NULL;
     }
