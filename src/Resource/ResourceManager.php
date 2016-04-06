@@ -84,31 +84,14 @@ class ResourceManager implements ResourceManagerInterface {
    * {@inheritdoc}
    */
   public function getPlugin($instance_id, RequestInterface $request = NULL) {
-    /* @var ResourceInterface $plugin */
-    if (!$plugin = $this->plugins->get($instance_id)) {
-      return NULL;
-    }
-    if ($request) {
-      $plugin->setRequest($request);
-    }
-    return $plugin;
+    return $this->massagePlugin($this->plugins->get($instance_id), $request);
   }
 
   /**
    * {@inheritdoc}
    */
   public function getPluginCopy($instance_id, RequestInterface $request = NULL) {
-    if (!$plugin = $this->pluginManager->createInstance($instance_id)) {
-      return NULL;
-    }
-    if ($request) {
-      $plugin->setRequest($request);
-    }
-    // Allow altering the resource, this way we can read the resource's
-    // definition to return a different class that is using composition.
-    drupal_alter('restful_resource', $plugin);
-    $plugin = $plugin->isEnabled() ? $plugin : NULL;
-    return $plugin;
+    return $this->massagePlugin($this->pluginManager->createInstance($instance_id), $request);
   }
 
   /**
@@ -333,6 +316,32 @@ class ResourceManager implements ResourceManagerInterface {
     // Get the latest resource for the minor version.
     $resource = end($resources);
     return array($resource['majorVersion'], $resource['minorVersion']);
+  }
+
+  /**
+   * Helper method that sets the request and alters the resource.
+   *
+   * @param ResourceInterface $plugin
+   *   The resource to return.
+   * @param RequestInterface $request
+   *   The request.
+   *
+   * @return ResourceInterface
+   *   The transformed resource.
+   */
+  protected function massagePlugin(ResourceInterface $plugin, RequestInterface $request = NULL) {
+    if (!$plugin) {
+      return NULL;
+    }
+    if ($request) {
+      $plugin->setRequest($request);
+    }
+    // Allow altering the resource, this way we can read the resource's
+    // definition to return a different class that is using composition.
+    drupal_alter('restful_resource', $plugin);
+    $plugin = $plugin->isEnabled() ? $plugin : NULL;
+
+    return $plugin;
   }
 
 }

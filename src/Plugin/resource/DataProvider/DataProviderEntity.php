@@ -16,6 +16,7 @@ use Drupal\restful\Exception\InaccessibleRecordException;
 use Drupal\restful\Http\Request;
 use Drupal\restful\Http\RequestInterface;
 use Drupal\restful\Plugin\resource\Decorators\CacheDecoratedResource;
+use Drupal\restful\Plugin\resource\Field\ResourceFieldEntityAlterableInterface;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldResourceInterface;
 use Drupal\restful\Plugin\resource\ResourceEntity;
 use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterEMW;
@@ -602,8 +603,15 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
       if (!$resource_field = $resource_fields->get($public_field_name)) {
         return;
       }
+      $this->alterSortQuery($public_field_name, $direction, $query);
       if (!$property_name = $resource_field->getProperty()) {
-        throw new BadRequestException('The current sort selection does not map to any entity property or Field API field.');
+        if (!$resource_field instanceof ResourceFieldEntityAlterableInterface) {
+          throw new BadRequestException('The current sort selection does not map to any entity property or Field API field.');
+        }
+        // If there was no property but the resource field was sortable, do
+        // not add the default field filtering.
+        // TODO: This is a workaround. The filtering logic should live in the resource field class.
+        return;
       }
       if (ResourceFieldEntity::propertyIsField($property_name)) {
         $query->fieldOrderBy($property_name, $resource_field->getColumn(), $direction);
@@ -645,9 +653,6 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
         $this->addNestedFilter($filter, $query);
         continue;
       }
-      if (!$property_name = $resource_field->getProperty()) {
-        throw new BadRequestException(sprintf('The current filter "%s" selection does not map to any entity property or Field API field.', $filter['public_field']));
-      }
 
       // Give the chance for other data providers to have a special handling for
       // a given field.
@@ -655,6 +660,15 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
       if (!empty($filter['processed'])) {
         // If the filter was already processed by the alter filters, continue.
         continue;
+      }
+      if (!$property_name = $resource_field->getProperty()) {
+        if (!$resource_field instanceof ResourceFieldEntityAlterableInterface) {
+          throw new BadRequestException(sprintf('The current filter "%s" selection does not map to any entity property or Field API field and has no custom filtering.', $filter['public_field']));
+        }
+        // If there was no property but the resource field was filterable, do
+        // not add the default field filtering.
+        // TODO: This is a workaround. The filtering logic should live in the resource field class.
+        return;
       }
       if (field_info_field($property_name)) {
         if ($this::isMultipleValuOperator($filter['operator'][0])) {
@@ -694,7 +708,43 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
    *   The EFQ to add the filter to.
    */
   protected function alterFilterQuery(array &$filter, \EntityFieldQuery $query) {
-    // This method is intentionally empty.
+    if (!$resource_field = $this->fieldDefinitions->get($filter['public_field'])) {
+      return;
+    }
+    if (!$resource_field instanceof ResourceFieldEntityAlterableInterface) {
+      return;
+    }
+    $resource_field->alterFilterEntityFieldQuery($filter, $query);
+  }
+
+  /**
+   * Placeholder method to alter the filters.
+   *
+   * If no further processing for the filter is needed (i.e. alterFilterQuery
+   * already added the query filters to $query), then set the 'processed' flag
+   * in $filter to TRUE. Otherwise normal filtering will be added on top,
+   * leading to unexpected results.
+   *
+   * @param string $public_field_name
+   *   The public field name to sort by.
+   * @param string $direction
+   *   The sort direction.
+   * @param \EntityFieldQuery $query
+   *   The EFQ to add the filter to.
+   */
+  protected function alterSortQuery($public_field_name, $direction, \EntityFieldQuery $query) {
+    if (!$resource_field = $this->fieldDefinitions->get($public_field_name)) {
+      return;
+    }
+    if (!$resource_field instanceof ResourceFieldEntityAlterableInterface) {
+      return;
+    }
+    $sort = array(
+      'public_field' => $public_field_name,
+      'direction' => $direction,
+      'resource_id' => $this->pluginId,
+    );
+    $resource_field->alterSortEntityFieldQuery($sort, $query);
   }
 
   /**

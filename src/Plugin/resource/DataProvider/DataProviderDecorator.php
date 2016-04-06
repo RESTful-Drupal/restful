@@ -183,4 +183,46 @@ abstract class DataProviderDecorator implements DataProviderInterface {
     $this->decorated->remove($identifier);
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function discover($path = NULL) {
+    return $this->decorated->discover($path);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function isNestedField($field_name) {
+    return DataProvider::isNestedField($field_name);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function processFilterInput($filter, $public_field) {
+    return DataProvider::processFilterInput($filter, $public_field);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setResourcePath($resource_path) {
+    $this->decorated->setResourcePath($resource_path);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getResourcePath() {
+    return $this->decorated->getResourcePath();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getMetadata() {
+    return $this->decorated->getMetadata();
+  }
+
 }

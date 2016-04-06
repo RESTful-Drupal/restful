@@ -399,7 +399,8 @@ abstract class DataProvider implements DataProviderInterface {
       if (!static::isNestedField($public_field) && !$this->fieldDefinitions->get($public_field)) {
         throw new BadRequestException(format_string('The filter @filter is not allowed for this path.', array('@filter' => $public_field)));
       }
-      $filters[] = static::processFilterInput($value, $public_field);
+      $filter = static::processFilterInput($value, $public_field);
+      $filters[] = $filter + array('resource_id' => $this->pluginId);
     }
 
     return $filters;
