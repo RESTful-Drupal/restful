@@ -400,3 +400,17 @@ homepage:
 # List resources
 curl -u user:password https://example.org/api
 ```
+
+## Field Translation Support
+
+If you're using the _entity translation_ module then you now have the option to
+use it in your plugin as well, just need to add a line to your settings:
+```
+$plugin = array(
+  ...
+  'field_translate_available' => TRUE,
+  ...
+);
+```
+
+It automatically supports all the languages defined on your configuration.
