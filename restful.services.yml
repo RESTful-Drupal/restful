@@ -26,6 +26,10 @@ services:
     class: Drupal\restful\Encoder\JsonEncoder
     tags:
       - { name: encoder, priority: 20, format: 'hal_json' }
+  restful.route_enhancer:
+    class: Drupal\restful\Routing\RouteEnhancer
+    tags:
+      - { name: route_enhancer }
   restful.resource_routes:
     class: Drupal\restful\Routing\ResourceRoutes
     arguments: ['@plugin.manager.rest', '@entity_type.manager', '@logger.channel.rest']

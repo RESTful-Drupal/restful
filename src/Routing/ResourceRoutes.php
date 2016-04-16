@@ -76,6 +76,12 @@ class ResourceRoutes extends RouteSubscriberBase {
         // Only expose routes where the method is enabled in the configuration.
         if ($methods && ($method = $methods[0]) && $method) {
           $route->setRequirement('_access_rest_csrf', 'TRUE');
+          $definition = $plugin->getPluginDefinition();
+          if ($method != 'POST') {
+            // Make sure that the matched route is for the correct bundle.
+            $route->setRequirement('_entity_type', $definition['entity_type']);
+            $route->setRequirement('_bundle', $definition['bundle']);
+          }
 //          // Check that authentication providers are defined.
 //          if (empty($enabled_methods[$method]['supported_auth']) || !is_array($enabled_methods[$method]['supported_auth'])) {
 //            $this->logger->error('At least one authentication provider must be defined for resource @id', array(':id' => $id));
