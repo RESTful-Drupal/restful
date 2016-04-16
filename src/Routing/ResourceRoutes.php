@@ -7,7 +7,6 @@
 
 namespace Drupal\restful\Routing;
 
-use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Routing\RouteSubscriberBase;
 use Drupal\rest\Plugin\Type\ResourcePluginManager;
@@ -69,7 +68,7 @@ class ResourceRoutes extends RouteSubscriberBase {
 
     // Iterate over all enabled resource plugins.
     foreach ($enabled_resources as $id => $resource_config) {
-      $plugin = $this->manager->getInstance(array('id' => 'restful_entity:' . $id));
+      $plugin = $this->manager->getInstance(['id' => 'restful_entity:' . $id]);
 
       foreach ($plugin->routes() as $name => $route) {
         // @todo: Are multiple methods possible here?
@@ -77,7 +76,6 @@ class ResourceRoutes extends RouteSubscriberBase {
         // Only expose routes where the method is enabled in the configuration.
         if ($methods && ($method = $methods[0]) && $method) {
           $route->setRequirement('_access_rest_csrf', 'TRUE');
-
 //          // Check that authentication providers are defined.
 //          if (empty($enabled_methods[$method]['supported_auth']) || !is_array($enabled_methods[$method]['supported_auth'])) {
 //            $this->logger->error('At least one authentication provider must be defined for resource @id', array(':id' => $id));

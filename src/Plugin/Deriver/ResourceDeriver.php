@@ -69,6 +69,7 @@ class ResourceDeriver implements ContainerDeriverInterface {
    */
   public function getDerivativeDefinitions($base_definition) {
     if (!isset($this->derivatives)) {
+      $this->derivatives = [];
       // Add in the default plugin configuration and the resource type.
       /* @var \Drupal\restful\ResourceConfigInterface[] $resource_configs */
       $resource_configs = $this
