@@ -48,10 +48,12 @@ class ResourceRoutesTest extends RestfulDrupalTestBase {
   public function testAlterRoutes() {
     // Add a resource config object.
     $base_path = $this->getRandomGenerator()->name();
+    $entity_type = 'node';
+    $bundle = $this->getRandomGenerator()->name();
     $this->entityTypeManager->getStorage('resource_config')->create([
       'id' => 'articles.v1.0',
-      'contentEntityTypeId' => 'node',
-      'contentBundleId' => 'article',
+      'contentEntityTypeId' => $entity_type,
+      'contentBundleId' => $bundle,
       'path' => $base_path,
     ])->save();
     $resource_routes = new ResourceRoutes($this->manager, $this->entityTypeManager, $this->logger);
@@ -67,10 +69,12 @@ class ResourceRoutesTest extends RestfulDrupalTestBase {
       // Check the altered routes.
       foreach ($route->getMethods() as $method) {
         if ($method == 'POST') {
-          $this->assertEquals('/entity/node', $route->getPath());
+          $this->assertEquals('/entity/' . $entity_type, $route->getPath());
         }
         else {
-          $this->assertEquals('/' . $base_path . '/{node}', $route->getPath());
+          $this->assertEquals('/' . $base_path . '/{' . $entity_type . '}', $route->getPath());
+          $this->assertEquals($entity_type, $route->getRequirement('_entity_type'));
+          $this->assertEquals($bundle, $route->getRequirement('_bundle'));
         }
       }
       $route_iterator->next();
