@@ -15,6 +15,7 @@ use Drupal\Tests\UnitTestCase;
  * @package Drupal\Tests\restful\Unit\Plugin\rest\resource
  *
  * @coversDefaultClass \Drupal\restful\Plugin\rest\resource\RestfulResource
+ *
  * @group RESTful
  */
 class RestfulResourceTest extends UnitTestCase {

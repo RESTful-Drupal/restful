@@ -10,7 +10,6 @@ namespace Drupal\Tests\restful\Unit\Entity;
 use Drupal\restful\Entity\ResourceConfig;
 use Drupal\Tests\UnitTestCase;
 
-
 /**
  * @coversDefaultClass \Drupal\restful\Entity\ResourceConfig
  * @group RESTful

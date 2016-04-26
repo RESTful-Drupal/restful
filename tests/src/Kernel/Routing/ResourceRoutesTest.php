@@ -17,6 +17,7 @@ use Symfony\Component\Routing\RouteCollection;
  * @package Drupal\Tests\restful\Unit\Routing
  *
  * @coversDefaultClass \Drupal\restful\Routing\ResourceRoutes
+ *
  * @group RESTful
  */
 class ResourceRoutesTest extends RestfulDrupalTestBase {

@@ -1,12 +1,8 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\restful\Plugin\restful\resource\RestfulResource.
- */
-
 namespace Drupal\restful\Plugin\rest\resource;
 
+use Psr\Log\LoggerInterface;
 use Drupal\rest\Plugin\rest\resource\EntityResource;
 
 /**
@@ -30,7 +26,7 @@ class RestfulResource extends EntityResource {
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, array $serializer_formats, \Psr\Log\LoggerInterface $logger) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, array $serializer_formats, LoggerInterface $logger) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $serializer_formats, $logger);
   }
 

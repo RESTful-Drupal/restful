@@ -60,10 +60,10 @@ class ResourceRoutes extends RouteSubscriberBase {
    *
    * @param \Symfony\Component\Routing\RouteCollection $collection
    *   The route collection for adding routes.
+   *
    * @return array
    */
   protected function alterRoutes(RouteCollection $collection) {
-    $routes = array();
     $enabled_resources = $this->entityTypeManager->getStorage('resource_config')->loadMultiple();
 
     // Iterate over all enabled resource plugins.
@@ -82,29 +82,7 @@ class ResourceRoutes extends RouteSubscriberBase {
             $route->setRequirement('_entity_type', $definition['entity_type']);
             $route->setRequirement('_bundle', $definition['bundle']);
           }
-//          // Check that authentication providers are defined.
-//          if (empty($enabled_methods[$method]['supported_auth']) || !is_array($enabled_methods[$method]['supported_auth'])) {
-//            $this->logger->error('At least one authentication provider must be defined for resource @id', array(':id' => $id));
-//            continue;
-//          }
-//
-//          // Check that formats are defined.
-//          if (empty($enabled_methods[$method]['supported_formats']) || !is_array($enabled_methods[$method]['supported_formats'])) {
-//            $this->logger->error('At least one format must be defined for resource @id', array(':id' => $id));
-//            continue;
-//          }
-//
-//          // If the route has a format requirement, then verify that the
-//          // resource has it.
-//          $format_requirement = $route->getRequirement('_format');
-//          if ($format_requirement && !in_array($format_requirement, $enabled_methods[$method]['supported_formats'])) {
-//            continue;
-//          }
-//
-//          // The configuration seems legit at this point, so we set the
-//          // authentication provider and add the route.
-//          $route->setOption('_auth', $enabled_methods[$method]['supported_auth']);
-          $routes["rest.$name"] = $route;
+          // TODO Copy from the Drupal\rest\Routing\ResourceRoutes::alterRoutes.
           $collection->add("rest.$name", $route);
         }
       }

@@ -14,6 +14,7 @@ use Drupal\Core\Entity\EntityInterface;
  * Provides a listing of Resource Config entities.
  */
 class ResourceConfigListBuilder extends ConfigEntityListBuilder {
+
   /**
    * {@inheritdoc}
    */
