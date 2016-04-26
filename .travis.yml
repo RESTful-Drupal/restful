@@ -67,4 +67,4 @@ script:
   # Run the PHPUnit tests which also include the kernel tests.
   - ./vendor/bin/phpunit -c ./core/phpunit.xml.dist ./modules/restful
   # Check for coding standards violations
-  - cd modules/restful && ~/.composer/vendor/bin/phpcs
+  - cd modules/restful && ~/.composer/vendor/bin/phpcs --standard=DrupalPractice .

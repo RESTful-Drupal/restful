@@ -15,6 +15,7 @@ use Drupal\Core\Url;
  * Builds the form to delete Resource Config entities.
  */
 class ResourceConfigDeleteForm extends EntityConfirmFormBase {
+
   /**
    * {@inheritdoc}
    */
@@ -46,7 +47,7 @@ class ResourceConfigDeleteForm extends EntityConfirmFormBase {
       $this->t('content @type: deleted @label.',
         [
           '@type' => $this->entity->bundle(),
-          '@label' => $this->entity->label()
+          '@label' => $this->entity->label(),
         ]
         )
     );

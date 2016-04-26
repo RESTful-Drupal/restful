@@ -6,8 +6,7 @@
  */
 
 namespace Drupal\restful\Routing;
-use Drupal\Core\Entity\EntityMalformedException;
-use Drupal\Core\ParamConverter\ParamNotConvertedException;
+
 use Drupal\Core\Routing\Enhancer\RouteEnhancerInterface;
 use Symfony\Cmf\Component\Routing\RouteObjectInterface;
 use Symfony\Component\HttpFoundation\Request;

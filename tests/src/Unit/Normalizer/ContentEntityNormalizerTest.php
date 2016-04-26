@@ -7,6 +7,7 @@
 
 namespace Drupal\Tests\restful\Unit\Normalizer;
 
+use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\restful\Normalizer\ContentEntityNormalizer;
 use Drupal\Tests\UnitTestCase;
 
@@ -93,7 +94,7 @@ class ContentEntityNormalizerTest extends UnitTestCase {
       ->method('normalize')
       ->with($this->containsOnlyInstancesOf('Drupal\Core\Field\FieldItemListInterface'), 'test_format')
       // Stub result using the arguments.
-      ->will($this->returnCallback(function (\Drupal\Core\Field\FieldItemListInterface $argument, $format) {
+      ->will($this->returnCallback(function (FieldItemListInterface $argument, $format) {
         return [
           $argument->getFieldDefinition()->getName() => [
             'value' => $format,

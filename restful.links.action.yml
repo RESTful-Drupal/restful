@@ -3,4 +3,3 @@ entity.resource_config.add_form:
   title: 'Add Resource Config'
   appears_on:
     - entity.resource_config.collection
-
