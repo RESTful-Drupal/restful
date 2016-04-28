@@ -28,6 +28,7 @@ use Drupal\restful\Exception\UnprocessableEntityException;
 use Drupal\restful\Plugin\resource\Field\ResourceFieldInterface;
 use Drupal\restful\Plugin\resource\Resource;
 use Drupal\restful\Plugin\resource\ResourceInterface;
+use Drupal\restful\Util\ExplorableDecoratorInterface;
 use Drupal\restful\Util\RelationalFilter;
 use Drupal\restful\Util\RelationalFilterInterface;
 use Drupal\entity_validator\ValidatorPluginManager;
@@ -603,7 +604,16 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
       if (!$resource_field = $resource_fields->get($public_field_name)) {
         return;
       }
-      $this->alterSortQuery($public_field_name, $direction, $query);
+      $sort = array(
+        'public_field' => $public_field_name,
+        'direction' => $direction,
+        'resource_id' => $this->pluginId,
+      );
+      $sort = $this->alterSortQuery($sort, $query);
+      if (!empty($sort['processed'])) {
+        // If the sort was already processed by the alter filters, continue.
+        continue;
+      }
       if (!$property_name = $resource_field->getProperty()) {
         if (!$resource_field instanceof ResourceFieldEntityAlterableInterface) {
           throw new BadRequestException('The current sort selection does not map to any entity property or Field API field.');
@@ -614,11 +624,11 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
         return;
       }
       if (ResourceFieldEntity::propertyIsField($property_name)) {
-        $query->fieldOrderBy($property_name, $resource_field->getColumn(), $direction);
+        $query->fieldOrderBy($property_name, $resource_field->getColumn(), $sort['direction']);
       }
       else {
         $column = $this->getColumnFromProperty($property_name);
-        $query->propertyOrderBy($column, $direction);
+        $query->propertyOrderBy($column, $sort['direction']);
       }
     }
   }
@@ -656,7 +666,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
 
       // Give the chance for other data providers to have a special handling for
       // a given field.
-      $this->alterFilterQuery($filter, $query);
+      $filter = $this->alterFilterQuery($filter, $query);
       if (!empty($filter['processed'])) {
         // If the filter was already processed by the alter filters, continue.
         continue;
@@ -706,15 +716,21 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
    *   The parsed filter information.
    * @param \EntityFieldQuery $query
    *   The EFQ to add the filter to.
+   *
+   * @return array
+   *   The modified $filter array.
    */
-  protected function alterFilterQuery(array &$filter, \EntityFieldQuery $query) {
+  protected function alterFilterQuery(array $filter, \EntityFieldQuery $query) {
     if (!$resource_field = $this->fieldDefinitions->get($filter['public_field'])) {
-      return;
+      return $filter;
     }
     if (!$resource_field instanceof ResourceFieldEntityAlterableInterface) {
-      return;
+      // Check if the resource can check on decorated instances.
+      if (!$resource_field instanceof ExplorableDecoratorInterface || !$resource_field->isInstanceOf(ResourceFieldEntityAlterableInterface::class)) {
+        return $filter;
+      }
     }
-    $resource_field->alterFilterEntityFieldQuery($filter, $query);
+    return $resource_field->alterFilterEntityFieldQuery($filter, $query);
   }
 
   /**
@@ -725,26 +741,28 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
    * in $filter to TRUE. Otherwise normal filtering will be added on top,
    * leading to unexpected results.
    *
-   * @param string $public_field_name
-   *   The public field name to sort by.
-   * @param string $direction
-   *   The sort direction.
+   * @param array $sort
+   *   The sort array containing the keys:
+   *     - public_field: Contains the public property.
+   *     - direction: The sorting direction, either ASC or DESC.
+   *     - resource_id: The resource machine name.
    * @param \EntityFieldQuery $query
    *   The EFQ to add the filter to.
+   *
+   * @return array
+   *   The modified $sort array.
    */
-  protected function alterSortQuery($public_field_name, $direction, \EntityFieldQuery $query) {
-    if (!$resource_field = $this->fieldDefinitions->get($public_field_name)) {
-      return;
+  protected function alterSortQuery(array $sort, \EntityFieldQuery $query) {
+    if (!$resource_field = $this->fieldDefinitions->get($sort['public_field'])) {
+      return $sort;
     }
     if (!$resource_field instanceof ResourceFieldEntityAlterableInterface) {
-      return;
+      // Check if the resource can check on decorated instances.
+      if (!$resource_field instanceof ExplorableDecoratorInterface || !$resource_field->isInstanceOf(ResourceFieldEntityAlterableInterface::class)) {
+        return $sort;
+      }
     }
-    $sort = array(
-      'public_field' => $public_field_name,
-      'direction' => $direction,
-      'resource_id' => $this->pluginId,
-    );
-    $resource_field->alterSortEntityFieldQuery($sort, $query);
+    return $resource_field->alterSortEntityFieldQuery($sort, $query);
   }
 
   /**
@@ -1210,7 +1228,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
   protected function addNestedFilter(array $filter, \EntityFieldQuery $query) {
     $relational_filters = array();
     foreach ($this->getFieldsInfoFromPublicName($filter['public_field']) as $field_info) {
-      $relational_filters[] = new RelationalFilter($field_info['name'], $field_info['type'], $field_info['column'], $field_info['entity_type'], $field_info['bundles']);
+      $relational_filters[] = new RelationalFilter($field_info['name'], $field_info['type'], $field_info['column'], $field_info['entity_type'], $field_info['bundles'], $field_info['target_column']);
     }
     $query->addRelationship($filter + array('relational_filters' => $relational_filters));
   }
@@ -1223,8 +1241,10 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
    *
    * @throws ServerConfigurationException
    *   When the required resource information is not available.
+   * @throws BadRequestException
+   *   When the nested field is invalid.
    *
-   * @return array[]
+   * @return array
    *   An array of fields with name and type.
    */
   protected function getFieldsInfoFromPublicName($name) {
@@ -1254,6 +1274,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
       'type' => ResourceFieldEntity::propertyIsField($property) ? RelationalFilterInterface::TYPE_FIELD : RelationalFilterInterface::TYPE_PROPERTY,
       'entity_type' => NULL,
       'bundles' => array(),
+      'target_column' => NULL,
     );
     $item['column'] = $item['type'] == RelationalFilterInterface::TYPE_FIELD ? $resource_field->getColumn() : NULL;
     $fields[] = $item;
@@ -1280,21 +1301,18 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
    *     field is not a reference (for instance the destination field used in
    *     the where clause).
    */
-  protected function getFieldsFromPublicNameItem(ResourceFieldInterface $resource_field) {
+  protected function getFieldsFromPublicNameItem(ResourceFieldResourceInterface $resource_field) {
     $property = $resource_field->getProperty();
-    $resource = $resource_field->getResource();
     $item = array(
       'name' => $property,
       'type' => ResourceFieldEntity::propertyIsField($property) ? RelationalFilterInterface::TYPE_FIELD : RelationalFilterInterface::TYPE_PROPERTY,
       'entity_type' => NULL,
       'bundles' => array(),
+      'target_column' => $resource_field->getTargetColumn(),
     );
     $item['column'] = $item['type'] == RelationalFilterInterface::TYPE_FIELD ? $resource_field->getColumn() : NULL;
-    $instance_id = sprintf('%s:%d.%d', $resource['name'], $resource['majorVersion'], $resource['minorVersion']);
     /* @var ResourceEntity $resource */
-    $resource = restful()
-      ->getResourceManager()
-      ->getPluginCopy($instance_id, Request::create('', array(), RequestInterface::METHOD_GET));
+    $resource = $resource_field->getResourcePlugin();
 
     // Variables for the next iteration.
     $definitions = $resource->getFieldDefinitions();

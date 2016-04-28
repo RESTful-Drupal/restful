@@ -7,6 +7,11 @@
 
 namespace Drupal\restful\Util;
 
+/**
+ * Class RelationalFilter.
+ *
+ * @package Drupal\restful\Util
+ */
 class RelationalFilter implements RelationalFilterInterface {
 
   /**
@@ -45,6 +50,13 @@ class RelationalFilter implements RelationalFilterInterface {
   protected $column;
 
   /**
+   * Database column for the target table relationship.
+   *
+   * @var string
+   */
+  protected $targetColumn;
+
+  /**
    * Constructs the RelationalFilter object.
    *
    * @param string $name
@@ -52,13 +64,15 @@ class RelationalFilter implements RelationalFilterInterface {
    * @param string $column
    * @param string $entity_type
    * @param array $bundles
+   * @param string $targetColumn
    */
-  public function __construct($name, $type, $column, $entity_type, array $bundles = array()) {
+  public function __construct($name, $type, $column, $entity_type, array $bundles = array(), $target_column = NULL) {
     $this->name = $name;
     $this->type = $type;
     $this->column = $column;
     $this->entityType = $entity_type;
     $this->bundles = $bundles;
+    $this->targetColumn = $target_column;
   }
 
   /**
@@ -94,6 +108,13 @@ class RelationalFilter implements RelationalFilterInterface {
    */
   public function getColumn() {
     return $this->column;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getTargetColumn() {
+    return $this->targetColumn;
   }
 
 }
