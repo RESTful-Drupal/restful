@@ -114,7 +114,7 @@ class RestfulForbiddenItemsTestCase extends DrupalWebTestCase {
     $response = $handler->process();
     $formatter->setResource($handler);
     $results = $formatter->prepare($response);
-    $this->assertEqual(count($results['data'][0]['relationships']['entity_reference_multiple']['data']), 2, 'Access checks are not applied when the entity is not included.');
+    $this->assertEqual(count($results['data'][0]['relationships']['entity_reference_multiple']['data']), 1, 'Access checks are applied when the entity is not included.');
     $this->assertTrue(empty($results['meta']['denied']), 'No denied item was detected.');
   }
 

@@ -17,6 +17,7 @@ use Drupal\restful\Plugin\resource\DataInterpreter\DataInterpreterInterface;
 use Drupal\restful\Plugin\resource\Field\PublicFieldInfo\PublicFieldInfoEntity;
 use Drupal\restful\Plugin\resource\Field\PublicFieldInfo\PublicFieldInfoEntityInterface;
 use Drupal\restful\Plugin\resource\Field\PublicFieldInfo\PublicFieldInfoInterface;
+use Drupal\restful\Plugin\resource\ResourceInterface;
 
 /**
  * Class ResourceFieldEntity.
@@ -210,17 +211,19 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
    * {@inheritdoc}
    */
   public function compoundDocumentId(DataInterpreterInterface $interpreter) {
-    $property_wrapper = $this->propertyWrapper($interpreter);
-
-    if ($property_wrapper instanceof \EntityListWrapper) {
-      $values = array();
-      // Multiple values.
-      foreach ($property_wrapper->getIterator() as $item_wrapper) {
-        $values[] = $this->propertyIdentifier($item_wrapper);
+    $collections = $this->render($interpreter);
+    // Extract the document ID from the field resource collection.
+    $process = function ($collection) {
+      if (!$collection instanceof ResourceFieldCollectionInterface) {
+        return $collection;
       }
-      return $values;
-    }
-    return $this->propertyIdentifier($property_wrapper);
+      $id_field = $collection->getIdField();
+      return $id_field->render($collection->getInterpreter());
+    };
+    // If cardinality is 1, then we don't have an array.
+    return $this->getCardinality() == 1 ?
+      $process($collections) :
+      array_map($process, array_filter($collections));
   }
 
   /**
