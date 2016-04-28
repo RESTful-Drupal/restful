@@ -215,7 +215,7 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
     // Extract the document ID from the field resource collection.
     $process = function ($collection) {
       if (!$collection instanceof ResourceFieldCollectionInterface) {
-        return NULL;
+        return $collection;
       }
       $id_field = $collection->getIdField();
       return $id_field->render($collection->getInterpreter());
@@ -223,7 +223,7 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
     // If cardinality is 1, then we don't have an array.
     return $this->getCardinality() == 1 ?
       $process($collections) :
-      array_filter(array_map($process, $collections));
+      array_map($process, array_filter($collections));
   }
 
   /**
