@@ -346,11 +346,11 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
           $new_includes_parents[] = $field_name;
           $included[$field_path][$include_key] = $this->renormalize($field_item, $included, $nested_allowed_fields, $new_includes_parents);
           $included[$field_path][$include_key] += $include_links ? array('links' => $include_links) : array();
-          $rel[] = $element;
+          $rel[$include_key] = $element;
         }
         // Only place the relationship info.
         $result['relationships'][$field_name] = array(
-          'data' => $single_item ? reset($rel) : $rel,
+          'data' => $single_item ? reset($rel) : array_values($rel),
         );
         if (!empty($relationship_links)) {
           $result['relationships'][$field_name]['links'] = $relationship_links;
