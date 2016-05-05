@@ -1118,6 +1118,9 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
     if ($wrapper instanceof \EntityValueWrapper) {
       $wrapper = entity_metadata_wrapper($this->getEntityType(), $wrapper->value());
     }
+    elseif ($wrapper instanceof \EntityStructureWrapper) {
+      $wrapper = entity_metadata_wrapper($this->getEntityType(), $wrapper->{$this->getSubProperty()}->value());
+    }
     $id = $wrapper->getIdentifier();
     $bundle = $wrapper->getBundle();
     $resource = $this->getResource();
