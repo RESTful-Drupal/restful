@@ -132,7 +132,7 @@ class EntityFieldQuery extends \EntityFieldQuery implements EntityFieldQueryRela
           // In this scenario we want to join with the new table entity. This
           // will only work if the property contains the referenced entity ID
           // (which is not unreasonable).
-          $host_entity_table = $entity_table;
+          $host_entity_table = $entity_table_alias;
           $entity_info = entity_get_info($relational_filter->getEntityType());
           $entity_table_alias = $this::aliasJoinTable($entity_info['base table'], $select_query);
           $select_query->addJoin('INNER', $entity_info['base table'], $entity_table_alias, sprintf('%s.%s = %s.%s',
