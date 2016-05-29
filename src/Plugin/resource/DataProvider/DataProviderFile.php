@@ -107,7 +107,8 @@ class DataProviderFile extends DataProviderEntity implements DataProviderInterfa
     $options = $provider_options['options'];
     
     $subdir = empty($options['subdir']) ? NULL : $options['subdir'] . '/';
-    $datedir = $options['datedir'] === TRUE && !empty($options['subdir']) ? date('Y-m-d') . '/' : NULL;
+    $date_format = empty($options['date_format']) ? NULL : $options['date_format'];
+    $datedir = $options['datedir'] === TRUE && !is_null($date_format) ? date($date_format) . '/' : NULL;
 
     $validators = empty($options['validators']) ? NULL : $options['validators'];
     $destination = $options['scheme'] . '://' . $subdir . $datedir;
