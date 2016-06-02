@@ -260,6 +260,26 @@ class Request implements RequestInterface {
   /**
    * {@inheritdoc}
    */
+  public function getPagerInput() {
+    $input = $this->getParsedInput();
+    if (!isset($input['page'])) {
+      $page = array('number' => 1);
+    }
+    else {
+      $page = $input['page'];
+      if (!is_array($page)) {
+        $page = array('number' => $page);
+      }
+    }
+    if (isset($input['range'])) {
+      $page['size'] = $input['range'];
+    }
+    return $page + array('number' => 1);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function setParsedInput(array $input) {
     $this->parsedInput = $input;
   }

@@ -416,14 +416,14 @@ abstract class DataProvider implements DataProviderInterface {
    * @throws UnprocessableEntityException
    */
   protected function parseRequestForListPagination() {
-    $input = $this->getRequest()->getParsedInput();
+    $pager_input = $this->getRequest()->getPagerInput();
 
-    $page = isset($input['page']) ? (int) $input['page'] : 1;
+    $page = $pager_input['number'];
     if (!ctype_digit((string) $page) || $page < 1) {
       throw new BadRequestException('"Page" property should be numeric and equal or higher than 1.');
     }
 
-    $range = isset($input['range']) ? (int) $input['range'] : $this->getRange();
+    $range = isset($pager_input['size']) ? (int) $pager_input['size'] : $this->getRange();
     $range = $range > $this->getRange() ? $this->getRange() : $range;
     if (!ctype_digit((string) $range) || $range < 1) {
       throw new BadRequestException('"Range" property should be numeric and equal or higher than 1.');

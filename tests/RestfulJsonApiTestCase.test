@@ -508,20 +508,26 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
       'first' => $this->handler->versionedUrl('', array('query' => array('range' => $range))),
       'previous' => $this->handler->versionedUrl('', array(
         'query' => array(
-          'range' => $range,
-          'page' => 1,
+          'page' => array(
+            'size' => $range,
+            'number' => 1,
+          ),
         ),
       )),
       'last' => $this->handler->versionedUrl('', array(
         'query' => array(
-          'range' => $range,
-          'page' => 5,
+          'page' => array(
+            'size' => $range,
+            'number' => 5,
+          ),
         ),
       )),
       'next' => $this->handler->versionedUrl('', array(
         'query' => array(
-          'range' => $range,
-          'page' => 3,
+          'page' => array(
+            'size' => $range,
+            'number' => 3,
+          ),
         ),
       )),
     );
@@ -530,8 +536,10 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
     // 3. Test pagination links in the last page.
     $range = 2;
     $this->handler->setRequest(Request::create('', array(
-      'range' => $range,
-      'page' => 5,
+      'page' => array(
+        'size' => $range,
+        'number' => 5,
+      ),
     )));
     $this->handler->setPath('');
     $this->formatter->setResource($this->handler);
@@ -541,21 +549,27 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
     $expected_links = array(
       'self' => $this->handler->versionedUrl('', array(
         'query' => array(
-          'range' => $range,
-          'page' => 5,
+          'page' => array(
+            'size' => $range,
+            'number' => 5,
+          ),
         ),
       )),
       'first' => $this->handler->versionedUrl('', array('query' => array('range' => $range))),
       'previous' => $this->handler->versionedUrl('', array(
         'query' => array(
-          'range' => $range,
-          'page' => 4,
+          'page' => array(
+            'size' => $range,
+            'number' => 4,
+          ),
         ),
       )),
       'last' => $this->handler->versionedUrl('', array(
         'query' => array(
-          'range' => $range,
-          'page' => 5,
+          'page' => array(
+            'size' => $range,
+            'number' => 5,
+          ),
         ),
       )),
     );

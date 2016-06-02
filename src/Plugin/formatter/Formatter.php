@@ -327,8 +327,8 @@ abstract class Formatter extends PluginBase implements FormatterInterface {
   protected function calculateItemsPerPage(ResourceInterface $resource) {
     $data_provider = $resource->getDataProvider();
     $max_range = $data_provider->getRange();
-    $original_input = $resource->getRequest()->getParsedInput();
-    $items_per_page = empty($original_input['range']) ? $max_range : $original_input['range'];
+    $original_input = $resource->getRequest()->getPagerInput();
+    $items_per_page = empty($original_input['size']) ? $max_range : $original_input['size'];
     return $items_per_page > $max_range ? $max_range : $items_per_page;
   }
 

@@ -103,8 +103,10 @@ class RestfulSimpleJsonTestCase extends RestfulCurlBaseTestCase {
     // Test the max cap for the range.
     $handler->getDataProvider()->setRange(1);
     $handler->setRequest(Request::create('/api/v1.5/articles', array(
-      'range' => 1000,
-      'page' => 2,
+      'page' => array(
+        'size' => 1000,
+        'number' => 2,
+      ),
     )));
     $handler->setPath('');
     $results = $handler->process();
