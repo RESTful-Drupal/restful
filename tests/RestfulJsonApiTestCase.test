@@ -143,7 +143,9 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
       $expected['text_multiple'][] = $text_multiple_wrapper->value();
     }
     $this->assertEqual(array_filter($expected), array_filter($attributes));
-    $this->assertEqual($this->handler->versionedUrl($wrapper->getIdentifier()), $result['links']['self']);
+    $this->assertEqual($this->handler->versionedUrl($wrapper->getIdentifier(), array(
+      'query' => array('page' => array('number' => 1)),
+    )), $result['links']['self']);
 
     // 2. Assert the relationships.
     $relationships = $result['data']['relationships'];
