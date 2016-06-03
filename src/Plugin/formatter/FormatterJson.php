@@ -159,10 +159,14 @@ class FormatterJson extends Formatter implements FormatterInterface {
     );
 
     $input = $request->getParsedInput();
-    $page = !empty($input['page']) ? $input['page'] : 1;
+    unset($input['page']);
+    unset($input['range']);
+    $input['page'] = $request->getPagerInput();
+    $page = $input['page']['number'];
 
     if ($page > 1) {
-      $query = array('page' => $page - 1) + $input;
+      $query = $input;
+      $query['page']['number'] = $page - 1;
       $data['previous'] = array(
         'title' => 'Previous',
         'href' => $resource->versionedUrl('', array('query' => $query), TRUE),
@@ -175,7 +179,8 @@ class FormatterJson extends Formatter implements FormatterInterface {
     $items_per_page = $this->calculateItemsPerPage($resource);
     $previous_items = ($page - 1) * $items_per_page;
     if (isset($data['count']) && $data['count'] > count($data['data']) + $previous_items) {
-      $query = array('page' => $page + 1) + $input;
+      $query = $input;
+      $query['page']['number'] = $page + 1;
       $data['next'] = array(
         'title' => 'Next',
         'href' => $resource->versionedUrl('', array('query' => $query), TRUE),

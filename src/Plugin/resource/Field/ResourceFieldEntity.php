@@ -570,7 +570,6 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
    *   The processed filters.
    */
   protected function nestedDottedFilters() {
-
     $input = $this
       ->getRequest()
       ->getParsedInput();

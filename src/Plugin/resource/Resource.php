@@ -510,8 +510,6 @@ abstract class Resource extends PluginBase implements ResourceInterface {
    * {@inheritdoc}
    */
   public function getUrl(array $options = array(), $keep_query = TRUE, RequestInterface $request = NULL) {
-    $request  = $request ?: $this->getRequest();
-    $input = $request->getParsedInput();
     // By default set URL to be absolute.
     $options += array(
       'absolute' => TRUE,
@@ -519,6 +517,11 @@ abstract class Resource extends PluginBase implements ResourceInterface {
     );
 
     if ($keep_query) {
+      $request  = $request ?: $this->getRequest();
+      $input = $request->getParsedInput();
+      unset($input['page']);
+      unset($input['range']);
+      $input['page'] = $request->getPagerInput();
       // Remove special params.
       unset($input['q']);
 

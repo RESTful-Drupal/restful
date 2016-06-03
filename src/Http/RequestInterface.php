@@ -273,4 +273,16 @@ interface RequestInterface {
    */
   public function getCookies();
 
+  /**
+   * Get the normalized pager input.
+   *
+   * This is to support page=1&range=6 and page[number]=1&page[size]=6 at the
+   * same time.
+   *
+   * @return array
+   *   An associative array with the pager information in the form of
+   *   page[number]=1&page[size]=6.
+   */
+  public function getPagerInput();
+
 }

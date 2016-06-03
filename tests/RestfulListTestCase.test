@@ -690,11 +690,11 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     $result = drupal_json_decode($formatter_handler->format($handler->process()));
     $this->assertTrue($result['next'], '"Next" link exists on the middle page.');
     $this->assertEqual($result['next']['href'], $handler->versionedUrl('', array(
-      'query' => array('page' => 3),
+      'query' => array('page' => array('number' => 3)),
     )));
     $this->assertTrue($result['previous'], '"Previous" link exists on the middle page.');
     $this->assertEqual($result['previous']['href'], $handler->versionedUrl('', array(
-      'query' => array('page' => 1),
+      'query' => array('page' => array('number' => 1)),
     )));
 
     // Check pagination of last page.

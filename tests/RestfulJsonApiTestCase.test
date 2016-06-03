@@ -5,7 +5,6 @@
  * Contains \RestfulJsonApiTestCase.
  */
 
-use Drupal\restful\Exception\UnprocessableEntityException;
 use Drupal\restful\Http\Request;
 
 /**
@@ -144,7 +143,9 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
       $expected['text_multiple'][] = $text_multiple_wrapper->value();
     }
     $this->assertEqual(array_filter($expected), array_filter($attributes));
-    $this->assertEqual($this->handler->versionedUrl($wrapper->getIdentifier()), $result['links']['self']);
+    $this->assertEqual($this->handler->versionedUrl($wrapper->getIdentifier(), array(
+      'query' => array('page' => array('number' => 1)),
+    )), $result['links']['self']);
 
     // 2. Assert the relationships.
     $relationships = $result['data']['relationships'];
@@ -470,18 +471,29 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
     $result = drupal_json_decode($this->formatter->format($resource_field_collections));
     $links = $result['links'];
     $expected_links = array(
-      'self' => $this->handler->versionedUrl('', array('query' => array('range' => $range))),
-      'first' => $this->handler->versionedUrl('', array('query' => array('range' => $range))),
+      'self' => $this->handler->versionedUrl('', array(
+        'query' => array(
+          'page' => array(
+            'number' => 1,
+            'size' => $range,
+          ),
+        ),
+      )),
+      'first' => $this->handler->versionedUrl('', array('query' => array('page' => array('size' => $range)))),
       'last' => $this->handler->versionedUrl('', array(
         'query' => array(
-          'range' => $range,
-          'page' => 5,
+          'page' => array(
+            'number' => 5,
+            'size' => $range,
+          ),
         ),
       )),
       'next' => $this->handler->versionedUrl('', array(
         'query' => array(
-          'range' => $range,
-          'page' => 2,
+          'page' => array(
+            'number' => 2,
+            'size' => $range,
+          ),
         ),
       )),
     );
@@ -501,27 +513,35 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
     $expected_links = array(
       'self' => $this->handler->versionedUrl('', array(
         'query' => array(
-          'range' => $range,
-          'page' => 2,
+          'page' => array(
+            'number' => 2,
+            'size' => $range,
+          ),
         ),
       )),
-      'first' => $this->handler->versionedUrl('', array('query' => array('range' => $range))),
+      'first' => $this->handler->versionedUrl('', array('query' => array('page' => array('size' => $range)))),
       'previous' => $this->handler->versionedUrl('', array(
         'query' => array(
-          'range' => $range,
-          'page' => 1,
+          'page' => array(
+            'number' => 1,
+            'size' => $range,
+          ),
         ),
       )),
       'last' => $this->handler->versionedUrl('', array(
         'query' => array(
-          'range' => $range,
-          'page' => 5,
+          'page' => array(
+            'number' => 5,
+            'size' => $range,
+          ),
         ),
       )),
       'next' => $this->handler->versionedUrl('', array(
         'query' => array(
-          'range' => $range,
-          'page' => 3,
+          'page' => array(
+            'number' => 3,
+            'size' => $range,
+          ),
         ),
       )),
     );
@@ -530,8 +550,10 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
     // 3. Test pagination links in the last page.
     $range = 2;
     $this->handler->setRequest(Request::create('', array(
-      'range' => $range,
-      'page' => 5,
+      'page' => array(
+        'size' => $range,
+        'number' => 5,
+      ),
     )));
     $this->handler->setPath('');
     $this->formatter->setResource($this->handler);
@@ -541,21 +563,27 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
     $expected_links = array(
       'self' => $this->handler->versionedUrl('', array(
         'query' => array(
-          'range' => $range,
-          'page' => 5,
+          'page' => array(
+            'size' => $range,
+            'number' => 5,
+          ),
         ),
       )),
-      'first' => $this->handler->versionedUrl('', array('query' => array('range' => $range))),
+      'first' => $this->handler->versionedUrl('', array('query' => array('page' => array('size' => $range)))),
       'previous' => $this->handler->versionedUrl('', array(
         'query' => array(
-          'range' => $range,
-          'page' => 4,
+          'page' => array(
+            'size' => $range,
+            'number' => 4,
+          ),
         ),
       )),
       'last' => $this->handler->versionedUrl('', array(
         'query' => array(
-          'range' => $range,
-          'page' => 5,
+          'page' => array(
+            'size' => $range,
+            'number' => 5,
+          ),
         ),
       )),
     );

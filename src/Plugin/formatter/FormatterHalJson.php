@@ -120,11 +120,11 @@ class FormatterHalJson extends Formatter implements FormatterInterface {
       'href' => $resource->versionedUrl($resource->getPath()),
     );
 
-    $input = $request->getParsedInput();
-    $page = !empty($input['page']) ? $input['page'] : 1;
+    $input = $request->getPagerInput();
+    $page = $input['number'];
 
     if ($page > 1) {
-      $input['page'] = $page - 1;
+      $input['number'] = $page - 1;
       $data['_links']['previous'] = array(
         'title' => 'Previous',
         'href' => $resource->getUrl(),
@@ -140,7 +140,7 @@ class FormatterHalJson extends Formatter implements FormatterInterface {
     $items_per_page = $this->calculateItemsPerPage($resource);
     $previous_items = ($page - 1) * $items_per_page;
     if (isset($data['count']) && $data['count'] > $listed_items + $previous_items) {
-      $input['page'] = $page + 1;
+      $input['number'] = $page + 1;
       $data['_links']['next'] = array(
         'title' => 'Next',
         'href' => $resource->getUrl(),
