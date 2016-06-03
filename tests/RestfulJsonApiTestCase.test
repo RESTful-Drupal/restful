@@ -5,7 +5,6 @@
  * Contains \RestfulJsonApiTestCase.
  */
 
-use Drupal\restful\Exception\UnprocessableEntityException;
 use Drupal\restful\Http\Request;
 
 /**
@@ -470,18 +469,29 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
     $result = drupal_json_decode($this->formatter->format($resource_field_collections));
     $links = $result['links'];
     $expected_links = array(
-      'self' => $this->handler->versionedUrl('', array('query' => array('range' => $range))),
-      'first' => $this->handler->versionedUrl('', array('query' => array('range' => $range))),
+      'self' => $this->handler->versionedUrl('', array(
+        'query' => array(
+          'page' => array(
+            'number' => 1,
+            'size' => $range
+          )
+        )
+      )),
+      'first' => $this->handler->versionedUrl('', array('query' => array('page' => array('size' => $range)))),
       'last' => $this->handler->versionedUrl('', array(
         'query' => array(
-          'range' => $range,
-          'page' => 5,
+          'page' => array(
+            'number' => 5,
+            'size' => $range,
+          ),
         ),
       )),
       'next' => $this->handler->versionedUrl('', array(
         'query' => array(
-          'range' => $range,
-          'page' => 2,
+          'page' => array(
+            'number' => 2,
+            'size' => $range,
+          ),
         ),
       )),
     );
@@ -501,32 +511,34 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
     $expected_links = array(
       'self' => $this->handler->versionedUrl('', array(
         'query' => array(
-          'range' => $range,
-          'page' => 2,
+          'page' => array(
+            'number' => 2,
+            'size' => $range,
+          ),
         ),
       )),
-      'first' => $this->handler->versionedUrl('', array('query' => array('range' => $range))),
+      'first' => $this->handler->versionedUrl('', array('query' => array('page' => array('size' => $range)))),
       'previous' => $this->handler->versionedUrl('', array(
         'query' => array(
           'page' => array(
-            'size' => $range,
             'number' => 1,
+            'size' => $range,
           ),
         ),
       )),
       'last' => $this->handler->versionedUrl('', array(
         'query' => array(
           'page' => array(
-            'size' => $range,
             'number' => 5,
+            'size' => $range,
           ),
         ),
       )),
       'next' => $this->handler->versionedUrl('', array(
         'query' => array(
           'page' => array(
-            'size' => $range,
             'number' => 3,
+            'size' => $range,
           ),
         ),
       )),
@@ -555,7 +567,7 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
           ),
         ),
       )),
-      'first' => $this->handler->versionedUrl('', array('query' => array('range' => $range))),
+      'first' => $this->handler->versionedUrl('', array('query' => array('page' => array('size' => $range)))),
       'previous' => $this->handler->versionedUrl('', array(
         'query' => array(
           'page' => array(
