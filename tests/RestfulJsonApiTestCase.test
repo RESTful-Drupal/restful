@@ -473,9 +473,9 @@ class RestfulJsonApiTestCase extends RestfulCurlBaseTestCase {
         'query' => array(
           'page' => array(
             'number' => 1,
-            'size' => $range
-          )
-        )
+            'size' => $range,
+          ),
+        ),
       )),
       'first' => $this->handler->versionedUrl('', array('query' => array('page' => array('size' => $range)))),
       'last' => $this->handler->versionedUrl('', array(
