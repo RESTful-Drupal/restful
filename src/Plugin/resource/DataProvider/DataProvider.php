@@ -418,7 +418,7 @@ abstract class DataProvider implements DataProviderInterface {
   protected function parseRequestForListPagination() {
     $pager_input = $this->getRequest()->getPagerInput();
 
-    $page = $pager_input['number'];
+    $page = isset($pager_input['number']) ? $pager_input['number'] : 1;
     if (!ctype_digit((string) $page) || $page < 1) {
       throw new BadRequestException('"Page" property should be numeric and equal or higher than 1.');
     }
