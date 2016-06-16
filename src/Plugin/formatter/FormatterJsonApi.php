@@ -422,6 +422,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
    *   The contents for the JSON API attribute or relationship.
    */
   protected function embedField(ResourceFieldInterface $resource_field, $parent_id, DataInterpreterInterface $interpreter, array &$parents, array &$parent_hashes) {
+    static $embedded_resources = array();
     // If the field points to a resource that can be included, include it
     // right away.
     if (!$resource_field instanceof ResourceFieldResourceInterface) {
@@ -450,17 +451,19 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
       return $empty_value + array('#resource_id' => $id);
     }, $ids);
     if ($this->needsIncluding($resource_field, $parents)) {
-      $value = $resource_field->render($interpreter);
-      if (
-        empty($value) ||
-        !static::isIterable($value)
-      ) {
-        return $value;
+      $cid = sprintf('%s:%d.%d--%s', $resource_info['name'], $resource_info['majorVersion'], $resource_info['minorVersion'], implode(',', $ids));
+      if (!isset($embedded_resources[$cid])) {
+        $result = $resource_field->render($interpreter);
+        if (empty($result) || !static::isIterable($result)) {
+          $embedded_resources[$cid] = $result;
+          return $result;
+        }
+        $new_parents = $parents;
+        $new_parents[] = $public_field_name;
+        $result = $this->extractFieldValues($result, $new_parents, $parent_hashes);
+        $embedded_resources[$cid] = $cardinality == 1 ? array($result) : $result;
       }
-      $new_parents = $parents;
-      $new_parents[] = $public_field_name;
-      $value = $this->extractFieldValues($value, $new_parents, $parent_hashes);
-      $value = $cardinality == 1 ? array($value) : $value;
+      $value = $embedded_resources[$cid];
     }
     // At this point we are dealing with an embed.
     $value = array_filter($value);
