@@ -754,20 +754,17 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
    *   The links.
    */
   protected function buildRelationshipLinks($parent_id, $public_field_name, ResourceInterface $resource_plugin, $identifier) {
-    // If there is a resource plugin for the parent, set the related
-    // links.
-    $links = array();
+    // If there is a resource plugin for the parent, set the related links.
     if ($resource = $this->getResource()) {
-      $links['related'] = $resource->versionedUrl('', array(
-        'absolute' => TRUE,
-        'query' => array(
-          'filter' => array($public_field_name => $identifier),
-        ),
-      ));
-      $links['self'] = $resource_plugin->versionedUrl($parent_id . '/relationships/' . $public_field_name);
-      return $links;
+      return array();
     }
-    return $links;
+    return array(
+      'related' => $resource->versionedUrl('', array(
+        'absolute' => TRUE,
+        'query' => array('filter' => array($public_field_name => $identifier)),
+      )),
+      'self' => $resource_plugin->versionedUrl($parent_id . '/relationships/' . $public_field_name),
+    );
   }
 
 }
