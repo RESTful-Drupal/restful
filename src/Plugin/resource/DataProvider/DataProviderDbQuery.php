@@ -198,7 +198,7 @@ class DataProviderDbQuery extends DataProvider implements DataProviderDbQueryInt
         $id_values[$id_column] = $record[$id_column];
       }
       $new_id = implode(self::COLUMN_IDS_SEPARATOR, $id_values);
-      return $this->view($new_id);
+      return array($this->view($new_id));
     }
     return NULL;
   }
