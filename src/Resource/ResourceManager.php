@@ -121,6 +121,19 @@ class ResourceManager implements ResourceManagerInterface {
   /**
    * {@inheritdoc}
    */
+  public function getResourceIdFromRequest() {
+    $resource_name = &drupal_static(__METHOD__);
+    if (isset($resource_name)) {
+      return $resource_name;
+    }
+    $path = $this->request->getPath(FALSE);
+    list($resource_name,) = static::getPageArguments($path);
+    return $resource_name;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getVersionFromRequest() {
     $version = &drupal_static(__METHOD__);
     if (isset($version)) {

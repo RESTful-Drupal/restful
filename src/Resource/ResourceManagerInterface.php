@@ -51,6 +51,14 @@ interface ResourceManagerInterface {
   public function clearPluginCache($instance_id);
 
   /**
+   * Get the resource name for the current request.
+   *
+   * @return string
+   *   The resource ID.
+   */
+  public function getResourceIdFromRequest();
+
+  /**
    * Gets the major and minor version for the current request.
    *
    * @return array
