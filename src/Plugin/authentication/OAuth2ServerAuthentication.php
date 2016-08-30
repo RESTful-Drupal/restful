@@ -70,6 +70,12 @@ class OAuth2ServerAuthentication extends Authentication {
    */
   protected function getOAuth2Info(RequestInterface $request) {
     $plugin_id = $this->getResourcePluginIdFromRequest();
+    if (!$plugin_id) {
+      // If the plugin can't be determined, it is probably not a request to the
+      // resource but something else that is just loading all the plugins.
+      return NULL;
+    }
+
     $plugin_definition = ResourcePluginManager::create('cache', $request)->getDefinition($plugin_id);
 
     $server = !empty($plugin_definition['oauth2Server']) ? $plugin_definition['oauth2Server'] : variable_get('oauth2_server_restful_server');
