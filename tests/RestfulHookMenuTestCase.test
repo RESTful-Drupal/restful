@@ -139,26 +139,31 @@ class RestfulHookMenuTestCase extends RestfulCurlBaseTestCase {
         'path' => 'api/v1.1/articles',
         'version_header' => NULL,
         'expected_version' => array(1, 1),
+        'expected_resource' => 'articles',
       ),
       array(
         'path' => 'api/v1/articles',
         'version_header' => NULL,
         'expected_version' => array(1, 7),
+        'expected_resource' => 'articles',
       ),
       array(
         'path' => 'api/articles',
         'version_header' => 'v1',
         'expected_version' => array(1, 7),
+        'expected_resource' => 'articles',
       ),
       array(
         'path' => 'api/articles',
         'version_header' => 'v1.0',
         'expected_version' => array(1, 0),
+        'expected_resource' => 'articles',
       ),
       array(
         'path' => 'api/articles',
         'version_header' => NULL,
         'expected_version' => array(2, 1),
+        'expected_resource' => 'articles',
       ),
     );
 
@@ -173,6 +178,7 @@ class RestfulHookMenuTestCase extends RestfulCurlBaseTestCase {
       $resource_manager = new \Drupal\restful\Resource\ResourceManager($request);
       drupal_static_reset('Drupal\restful\Resource\ResourceManager::getVersionFromRequest');
       $this->assertEqual($resource_manager->getVersionFromRequest(), $test_item['expected_version'], sprintf('%s resolves correctly.', $test_item['path']));
+      $this->assertEqual($resource_manager->getResourceIdFromRequest(), $test_item['expected_resource'], sprintf('Resource name obtained correctly from %s.', $test_item['path']));
     }
 
   }
