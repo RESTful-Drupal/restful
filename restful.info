@@ -9,6 +9,9 @@ configure = admin/config/services/restful
 registry_autoload[] = PSR-0
 registry_autoload[] = PSR-4
 
+; Temporary workaround to allow RESTful to work fine on PHP7.
+registry_autoload_files[] = src/Util/ExplorableDecoratorInterface.php
+
 ; Tests
 files[] = tests/RestfulAuthenticationTestCase.test
 files[] = tests/RestfulCommentTestCase.test
