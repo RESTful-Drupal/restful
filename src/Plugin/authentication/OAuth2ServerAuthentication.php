@@ -78,11 +78,19 @@ class OAuth2ServerAuthentication extends Authentication {
 
     $plugin_definition = ResourcePluginManager::create('cache', $request)->getDefinition($plugin_id);
 
-    if (empty($plugin_definition['oauth2Info']) || empty($plugin_definition['oauth2Info']['server'])) {
-      return NULL;
+    // First check if we have an array with OAuth2 info and use if available.
+    if (!empty($plugin_definition['oauth2Info']) && !empty($plugin_definition['oauth2Info']['server'])) {
+      return $plugin_definition['oauth2Info'] + ['scope' => ''];
     }
 
-    return $plugin_definition['oauth2Info'] + ['scope' => ''];
+    // Check for OAuth2 properties at top level for legacy support.
+    if (!empty($plugin_definition['oauth2Server'])) {
+      $server = $plugin_definition['oauth2Server'];
+      $scope = !empty($plugin_definition['oauth2Scope']) ? $plugin_definition['oauth2Scope'] : '';
+      return ['server' => $server, 'scope' => $scope];
+    }
+
+    return NULL;
   }
 
   /**
