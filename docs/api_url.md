@@ -197,7 +197,7 @@ following example will get all the articles with an `integer_multiple` value les
 and another equal to 10.
 
 ```
-curl https://example.com/api/articles?filter[integer_multiple][value][0]=5&filter[integer_multiple][value][1]=10&filter[integer_multiple][operator][0]=">"&filter[integer_multiple][operator][0]="="
+curl https://example.com/api/articles?filter[integer_multiple][value][0]=5&filter[integer_multiple][value][1]=10&filter[integer_multiple][operator][0]=">"&filter[integer_multiple][operator][1]="="
 ```
 
 ## Loading by an alternate ID.
