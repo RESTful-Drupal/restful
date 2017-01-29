@@ -739,7 +739,7 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
         // Do not default to format.
         $this->setColumn('value');
       }
-      elseif ($field['type'] == 'addressfield' && array_key_exists($this->subProperty, $field['columns']) ) {
+      else if ($field['type'] == 'addressfield' && isset($field['columns'][$this->subProperty])){
         $this->setColumn($this->subProperty);
       }
       else {
