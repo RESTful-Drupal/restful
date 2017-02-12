@@ -39,7 +39,7 @@ function restful_token_auth_restful_parse_request_alter(RequestInterface &$reque
     $plugin = $authentication_manager->getPlugin('token');
   }
   catch (PluginNotFoundException $e) {
-    watchdog_exception('restful_token_auht', $e);
+    watchdog_exception('restful_token_auth', $e);
     return;
   }
   $plugin_definition = $plugin->getPluginDefinition();
