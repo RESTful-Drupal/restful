@@ -59,8 +59,6 @@ class AccessToken__1_0 extends TokenAuthenticationBase implements ResourceInterf
     $entity_type = $this->getEntityType();
     $account = $this->getAccount();
 
-    // TODO: Reimplement token cleanup (but needs to support multiple tokens).
-
     // Check if there is a token that did not expire yet.
     /* @var DataProviderEntityInterface $data_provider */
     $data_provider = $this->getDataProvider();
