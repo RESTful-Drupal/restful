@@ -46,7 +46,7 @@ class AccessToken__1_0 extends TokenAuthenticationBase implements ResourceInterf
     return array(
       '' => array(
         // Get or create a new token.
-        RequestInterface::METHOD_GET => 'getOrCreateToken',
+        RequestInterface::METHOD_GET => 'createToken',
         RequestInterface::METHOD_OPTIONS => 'discover',
       ),
     );
@@ -55,43 +55,45 @@ class AccessToken__1_0 extends TokenAuthenticationBase implements ResourceInterf
   /**
    * Create a token for a user, and return its value.
    */
-  public function getOrCreateToken() {
+  public function createToken() {
     $entity_type = $this->getEntityType();
     $account = $this->getAccount();
+
+    // TODO: Reimplement token cleanup (but needs to support multiple tokens).
+
     // Check if there is a token that did not expire yet.
     /* @var DataProviderEntityInterface $data_provider */
-    $data_provider = $this->getDataProvider();
-    $query = $data_provider->EFQObject();
-    $result = $query
-      ->entityCondition('entity_type', $entity_type)
-      ->entityCondition('bundle', 'access_token')
-      ->propertyCondition('uid', $account->uid)
-      ->range(0, 1)
-      ->execute();
+    // $data_provider = $this->getDataProvider();
+    // $query = $data_provider->EFQObject();
+    // $result = $query
+    //   ->entityCondition('entity_type', $entity_type)
+    //   ->entityCondition('bundle', 'access_token')
+    //   ->propertyCondition('uid', $account->uid)
+    //   ->range(0, 1)
+    //   ->execute();
+    //
+    // $token_exists = FALSE;
+    //
+    // if (!empty($result[$entity_type])) {
+    //   $id = key($result[$entity_type]);
+    //   $access_token = entity_load_single($entity_type, $id);
+    //
+    //   $token_exists = TRUE;
+    //   if (!empty($access_token->expire) && $access_token->expire < REQUEST_TIME) {
+    //     if (variable_get('restful_token_auth_delete_expired_tokens', TRUE)) {
+    //       // Token has expired, so we can delete this token.
+    //       $access_token->delete();
+    //     }
+    //
+    //     $token_exists = FALSE;
+    //   }
+    // }
 
-    $token_exists = FALSE;
+    /* @var \Drupal\restful_token_auth\Entity\RestfulTokenAuthController $controller */
+    $controller = entity_get_controller($this->getEntityType());
+    $access_token = $controller->generateAccessToken($account->uid);
+    $id = $access_token->id;
 
-    if (!empty($result[$entity_type])) {
-      $id = key($result[$entity_type]);
-      $access_token = entity_load_single($entity_type, $id);
-
-      $token_exists = TRUE;
-      if (!empty($access_token->expire) && $access_token->expire < REQUEST_TIME) {
-        if (variable_get('restful_token_auth_delete_expired_tokens', TRUE)) {
-          // Token has expired, so we can delete this token.
-          $access_token->delete();
-        }
-
-        $token_exists = FALSE;
-      }
-    }
-
-    if (!$token_exists) {
-      /* @var \Drupal\restful_token_auth\Entity\RestfulTokenAuthController $controller */
-      $controller = entity_get_controller($this->getEntityType());
-      $access_token = $controller->generateAccessToken($account->uid);
-      $id = $access_token->id;
-    }
     $output = $this->view($id);
 
     return $output;

@@ -57,17 +57,17 @@ class RestfulTokenAuthController extends \EntityAPIController {
    */
   private function generateRefreshToken($uid) {
     // Check if there are other refresh tokens for the user.
-    $query = new \EntityFieldQuery();
-    $results = $query
-      ->entityCondition('entity_type', 'restful_token_auth')
-      ->entityCondition('bundle', 'refresh_token')
-      ->propertyCondition('uid', $uid)
-      ->execute();
-
-    if (!empty($results['restful_token_auth'])) {
-      // Delete the tokens.
-      entity_delete_multiple('restful_token_auth', array_keys($results['restful_token_auth']));
-    }
+    // $query = new \EntityFieldQuery();
+    // $results = $query
+    //   ->entityCondition('entity_type', 'restful_token_auth')
+    //   ->entityCondition('bundle', 'refresh_token')
+    //   ->propertyCondition('uid', $uid)
+    //   ->execute();
+    //
+    // if (!empty($results['restful_token_auth'])) {
+    //   // Delete the tokens.
+    //   entity_delete_multiple('restful_token_auth', array_keys($results['restful_token_auth']));
+    // }
 
     // Create a new refresh token.
     $values = array(
