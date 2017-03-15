@@ -131,3 +131,24 @@ function restful_token_auth_cron() {
   $ids = array_keys($result['restful_token_auth']);
   entity_delete_multiple('restful_token_auth', $ids);
 }
+
+/**
+ * Implements hook_user_update().
+ */
+function restful_token_auth_user_update(&$edit, $account, $category) {
+  if ($edit['status']) {
+    return;
+  }
+
+  $query = new EntityFieldQuery();
+  $result = $query
+    ->entityCondition('entity_type', 'restful_token_auth')
+    ->propertyCondition('uid', $account->uid)
+    ->execute();
+
+  if (empty($result['restful_token_auth'])) {
+    return;
+  }
+
+  entity_delete_multiple('restful_token_auth', array_keys($result['restful_token_auth']));
+}

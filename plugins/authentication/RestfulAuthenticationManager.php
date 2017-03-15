@@ -87,13 +87,13 @@ class RestfulAuthenticationManager extends \ArrayObject {
     // Resolve the user based on the providers in the manager.
     $account = NULL;
     foreach ($this as $provider) {
-      if ($provider->applies($request, $method) && $account = $provider->authenticate($request, $method)) {
+      if ($provider->applies($request) && ($account = $provider->authenticate($request)) && $account->uid && $account->status) {
         // The account has been loaded, we can stop looking.
         break;
       }
     }
 
-    if (!$account) {
+    if (empty($account->uid) || !$account->status) {
 
       if ($this->count() && !$this->getIsOptional()) {
         // Allow caching pages for anonymous users.
