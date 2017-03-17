@@ -345,10 +345,12 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
       catch (InaccessibleRecordException $e) {
         // If you don't have access to the embedded entity is like not having
         // access to the property.
+        watchdog_exception('restful', $e);
         return NULL;
       }
       catch (UnprocessableEntityException $e) {
         // If you access a nonexistent embedded entity.
+        watchdog_exception('restful', $e);
         return NULL;
       }
       // Test if the $embedded_entity meets the filter or not.

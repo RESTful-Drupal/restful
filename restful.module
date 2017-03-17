@@ -13,6 +13,7 @@ use Drupal\Component\Plugin\PluginBase;
 use Drupal\restful\Exception\RestfulException;
 use Drupal\restful\Http\HttpHeader;
 use Drupal\restful\Http\RequestInterface;
+use Drupal\restful\Http\Response;
 use Drupal\restful\Http\ResponseInterface;
 use Drupal\restful\Plugin\resource\Decorators\CacheDecoratedResource;
 use Drupal\restful\Plugin\resource\Decorators\RateLimitDecoratedResource;
@@ -306,9 +307,24 @@ function restful_delivery($var = NULL) {
   if (!isset($var)) {
     return;
   }
+  $response = _restful_delivery_fill_reponse($var, restful()->getResponse());
+  $response->send();
+}
 
+/**
+ * Gets the response object to be send.
+ *
+ * @param mixed $var
+ *   If set, the variable will be converted to JSON and output.
+ * @param ResponseInterface $response
+ *   If set, this response will be used to add the response data.
+ *
+ * @return ResponseInterface
+ *   A prepared response for sending.
+ */
+function _restful_delivery_fill_reponse($var, ResponseInterface $response = NULL) {
   $request = restful()->getRequest();
-  $response = restful()->getResponse();
+  $response = $response ? $response : new Response();
   if (!empty($var['status'])) {
     $response->setStatusCode($var['status']);
   }
@@ -329,17 +345,15 @@ function restful_delivery($var = NULL) {
 
       $response->setContent($data);
       $response->prepare($request);
-      $response->send();
+      return $response;
     }
     catch (RestfulException $e) {
       // If there is an exception during delivery, just JSON encode this.
       $output = _restful_build_http_api_error($e, $response);
       $response->setStatusCode($e->getCode());
       $response->setContent(drupal_json_encode($output));
-      $response->send();
-      return;
+      return $response;
     }
-    return;
   }
 
   try {
@@ -368,12 +382,11 @@ function restful_delivery($var = NULL) {
     $output = _restful_build_http_api_error($e, $response);
     $response->setStatusCode($e->getCode());
     $response->setContent(drupal_json_encode($output));
-    $response->send();
-    return;
+    return $response;
   }
 
   $response->prepare($request);
-  $response->send();
+  return $response;
 }
 
 /**

@@ -139,7 +139,15 @@ class ResourceManager implements ResourceManagerInterface {
     if (isset($version)) {
       return $version;
     }
-    $path = $this->request->getPath(FALSE);
+    $version = $this->getVersionFromProvidedRequest($this->request);
+    return $version;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getVersionFromProvidedRequest(RequestInterface $request = NULL) {
+    $path = $request->getPath(FALSE);
     list($resource_name, $version) = static::getPageArguments($path);
     if (preg_match('/^v\d+(\.\d+)?$/', $version)) {
       $version = $this->parseVersionString($version, $resource_name);
@@ -161,8 +169,15 @@ class ResourceManager implements ResourceManagerInterface {
    * {@inheritdoc}
    */
   public function negotiate() {
-    $version = $this->getVersionFromRequest();
-    list($resource_name,) = static::getPageArguments($this->request->getPath(FALSE));
+    return $this->negotiateFromRequest($this->request);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function negotiateFromRequest(RequestInterface $request) {
+    $version = $this->getVersionFromProvidedRequest($request);
+    list($resource_name,) = static::getPageArguments($request->getPath(FALSE));
     try {
       $resource = $this->getPlugin($resource_name . PluginBase::DERIVATIVE_SEPARATOR . $version[0] . '.' . $version[1]);
       return $resource->isEnabled() ? $resource : NULL;

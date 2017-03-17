@@ -218,7 +218,10 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     // The access calls use the request method. Fake the view to be a GET.
     $old_request = $this->getRequest();
     $this->getRequest()->setMethod(RequestInterface::METHOD_GET);
-    $output = array($this->view($wrapper->getIdentifier()));
+    $identifier = empty($this->options['idField'])
+      ? $wrapper->getIdentifier()
+      : $wrapper->get($this->options['idField'])->value();
+    $output = array($this->view($identifier));
     // Put the original request back to a POST.
     $this->request = $old_request;
 
@@ -318,6 +321,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
    * {@inheritdoc}
    */
   public function remove($identifier) {
+    $identifier = $this->getEntityIdByFieldId($identifier);
     $this->isValidEntity('delete', $identifier);
 
     /* @var \EntityDrupalWrapper $wrapper */
