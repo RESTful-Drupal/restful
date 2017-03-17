@@ -67,6 +67,18 @@ interface ResourceManagerInterface {
   public function getVersionFromRequest();
 
   /**
+   * Gets the major and minor version for the provided request.
+   *
+   * @param \Drupal\restful\Http\RequestInterface $request
+   *   The request object to get the version from. If NULL the current request
+   *   will be used.
+   *
+   * @return array
+   *   The array with the version.
+   */
+  public function getVersionFromProvidedRequest(RequestInterface $request);
+
+  /**
    * Gets the resource plugin based on the information in the request object.
    *
    * @throws ServerConfigurationException
@@ -76,6 +88,21 @@ interface ResourceManagerInterface {
    *   The resource plugin instance.
    */
   public function negotiate();
+
+  /**
+   * Gets the resource plugin based on the information in the request object.
+   *
+   * @param \Drupal\restful\Http\RequestInterface $request
+   *   The request object to get the version from. If NULL the current request
+   *   will be used.
+   *
+   * @throws ServerConfigurationException
+   *   If the plugin could not be found.
+   *
+   * @return ResourceInterface
+   *   The resource plugin instance.
+   */
+  public function negotiateFromRequest(RequestInterface $request);
 
   /**
    * Execute a user callback.

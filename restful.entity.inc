@@ -5,11 +5,12 @@
  * Contains entity related code.
  */
 
+use Doctrine\Common\Collections\ArrayCollection;
+use Drupal\restful\Exception\ServerConfigurationException;
 use Drupal\restful\Plugin\resource\Decorators\CacheDecoratedResource;
 use Drupal\restful\Plugin\resource\Decorators\CacheDecoratedResourceInterface;
 use Drupal\restful\RenderCache\Entity\CacheFragmentController;
 use Drupal\restful\RenderCache\RenderCache;
-use Doctrine\Common\Collections\ArrayCollection;
 
 /**
  * Implements hook_entity_info().
@@ -154,9 +155,13 @@ function _restful_entity_clear_all_resources($cid) {
   if (!$instance_id = CacheFragmentController::resourceIdFromHash($cid)) {
     return;
   }
-  $handler = restful()
-    ->getResourceManager()
-    ->getPlugin($instance_id);
+  try {
+    $handler = restful()->getResourceManager()->getPlugin($instance_id);
+  }
+  catch (ServerConfigurationException $e) {
+    watchdog_exception('restful', $e);
+    return;
+  }
   if (!$handler instanceof CacheDecoratedResourceInterface) {
     return;
   }
