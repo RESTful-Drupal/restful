@@ -114,7 +114,7 @@ interface ResourceManagerInterface {
    *       Ex: array($this, 'format').
    *     - An array containing any of the methods before and an array of
    *       parameters to pass to the callback.
-   *       Ex: array(array($this, 'processing'), array('param1', 2))
+   *       Ex: array(array(array($this, 'processing'), array('param1', 2)))
    * @param array $params
    *   Array of additional parameters to pass in.
    *
