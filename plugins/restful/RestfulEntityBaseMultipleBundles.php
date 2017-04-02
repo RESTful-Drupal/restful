@@ -58,7 +58,7 @@ class RestfulEntityBaseMultipleBundles extends RestfulEntityBase {
 
 
     if (empty($result[$entity_type])) {
-      return;
+      return array();
     }
 
     $account = $this->getAccount();
