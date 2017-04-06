@@ -33,6 +33,10 @@ class CookieAuthentication extends Authentication {
 
     global $user;
     $account = user_load($user->uid);
+    
+    if ($account->uid === 0) {
+      return FALSE;
+    }
 
     if (!$request::isWriteMethod($request->getMethod()) || $request->getApplicationData('rest_call')) {
       // Request is done via API not CURL, or not a write operation, so we don't
