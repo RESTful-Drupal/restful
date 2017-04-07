@@ -131,7 +131,7 @@ function restful_token_auth_restful_resource_alter(ResourceInterface &$resource)
  * Implements hook_user_update().
  */
 function restful_token_auth_user_update(&$edit, $account, $category) {
-  if ($edit['status']) {
+  if (isset($edit['status']) && $edit['status']) {
     return;
   }
 
