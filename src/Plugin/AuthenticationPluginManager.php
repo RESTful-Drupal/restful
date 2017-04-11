@@ -67,4 +67,24 @@ class AuthenticationPluginManager extends DefaultPluginManager {
     return static::semiSingletonInstance($factory, array($bin));
   }
 
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDefinitions() {
+    $definitions = &drupal_static(__METHOD__);
+    if (!isset($definitions)) {
+      $definitions = parent::getDefinitions();
+    }
+    return $definitions;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDefinition($plugin_id, $exception_on_invalid = TRUE) {
+    $definitions = $this->getDefinitions();
+    return $this->doGetDefinition($definitions, $plugin_id, $exception_on_invalid);
+  }
+
 }
