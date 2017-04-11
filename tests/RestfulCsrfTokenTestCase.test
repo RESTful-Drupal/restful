@@ -104,8 +104,7 @@ class RestfulCsrfTokenTestCase extends RestfulCurlBaseTestCase {
       $result = $this->httpRequest($this->getPath($method), $method, $request, array(), FALSE);
       if ($csrf_required) {
         $params['@code'] = 400;
-        $params['@returned'] = $result['code'];
-        $this->assertEqual($result['code'], $params['@code'], format_string('Returned @returned, expected @code on @method without CSRF token for @role user.', $params));
+        $this->assertEqual($result['code'], $params['@code'], format_string('@code on @method without CSRF token for @role user.', $params));
       }
       else {
         $this->assertTrue($result['code'] >= 200 && $result['code'] <= 204, format_string('@method without CSRF token for @role user is allowed.', $params));
@@ -115,8 +114,7 @@ class RestfulCsrfTokenTestCase extends RestfulCurlBaseTestCase {
       $result = $this->httpRequest($this->getPath($method), $method, $request, array('X-CSRF-Token' => 'invalidToken'), FALSE);
       if ($csrf_required) {
         $params['@code'] = 403;
-        $params['@returned'] = $result['code'];
-        $this->assertEqual($result['code'], $params['@code'], format_string('Returned @returned, expected @code on @method with invalid CSRF token for @role user.', $params));
+        $this->assertEqual($result['code'], $params['@code'], format_string('@code on @method with invalid CSRF token for @role user.', $params));
       }
       else {
         $this->assertTrue($result['code'] >= 200 && $result['code'] <= 204, format_string('@method with invalid CSRF token for @role user is allowed.', $params));
