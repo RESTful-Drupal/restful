@@ -24,13 +24,13 @@ interface RestfulDataProviderInterface {
   /**
    * View a collection of items.
    *
-   * @param array $ids
+   * @param mixed $ids
    *   An array of items to view.
    *
    * @return array
    *   The structured array ready to be rendered.
    */
-  public function viewMultiple(array $ids);
+  public function viewMultiple($ids);
 
   /**
    * View an item from the data source.
