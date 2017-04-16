@@ -826,3 +826,35 @@ function _restful_get_query_string_from_php_input() {
 
     return $query_string;
 }
+
+
+/**
+ * Utility function to return image URLs based on image styles.
+ *
+ * @param array $file_array
+ *   The image array.
+ * @param array $image_styles
+ *   Array of image style names that should be used. If empty, all existing
+ *   image styles would be used.
+ *
+ * @return array
+ *   Array keyed by the image style and the url as the value, and an "original"
+ *   key for the original file URL.
+ */
+function restful_get_image_styles(array $file_array, array $image_styles = array()) {
+  $uri = $file_array['uri'];
+  $return = array('original' => file_create_url($uri));
+
+  if (!$image_styles) {
+    // Get all the images styles.
+    $image_styles = array();
+    foreach (image_styles() as $image_style) {
+      $image_styles[] = $image_style['name'];
+    }
+  }
+
+  foreach ($image_styles as $image_style) {
+    $return[$image_style] = image_style_url($image_style, $uri);
+  }
+  return $return;
+}
