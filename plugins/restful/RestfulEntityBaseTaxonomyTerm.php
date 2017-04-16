@@ -18,11 +18,13 @@ class RestfulEntityBaseTaxonomyTerm extends RestfulEntityBase {
    */
   protected function setPropertyValues(EntityMetadataWrapper $wrapper, $null_missing_fields = FALSE) {
     $term = $wrapper->value();
-    if (!empty($term->tid)) {
+    if (empty($term->tid) && (!taxonomy_vocabulary_machine_name_load($this->getBundle()))) {
+      // This is a new term object but we don't have a vocabulary with the name
+      // from the plugin definition.
       return;
     }
 
-    $vocabulary = taxonomy_vocabulary_machine_name_load($term->vocabulary_machine_name);
+    $vocabulary = taxonomy_vocabulary_machine_name_load($this->getBundle());
     $term->vid = $vocabulary->vid;
 
     parent::setPropertyValues($wrapper, $null_missing_fields);
@@ -42,5 +44,29 @@ class RestfulEntityBaseTaxonomyTerm extends RestfulEntityBase {
       return TRUE;
     }
     return parent::checkPropertyAccess($op, $public_field_name, $property, $wrapper);
+  }
+
+  /**
+   * Overrides \RestfulEntityBaseTaxonomyTerm::checkEntityAccess().
+   *
+   * Taxonomy access for different operations has defined in the menu in various
+   * ways. This method will implement the same access logic of the menu items.
+   */
+  protected function checkEntityAccess($op, $entity_type, $entity) {
+    if ($this->getMethod() == \RestfulBase::GET) {
+      $permission = 'access content';
+    }
+    else {
+      if ($this->getMethod() == \RestfulBase::POST) {
+        $permission = 'administer taxonomy';
+      }
+      else {
+        $vocabulary = taxonomy_vocabulary_machine_name_load($this->getBundle());
+        $operation = $this->getMethod() == \RestfulBase::DELETE ? 'delete' : 'edit';
+        $permission = $operation . ' terms in ' . $vocabulary->vid;
+      }
+    }
+
+    return user_access($permission, $this->getAccount());
   }
 }

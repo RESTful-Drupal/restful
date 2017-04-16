@@ -1,0 +1,128 @@
+<?php
+
+/**
+ * @file
+ * Contains RestfulCRUDTaxonomyTermTestCase
+ */
+
+class RestfulCRUDTaxonomyTermTestCase extends DrupalWebTestCase {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Taxonomy term integration',
+      'description' => 'Test the CRUD actions of a taxonomy term entity type.',
+      'group' => 'RESTful',
+    );
+  }
+
+  function setUp() {
+    parent::setUp('restful_test');
+  }
+
+  /**
+   * Test the CRUD actions.
+   */
+  function testCRUD() {
+    $vid = taxonomy_vocabulary_machine_name_load('tags')->vid;
+
+    // Test creation of a taxonomy term.
+    $user1 = $this->drupalCreateuser(array(
+      'administer taxonomy',
+      'edit terms in ' . $vid,
+      'delete terms in ' . $vid,
+      'create article content'
+    ));
+    $user2 = $this->drupalCreateUser(array('access content', 'create article content'));
+
+    $handler = restful_get_restful_handler('test_tags');
+    $handler->setAccount($user1);
+
+    $text1 = $this->randomName();
+    $request = array('label' => $text1);
+    $result = $handler->post('', $request);
+
+    $id = $result[0]['id'];
+    $this->assertTrue($id, 'Term was created by a user with the proper permission.');
+
+    // Test the update of a taxonomy term.
+    $text2 = $this->randomName();
+    $request = array('label' => $text2);
+    $result = $handler->patch($id, $request);
+    $this->assertTrue($result[0]['label'] == $text2, 'The taxonomy term has been updates successfully');
+
+    // Test the deletion of a taxonomy term.
+    $handler->delete($id);
+    $this->assertFalse(taxonomy_term_load($id), 'The taxonomy term has been deleted successfully');
+
+    // Verify user2 can't create terms.
+    $handler->setAccount($user2);
+    try {
+      $text1 = $this->randomName();
+      $request = array('label' => $text1);
+      $handler->post('', $request);
+    }
+    catch (RestfulForbiddenException $e) {
+      $this->pass('user2 cannot create taxonomy term via restful.');
+    }
+
+    // Creating a term and check that the normal user can consume the resource.
+    $text3 = $this->randomName();
+    $taxonomy = entity_create('taxonomy_term', array(
+      'name' => $text3,
+      'vid' => taxonomy_vocabulary_machine_name_load('tags')->vid,
+    ));
+    entity_save('taxonomy_term', $taxonomy);
+    $terms = $handler->get();
+
+    $this->assertEqual($terms[0]['label'], $text3, 'user2 can access to the terms via rest.');
+
+    // Check user can't patch a term.
+    try {
+      $handler->patch($taxonomy->tid, array('name' => $this->randomName()));
+    }
+    catch (RestfulForbiddenException $e) {
+      $this->pass('user2 cannot patch taxonomy term.');
+    }
+
+    // Check user can't delete a term.
+    try {
+      $handler->delete($taxonomy->tid);
+    }
+    catch (RestfulForbiddenException $e) {
+      $this->pass('user2 cannot delete taxonomy term.');
+    }
+
+    drupal_static_reset();
+
+    // Testing sub-requests.
+    $handler = restful_get_restful_handler('articles', 1, 5);
+    $handler->setAccount($user2);
+    $tags = array(
+      'label' => 'foo',
+    );
+    $data = array(
+      'label' => 'bar',
+      'tags' => array($tags),
+    );
+    try {
+      $handler->post('', $data);
+      $this->fail('User 2 managed to create a new tag resource');
+    } catch (RestfulForbiddenException $e) {
+      $this->pass('User 2 cannot create a new tag resource');
+    }
+
+    // Verify user 1 can create new tag resource via sub request.
+    drupal_static_reset();
+    $handler = restful_get_restful_handler('articles', 1, 5);
+    $handler->setAccount($user1);
+    $tags = array(
+      'label' => 'foo',
+    );
+    $data = array(
+      'label' => 'bar',
+      'tags' => array($tags),
+    );
+    $handler->post('', $data);
+    $this->pass('User 1 managed to create a new tag resource');
+  }
+}
