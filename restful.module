@@ -578,17 +578,78 @@ function restful_parse_request() {
   }
   elseif ($method == \RestfulInterface::POST) {
     $request = $_POST;
+    if ($_FILES) {
+      $request['file_upload'] = true;
+    }
+    watchdog('debug', 'files : ' . print_r($_FILES, 1));
+  }
+  elseif ($method == \RestfulInterface::HEAD) {
+    $request = array('method' => $method);
+  }
+  elseif ($method == \RestfulInterface::DELETE) {
+    $request = array('method' => $method);
   }
 
-  if (!$request && $query_string = _restful_get_query_string_from_php_input()) {
-    // When trying to POST using curl on simpleTest it doesn't reach
-    // $_POST, so we try to re-grab it here.
-    // Also, sometimes the client might send the input still encoded.
-    if ($decoded_json = drupal_json_decode($query_string)) {
-      $request = $decoded_json;
-    }
-    else {
-      parse_str($query_string, $request);
+  // if we get this far, then we need to do special processing on php://input to get the data
+  if (!$request) {
+    $temp = explode(';', isset($_SERVER['CONTENT_TYPE']) ? $_SERVER['CONTENT_TYPE'] : 'unknown');
+    $contentType = $temp[0];
+    // CHARSET=<Something> will be in $temp[1], if it's ever needed
+    switch ($contentType) {
+      case 'application/json':
+        $request = drupal_json_decode(_restful_get_query_string_from_php_input());
+        break;
+      case 'application/x-www-form-encoded':
+        parse_str(_restful_get_query_string_from_php_input(), $request);
+        break;
+      case 'multipart/form-data':
+        // php://input is an empty string when the content-type is multipart/form-data
+        // There's nothing we can do to get this data
+        throw new RestfulBadRequestException('Cannot use multipart/form-data with HTTP Method ' . $method . '.');
+        break;
+      case 'unknown':
+        // if content type is undefined, we try a couple things and if they don't work, oh well
+        $request = drupal_json_decode(_restful_get_query_string_from_php_input());
+        if (!$request) {
+          parse_str(_restful_get_query_string_from_php_input(), $request);
+        }
+        break;
+      default:
+        // this is some kind of file, a direct upload
+        // copy it into the temporary directory then pass the URI to the handler for it to deal with
+        // handlers are expected to copy this file somewhere else
+        $uri = drupal_tempnam('temporary://', 'restFile_');
+        $input = fopen('php://input', 'rb');
+        $dest = fopen($uri, 'wb');
+
+        $size = $_SERVER['CONTENT_LENGTH'];
+        $pos = 0;
+        $chunk = 1024;
+        while ($pos < $size) {
+          if ($writ = stream_copy_to_stream($input, $dest, $chunk)) {
+            $pos += $writ;
+          } else {
+            fclose($input);
+            fclose($dest);
+            throw new RestfulUnprocessableEntityException('Unable to copy file.');
+          }
+        }
+
+        // construct a file object based on the file we just received.
+        $uri = file_stream_wrapper_uri_normalize($uri);
+        $file = new stdClass();
+        $file->uid = $GLOBALS['user']->uid;
+        $file->filename = basename($uri);
+        $file->uri = $uri;
+        $file->filemime = $contentType;
+        // This is gagged because some uris will not support it.
+        $file->filesize = @filesize($uri);
+        $file->timestamp = REQUEST_TIME;
+
+        $request['file'] = $file;
+        fclose($input);
+        fclose($dest);
+        break;
     }
   }
 
