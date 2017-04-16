@@ -31,7 +31,8 @@ class RestfulFormatterJson extends \RestfulFormatterBase implements \RestfulForm
       if (
         method_exists($this->handler, 'getTotalCount') &&
         method_exists($this->handler, 'isListRequest') &&
-        $this->handler->isListRequest()
+        $this->handler->isListRequest() && 
+        !empty($data)
       ) {
         // Get the total number of items for the current request without pagination.
         $output['count'] = $this->handler->getTotalCount();
