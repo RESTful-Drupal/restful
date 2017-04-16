@@ -44,6 +44,22 @@ function restful_ctools_plugin_type() {
   return $plugins;
 }
 
+/**
+ * Include Ctools plugins and get plugins of the given type.
+ *
+ * @param string $type
+ *   The type of plugin to retrieve.
+ *
+ * @return array
+ *   All plugins of the given type.
+ */
+function restful_get_plugins_by_type($type) {
+  ctools_include('plugins');
+  $plugins = ctools_get_plugins('restful', $type);
+  uasort($plugins, 'drupal_sort_weight');
+  return $plugins;
+}
+
 
 /**
  * Include CTools plugins and get all restful plugins.
@@ -52,8 +68,7 @@ function restful_ctools_plugin_type() {
  *   All plugins for restful resources.
  */
 function restful_get_restful_plugins() {
-  ctools_include('plugins');
-  return ctools_get_plugins('restful', 'restful');
+  return restful_get_plugins_by_type('restful');
 }
 
 /**
@@ -63,8 +78,7 @@ function restful_get_restful_plugins() {
  *   All plugins for restful authentication.
  */
 function restful_get_authentication_plugins() {
-  ctools_include('plugins');
-  return ctools_get_plugins('restful', 'authentication');
+  return restful_get_plugins_by_type('authentication');
 }
 
 /**
@@ -74,8 +88,7 @@ function restful_get_authentication_plugins() {
  *   All the restful rate_limit plugins.
  */
 function restful_get_rate_limit_plugins() {
-  ctools_include('plugins');
-  return ctools_get_plugins('restful', 'rate_limit');
+  return restful_get_plugins_by_type('rate_limit');
 }
 
 /**
@@ -85,8 +98,7 @@ function restful_get_rate_limit_plugins() {
  *   All the restful formatter plugins.
  */
 function restful_get_formatter_plugins() {
-  ctools_include('plugins');
-  return ctools_get_plugins('restful', 'formatter');
+  return restful_get_plugins_by_type('formatter');
 }
 
 /**
