@@ -180,6 +180,10 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
         }
       }
       else {
+        if (in_array(strtoupper($filter['operator'][0]), array('IN', 'BETWEEN'))) {
+          $query->propertyCondition($property_name, $filter['value'], $filter['operator'][0]);
+          continue;
+        }
         $column = $this->getColumnFromProperty($property_name);
         if (in_array(strtoupper($filter['operator'][0]), array('IN', 'BETWEEN'))) {
           $query->propertyCondition($column, $filter['value'], $filter['operator'][0]);
