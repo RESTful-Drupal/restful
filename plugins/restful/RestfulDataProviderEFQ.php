@@ -112,6 +112,7 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
       }
     }
 
+    $this->queryForLanguage($query);
     $this->queryForListSort($query);
     $this->queryForListFilter($query);
     $this->queryForListPagination($query);
@@ -177,6 +178,7 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
         }
         for ($index = 0; $index < count($filter['value']); $index++) {
           $query->fieldCondition($public_fields[$filter['public_field']]['property'], $public_fields[$filter['public_field']]['column'], $filter['value'][$index], $filter['operator'][$index]);
+          $query->fieldLanguageCondition($public_fields[$filter['public_field']]['property'], array($this->langcode, 'und'), 'IN');
         }
       }
       else {
@@ -189,6 +191,19 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
           $query->propertyCondition($column, $filter['value'][$index], $filter['operator'][$index]);
         }
       }
+    }
+  }
+
+  /**
+   * Apply language conditions to the query.
+   *
+   * @param \EntityFieldQuery $query
+   *   The query object.
+   */
+  protected function queryForLanguage(\EntityFieldQuery $query) {
+    if (!empty($this->langcode)) {
+      $query->addTag('entity_translation');
+      $query->addMetaData('language', $this->langcode);
     }
   }
 
@@ -278,6 +293,8 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
 
   /**
    * {@inheritdoc}
+   *
+   * @todo Address duplication here with getQueryForList().
    */
   public function getQueryCount() {
     $query = $this->getEntityFieldQuery();
@@ -286,6 +303,7 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
       $query->entityCondition('entity_id', $ids, 'IN');
     }
 
+    $this->queryForLanguage($query);
     $this->queryForListFilter($query);
 
     $this->addExtraInfoToQuery($query);
@@ -314,7 +332,8 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
     $entity_type = $this->getEntityType();
     // The only time you need to add the access tags to a EFQ is when you don't
     // have fieldConditions.
-    if (empty($query->fieldConditions)) {
+    // This currently breaks when field tables are joined for sorting.
+    if (empty($query->fieldConditions) && empty($query->order[0]['specifier']['field'])) {
       // Add a generic entity access tag to the query.
       $query->addTag($entity_type . '_access');
     }
