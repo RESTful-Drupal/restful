@@ -8,7 +8,7 @@
 namespace Drupal\restful\Plugin\resource;
 
 /**
- * Class Articles
+ * Class Users
  * @package Drupal\restful\Plugin\resource
  *
  * @Resource(
