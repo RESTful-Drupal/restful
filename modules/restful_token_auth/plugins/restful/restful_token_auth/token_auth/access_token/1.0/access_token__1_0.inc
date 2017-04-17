@@ -11,6 +11,7 @@ $plugin = array(
   'authentication_types' => array(
     'cookie',
     'basic_auth',
+    'token',
   ),
   // We will implement hook_menu() with custom settings.
   'menu_item' => variable_get('restful_hook_menu_base_path', 'api') . '/login-token',
