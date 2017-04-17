@@ -392,7 +392,8 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     $resource = $info['resource'] ?: NULL;
 
     if ($info['sub_property'] && $sub_wrapper->value()) {
-      $sub_wrapper = $sub_wrapper->{$info['sub_property']};
+      $property = $info['sub_property'];
+      $sub_wrapper = $sub_wrapper->{$property};
     }
 
     if ($resource) {
