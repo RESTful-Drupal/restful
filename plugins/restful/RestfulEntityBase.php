@@ -642,7 +642,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
 
     $wrapper = entity_metadata_wrapper($this->entityType, $entity);
 
-    $this->setPropertyValues($wrapper);
+    $this->setPropertyValues($wrapper, FALSE, 'create');
     return array($this->viewEntity($wrapper->getIdentifier()));
   }
 
@@ -655,10 +655,13 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    *   Determine if properties that are missing from the request array should
    *   be treated as NULL, or should be skipped. Defaults to FALSE, which will
    *   skip, instead of setting the fields to NULL.
+   * @param string $op
+   *   The operation that is happening to the entity (create or edit). Defaults
+   *   to 'edit'.
    *
    * @throws RestfulBadRequestException
    */
-  protected function setPropertyValues(EntityMetadataWrapper $wrapper, $null_missing_fields = FALSE) {
+  protected function setPropertyValues(EntityMetadataWrapper $wrapper, $null_missing_fields = FALSE, $op = 'edit') {
     $request = $this->getRequest();
 
     static::cleanRequest($request);
@@ -683,7 +686,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
 
       if (!array_key_exists($public_field_name, $request)) {
         // No property to set in the request.
-        if ($null_missing_fields && $this->checkPropertyAccess('edit', $public_field_name, $wrapper->{$property_name}, $wrapper)) {
+        if ($null_missing_fields && $this->checkPropertyAccess($op, $public_field_name, $wrapper->{$property_name}, $wrapper)) {
           // We need to set the value to NULL.
           $field_value = NULL;
         }
@@ -702,7 +705,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
 
       // We check the property access only after setting the values, as the
       // access callback's response might change according to the field value.
-      if (!$this->checkPropertyAccess('edit', $public_field_name, $wrapper->{$property_name}, $wrapper)) {
+      if (!$this->checkPropertyAccess($op, $public_field_name, $wrapper->{$property_name}, $wrapper)) {
         throw new \RestfulBadRequestException(format_string('Property @name cannot be set.', array('@name' => $public_field_name)));
       }
 
