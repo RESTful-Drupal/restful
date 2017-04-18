@@ -43,9 +43,8 @@ class RestfulCsrfTokenTestCase extends RestfulCurlBaseTestCase {
       'edit any article content',
       'delete any article content',
     );
-    $account = $this->drupalCreateUser($permissions);
-    $this->drupalLogin($account);
-    $user = $account;
+    $this->account = $this->drupalCreateUser($permissions);
+    $user = $this->account;
 
     // Check CSRF is not checked for read operations.
     $this->checkCsrfRequest(array(\RestfulInterface::GET), FALSE);
@@ -74,6 +73,7 @@ class RestfulCsrfTokenTestCase extends RestfulCurlBaseTestCase {
       \RestfulInterface::PATCH,
       \RestfulInterface::DELETE
     );
+
     $this->checkCsrfRequest($write_operations, FALSE, FALSE);
   }
 
@@ -89,6 +89,11 @@ class RestfulCsrfTokenTestCase extends RestfulCurlBaseTestCase {
    *   Determine if a user should be created and logged in. Defaults to TRUE.
    */
   protected function checkCsrfRequest($methods = array(), $csrf_required, $auth_user = TRUE) {
+    // Log-in user if needed.
+    if ($auth_user) {
+      $this->drupalLogin($this->account);
+    }
+
     $params['@role'] = $auth_user ? 'authenticated' : 'anonymous';
 
     foreach ($methods as $method) {
