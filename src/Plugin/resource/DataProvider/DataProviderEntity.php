@@ -527,13 +527,13 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     try {
       $this->queryForListSort($query);
     }
-    catch (ServerConfigurationException $e) {
+    catch (BadRequestException $e) {
       watchdog_exception('restful', $e);
     }
     try {
       $this->queryForListFilter($query);
     }
-    catch (ServerConfigurationException $e) {
+    catch (BadRequestException $e) {
       watchdog_exception('restful', $e);
     }
 
@@ -552,8 +552,14 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
   protected function getQueryCount() {
     $query = $this->getEntityFieldQuery();
 
-    // If we are trying to filter on a computed field, just ignore it and log an
-    // exception.
+    // If we are trying to filter or sort on a computed field, just ignore it
+    // and log an exception.
+    try {
+      $this->queryForListSort($query);
+    }
+    catch (BadRequestException $e) {
+      watchdog_exception('restful', $e);
+    }
     try {
       $this->queryForListFilter($query);
     }
