@@ -17,22 +17,24 @@ class DataProviderNode extends DataProviderEntity implements DataProviderInterfa
   /**
    * Overrides DataProviderEntity::getQueryForList().
    *
-   * Expose only published nodes.
+   * Expose only published nodes, and of the current language.
    */
   public function getQueryForList() {
     $query = parent::getQueryForList();
     $query->propertyCondition('status', NODE_PUBLISHED);
+    $query->propertyCondition('language', $this->getLangCode());
     return $query;
   }
 
   /**
    * Overrides DataProviderEntity::getQueryCount().
    *
-   * Only count published nodes.
+   * Only count published nodes, and of the current language.
    */
   public function getQueryCount() {
     $query = parent::getQueryCount();
     $query->propertyCondition('status', NODE_PUBLISHED);
+    $query->propertyCondition('language', $this->getLangCode());
     return $query;
   }
 
