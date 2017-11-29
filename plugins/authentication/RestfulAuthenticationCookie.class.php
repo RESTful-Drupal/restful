@@ -10,7 +10,6 @@ class RestfulAuthenticationCookie extends RestfulAuthenticationBase implements R
    * {@inheritdoc}
    */
   public function applies(array $request = array(), $method = \RestfulInterface::GET) {
-    
     // Skip cookies auth if we have an access token.
     if (variable_get('restful_prefer_access_token', FALSE) && $request['__application']['access_token']) {
       // The variable may be set if you want to be logged in both with a session
