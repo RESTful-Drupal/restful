@@ -7,6 +7,20 @@
 class RestfulAuthenticationCookie extends RestfulAuthenticationBase implements RestfulAuthenticationInterface {
 
   /**
+   * {@inheritdoc}
+   */
+  public function applies(array $request = array(), $method = \RestfulInterface::GET) {
+    if (variable_get('restful_prefer_access_token', FALSE) && $request['__application']['access_token']) {
+      // Skip cookies auth. The variable may be set if you want to be logged in
+      // both with a session cookie and with an access token, favoriting the
+      // access_token.
+      // request. see https://github.com/RESTful-Drupal/restful/issues/412.
+      return;
+    }
+    return TRUE;
+  }
+
+  /**
    * Implements RestfulAuthenticationInterface::authenticate().
    */
   public function authenticate(array $request = array(), $method = \RestfulInterface::GET) {
