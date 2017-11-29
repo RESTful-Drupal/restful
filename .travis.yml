@@ -16,7 +16,7 @@ mysql:
 
 install:
   # Grab Drush
-  - composer global require "drush/drush:7.*"
+  - composer global require "drush/drush:8.*"
   - phpenv rehash
   # Make sure we don't fail when checking out projects
   - echo -e "Host github.com\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
