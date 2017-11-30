@@ -922,6 +922,7 @@ class ResourceFieldEntity implements ResourceFieldEntityInterface {
 
     switch ($field_info['type']) {
       case 'entityreference':
+      case 'commerce_product_reference':
       case 'taxonomy_term_reference':
         return '\Drupal\restful\Plugin\resource\Field\ResourceFieldEntityReference';
 
