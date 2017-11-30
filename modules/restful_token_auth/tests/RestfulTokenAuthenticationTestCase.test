@@ -17,6 +17,31 @@ class RestfulTokenAuthenticationTestCase extends DrupalWebTestCase {
 
   function setUp() {
     parent::setUp('restful_example', 'restful_token_auth', 'entityreference');
+
+    $this->user = $this->drupalCreateUser();
+  }
+
+  /**
+   * Testing the user's access token will be invalidate one the user is blocked.
+   */
+  function testTokenInvalidating() {
+    $this->drupalLogin($this->user);
+    $handler = restful_get_restful_handler('access_token');
+
+    // Generating token.
+    $handler->get();
+
+    // Blocking the user.
+    user_save($this->user, array('status' => FALSE));
+
+    // Verify the token removed.
+    $query = new EntityFieldQuery();
+    $result = $query
+      ->entityCondition('entity_type', 'restful_token_auth')
+      ->propertyCondition('uid', $this->user->uid)
+      ->execute();
+
+    $this->assertTrue(empty($result), 'The access tokens invalidated when blocking the user.');
   }
 
   /**
@@ -24,18 +49,18 @@ class RestfulTokenAuthenticationTestCase extends DrupalWebTestCase {
    */
   function testAuthentication() {
     // Create user.
-    $user1 = $this->drupalCreateUser();
-    $this->drupalLogin($user1);
+    $this->user = $this->drupalCreateUser();
+    $this->drupalLogin($this->user);
 
     // Create "Article" node.
     $title1 = $this->randomName();
     $settings = array(
       'type' => 'article',
       'title' => $title1,
-      'uid' => $user1->uid,
+      'uid' => $this->user->uid,
     );
     $node1 = $this->drupalCreateNode($settings);
-    $id= $node1->nid;
+    $id = $node1->nid;
 
     // Get a token for the user, using the handler.
     $handler = restful_get_restful_handler('access_token');

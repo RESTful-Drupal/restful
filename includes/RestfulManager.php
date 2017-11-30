@@ -231,6 +231,10 @@ class RestfulManager {
     // the default content type and not just any.
     if (!empty($GLOBALS['_SERVER']['HTTP_ACCEPT']) && $GLOBALS['_SERVER']['HTTP_ACCEPT'] != '*/*') {
       foreach (explode(',', $GLOBALS['_SERVER']['HTTP_ACCEPT']) as $accepted_content_type) {
+        // Bypass case where Content-Type HTTP_ACCEPT looks like '*/*,image/webp'.
+        if ($accepted_content_type == '*/*') {
+          continue;
+        }
         // Loop through all the formatters and find the first one that matches the
         // Content-Type header.
         foreach (restful_get_formatter_plugins() as $formatter_info) {
