@@ -1124,6 +1124,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     $field_info = field_info_field($resource_field->getProperty());
     // We support:
     // - Entity Reference.
+    // - Commerce Product
     // - Taxonomy Term.
     // - File & Image field.
     // - uid property.
@@ -1143,6 +1144,10 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
       }
     }
     elseif (!empty($field_info['type']) && $field_info['type'] == 'entityreference') {
+      $target_entity_type = $field_info['settings']['target_type'];
+      $bundles = empty($field_info['settings']['handler_settings']['target_bundles']) ? array() : $field_info['settings']['handler_settings']['target_bundles'];
+    }
+    elseif (!empty($field_info['type']) && $field_info['type'] == 'commerce_product_reference') {
       $target_entity_type = $field_info['settings']['target_type'];
       $bundles = empty($field_info['settings']['handler_settings']['target_bundles']) ? array() : $field_info['settings']['handler_settings']['target_bundles'];
     }
