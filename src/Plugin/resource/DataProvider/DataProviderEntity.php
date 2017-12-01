@@ -1143,11 +1143,8 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
         $target_entity_type = 'taxonomy_vocabulary';
       }
     }
-    elseif (!empty($field_info['type']) && $field_info['type'] == 'entityreference') {
-      $target_entity_type = $field_info['settings']['target_type'];
-      $bundles = empty($field_info['settings']['handler_settings']['target_bundles']) ? array() : $field_info['settings']['handler_settings']['target_bundles'];
-    }
-    elseif (!empty($field_info['type']) && $field_info['type'] == 'commerce_product_reference') {
+    elseif (!empty($field_info['type']) 
+    elseif (!empty($field_info['type']) && ( $field_info['type'] == 'entityreference' || $field_info['type'] == 'commerce_product_reference') ) {
       $target_entity_type = $field_info['settings']['target_type'];
       $bundles = empty($field_info['settings']['handler_settings']['target_bundles']) ? array() : $field_info['settings']['handler_settings']['target_bundles'];
     }
