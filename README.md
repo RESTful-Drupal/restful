@@ -56,6 +56,8 @@ registry_autoload[] = PSR-4
 ```php
 
 namespace Drupal\restful_custom\Plugin\resource;
+use Drupal\restful\Plugin\resource\ResourceEntity;
+use Drupal\restful\Plugin\resource\ResourceInterface;
 
 /**
  * Class Custom__1_0
