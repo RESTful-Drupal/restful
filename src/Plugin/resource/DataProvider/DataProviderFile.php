@@ -105,9 +105,14 @@ class DataProviderFile extends DataProviderEntity implements DataProviderInterfa
 
     $provider_options = $this->getOptions();
     $options = $provider_options['options'];
+    
+    $subdir = empty($options['subdir']) ? NULL : $options['subdir'] . '/';
+    $date_format = empty($options['date_format']) ? NULL : $options['date_format'];
+    $datedir = $options['datedir'] === TRUE && !is_null($date_format) ? date($date_format) . '/' : NULL;
 
     $validators = empty($options['validators']) ? NULL : $options['validators'];
-    $destination = $options['scheme'] . "://";
+    $destination = $options['scheme'] . '://' . $subdir . $datedir;
+    file_prepare_directory($destination, FILE_CREATE_DIRECTORY);
     $replace = empty($options['replace']) ? NULL : $options['replace'];
 
     // Return cached objects without processing since the file will have
