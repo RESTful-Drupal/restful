@@ -51,8 +51,22 @@ class OAuth2ServerAuthentication extends Authentication {
     if ($result instanceof \OAuth2\Response) {
       throw new UnauthorizedException($result->getResponseBody(), $result->getStatusCode());
     }
-    elseif (empty($result['user_id'])) {
-      return NULL;
+
+    if (empty($result['user_id'])) {
+      // If the user_id is not set, it could mean that this is a client
+      // credentials grant token, in which case the client_id would be set.
+      if (empty($result['client_id'])) {
+        return NULL;
+      }
+
+      // We are dealing with client credentials flow. See if the resource has
+      // defined an user for this grant type.
+      if (!empty($oauth2_info['client_credentials_uid'])) {
+        $result['user_id'] = $oauth2_info['client_credentials_uid'];
+      }
+      elseif (!empty($oauth2_info['client_credentials_user'])) {
+        $result['user_id'] = user_load_by_name($oauth2_info['client_credentials_user'])->uid;
+      }
     }
     return user_load($result['user_id']);
   }
@@ -84,7 +98,14 @@ class OAuth2ServerAuthentication extends Authentication {
 
     $server = $plugin_definition['oauth2Server'];
     $scope = !empty($plugin_definition['oauth2Scope']) ? $plugin_definition['oauth2Scope'] : '';
-    return ['server' => $server, 'scope' => $scope];
+    $cc_user = !empty($plugin_definition['oauth2ClientCredentialsUser']) ? $plugin_definition['oauth2ClientCredentialsUser'] : '';
+    $cc_uid = !empty($plugin_definition['oauth2ClientCredentialsUid']) ? $plugin_definition['oauth2ClientCredentialsUid'] : '';
+    return [
+      'server' => $server,
+      'scope' => $scope,
+      'client_credentials_user' => $cc_user,
+      'client_credentials_uid' => $cc_uid,
+    ];
   }
 
   /**
