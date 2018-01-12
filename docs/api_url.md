@@ -161,7 +161,24 @@ Returns:
   }]
 }
 ```
+It is worth noting, that if field returns an array, you will need to specifically call each field, you cannot simply call field=a_field. For example, if your data looks like the following:
 
+```javascript
+{
+  "data": [{
+    "a_field": {
+       "id": "123",
+       "label": "Label",
+     }
+}]
+}
+```
+To return both, you would need to specifically call:
+
+```shell
+# Handler v1.0
+curl https://example.com/api/v1/articles/2?fields=a_field.id,a_field.label
+```
 
 ## Applying a query filter
 RESTful allows applying filters to the database query used to generate the list.
