@@ -364,6 +364,16 @@ abstract class DataProvider implements DataProviderInterface {
   }
 
   /**
+   * Check this is a request to get list of entities.
+   *
+   * @return bool
+   *   TRUE if this a request to get list of entities.
+   */
+  public function isListRequest() {
+    return $this->request->isListRequest($this->getResourcePath());
+  }
+
+  /**
    * Filter the query for list.
    *
    * @returns array
@@ -375,7 +385,7 @@ abstract class DataProvider implements DataProviderInterface {
    * @see \RestfulEntityBase::getQueryForList
    */
   protected function parseRequestForListFilter() {
-    if (!$this->request->isListRequest($this->getResourcePath())) {
+    if (!$this->isListRequest()) {
       // Not a list request, so we don't need to filter.
       // We explicitly check this, as this function might be called from a
       // formatter plugin, after RESTful's error handling has finished, and an
