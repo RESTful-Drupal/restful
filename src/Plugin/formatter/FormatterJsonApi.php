@@ -318,7 +318,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
       if ($allowed_fields !== FALSE && !in_array($field_name, $allowed_fields)) {
         continue;
       }
-      if (empty($field_contents['#embedded'])) {
+      if (!isset($field_contents['#embedded'])) {
         $result['attributes'][$field_name] = $field_contents;
       }
       else {
@@ -326,6 +326,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
         $rel = array();
         $single_item = $field_contents['#cardinality'] == 1;
         $relationship_links = empty($field_contents['#relationship_links']) ? NULL : $field_contents['#relationship_links'];
+        $is_embedded = $field_contents['#embedded'];
         unset($field_contents['#embedded']);
         unset($field_contents['#cardinality']);
         unset($field_contents['#relationship_links']);
@@ -338,25 +339,32 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
           $element = $field_item['#relationship_info'];
           unset($field_item['#relationship_info']);
           $include_key = $field_item['#resource_plugin'] . '--' . $field_item['#resource_id'];
-          $nested_allowed_fields = $this->unprefixInputOptions($allowed_fields, $field_name);
-          // If the list of the child allowed fields is empty, but the parent is
-          // part of the includes, it means that the consumer meant to include
-          // all the fields in the children.
-          if (is_array($allowed_fields) && empty($nested_allowed_fields) && in_array($field_name, $allowed_fields)) {
-            $nested_allowed_fields = FALSE;
+          if ($is_embedded) {
+            $nested_allowed_fields = $this->unprefixInputOptions($allowed_fields, $field_name);
+            // If the list of the child allowed fields is empty, but the parent is
+            // part of the includes, it means that the consumer meant to include
+            // all the fields in the children.
+            if (is_array($allowed_fields) && empty($nested_allowed_fields) && in_array($field_name, $allowed_fields)) {
+              $nested_allowed_fields = FALSE;
+            }
+            // If we get here is because the relationship is included in the
+            // sparse fieldset. That means that in this context, empty field
+            // limits mean all the fields.
+            $new_includes_parents = $includes_parents;
+            $new_includes_parents[] = $field_name;
+            $included[$field_path][$include_key] = $this->renormalize($field_item, $included, $nested_allowed_fields, $new_includes_parents);
+            $included[$field_path][$include_key] += $include_links ? array('links' => $include_links) : array();
           }
-          // If we get here is because the relationship is included in the
-          // sparse fieldset. That means that in this context, empty field
-          // limits mean all the fields.
-          $new_includes_parents = $includes_parents;
-          $new_includes_parents[] = $field_name;
-          $included[$field_path][$include_key] = $this->renormalize($field_item, $included, $nested_allowed_fields, $new_includes_parents);
-          $included[$field_path][$include_key] += $include_links ? array('links' => $include_links) : array();
           $rel[$include_key] = $element;
         }
         // Only place the relationship info.
+        $data = $single_item ? reset($rel) : array_values($rel);
+        if ($single_item && empty($rel)) {
+          // We don't want $data to be FALSE, that is invalid JSON API.
+          $data = NULL;
+        }
         $result['relationships'][$field_name] = array(
-          'data' => $single_item ? reset($rel) : array_values($rel),
+          'data' => $data,
         );
         if (!empty($relationship_links)) {
           $result['relationships'][$field_name]['links'] = $relationship_links;
@@ -438,9 +446,11 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
     }
     $ids = $cardinality == 1 ? $ids = array($ids) : $ids;
     $resource_info = $resource_field->getResource();
+    $is_embedded = !isset($resource_info['fullView']) || $resource_info['fullView'];
     $empty_value = array(
       '#fields' => array(),
-      '#embedded' => TRUE,
+      // Do not set the embedded flag if fullView is FALSE.
+      '#embedded' => $is_embedded,
       '#resource_plugin' => sprintf('%s:%d.%d', $resource_info['name'], $resource_info['majorVersion'], $resource_info['minorVersion']),
       '#cache_placeholder' => array(
         'parents' => array_merge($parents, array($public_field_name)),
@@ -450,7 +460,8 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
     $value = array_map(function ($id) use ($empty_value) {
       return $empty_value + array('#resource_id' => $id);
     }, $ids);
-    if ($this->needsIncluding($resource_field, $parents)) {
+
+    if ($is_embedded && $this->needsIncluding($resource_field, $parents)) {
       $cid = sprintf('%s:%d.%d--%s', $resource_info['name'], $resource_info['majorVersion'], $resource_info['minorVersion'], implode(',', $ids));
       if (!isset($embedded_resources[$cid])) {
         $result = $resource_field->render($interpreter);
@@ -465,7 +476,7 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
       }
       $value = $embedded_resources[$cid];
     }
-    // At this point we are dealing with an embed.
+
     $value = array_filter($value);
     // Set the resource for the reference.
     $resource_plugin = $resource_field->getResourcePlugin();
@@ -493,21 +504,10 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
       ) + $value_item;
       $output[] = $item;
     }
-    // If there is a resource plugin for the parent, set the related
-    // links.
-    $links = array();
-    if ($resource = $this->getResource()) {
-      $links['related'] = $resource->versionedUrl('', array(
-        'absolute' => TRUE,
-        'query' => array(
-          'filter' => array($public_field_name => reset($ids)),
-        ),
-      ));
-      $links['self'] = $resource_plugin->versionedUrl($parent_id . '/relationships/' . $public_field_name);
-    }
 
-    return $output + array(
-      '#embedded' => TRUE,
+    $links = $this->buildRelationshipLinks($parent_id, $public_field_name, $resource_plugin, reset($ids));
+    return empty($output) ? array() : $output + array(
+      '#embedded' => $is_embedded,
       '#cardinality' => $cardinality,
       '#relationship_links' => $links,
     );
@@ -736,6 +736,35 @@ class FormatterJsonApi extends Formatter implements FormatterInterface {
       }
     }
     return NULL;
+  }
+
+  /**
+   * Builds the relationship links.
+   *
+   * @param string $parent_id
+   *   The ID of the host entity.
+   * @param string $public_field_name
+   *   The name of the relationship.
+   * @param ResourceInterface $resource_plugin
+   *   The resource plugin.
+   * @param string $identifier
+   *   The ID of the target entity on the relationship.
+   *
+   * @return array
+   *   The links.
+   */
+  protected function buildRelationshipLinks($parent_id, $public_field_name, ResourceInterface $resource_plugin, $identifier) {
+    // If there is a resource plugin for the parent, set the related links.
+    if ($resource = $this->getResource()) {
+      return array();
+    }
+    return array(
+      'related' => $resource->versionedUrl('', array(
+        'absolute' => TRUE,
+        'query' => array('filter' => array($public_field_name => $identifier)),
+      )),
+      'self' => $resource_plugin->versionedUrl($parent_id . '/relationships/' . $public_field_name),
+    );
   }
 
 }
