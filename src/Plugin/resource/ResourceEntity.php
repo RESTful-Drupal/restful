@@ -189,6 +189,8 @@ abstract class ResourceEntity extends Resource {
     // ResourceFieldEntity. Otherwise they will be considered regular
     // ResourceField.
     return array_map(function ($field_definition) {
+      if (isset($field_definition['callback'])) return $field_definition;
+
       $field_entity_class = '\Drupal\restful\Plugin\resource\Field\ResourceFieldEntity';
       $class_name = ResourceFieldEntity::fieldClassName($field_definition);
       if (!$class_name || is_subclass_of($class_name, $field_entity_class)) {
