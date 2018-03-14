@@ -24,6 +24,17 @@ function restful_token_auth_menu() {
     'access arguments' => array('administer restful'),
     'file' => 'restful_token_auth.admin.inc',
   );
+  // Add an API tab to the user profile.
+  $items['user/%user/api'] = array(
+    'title' => 'API',
+    'description' => 'API details',
+    'page callback' => 'restful_token_auth_get_credentials',
+    'access callback' => 'user_view_access',
+    'access arguments' => array(1),
+    'page arguments' => array(1),
+    'file' => 'restful_token_auth.pages.inc',
+    'type' => MENU_LOCAL_TASK,
+  );
   return $items;
 }
 
@@ -146,4 +157,20 @@ function restful_token_auth_user_update(&$edit, $account, $category) {
   }
 
   entity_delete_multiple('restful_token_auth', array_keys($result['restful_token_auth']));
+}
+
+/**
+ * Implementation of hook_theme().
+ */
+function restful_token_auth_theme() {
+  $module_path = drupal_get_path('module', 'restful_token_auth');
+  return array(
+    'restful_token_auth_user_key' => array(
+      'variables' => array(
+        'token' => NULL,
+      ),
+      'template' => 'user-key',
+      'path' => $module_path . '/templates',
+    )
+  );
 }
