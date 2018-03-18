@@ -208,6 +208,8 @@ curl https://example.com/api/v1.3/articles/1?access_token=YOUR_TOKEN
 curl -H "access-token: YOUR_TOKEN" https://example.com/api/v1.3/articles/1
 ```
 
+* Note above that in the header the `access-token` is with a dash and not an underscore.
+
 ## Change request formatter
 
 By default Restful module allows for any **Content-type** requests by setting the ```Accept: */*```. This means that you can make requests in the format you want (of course if this format is available on the restful plugins). 
