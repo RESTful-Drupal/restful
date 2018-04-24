@@ -269,22 +269,29 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
 
   /**
    * {@inheritdoc}
+   *
+   * @throws \Exception
+   *   In case there's no content to show, and some exceptions where thrown
+   *   from view(), then the last exception will be thrown.
    */
   public function viewMultiple(array $identifiers) {
-    $return = array();
-    // If no IDs were requested, we should not throw an exception in case an
-    // entity is un-accessible by the user.
+    $rows = array();
+
     foreach ($identifiers as $identifier) {
       try {
-        $row = $this->view($identifier);
+        $rows[] = $this->view($identifier);
       }
-      catch (InaccessibleRecordException $e) {
-        $row = NULL;
+      catch (\Exception $e) {
+        // Ignore the exceptions in case some content is visible, to allow
+        // partial success.
       }
-      $return[] = $row;
+    }
+    if (!$rows && isset($e)) {
+      // Re-through the last exception in case no content is visible.
+      throw $e;
     }
 
-    return array_values(array_filter($return));
+    return $rows;
   }
 
   /**
