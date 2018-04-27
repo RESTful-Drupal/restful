@@ -349,6 +349,13 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
   /**
    * {@inheritdoc}
    */
+  public function entitySave(\EntityDrupalWrapper $wrapper) {
+    $wrapper->save();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function entityValidate(\EntityDrupalWrapper $wrapper) {
     if (!module_exists('entity_validator')) {
       // Entity validator doesn't exist.
@@ -1057,8 +1064,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     $this->entityPreSave($interpreter->getWrapper());
 
     $this->entityValidate($interpreter->getWrapper());
-
-    $wrapper->save();
+    $this->entitySave($interpreter->getWrapper());
   }
 
   /**
