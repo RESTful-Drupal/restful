@@ -20,6 +20,14 @@ interface DataProviderEntityInterface extends DataProviderInterface {
   public function entityPreSave(\EntityDrupalWrapper $wrapper);
 
   /**
+   * Save an entity.
+   *
+   * @param \EntityDrupalWrapper $wrapper
+   *   The wrapped entity.
+   */
+  public function entitySave(\EntityDrupalWrapper $wrapper);
+
+  /**
    * Validate an entity before it is saved.
    *
    * @param \EntityDrupalWrapper $wrapper
