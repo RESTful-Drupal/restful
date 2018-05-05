@@ -205,10 +205,19 @@ class CacheDecoratedResource extends ResourceDecoratorBase implements CacheDecor
   /**
    * {@inheritdoc}
    */
+  public function create($path) {
+    $object = $this->getRequest()->getParsedBody();
+    return $this->getDataProvider()->create($object);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function update($path) {
     $this->invalidateResourceCache($path);
     // Update according to the decorated.
-    return $this->subject->update($path);
+    $object = $this->getRequest()->getParsedBody();
+    return $this->getDataProvider()->update($path, $object, FALSE);
   }
 
   /**

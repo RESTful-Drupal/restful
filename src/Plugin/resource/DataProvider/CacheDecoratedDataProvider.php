@@ -175,7 +175,16 @@ class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface,
    * {@inheritdoc}
    */
   public function create($object) {
-    return $this->subject->create($object);
+    $return = $this->subject->create($object);
+    $resource_field_collection = reset($return);
+
+    if (!$resource_field_collection instanceof ResourceFieldCollectionInterface) {
+      return NULL;
+    }
+
+    $interpreter = $resource_field_collection->getInterpreter();
+    $resource_field_collection->setContext('cache_fragments', $this->getCacheFragments($resource_field_collection->getIdField()->value($interpreter)));
+    return $return;
   }
 
   /**
@@ -216,7 +225,15 @@ class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface,
    */
   public function update($identifier, $object, $replace = TRUE) {
     $this->clearRenderedCache($this->getCacheFragments($identifier));
-    return $this->subject->update($identifier, $object, $replace);
+    $return = $this->subject->update($identifier, $object, $replace);
+    $resource_field_collection = reset($return);
+
+    if (!$resource_field_collection instanceof ResourceFieldCollectionInterface) {
+      return NULL;
+    }
+
+    $resource_field_collection->setContext('cache_fragments', $this->getCacheFragments($identifier));
+    return $return;
   }
 
   /**
