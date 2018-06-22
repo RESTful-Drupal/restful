@@ -21,7 +21,6 @@ install:
   # Make sure we don't fail when checking out projects
   - echo -e "Host github.com\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
   # LAMP package installation (mysql is already started)
-  - sudo apt-get update
   - sudo apt-get install apache2 libapache2-mod-fastcgi
   # enable php-fpm, travis does not support any other method with php and apache
   - sudo cp ~/.phpenv/versions/$(phpenv version-name)/etc/php-fpm.conf.default ~/.phpenv/versions/$(phpenv version-name)/etc/php-fpm.conf
@@ -47,17 +46,14 @@ install:
 
 before_script:
   - cd $TRAVIS_BUILD_DIR/../drupal
-  # Update drupal core
-  - git pull origin 7.x
   # Install the site
   - drush -v site-install minimal --db-url=mysql://root:@localhost/drupal --yes
+  - phpenv rehash
+  - echo " > MySQL fine-tuning."
+  - sudo service mysql stop
   # Increase max_allowed_packet to avoid MySQL errors
   - echo -e "[server]\nmax_allowed_packet=64M" | sudo tee -a /etc/mysql/conf.d/drupal.cnf
-  - sudo service mysql restart
-  - phpenv rehash
   # Performance optimization - MySQL to RAM disk
-  - echo " > Move MySQL datadir to RAM disk."
-  - sudo service mysql stop
   - sudo mv /var/lib/mysql /var/run/tmpfs
   - sudo ln -s /var/run/tmpfs /var/lib/mysql
   - sudo service mysql start
