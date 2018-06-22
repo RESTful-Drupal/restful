@@ -27,6 +27,8 @@ install:
   - sudo cp ~/.phpenv/versions/$(phpenv version-name)/etc/php-fpm.conf.default ~/.phpenv/versions/$(phpenv version-name)/etc/php-fpm.conf
   - sudo a2enmod rewrite actions fastcgi alias
   - echo "cgi.fix_pathinfo = 1" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
+  - sudo sed -i -e "s,www-data,travis,g" /etc/apache2/envvars
+  - sudo chown -R travis:travis /var/lib/apache2/fastcgi
   - ~/.phpenv/versions/$(phpenv version-name)/sbin/php-fpm
   # Set sendmail so drush doesn't throw an error during site install.
   - echo "sendmail_path='true'" >> `php --ini | grep "Loaded Configuration" | awk '{print $4}'`
@@ -40,9 +42,6 @@ install:
   - export APACHE_SITE_CFG="/etc/apache2/sites-available/000-default.conf"
   - sudo sh -c 'cat $TRAVIS_BUILD_DIR/.travis-apache.cfg | sed -e "s,PATH,$DOCROOT,g" | tee > $APACHE_SITE_CFG'
 
-  # Restart apache and test it
-  - sudo service apache2 restart
-  - curl -v "http://localhost"
   # Re-enable when trying to get CodeSniffer doesn't return a 403 anymore.
   #- composer global require drupal/coder:\>7
 
@@ -56,6 +55,9 @@ before_script:
   - echo -e "[server]\nmax_allowed_packet=64M" | sudo tee -a /etc/mysql/conf.d/drupal.cnf
   - sudo service mysql restart
   - phpenv rehash
+  # Restart apache and test it
+  - sudo service apache2 restart
+  - curl -v "http://localhost"
 
 script:
   # Go to our Drupal module directory
