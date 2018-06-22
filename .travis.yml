@@ -28,8 +28,6 @@ install:
   - sudo a2enmod rewrite actions fastcgi alias
   - echo "cgi.fix_pathinfo = 1" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
   - ~/.phpenv/versions/$(phpenv version-name)/sbin/php-fpm
-  # Make sure the apache root is in our wanted directory
-  - echo "$(curl -fsSL https://gist.githubusercontent.com/nickveenhof/11386315/raw/b8abaf9304fe12b5cc7752d39c29c1edae8ac2e6/gistfile1.txt)" | sed -e "s,PATH,$TRAVIS_BUILD_DIR/../drupal,g" | sudo tee /etc/apache2/sites-available/default > /dev/null
   # Set sendmail so drush doesn't throw an error during site install.
   - echo "sendmail_path='true'" >> `php --ini | grep "Loaded Configuration" | awk '{print $4}'`
   # Forward the errors to the syslog so we can print them
@@ -37,6 +35,12 @@ install:
   # Get latest drupal 8 core
   - cd $TRAVIS_BUILD_DIR/..
   - git clone --depth 1 --branch 7.x http://git.drupal.org/project/drupal.git
+  # Make sure the apache root is in our wanted directory
+  - cd drupal && export DOCROOT=$(pwd)
+  - echo "$(curl -fsSL https://gist.githubusercontent.com/nickveenhof/11386315/raw/b8abaf9304fe12b5cc7752d39c29c1edae8ac2e6/gistfile1.txt)" | sed -e "s,PATH,$DOCROOT,g" | sudo tee /etc/apache2/sites-available/default > /dev/null
+  # Validate the config
+  - echo /etc/apache2/sites-available/default
+
   # Restart apache and test it
   - sudo service apache2 restart
   - curl -v "http://localhost"
