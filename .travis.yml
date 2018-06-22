@@ -38,7 +38,7 @@ install:
   # Make sure the apache root is in our wanted directory
   - cd drupal && export DOCROOT=$(pwd)
   - export APACHE_SITE_CFG="/etc/apache2/sites-available/000-default.conf"
-  - cat $TRAVIS_BUILD_DIR/.travis-apache.cfg | sed -e "s,PATH,$DOCROOT,g" | tee > $APACHE_SITE_CFG
+  - sudo sh -c 'cat $TRAVIS_BUILD_DIR/.travis-apache.cfg | sed -e "s,PATH,$DOCROOT,g" | tee > $APACHE_SITE_CFG'
 
   # Restart apache and test it
   - sudo service apache2 restart
