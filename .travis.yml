@@ -6,7 +6,7 @@ php:
   - 5.6
 
 env:
-  - PATH=$PATH:/home/travis/.composer/vendor/bin
+  - PATH="$HOME/.config/composer/vendor/bin:$PATH"
 
 # This will create the database
 mysql:
