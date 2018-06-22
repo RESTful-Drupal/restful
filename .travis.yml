@@ -39,7 +39,7 @@ install:
   - cd drupal && export DOCROOT=$(pwd)
   - echo "$(curl -fsSL https://gist.githubusercontent.com/nickveenhof/11386315/raw/b8abaf9304fe12b5cc7752d39c29c1edae8ac2e6/gistfile1.txt)" | sed -e "s,PATH,$DOCROOT,g" | sudo tee /etc/apache2/sites-available/default > /dev/null
   # Validate the config
-  - echo /etc/apache2/sites-available/default
+  - cat /etc/apache2/sites-available/default
 
   # Restart apache and test it
   - sudo service apache2 restart
