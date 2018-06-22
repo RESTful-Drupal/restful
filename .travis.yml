@@ -37,9 +37,10 @@ install:
   - git clone --depth 1 --branch 7.x http://git.drupal.org/project/drupal.git
   # Make sure the apache root is in our wanted directory
   - cd drupal && export DOCROOT=$(pwd)
-  - echo "$(curl -fsSL https://gist.githubusercontent.com/nickveenhof/11386315/raw/b8abaf9304fe12b5cc7752d39c29c1edae8ac2e6/gistfile1.txt)" | sed -e "s,PATH,$DOCROOT,g" | sudo tee /etc/apache2/sites-available/default > /dev/null
+  - export APACHE_SITE_CFG="/etc/apache2/sites-available/000-default.conf"
+  - echo "$(curl -fsSL https://gist.githubusercontent.com/nickveenhof/11386315/raw/b8abaf9304fe12b5cc7752d39c29c1edae8ac2e6/gistfile1.txt)" | sed -e "s,PATH,$DOCROOT,g" | sudo tee $APACHE_SITE_CFG > /dev/null
   # Validate the config
-  - cat /etc/apache2/sites-available/default
+  - cat $APACHE_SITE_CFG
 
   # Restart apache and test it
   - sudo service apache2 restart
