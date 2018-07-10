@@ -17,7 +17,7 @@ class RestfulAuthenticationToken extends \RestfulAuthenticationBase {
    * @return string
    *  The token from the request or FALSE if token isn't exists.
    */
-  private  function extractTokenFromRequest(array $request = array(), $param_name) {
+  protected function extractTokenFromRequest(array $request = array(), $param_name) {
     $key_name = !empty($param_name) ? $param_name : 'access_token';
     $dashed_key_name = str_replace('_', '-', $key_name);
 
