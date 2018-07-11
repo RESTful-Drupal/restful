@@ -698,7 +698,18 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
         $field_value = $this->propertyValuesPreprocess($property_name, $request[$public_field_name], $public_field_name);
       }
 
-      $wrapper->{$property_name}->set($field_value);
+      $sub_property = $info['sub_property'];
+      if (!empty($sub_property) && isset($wrapper->{$property_name}->{$sub_property}) && is_object($wrapper->{$property_name}->{$sub_property})) {
+        try {
+          $wrapper->{$property_name}->{$sub_property}->set($field_value);
+        }
+        catch (\Exception $e) {
+          $wrapper->{$property_name}->set($field_value);
+        }
+      }
+      else {
+        $wrapper->{$property_name}->set($field_value);
+      }
 
       // We check the property access only after setting the values, as the
       // access callback's response might change according to the field value.
