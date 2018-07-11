@@ -699,7 +699,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       }
 
       $sub_property = $info['sub_property'];
-      if (!empty($sub_property)) {
+      if (!empty($sub_property) && is_object($wrapper->{$property_name}->{$sub_property})) {
         try {
           $wrapper->{$property_name}->{$sub_property}->set($field_value);
         }
