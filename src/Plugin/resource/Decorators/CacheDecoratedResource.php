@@ -225,7 +225,7 @@ class CacheDecoratedResource extends ResourceDecoratorBase implements CacheDecor
    */
   public function remove($path) {
     $this->invalidateResourceCache($path);
-    $this->subject->remove($path);
+    return $this->subject->remove($path);
   }
 
   /**

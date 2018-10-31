@@ -408,7 +408,7 @@ abstract class Resource extends PluginBase implements ResourceInterface {
    */
   public function remove($path) {
     // TODO: Compare this with 1.x logic.
-    $this->getDataProvider()->remove($path);
+    return $this->getDataProvider()->remove($path);
   }
 
   /**

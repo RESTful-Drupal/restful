@@ -225,6 +225,7 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     // Put the original request back to a POST.
     $this->request = $old_request;
 
+    $output += array('status' => 201);
     return $output;
   }
 
@@ -300,9 +301,6 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
 
     $this->setPropertyValues($wrapper, $object, $replace);
 
-    // Set the HTTP headers.
-    $this->setHttpHeader('Status', 201);
-
     if (!empty($wrapper->url) && $url = $wrapper->url->value()) {
       $this->setHttpHeader('Location', $url);
     }
@@ -329,7 +327,10 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     $wrapper->delete();
 
     // Set the HTTP headers.
-    $this->setHttpHeader('Status', 204);
+    return array(
+        'type' => 'https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.5',
+        'status' => 204,
+    );
   }
 
   /**
