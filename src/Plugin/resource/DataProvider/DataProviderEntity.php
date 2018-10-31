@@ -225,7 +225,10 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
     // Put the original request back to a POST.
     $this->request = $old_request;
 
-    return $output;
+    return array(
+        'status' => 201,
+        $output
+    );
   }
 
   /**
