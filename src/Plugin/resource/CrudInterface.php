@@ -80,6 +80,9 @@ interface CrudInterface {
    *
    * @param mixed $identifier
    *   The ID of thing to be removed.
+   *
+   * @return array
+   *   An array of structured data for the thing that was removed.
    */
   public function remove($identifier);
 

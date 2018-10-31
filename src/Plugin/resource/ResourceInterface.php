@@ -258,6 +258,9 @@ interface ResourceInterface extends PluginInspectionInterface, ConfigurablePlugi
    *
    * @param string $path
    *   The resource path.
+   *
+   * @return array
+   *   An array of structured data for the thing that was removed.
    */
   public function remove($path);
 

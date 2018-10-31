@@ -224,7 +224,7 @@ class CacheDecoratedDataProvider implements CacheDecoratedDataProviderInterface,
    */
   public function remove($identifier) {
     $this->clearRenderedCache($this->getCacheFragments($identifier));
-    $this->subject->remove($identifier);
+    return $this->subject->remove($identifier);
   }
 
   /**
