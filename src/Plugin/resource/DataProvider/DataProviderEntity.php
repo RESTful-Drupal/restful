@@ -301,9 +301,6 @@ class DataProviderEntity extends DataProvider implements DataProviderEntityInter
 
     $this->setPropertyValues($wrapper, $object, $replace);
 
-    // Set the HTTP headers.
-    $this->setHttpHeader('Status', 201);
-
     if (!empty($wrapper->url) && $url = $wrapper->url->value()) {
       $this->setHttpHeader('Location', $url);
     }
