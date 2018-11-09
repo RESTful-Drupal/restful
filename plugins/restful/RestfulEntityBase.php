@@ -1162,7 +1162,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     );
 
     if (!$entity = entity_load_single($entity_type, $entity_id)) {
-      throw new RestfulUnprocessableEntityException(format_string('The entity ID @id for @resource does not exist.', $params));
+      throw new RestfulNotFoundException(format_string('The entity ID @id for @resource does not exist.', $params));
     }
 
     list(,, $bundle) = entity_extract_ids($entity_type, $entity);

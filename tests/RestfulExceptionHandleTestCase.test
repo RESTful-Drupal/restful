@@ -45,7 +45,7 @@ class RestfulExceptionHandleTestCase extends RestfulCurlBaseTestCase {
     $url = 'api/v1.0/articles/1';
     $result = $this->httpRequest($url);
     $body = drupal_json_decode($result['body']);
-    $this->assertEqual($result['code'], '422', format_string('422 status code sent for @url url.', array('@url' => $url)));
+    $this->assertEqual($result['code'], '404', format_string('404 status code sent for @url url.', array('@url' => $url)));
     $this->assertTrue(strpos($result['headers'], 'application/problem+json;'), '"application/problem+json" found in invalid request.');
     $this->assertEqual($body['title'], 'The entity ID 1 for Articles does not exist.', 'Correct error message.');
   }
