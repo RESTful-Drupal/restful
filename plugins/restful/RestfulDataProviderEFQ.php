@@ -171,7 +171,7 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
         throw new \RestfulBadRequestException('The current filter selection does not map to any entity property or Field API field.');
       }
       if (field_info_field($property_name)) {
-        if (in_array(strtoupper($filter['operator'][0]), array('IN', 'BETWEEN'))) {
+        if (in_array(strtoupper($filter['operator'][0]), array('IN', 'NOT IN', 'BETWEEN'))) {
           $query->fieldCondition($public_fields[$filter['public_field']]['property'], $public_fields[$filter['public_field']]['column'], $filter['value'], $filter['operator'][0]);
           continue;
         }
@@ -181,7 +181,7 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
       }
       else {
         $column = $this->getColumnFromProperty($property_name);
-        if (in_array(strtoupper($filter['operator'][0]), array('IN', 'BETWEEN'))) {
+        if (in_array(strtoupper($filter['operator'][0]), array('IN', 'NOT IN', 'BETWEEN'))) {
           $query->propertyCondition($column, $filter['value'], $filter['operator'][0]);
           continue;
         }
