@@ -1019,7 +1019,7 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
       }
 
       // Make sure that we have the same amount of operators than values.
-      if (!in_array(strtoupper($value['operator'][0]), array('IN', 'BETWEEN')) && count($value['value']) != count($value['operator'])) {
+      if (!in_array(strtoupper($value['operator'][0]), array('IN', 'NOT IN', 'BETWEEN')) && count($value['value']) != count($value['operator'])) {
         throw new RestfulBadRequestException('The number of operators and values has to be the same.');
       }
 
