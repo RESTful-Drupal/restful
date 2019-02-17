@@ -525,7 +525,7 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     $this->assertEqual(count($result), 3, 'List filtered by the "author" entity metadata wrapper property, which maps to the "uid" DB column name, using the "IN" operator.');
 
     // Filter by an entity metadata wrapper property that is different from the
-    // DB column name using the 'IN' operator.
+    // DB column name using the 'NOT IN' operator.
     $request = array(
       'filter' => array(
         'user' => array(
@@ -539,7 +539,7 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     $this->assertEqual(count($result), 0, 'List filtered by the "author" entity metadata wrapper property, which maps to the "uid" DB column name, using the "NOT IN" operator.');
 
     // Filter by an entity metadata wrapper property that is different from the
-    // DB column name using the 'IN' operator.
+    // DB column name using the 'NOT IN' operator.
     $request = array(
       'filter' => array(
         'user' => array(
