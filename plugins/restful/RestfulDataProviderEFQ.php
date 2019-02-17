@@ -172,13 +172,14 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
       }
       if (field_info_field($property_name)) {
         if (in_array(strtoupper($filter['operator'][0]), array('IN', 'NOT IN', 'BETWEEN'))) {
-          if (is_array($filter['value']) && empty($filter['value'])) {
+          $value = $filter['value'];
+          if (is_array($value) && empty($value)) {
             // Filter by an empty array throws an error, hence we simply replace
             // the value with NULL.
-            $filter['value'] = NULL;
+            $value = NULL;
           }
 
-          $query->fieldCondition($public_fields[$filter['public_field']]['property'], $public_fields[$filter['public_field']]['column'], $filter['value'], $filter['operator'][0]);
+          $query->fieldCondition($public_fields[$filter['public_field']]['property'], $public_fields[$filter['public_field']]['column'], $value, $filter['operator'][0]);
           continue;
         }
         for ($index = 0; $index < count($filter['value']); $index++) {
@@ -188,12 +189,13 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
       else {
         $column = $this->getColumnFromProperty($property_name);
         if (in_array(strtoupper($filter['operator'][0]), array('IN', 'NOT IN', 'BETWEEN'))) {
-          if (is_array($filter['value']) && empty($filter['value'])) {
+          $value = $filter['value'];
+          if (is_array($value) && empty($value)) {
             // Filter by an empty array throws an error, hence we simply replace
             // the value with NULL.
-            $filter['value'] = NULL;
+            $value = NULL;
           }
-          $query->propertyCondition($column, $filter['value'], $filter['operator'][0]);
+          $query->propertyCondition($column, $value, $filter['operator'][0]);
           continue;
         }
         for ($index = 0; $index < count($filter['value']); $index++) {
