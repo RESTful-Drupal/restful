@@ -1012,8 +1012,12 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
       // Add the property
       $value['public_field'] = $public_field;
 
+      // Set default operator count as `1` when value is empty.
+      // When PHP < 5.6 and the passed value is an empty array we get:
+      // `array_fill(): Number of elements must be positive` exception.
+      $default_operator_count = count($value['value']) ? count($value['value']) : 1;
       // Set default operator.
-      $value += array('operator' => array_fill(0, count($value['value']), '='));
+      $value += array('operator' => array_fill(0, $default_operator_count, '='));
       if (!is_array($value['operator'])) {
         $value['operator'] = array($value['operator']);
       }
