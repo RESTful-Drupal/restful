@@ -174,6 +174,7 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
         if (in_array(strtoupper($filter['operator'][0]), array('IN', 'NOT IN', 'BETWEEN'))) {
           $value = $filter['value'];
           if (is_array($value) && empty($value)) {
+            continue;
             // Filter by an empty array throws an error, hence we simply replace
             // the value with NULL.
             $value = NULL;
@@ -191,6 +192,7 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
         if (in_array(strtoupper($filter['operator'][0]), array('IN', 'NOT IN', 'BETWEEN'))) {
           $value = $filter['value'];
           if (is_array($value) && empty($value)) {
+            continue;
             // Filter by an empty array throws an error, hence we simply replace
             // the value with NULL.
             $value = NULL;
