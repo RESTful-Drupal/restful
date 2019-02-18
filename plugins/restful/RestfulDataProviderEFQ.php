@@ -173,7 +173,7 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
       if (field_info_field($property_name)) {
         if (in_array(strtoupper($filter['operator'][0]), array('IN', 'NOT IN', 'BETWEEN'))) {
           $value = $filter['value'];
-          if (is_array($value) && empty($value)) {
+          if (empty($value)) {
             // Filter by an empty array throws an error, hence we simply replace
             // the value with NULL.
             $value = NULL;
@@ -190,7 +190,7 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
         $column = $this->getColumnFromProperty($property_name);
         if (in_array(strtoupper($filter['operator'][0]), array('IN', 'NOT IN', 'BETWEEN'))) {
           $value = $filter['value'];
-          if (is_array($value) && empty($value)) {
+          if (empty($value)) {
             // Filter by an empty array throws an error, hence we simply replace
             // the value with NULL.
             $value = NULL;
