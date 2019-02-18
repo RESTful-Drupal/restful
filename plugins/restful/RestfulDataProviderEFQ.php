@@ -180,7 +180,7 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
             }
             // Since Drupal doesn't know how to handle an empty array within a
             // condition we add the `NULL` as an element to the array.
-            $filter['value'] = [NULL];
+            $filter['value'] = array(NULL);
           }
           $query->fieldCondition($public_fields[$filter['public_field']]['property'], $public_fields[$filter['public_field']]['column'], $filter['value'], $filter['operator'][0]);
           continue;
@@ -200,7 +200,7 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
             }
             // Since Drupal doesn't know how to handle an empty array within a
             // condition we add the `NULL` as an element to the array.
-            $filter['value'] = [NULL];
+            $filter['value'] = array(NULL);
           }
           $query->propertyCondition($column, $filter['value'], $filter['operator'][0]);
           continue;

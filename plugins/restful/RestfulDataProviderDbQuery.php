@@ -206,7 +206,7 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
           }
           // Since Drupal doesn't know how to handle an empty array within a
           // condition we add the `NULL` as an element to the array.
-          $filter['value'] = [NULL];
+          $filter['value'] = array(NULL);
         }
         $query->condition($column_name, $filter['value'], $filter['operator'][0]);
         continue;
