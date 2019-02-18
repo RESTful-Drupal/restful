@@ -198,10 +198,15 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
     foreach ($this->parseRequestForListFilter() as $filter) {
       if (in_array(strtoupper($filter['operator'][0]), array('IN', 'NOT IN', 'BETWEEN'))) {
         $column_name = $this->getPropertyColumnForQuery($public_fields[$filter['public_field']]);
-        if (is_array($filter['value']) && empty($filter['value']) && strtoupper($filter['operator'][0]) == 'NOT IN') {
-          // Skip filtering by an empty value when operator is 'NOT IN',
-          // since it throws an SQL error.
-          continue;
+        if (is_array($filter['value']) && empty($filter['value'])) {
+          if (strtoupper($filter['operator'][0]) == 'NOT IN') {
+            // Skip filtering by an empty value when operator is 'NOT IN',
+            // since it throws an SQL error.
+            continue;
+          }
+          // Since Drupal doesn't know how to handle an empty array within a
+          // condition we add the `NULL` as an element to the array.
+          $filter['value'] = [NULL];
         }
         $query->condition($column_name, $filter['value'], $filter['operator'][0]);
         continue;
