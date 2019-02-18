@@ -198,9 +198,9 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
     foreach ($this->parseRequestForListFilter() as $filter) {
       if (in_array(strtoupper($filter['operator'][0]), array('IN', 'NOT IN', 'BETWEEN'))) {
         $column_name = $this->getPropertyColumnForQuery($public_fields[$filter['public_field']]);
-        if (is_array($filter['value']) && empty($filter['value'])) {
-          // Skip filtering by an empty value, since it throws an SQL error
-          // regardless the operator we use.
+        if (is_array($filter['value']) && empty($filter['value']) && strtoupper($filter['operator'][0]) == 'NOT IN') {
+          // Skip filtering by an empty value when operator is 'NOT IN',
+          // since it throws an SQL error.
           continue;
         }
         $query->condition($column_name, $filter['value'], $filter['operator'][0]);

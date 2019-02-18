@@ -172,9 +172,9 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
       }
       if (field_info_field($property_name)) {
         if (in_array(strtoupper($filter['operator'][0]), array('IN', 'NOT IN', 'BETWEEN'))) {
-          if (is_array($filter['value']) && empty($filter['value'])) {
-            // Skip filtering by an empty value, since it throws an SQL error
-            // regardless the operator we use.
+          if (is_array($filter['value']) && empty($filter['value']) && strtoupper($filter['operator'][0]) == 'NOT IN') {
+            // Skip filtering by an empty value when operator is 'NOT IN',
+            // since it throws an SQL error.
             continue;
           }
           $query->fieldCondition($public_fields[$filter['public_field']]['property'], $public_fields[$filter['public_field']]['column'], $filter['value'], $filter['operator'][0]);
@@ -187,9 +187,9 @@ abstract class RestfulDataProviderEFQ extends \RestfulBase implements \RestfulDa
       else {
         $column = $this->getColumnFromProperty($property_name);
         if (in_array(strtoupper($filter['operator'][0]), array('IN', 'NOT IN', 'BETWEEN'))) {
-          if (is_array($filter['value']) && empty($filter['value'])) {
-            // Skip filtering by an empty value, since it throws an SQL error
-            // regardless the operator we use.
+          if (is_array($filter['value']) && empty($filter['value']) && strtoupper($filter['operator'][0]) == 'NOT IN') {
+            // Skip filtering by an empty value when operator is 'NOT IN',
+            // since it throws an SQL error.
             continue;
           }
           $query->propertyCondition($column, $filter['value'], $filter['operator'][0]);
