@@ -136,7 +136,7 @@ function restful_token_auth_cron() {
  * Implements hook_user_update().
  */
 function restful_token_auth_user_update(&$edit, $account, $category) {
-  if ($edit['status']) {
+  if (isset($edit['status']) && $edit['status']) {
     return;
   }
 
