@@ -64,7 +64,7 @@ class RestfulUpdateEntityCurlTestCase extends RestfulCurlBaseTestCase {
         'id' => $id,
         'label' => $new_label,
         'self' => url('api/v1.0/test_articles/' . $id, array('absolute' => TRUE)),
-        'body' => NULL,
+        'body' => '',
       )),
       'self' => array(
         'title' => 'Self',
