@@ -48,7 +48,7 @@ class RestfulCreateEntityTestCase extends RestfulCurlBaseTestCase {
     // Create test entities to be referenced.
     $ids = array();
     foreach (array(1, 2) as $id) {
-      $entity = entity_create('entity_test', array('name' => 'main'));
+      $entity = entity_create('entity_test', array('name' => 'main', 'uid' => $this->account->uid));
       $entity->save();
       $ids[] = $entity->pid;
     }
