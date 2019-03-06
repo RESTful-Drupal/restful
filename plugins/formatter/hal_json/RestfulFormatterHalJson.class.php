@@ -85,14 +85,16 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
     }
 
     // Get self link.
-    $data['_links']['self'] = array(
-      'title' => 'Self',
-      'href' => $this->handler->versionedUrl($this->handler->getPath()),
-    );
+    if (!isset($data['_links']['self'])) {
+      $data['_links']['self'] = array(
+        'title' => 'Self',
+        'href' => $this->handler->versionedUrl($this->handler->getPath()),
+      );
+    }
 
     $page = !empty($request['page']) ? $request['page'] : 1;
 
-    if ($page > 1) {
+    if (!isset($data['_links']['previous']) && $page > 1) {
       $request['page'] = $page - 1;
       $data['_links']['previous'] = array(
         'title' => 'Previous',
@@ -100,19 +102,21 @@ class RestfulFormatterHalJson extends \RestfulFormatterBase implements \RestfulF
       );
     }
 
-    $curies_resource = $this->withCurie($this->handler->getResourceName());
+    if (!isset($data['_links']['next'])) {
+      $curies_resource = $this->withCurie($this->handler->getResourceName());
 
-    // We know that there are more pages if the total count is bigger than the
-    // number of items of the current request plus the number of items in
-    // previous pages.
-    $items_per_page = $this->handler->getRange();
-    $previous_items = ($page - 1) * $items_per_page;
-    if (isset($data['count']) && $data['count'] > count($data[$curies_resource]) + $previous_items) {
-      $request['page'] = $page + 1;
-      $data['_links']['next'] = array(
-        'title' => 'Next',
-        'href' => $this->handler->getUrl($request),
-      );
+      // We know that there are more pages if the total count is bigger than the
+      // number of items of the current request plus the number of items in
+      // previous pages.
+      $items_per_page = $this->handler->getRange();
+      $previous_items = ($page - 1) * $items_per_page;
+      if (isset($data['count']) && $data['count'] > count($data[$curies_resource]) + $previous_items) {
+        $request['page'] = $page + 1;
+        $data['_links']['next'] = array(
+          'title' => 'Next',
+          'href' => $this->handler->getUrl($request),
+        );
+      }
     }
 
     if (!$curie = $this->getCurie()) {

@@ -60,14 +60,16 @@ class RestfulFormatterJson extends \RestfulFormatterBase implements \RestfulForm
     $request = $this->handler->getRequest();
 
     // Get self link.
-    $data['self'] = array(
-      'title' => 'Self',
-      'href' => $this->handler->versionedUrl($this->handler->getPath()),
-    );
+    if (!isset($data['self'])) {
+      $data['self'] = array(
+        'title' => 'Self',
+        'href' => $this->handler->versionedUrl($this->handler->getPath()),
+      );
+    }
 
     $page = !empty($request['page']) ? $request['page'] : 1;
 
-    if ($page > 1) {
+    if (!isset($data['previous']) && $page > 1) {
       $request['page'] = $page - 1;
       $data['previous'] = array(
         'title' => 'Previous',
@@ -75,19 +77,20 @@ class RestfulFormatterJson extends \RestfulFormatterBase implements \RestfulForm
       );
     }
 
-    // We know that there are more pages if the total count is bigger than the
-    // number of items of the current request plus the number of items in
-    // previous pages.
-    $items_per_page = $this->handler->getRange();
-    $previous_items = ($page - 1) * $items_per_page;
-    if (isset($data['count']) && $data['count'] > count($data['data']) + $previous_items) {
-      $request['page'] = $page + 1;
-      $data['next'] = array(
-        'title' => 'Next',
-        'href' => $this->handler->getUrl($request),
-      );
+    if (!isset($data['next'])) {
+      // We know that there are more pages if the total count is bigger than the
+      // number of items of the current request plus the number of items in
+      // previous pages.
+      $items_per_page = $this->handler->getRange();
+      $previous_items = ($page - 1) * $items_per_page;
+      if (isset($data['count']) && $data['count'] > count($data['data']) + $previous_items) {
+        $request['page'] = $page + 1;
+        $data['next'] = array(
+          'title' => 'Next',
+          'href' => $this->handler->getUrl($request),
+        );
+      }
     }
-
   }
 
   /**
@@ -104,4 +107,3 @@ class RestfulFormatterJson extends \RestfulFormatterBase implements \RestfulForm
     return $this->contentType;
   }
 }
-
