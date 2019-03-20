@@ -1180,6 +1180,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    * @throws \RestfulBadRequestException
    */
   public function entityValidate(\EntityMetadataWrapper $wrapper) {
+    $this->validateFields($wrapper);
     if (!module_exists('entity_validator')) {
       // Entity validator doesn't exist.
       return;
@@ -1683,6 +1684,23 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     $cid .= $this->getEntityType();
     $cid .= '::ei:' . $id;
     $this->cacheInvalidate($cid);
+  }
+
+  /**
+   * Validates an entity's fields before they are saved.
+   *
+   * @param \EntityDrupalWrapper $wrapper
+   *   A metadata wrapper for the entity.
+   *
+   * @throws \RestfulUnprocessableEntityException
+   */
+  protected function validateFields($wrapper) {
+    try {
+      field_attach_validate($wrapper->type(), $wrapper->value());
+    }
+    catch (\FieldValidationException $e) {
+      throw new RestfulUnprocessableEntityException($e->getMessage());
+    }
   }
 
   /**
