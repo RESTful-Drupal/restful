@@ -592,6 +592,36 @@ class RestfulListTestCase extends RestfulCurlBaseTestCase {
     catch (\RestfulBadRequestException $e) {
       $this->pass('Exception thrown for invalid filter.');
     }
+
+  }
+
+  /**
+   * Test filter request and Count.
+   */
+  function testFilterCount() {
+    $user = $this->drupalCreateUser();
+    restful_test_add_fields();
+    $entity1 = entity_create('entity_test', array('name' => 'main', 'uid' => $user->uid));
+    $entity1->save();
+
+    $entity2 = entity_create('entity_test', array('name' => 'main', 'uid' => $user->uid));
+    $entity2->save();
+
+    $entity3 = entity_create('entity_test', array('name' => 'main', 'uid' => $user->uid));
+    $wrapper = entity_metadata_wrapper('entity_test', $entity3);
+
+    $wrapper->entity_reference_single->set($entity1);
+    $wrapper->entity_reference_multiple[] = $entity1;
+    $wrapper->entity_reference_multiple[] = $entity2;
+
+    $wrapper->save();
+
+    // Assert count with subrequests.
+    $query = array('filter' => array('entity_reference_single' => array('value' => '1')));
+    $result = $this->httpRequest('api/v1.1/main', \RestfulInterface::GET, $query);
+
+    $body = drupal_json_decode($result['body']);
+    $this->assertEqual($body['count'], 1, 'Number of entities listed with subRequest.');
   }
 
   /**
