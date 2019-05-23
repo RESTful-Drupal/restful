@@ -25,6 +25,13 @@ class RestfulAccessTokenAuthentication extends \RestfulTokenAuthenticationBase {
   public function getOrCreateToken() {
     $entity_type = $this->getEntityType();
     $account = $this->getAccount();
+    
+    if (!$account->uid) {
+      // If this handler was called programmatically we want to make sure the
+      // account is of an authenticated user.
+      throw new RestfulBadRequestException('Only authenticated users can have an access token.');
+    }    
+    
     // Check if there is a token that did not expire yet.
     $query = new EntityFieldQuery();
     $result = $query
