@@ -785,7 +785,6 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     $save = FALSE;
     $original_request = $request;
 
-    $default_language = language_default();
     $title_field = $this->getTitleField();
 
     foreach ($this->getPublicFields() as $public_field_name => $info) {
@@ -830,6 +829,20 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
             throw new \RestfulBadRequestException(format_string('Invalid data has been passed to the translatable field \'@field\'.', array('@field' => $public_field_name)));
           }
 
+          // By default, the active language should be the entity's language.
+          if (!$active_language = entity_language($this->getEntityType(), $wrapper->value())) {
+            // Fallback to the site's default language.
+            $active_language = language_default('language');
+          }
+
+          if (function_exists('title_active_language')) {
+            // Override the active language being saved in a static variable
+            // in `title_active_language()` to be the language of the entity,
+            // this way we prevent `title_entity_presave()` from overriding
+            // the other languages we just set.
+            title_active_language($active_language);
+          }
+
           $enabled_languages = array_keys(language_list());
           foreach ($values as $current_language => $current_language_value) {
 
@@ -846,7 +859,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
             // the hook_node_presave on the 'title' module is syncing between the
             // title property and the title field in the default language, hence
             // we should set the original property as well.
-            if (!empty($title_field) && $title_field['field_name'] == $property_name && $default_language->language == $current_language) {
+            if (!empty($title_field) && $title_field['field_name'] == $property_name && $active_language == $current_language) {
               $wrapper->{$title_field['original_property']}->set($field_value);
             }
 
