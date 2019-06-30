@@ -224,6 +224,7 @@ function restful_test_add_fields($entity_type = 'entity_test', $bundle = 'main')
   field_create_instance($instance);
 
   $vocabulary_id = restful_test_create_vocabulary_and_terms();
+  $vocabulary = taxonomy_vocabulary_load($vocabulary_id);
 
   // Taxonomy term - single.
   $field = array(
@@ -231,6 +232,14 @@ function restful_test_add_fields($entity_type = 'entity_test', $bundle = 'main')
     'type' => 'taxonomy_term_reference',
     'entity_types' => array($entity_type),
     'cardinality' => 1,
+    'settings' => array(
+      'allowed_values' => array(
+        array(
+          'vocabulary' => $vocabulary->machine_name,
+          'parent' => '0',
+        ),
+      ),
+    ),
   );
   field_create_field($field);
 
@@ -257,6 +266,14 @@ function restful_test_add_fields($entity_type = 'entity_test', $bundle = 'main')
     'type' => 'taxonomy_term_reference',
     'entity_types' => array($entity_type),
     'cardinality' => FIELD_CARDINALITY_UNLIMITED,
+    'settings' => array(
+      'allowed_values' => array(
+        array(
+          'vocabulary' => $vocabulary->machine_name,
+          'parent' => '0',
+        ),
+      ),
+    ),
   );
   field_create_field($field);
 

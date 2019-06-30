@@ -75,6 +75,10 @@ script:
   - drush --yes dl entity
   - drush --yes dl entityreference
 
+  # Download entity translation.
+  - drush dl entity_translation --yes
+  - drush en entity_translation --yes
+
   # Patch Entity API.
   - curl -O https://www.drupal.org/files/issues/2086225-entity-access-check-node-create-3.patch
   - patch -p1 $TRAVIS_BUILD_DIR/../drupal/sites/all/modules/entity/modules/callbacks.inc  < 2086225-entity-access-check-node-create-3.patch

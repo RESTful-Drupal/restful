@@ -1,0 +1,206 @@
+<?php
+
+/**
+ * @file
+ * Contains RestfulViewEntityFieldTranslationTestCase
+ */
+
+class RestfulViewEntityFieldTranslationTestCase extends RestfulCurlBaseTestCase {
+
+  /**
+   * The user to run the tests as.
+   */
+  protected $testUser;
+
+  public static function getInfo() {
+    return array(
+      'name' => 'View field translation entity',
+      'description' => 'Test the viewing of an entity with translated field.',
+      'group' => 'RESTful',
+    );
+  }
+
+  function setUp() {
+    parent::setUp(
+      'restful_example',
+      'restful_test',
+      'entityreference',
+      'locale',
+      'entity_translation'
+    );
+
+    $this->testUser = $this->drupalCreateUser(
+      array(
+        'administer languages',
+        'access administration pages',
+        'administer site configuration',
+      )
+    );
+    require_once DRUPAL_ROOT . '/includes/locale.inc';
+    $this->drupalLogin($this->testUser);
+    $languages = language_list();
+    if (!isset($languages['en'])) {
+      locale_add_language('en', NULL, NULL, LANGUAGE_LTR, '', 'en');
+    }
+    if (!isset($languages['fr'])) {
+      locale_add_language('fr', NULL, NULL, LANGUAGE_LTR, '', 'fr');
+    }
+    $this->addTestFields();
+  }
+
+  /**
+   * Add test fields.
+   */
+  protected function addTestFields() {
+    // Text - single.
+    $field = array(
+      'field_name' => 'text_single',
+      'type' => 'text',
+      'entity_types' => array('restful_test_translatable_entity'),
+      'cardinality' => 1,
+      'translatable' => TRUE,
+      'settings' => array(
+        'entity_translation_sync' => FALSE,
+        'max_length' => 255,
+      ),
+    );
+    field_create_field($field);
+
+    $instance = array(
+      'field_name' => 'text_single',
+      'bundle' => 'restful_test_translatable_entity',
+      'entity_type' => 'restful_test_translatable_entity',
+      'label' => t('Text single'),
+      'settings' => array(
+        'entity_translation_sync' => FALSE,
+        'text_processing' => 0,
+      ),
+    );
+    field_create_instance($instance);
+    // Text - multiple.
+    $field = array(
+      'field_name' => 'text_multiple',
+      'type' => 'text_long',
+      'entity_types' => array('restful_test_translatable_entity'),
+      'cardinality' => FIELD_CARDINALITY_UNLIMITED,
+      'translatable' => TRUE,
+      'settings' => array(
+        'entity_translation_sync' => FALSE,
+      ),
+    );
+    field_create_field($field);
+
+    $instance = array(
+      'field_name' => 'text_multiple',
+      'bundle' => 'restful_test_translatable_entity',
+      'entity_type' => 'restful_test_translatable_entity',
+      'label' => t('Text multiple'),
+      'settings' => array(
+        'entity_translation_sync' => FALSE,
+        'text_processing' => 0,
+      ),
+    );
+    field_create_instance($instance);
+  }
+
+  /**
+   * Test viewing an entity with translatable fields.
+   */
+  function testViewFieldTranslatedEntity() {
+    $user = $this->drupalCreateUser();
+    $values = array(
+      'name' => 'restful_test_translatable_entity',
+      'uid' => $user->uid,
+      'label' => 'Test field translation',
+    );
+    $entity = entity_create('restful_test_translatable_entity', $values);
+    $wrapper = entity_metadata_wrapper('restful_test_translatable_entity', $entity);
+
+    $text1 = array(
+      'en' => $this->randomName(),
+      'fr' => $this->randomName(),
+    );
+    $text2 = array(
+      'en' => $this->randomName(),
+      'fr' => $this->randomName(),
+    );
+
+    $languages = array('en', 'fr');
+
+    foreach ($languages as $langcode) {
+      $wrapper->language($langcode);
+      $wrapper->text_single->set($text1[$langcode]);
+      $wrapper->text_multiple->set(array($text1[$langcode], $text2[$langcode]));
+    }
+    $wrapper->save();
+
+    $id = $entity->pid;
+    foreach ($languages as $langcode) {
+      $this->assertExpectedResult($langcode, $id, $text1[$langcode], $text2[$langcode]);
+    }
+
+    $this->postCheck($languages);
+  }
+
+  /**
+   * Helper to test viewing an entity (GET method) in a certain language.
+   *
+   * @param string $langcode
+   *   The language to view the entity in.
+   * @param int $id
+   *   The ID of the entity to test.
+   * @param string $text1
+   *   The first expected string (text_single and text_multiple[0]).
+   * @param string $text2
+   *   The second expected string (text_multiple[2]).
+   */
+  private function assertExpectedResult($langcode, $id, $text1, $text2) {
+    $handler = restful_get_restful_handler('restful_test_field_translatable_entity');
+    // Explicitly set the langcode.
+    $handler->setLangCode($langcode);
+    $response = $handler->get($id);
+    $result = $response[0];
+
+    $this->assertEqual(trim(strip_tags($result['text_single'][$langcode])), $text1, 'Entity view has correct result for "text_single" in language "' . $langcode . '".');
+    $this->assertEqual(trim(strip_tags($result['text_multiple'][$langcode][0])), $text1, 'Entity view has correct result for the first value of "text_multiple" in language "' . $langcode . '".');
+    $this->assertEqual(trim(strip_tags($result['text_multiple'][$langcode][1])), $text2, 'Entity view has correct result for the second value of "text_multiple" in language "' . $langcode . '".');
+  }
+
+  /**
+   * Helper to test creating an entity (POST method) in a certain language.
+   *
+   * @param $languages
+   *  An array of languages.
+   */
+  private function postCheck($languages) {
+    $handler = restful_get_restful_handler('restful_test_field_translatable_entity');
+
+    $text1 = $this->randomName();
+    $text2 = $this->randomName();
+
+    $request = array(
+      'text_single' => array($languages[0] => $text1),
+    );
+
+    $response = $handler->post('', $request);
+    $this->assertEqual(trim(strip_tags($response[0]['text_single'][$languages[0]])), $text1, 'Entity view has correct result for "text_single" in language "' . $languages[0] . '".');
+    $this->assertEqual(trim(strip_tags($response[0]['text_single'][$languages[1]])), NULL, 'Entity view has correct result for "text_single" in language "' . $languages[1] . '".');
+
+    $request = array(
+      'text_single' => array($languages[1] => $text1),
+    );
+    $response = $handler->post('', $request);
+    $this->assertEqual(trim(strip_tags($response[0]['text_single'][$languages[0]])), NULL, 'Entity view has correct result for "text_single" in language "' . $languages[0] . '".');
+    $this->assertEqual(trim(strip_tags($response[0]['text_single'][$languages[1]])), $text1, 'Entity view has correct result for "text_single" in language "' . $languages[1] . '".');
+
+    $request = array(
+      'text_single' => array(
+        $languages[0] => $text1,
+        $languages[1] => $text2,
+      ),
+    );
+    $response = $handler->post('', $request);
+    $this->assertEqual(trim(strip_tags($response[0]['text_single'][$languages[0]])), $text1, 'Entity view has correct result for "text_single" in language "' . $languages[0] . '".');
+    $this->assertEqual(trim(strip_tags($response[0]['text_single'][$languages[1]])), $text2, 'Entity view has correct result for "text_single" in language "' . $languages[1] . '".');
+  }
+}

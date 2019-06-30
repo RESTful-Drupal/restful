@@ -185,14 +185,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       return array();
     }
 
-    $result = $this->getQueryResultForAutocomplete();
-
-    $return = array();
-    foreach ($result as $entity_id => $label) {
-      $return[$entity_id] = check_plain($label);
-    }
-
-    return $return;
+    return $this->getQueryResultForAutocomplete();
   }
 
   /**
@@ -221,6 +214,10 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     $entity_info = $this->getEntityInfo();
     $request = $this->getRequest();
 
+    if (!empty($request['autocomplete']['language'])) {
+      $this->setLangCode($request['autocomplete']['language']);
+    }
+
     $string = drupal_strtolower($request['autocomplete']['string']);
     $operator = !empty($request['autocomplete']['operator']) ? $request['autocomplete']['operator'] : $autocomplete_options['operator'];
 
@@ -231,7 +228,12 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       $query->entityCondition('bundle', $bundles, 'IN');
     }
 
-    $query->propertyCondition($entity_info['entity keys']['label'], $string, $operator);
+    if (empty($title_field = $this->getTitleField())) {
+      $query->propertyCondition($entity_info['entity keys']['label'], $string, $operator);
+    }
+    else {
+      $query->fieldCondition($title_field['field_name'], 'value', $string, $operator);
+    }
 
     // Add a generic entity access tag to the query.
     $query->addTag($entity_type . '_access');
@@ -264,14 +266,51 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       return array();
     }
 
-    $ids = array_keys($result[$entity_type]);
     $return = array();
 
-    foreach (entity_load($entity_type, $ids) as $id => $entity) {
-      $return[$id] = entity_label($entity_type, $entity);
+    foreach (array_keys($result[$entity_type]) as $id) {
+      $wrapper = entity_metadata_wrapper($this->entityType, $id);
+      if (empty($title_field = $this->getTitleField())) {
+        $return[$id] = check_plain($wrapper->label());
+      }
+      else {
+        $wrapper->language($this->getLangCode());
+        $return[$id] = check_plain($wrapper->{$title_field['field_name']}->value());
+      }
     }
 
     return $return;
+  }
+
+  /**
+   * Get value by a wrapper.
+   *
+   * @param EntityMetadataWrapper $wrapper
+   *   The wrapped entity.
+   * @param EntityMetadataWrapper $sub_wrapper
+   *   The wrapped property.
+   * @param array $info
+   *   The public field info array.
+   * @param $public_field_name
+   *   The field name.
+   *
+   * @return mixed
+   *   A single or multiple values.
+   */
+  protected function getValueByWrapper(\EntityMetadataWrapper $wrapper, \EntityMetadataWrapper $sub_wrapper, array $info, $public_field_name) {
+    $value = NULL;
+    if ($sub_wrapper instanceof EntityListWrapper) {
+      // Multiple values.
+      foreach ($sub_wrapper as $item_wrapper) {
+        $value[] = $this->getValueFromProperty($wrapper, $item_wrapper, $info, $public_field_name);
+      }
+    }
+    else {
+      // Single value.
+      $value = $this->getValueFromProperty($wrapper, $sub_wrapper, $info, $public_field_name);
+    }
+
+    return $value;
   }
 
   /**
@@ -293,6 +332,16 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     $wrapper = entity_metadata_wrapper($this->entityType, $entity_id);
     $wrapper->language($this->getLangCode());
     $values = array();
+
+    // Try to figure out the default language used by the entity.
+    // With Drupal >= 7.15 we can use entity_language().
+    if (function_exists('entity_language')) {
+      $default_langcode = entity_language($this->getEntityType(), $wrapper->value());
+    }
+    else {
+      $entity_lang = $wrapper->get('language');
+      $default_langcode = !empty($entity_lang) ? $entity_lang : LANGUAGE_NONE;
+    }
 
     $limit_fields = !empty($request['fields']) ? explode(',', $request['fields']) : array();
 
@@ -324,15 +373,18 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
         }
 
         if (empty($info['formatter'])) {
-          if ($sub_wrapper instanceof EntityListWrapper) {
-            // Multiple values.
-            foreach ($sub_wrapper as $item_wrapper) {
-              $value[] = $this->getValueFromProperty($wrapper, $item_wrapper, $info, $public_field_name);
+          if ($this->fieldIsTranslatable($info['property'])) {
+            $enabled_languages = array_keys(language_list());
+
+            foreach ($enabled_languages as $language) {
+              $wrapper->language($language);
+              $sub_wrapper = $info['wrapper_method_on_entity'] ? $wrapper : $wrapper->{$property};
+              $value[$language] = $this->getValueByWrapper($wrapper, $sub_wrapper, $info, $public_field_name);
             }
           }
           else {
-            // Single value.
-            $value = $this->getValueFromProperty($wrapper, $sub_wrapper, $info, $public_field_name);
+            // Field is not translatable.
+            $value = $this->getValueByWrapper($wrapper, $sub_wrapper, $info, $public_field_name);
           }
         }
         else {
@@ -647,6 +699,74 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
   }
 
   /**
+   * Determine if the current bundle use the `title` module.
+   *
+   * @return array
+   *  An array containing 'field_name' and the 'original_property' name of the
+   *  title if the `title` module is being used, otherwise returns an empty
+   *  array.
+   */
+  protected function getTitleField() {
+    if (!module_exists('title')) {
+      return FALSE;
+    }
+
+    $entity_info = $this->getEntityInfo();
+    if (empty($entity_info['entity keys']['label'])) {
+      return FALSE;
+    }
+
+    // In 'title_entity_info_alter' function on the title module this is how
+    // the field name is being set.
+    $field_name = $entity_info['entity keys']['label'] . '_field';
+
+    $title_field = array();
+
+    $title_field_info = field_info_field($field_name);
+    if (!empty($title_field_info['bundles'][$this->getEntityType()]) && in_array($this->getBundle(), $title_field_info['bundles'][$this->getEntityType()])) {
+      $title_field['field_name'] = $title_field_info['field_name'];
+      $title_field['original_property'] = $entity_info['entity keys']['label'];
+    }
+
+    return $title_field;
+  }
+
+  /**
+   * Determine if the current plugin supports field translation.
+   *
+   * @return bool
+   */
+  protected function fieldTranslateAvailable() {
+    return $this->getPluginKey('field_translate_available') && module_exists('entity_translation');
+  }
+
+  /**
+   * Determine if the current bundle is translatable.
+   *
+   * @return bool
+   */
+  protected function bundleIsTranslatable() {
+    if ($this->getEntityType() == 'node') {
+      return entity_translation_node_supported_type($this->getBundle());
+    }
+
+    // For now we don't have a way to indicate this on other entities.
+    return TRUE;
+  }
+
+  /**
+   * Determine if a specific field is translatable.
+   *
+   * @param $field
+   *  The field machine name.
+   *
+   * @return bool
+   */
+  protected function fieldIsTranslatable($field) {
+    return $this->fieldTranslateAvailable() && $this->bundleIsTranslatable() && field_is_translatable($this->getEntityType(), field_info_field($field));
+  }
+
+  /**
    * Set properties of the entity based on the request, and save the entity.
    *
    * @param EntityMetadataWrapper $wrapper
@@ -664,6 +784,8 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     static::cleanRequest($request);
     $save = FALSE;
     $original_request = $request;
+
+    $title_field = $this->getTitleField();
 
     foreach ($this->getPublicFields() as $public_field_name => $info) {
       if (!empty($info['create_or_update_passthrough'])) {
@@ -694,11 +816,78 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
         }
       }
       else {
-        // Property is set in the request.
-        $field_value = $this->propertyValuesPreprocess($property_name, $request[$public_field_name], $public_field_name);
+        if ($this->fieldIsTranslatable($property_name)) {
+          $values = $request[$public_field_name];
+
+          // Parse values in case it still not an array.
+          if (!is_array($values)) {
+            $values = drupal_json_decode($values);
+          }
+
+          // When the data that has been passed to the request isn't compatible.
+          if (empty($values)) {
+            throw new \RestfulBadRequestException(format_string('Invalid data has been passed to the translatable field \'@field\'.', array('@field' => $public_field_name)));
+          }
+
+          // By default, the active language should be the entity's language.
+          if (!$active_language = entity_language($this->getEntityType(), $wrapper->value())) {
+            // Fallback to the site's default language.
+            $active_language = language_default('language');
+          }
+
+          if (function_exists('title_active_language')) {
+            // Override the active language being saved in a static variable
+            // in `title_active_language()` to be the language of the entity,
+            // this way we prevent `title_entity_presave()` from overriding
+            // the other languages we just set.
+            title_active_language($active_language);
+          }
+
+          $enabled_languages = array_keys(language_list());
+          foreach ($values as $current_language => $current_language_value) {
+
+            // Current language is not enabled.
+            if (!in_array($current_language, $enabled_languages)) {
+              throw new \RestfulBadRequestException(format_string('The language @language is not enabled.', array('@language' => $current_language)));
+            }
+
+            $field_value = $this->propertyValuesPreprocess($property_name, $current_language_value, $public_field_name);
+
+            $wrapper->language($current_language);
+
+            // Special case when title is being set in default language, since
+            // the hook_node_presave on the 'title' module is syncing between the
+            // title property and the title field in the default language, hence
+            // we should set the original property as well.
+            if (!empty($title_field) && $title_field['field_name'] == $property_name && $active_language == $current_language) {
+              $wrapper->{$title_field['original_property']}->set($field_value);
+            }
+
+            $wrapper->{$property_name}->set($field_value);
+          }
+        }
+        else {
+          // Field is not translatable.
+          $field_value = $this->propertyValuesPreprocess($property_name, $request[$public_field_name], $public_field_name);
+        }
       }
 
-      $wrapper->{$property_name}->set($field_value);
+      // Handle sub-properties, like body->value and so on.
+      // For details, see the doc comment of `$publicFields`.
+      $sub_property = $info['sub_property'];
+      if (!empty($sub_property) && isset($wrapper->{$property_name}->{$sub_property}) && is_object($wrapper->{$property_name}->{$sub_property})) {
+        // As EntityMetadataWrapper is not robust on subproperties of various
+        // types, we provide a fallback here.
+        try {
+          $wrapper->{$property_name}->{$sub_property}->set($field_value);
+        }
+        catch (\Exception $e) {
+          $wrapper->{$property_name}->set($field_value);
+        }
+      }
+      else {
+        $wrapper->{$property_name}->set($field_value);
+      }
 
       // We check the property access only after setting the values, as the
       // access callback's response might change according to the field value.
@@ -1004,6 +1193,7 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
    * @throws \RestfulBadRequestException
    */
   public function entityValidate(\EntityMetadataWrapper $wrapper) {
+    $this->validateFields($wrapper);
     if (!module_exists('entity_validator')) {
       // Entity validator doesn't exist.
       return;
@@ -1269,7 +1459,14 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       return $public_fields;
     }
 
-    if (!empty($entity_info['entity keys']['label'])) {
+    // Change the 'label' public field settings when a bundle use 'title'
+    // module.
+    if ($title_field = $this->getTitleField()) {
+      $public_fields['label']['wrapper_method_on_entity'] = FALSE;
+      $public_fields['label']['wrapper_method'] = 'value';
+      $public_fields['label']['property'] = $title_field['field_name'];
+    }
+    elseif (!empty($entity_info['entity keys']['label'])) {
       $public_fields['label']['property'] = $entity_info['entity keys']['label'];
     }
 
@@ -1500,6 +1697,23 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
     $cid .= $this->getEntityType();
     $cid .= '::ei:' . $id;
     $this->cacheInvalidate($cid);
+  }
+
+  /**
+   * Validates an entity's fields before they are saved.
+   *
+   * @param \EntityDrupalWrapper $wrapper
+   *   A metadata wrapper for the entity.
+   *
+   * @throws \RestfulUnprocessableEntityException
+   */
+  protected function validateFields($wrapper) {
+    try {
+      field_attach_validate($wrapper->type(), $wrapper->value());
+    }
+    catch (\FieldValidationException $e) {
+      throw new RestfulUnprocessableEntityException($e->getMessage());
+    }
   }
 
   /**
