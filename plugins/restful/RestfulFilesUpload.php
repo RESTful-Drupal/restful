@@ -15,6 +15,9 @@ class RestfulFilesUpload extends \RestfulEntityBase {
       '' => array(
         \RestfulInterface::POST => 'createEntity',
       ),
+      '^.*$' => array(
+        \RestfulInterface::PUT => 'putEntity',
+      ),
     );
   }
 
@@ -86,6 +89,33 @@ class RestfulFilesUpload extends \RestfulEntityBase {
     }
 
     return $return;
+  }
+
+  /**
+   * Replaces an existing file with a newly uploaded version.
+   *
+   * $request['files'] is a temporary file. We need to move it to replace the
+   * file given by $entity_id
+   *
+   * @return array
+   *   An array with the new file, post-replacement
+   *
+   * @throws \Exception
+   */
+  public function putEntity($entity_id) {
+    // this request is only a file
+    // no other data is addeed
+    if ($this->request['file']) {
+      $oldFile = file_load($entity_id);
+      $this->request['file']->filename = $oldFile->filename;
+      if ($file = file_move($this->request['file'], $oldFile->uri, FILE_EXISTS_REPLACE)) {
+        return array($this->viewEntity($entity_id));
+      }
+      else {
+        throw new RestfulBadRequestException('Error moving file.');
+      }
+    }
+    throw new RestfulBadRequestException('No file sent with request');
   }
 
   /**
