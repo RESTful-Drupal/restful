@@ -432,10 +432,13 @@ class DataProviderDbQuery extends DataProvider implements DataProviderDbQueryInt
   protected function queryForListFilter(\SelectQuery $query) {
     foreach ($this->parseRequestForListFilter() as $filter) {
       /* @var ResourceFieldDbColumnInterface $filter_field */
-      if (!$filter_field = $this->fieldDefinitions->get($filter['public_field'])) {
+      $public_field = $filter['public_field'];
+      if (!$filter_field = $this->fieldDefinitions->get($public_field)) {
         continue;
       }
-      $column_name = $filter_field->getColumnForQuery();
+      if (!$column_name = $filter_field->getColumnForQuery()) {
+        throw new BadRequestException(format_string('The filter "@filter" is not allowed for this path.', array('@filter' => $public_field)));
+      }
       if (in_array(strtoupper($filter['operator'][0]), array('IN', 'NOT IN', 'BETWEEN'))) {
         $query->condition($column_name, $filter['value'], $filter['operator'][0]);
         continue;
