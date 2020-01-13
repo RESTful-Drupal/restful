@@ -213,8 +213,19 @@ abstract class RestfulDataProviderDbQuery extends \RestfulBase implements \Restf
       }
       $condition = db_condition($filter['conjunction']);
       for ($index = 0; $index < count($filter['value']); $index++) {
+
+        $operator = strtoupper($filter['operator'][$index]);
+        $value = $filter['value'][$index];
+
+        // Convert CONTAINS and STARTS_WITH operators to mysql's LIKE.
+        if (in_array($operator, ['CONTAINS', 'STARTS_WITH'])) {
+          $like_prefix = $operator == 'CONTAINS' ? '%' : '';
+          $value = $like_prefix . db_like($value) . '%';
+          $operator = 'LIKE';
+        }
+
         $column_name = $this->getPropertyColumnForQuery($public_fields[$filter['public_field']]);
-        $condition->condition($column_name, $filter['value'][$index], $filter['operator'][$index]);
+        $condition->condition($column_name, $value, $operator);
       }
       $query->condition($condition);
     }
