@@ -30,10 +30,15 @@ class ResourceFieldEntityText extends ResourceFieldEntity implements ResourceFie
       if (!$instance['settings']['text_processing']) {
         return $value;
       }
-
+      if (isset($value['value'], $value['format'])) {
+        return array(
+          'value' => $value['value'],
+          'format' => $value['format'],
+        );
+      }
+      // Fallback to the initial behavior to support BC.
       return array(
         'value' => $value,
-        // TODO: This is hardcoded! Fix it.
         'format' => 'filtered_html',
       );
     }
@@ -43,7 +48,14 @@ class ResourceFieldEntityText extends ResourceFieldEntity implements ResourceFie
       if (!$instance['settings']['text_processing']) {
         $return[$delta] = $single_value;
       }
+      elseif (isset($single_value['value'], $single_value['format'])) {
+        $return[$delta] = array(
+          'value' => $single_value['value'],
+          'format' => $single_value['format'],
+        );
+      }
       else {
+        // Fallback to the initial behavior to support BC.
         $return[$delta] = array(
           'value' => $single_value,
           'format' => 'filtered_html',
