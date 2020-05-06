@@ -938,6 +938,10 @@ abstract class RestfulEntityBase extends \RestfulDataProviderEFQ implements \Res
       );
     }
 
+    // In case the value is empty.
+    if (empty($value)) {
+      $return = [];
+    }
     // Multiple values.
     foreach ($value as $delta => $single_value) {
       if (!$instance['settings']['text_processing']) {
