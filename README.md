@@ -42,7 +42,7 @@ describes the resource you want to make available.  Here are the bare
 essentials from one of the multiple examples in
 [the example module](./modules/restful_example):
 
-####restful\_custom/restful\_custom.info
+#### restful\_custom/restful\_custom.info
 ```ini
 name = RESTful custom
 description = Custom RESTful resource.
@@ -52,7 +52,7 @@ dependencies[] = restful
 registry_autoload[] = PSR-4
 ```
 
-####restful\_custom/src/Plugin/resource/Custom__1_0.php
+#### restful\_custom/src/Plugin/resource/Custom__1_0.php
 ```php
 
 namespace Drupal\restful_custom\Plugin\resource;
