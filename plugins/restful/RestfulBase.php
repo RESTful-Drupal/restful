@@ -1006,6 +1006,11 @@ abstract class RestfulBase extends \RestfulPluginBase implements \RestfulInterfa
         // filter[foo]=bar would be converted to filter[foo][value] = bar.
         $value = array('value' => $value);
       }
+      // It's possible someone is setting `operator` (or some other key) without a `value`.
+      // In these cases we should ignore the filter.
+      if (!isset($value['value'])) {
+        continue;
+      }
       if (!is_array($value['value'])) {
         $value['value'] = array($value['value']);
       }
