@@ -22,6 +22,13 @@ class RestfulRateLimitManager extends \RestfulPluginBase {
   protected $resource;
 
   /**
+   * @var array
+   *
+   * The plugin info.
+   */
+  protected $pluginInfo;
+
+  /**
    * Set the account.
    *
    * @param \stdClass $account
